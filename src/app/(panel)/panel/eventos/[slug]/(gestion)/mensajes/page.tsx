@@ -8,13 +8,19 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { isErr } from '@/shared/result'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
-export const metadata = { title: 'Mensajes' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Mensajes', 'Messages') }
+}
 
 // Los invitados escriben mientras el atelier mira la bandeja: esta página no se cachea.
 export const dynamic = 'force-dynamic'
 
 export default async function MensajesPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ filtro?: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const { filtro } = await searchParams
@@ -32,7 +38,7 @@ export default async function MensajesPage({ params, searchParams }: { params: P
   // Sin libro de firmas en el plan, la pantalla lo dice; quien ya tiene mensajes los sigue viendo.
   const conLibro = await plans.requireFeature(event.value.id, 'guestbook')
   if (isErr(conLibro) && total === 0) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={conLibro.error.detail} title="Mensajes" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={traducir(conLibro.error.detail, t)} title={t('Mensajes', 'Messages')} />
   }
   const sinAgradecer = libro.value.filter((m) => m.reply === null).length
   const soloSinAgradecer = filtro === 'sin-agradecer'
@@ -45,22 +51,22 @@ export default async function MensajesPage({ params, searchParams }: { params: P
           total === 0 ? undefined : (
             // El informe del evento trae el libro entero, listo para guardar como PDF.
             <span>
-              <PanelButton href={`/panel/eventos/${event.value.slug}/informe#libro`}>Descargar el libro</PanelButton>
+              <PanelButton href={`/panel/eventos/${event.value.slug}/informe#libro`}>{t('Descargar el libro', 'Download the book')}</PanelButton>
             </span>
           )
         }
-        meta={total === 0 ? 'Lo que tus invitados te escriben al confirmar.' : `${total} ${total === 1 ? 'firma' : 'firmas'}. Lo que tus invitados te escriben al confirmar.`}
-        title="Libro de firmas"
+        meta={total === 0 ? t('Lo que tus invitados te escriben al confirmar.', 'What your guests write to you when they RSVP.') : t(`${total} ${total === 1 ? 'firma' : 'firmas'}. Lo que tus invitados te escriben al confirmar.`, `${total} ${total === 1 ? 'entry' : 'entries'}. What your guests write to you when they RSVP.`)}
+        title={t('Libro de firmas', 'Guestbook')}
       />
       <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
 
       {total === 0 || sinAgradecer === 0 ? null : (
-        <nav aria-label="Filtrar firmas" className="mb-6 flex gap-2.5">
+        <nav aria-label={t('Filtrar firmas', 'Filter entries')} className="mb-6 flex gap-2.5">
           <FilterChipLink active={!soloSinAgradecer} href={base}>
-            Todas · {total}
+            {t('Todas', 'All')} · {total}
           </FilterChipLink>
           <FilterChipLink active={soloSinAgradecer} href={`${base}?filtro=sin-agradecer`}>
-            Sin agradecer · {sinAgradecer}
+            {t('Sin agradecer', 'Not thanked')} · {sinAgradecer}
           </FilterChipLink>
         </nav>
       )}

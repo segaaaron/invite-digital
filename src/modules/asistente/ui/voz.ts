@@ -130,10 +130,17 @@ export function frasesListas(texto: string): { frases: string[]; resto: string }
 }
 
 /** Las pantallas del panel por su nombre: un enlace leído en voz alta no dice nada. */
-const PANTALLAS: Record<string, string> = {
-  invitados: 'Invitados', mesas: 'Mesas', regalos: 'Regalos', mensajes: 'Mensajes', configuracion: 'Mi invitación', 'vista-previa': 'Ver mi invitación',
-  checkin: 'Ingreso al evento', equipo: 'Equipo', extras: 'Extras', 'dia-d': 'Día D', tareas: 'Plan de tareas', presupuesto: 'Presupuesto',
-  agenda: 'Agenda', proveedores: 'Proveedores', cronograma: 'Cronograma', cortejo: 'Cortejo', documentos: 'Documentos',
+const PANTALLAS: Record<'es' | 'en', Record<string, string>> = {
+  es: {
+    invitados: 'Invitados', mesas: 'Mesas', regalos: 'Regalos', mensajes: 'Mensajes', configuracion: 'Mi invitación', 'vista-previa': 'Ver mi invitación',
+    checkin: 'Ingreso al evento', equipo: 'Equipo', extras: 'Extras', 'dia-d': 'Día D', tareas: 'Plan de tareas', presupuesto: 'Presupuesto',
+    agenda: 'Agenda', proveedores: 'Proveedores', cronograma: 'Cronograma', cortejo: 'Cortejo', documentos: 'Documentos',
+  },
+  en: {
+    invitados: 'Guests', mesas: 'Tables', regalos: 'Gifts', mensajes: 'Messages', configuracion: 'My invitation', 'vista-previa': 'See my invitation',
+    checkin: 'Event check-in', equipo: 'Team', extras: 'Extras', 'dia-d': 'Big day', tareas: 'Task plan', presupuesto: 'Budget',
+    agenda: 'Calendar', proveedores: 'Vendors', cronograma: 'Schedule', cortejo: 'Wedding party', documentos: 'Documents',
+  },
 }
 
 /**
@@ -154,11 +161,13 @@ function telefonoParaLeer(numero: string): string {
 
 /** El texto tal como se lee: sin enlaces (la pantalla por su nombre), sin marcas y sin guiones de lista. */
 export function paraLeer(texto: string): string {
+  // Las pantallas en el idioma de la respuesta: Luxury contesta en el del aparato.
+  const idioma = idiomaDelTexto(texto, 'es')
   return texto
     // El enlace con su nombre al lado se diría dos veces («Agenda (Agenda)»): queda el nombre.
     .replace(/\[([^\]]+)\]\(\/panel\/[^)]*\)/g, '$1')
     .replace(/\s*\(\/panel\/eventos\/[^)\s]+\)/g, '')
-    .replace(/\/panel\/eventos\/[^/\s]+(?:\/planner)?\/?([a-z-]*)[^\s,.;:)]*/g, (_, p: string) => PANTALLAS[p] ?? 'el panel')
+    .replace(/\/panel\/eventos\/[^/\s]+(?:\/planner)?\/?([a-z-]*)[^\s,.;:)]*/g, (_, p: string) => PANTALLAS[idioma][p] ?? (idioma === 'es' ? 'el panel' : 'the panel'))
     // Los teléfonos, ya sin enlaces: las cifras de un enlace no son un teléfono.
     .replace(/\+?(?<![\d.,\w])\d(?: ?\d){6,14}(?![\d.,:-]?\d)/g, telefonoParaLeer)
     .replace(/[*_#`]/g, '')

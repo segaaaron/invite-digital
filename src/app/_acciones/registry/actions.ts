@@ -12,6 +12,8 @@ import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { ContributionMethod } from '@/modules/registry/domain/fund'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 /**
  * Lo que la UI recibe de vuelta. Que un regalo ya esté reservado no es excepcional: es
@@ -38,7 +40,7 @@ const refreshPanel = (slug: string) => revalidatePath(`/panel/eventos/${slug}/re
  */
 const sinMesaDeRegalos = async (eventId: string): Promise<RegistryActionResult | null> => {
   const permitido = await plans.requireFeature(eventId, 'registry')
-  return isErr(permitido) ? { ok: false, kind: permitido.error.kind, message: permitido.error.detail } : null
+  return isErr(permitido) ? { ok: false, kind: permitido.error.kind, message: traducir(permitido.error.detail, await tr()) } : null
 }
 
 // ============================================================================
@@ -116,6 +118,7 @@ export async function markPurchasedAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<RegistryActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -126,7 +129,7 @@ export async function markPurchasedAction(input: {
   if (isErr(result)) return fallo(result.error)
 
   refreshPanel(input.eventSlug)
-  return { ok: true, message: 'Marcado como comprado. Este cambio no tiene vuelta atrás.' }
+  return { ok: true, message: t('Marcado como comprado. Este cambio no tiene vuelta atrás.', 'Marked as bought. This change can’t be undone.') }
 }
 
 export async function releaseGiftAsAtelierAction(input: {
@@ -134,6 +137,7 @@ export async function releaseGiftAsAtelierAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<RegistryActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -144,7 +148,7 @@ export async function releaseGiftAsAtelierAction(input: {
   if (isErr(result)) return fallo(result.error)
 
   refreshPanel(input.eventSlug)
-  return { ok: true, message: 'Reserva liberada. El regalo vuelve a estar disponible.' }
+  return { ok: true, message: t('Reserva liberada. El regalo vuelve a estar disponible.', 'Reservation released. The gift is available again.') }
 }
 
 export async function addFundAction(input: {
@@ -193,6 +197,7 @@ export async function removeFundAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<RegistryActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -208,8 +213,8 @@ export async function removeFundAction(input: {
     ok: true,
     message:
       contributions === 0
-        ? 'Fondo eliminado.'
-        : `Fondo eliminado junto a ${contributions} aportación${contributions === 1 ? '' : 'es'}.`,
+        ? t('Fondo eliminado.', 'Fund deleted.')
+        : t(`Fondo eliminado junto a ${contributions} aportación${contributions === 1 ? '' : 'es'}.`, `Fund deleted along with ${contributions} contribution${contributions === 1 ? '' : 's'}.`),
   }
 }
 
@@ -288,8 +293,9 @@ const ipDeLaPeticion = async (): Promise<string> => {
 }
 
 export async function claimGiftAction(input: { token: string; giftId: string }): Promise<RegistryActionResult> {
+  const t = await tr()
   if (limiter.isLimited(await ipDeLaPeticion(), Date.now())) {
-    return { ok: false, kind: 'rate_limited', message: 'Demasiados intentos. Espera un minuto.' }
+    return { ok: false, kind: 'rate_limited', message: t('Demasiados intentos. Espera un minuto.', 'Too many attempts. Wait a minute.') }
   }
 
   const cerrado = await cerradaParaElInvitado(input.token)
@@ -317,8 +323,9 @@ export async function claimGiftAction(input: { token: string; giftId: string }):
 }
 
 export async function releaseGiftAction(input: { token: string; giftId: string }): Promise<RegistryActionResult> {
+  const t = await tr()
   if (limiter.isLimited(await ipDeLaPeticion(), Date.now())) {
-    return { ok: false, kind: 'rate_limited', message: 'Demasiados intentos. Espera un minuto.' }
+    return { ok: false, kind: 'rate_limited', message: t('Demasiados intentos. Espera un minuto.', 'Too many attempts. Wait a minute.') }
   }
 
   const cerrado = await cerradaParaElInvitado(input.token)

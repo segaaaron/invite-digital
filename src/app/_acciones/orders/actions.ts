@@ -17,6 +17,8 @@ import { campo } from '@/shared/forms/campo'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
 import type { OrderErrorCode } from '@/shared/i18n/dictionary'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 // ============================================================================
 // Este fichero tiene DOS bloques, y la diferencia importa.
@@ -50,6 +52,7 @@ export type PlaceOrderState =
 const CODIGOS_DE_PEDIDO: ReadonlySet<string> = new Set(['name', 'contact', 'email', 'eventDate', 'plan', 'notes'])
 
 export async function placeOrderAction(_previous: PlaceOrderState, formData: FormData): Promise<PlaceOrderState> {
+  const t = await tr()
   if (limitePedido.isLimited(await ipDeLaPeticion(), Date.now())) {
     return { status: 'error', code: 'rateLimited' }
   }
@@ -98,7 +101,7 @@ export async function placeOrderAction(_previous: PlaceOrderState, formData: For
   if (isErr(result)) {
     registrarFallo('orders/actions', 'pedido rechazado', result.error.kind, result.error.detail)
     if (result.error.kind !== 'invalid_input') return { status: 'error', code: 'failed' }
-    return { status: 'error', code: CODIGOS_DE_PEDIDO.has(result.error.detail) ? (result.error.detail as OrderErrorCode) : 'invalid' }
+    return { status: 'error', code: CODIGOS_DE_PEDIDO.has(traducir(result.error.detail, t)) ? (result.error.detail as OrderErrorCode) : 'invalid' }
   }
 
   return { status: 'success', publicRef: result.value.publicRef }
@@ -172,6 +175,7 @@ export type DecideOrderState =
   | { status: 'error'; message: string }
 
 export async function decideOrderAction(_previous: DecideOrderState, formData: FormData): Promise<DecideOrderState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const orderId = formData.get('orderId')
@@ -179,7 +183,7 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
   const note = formData.get('note')
 
   if (typeof orderId !== 'string' || (decision !== 'approved' && decision !== 'rejected')) {
-    return { status: 'error', message: 'Faltan datos de la decisión. Vuelve a cargar la página.' }
+    return { status: 'error', message: t('Faltan datos de la decisión. Vuelve a cargar la página.', 'The decision is missing data. Reload the page.') }
   }
 
   const result = await orders.decide({
@@ -194,10 +198,10 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
       status: 'error',
       message:
         result.error.kind === 'invalid_input'
-          ? result.error.detail
+          ? traducir(result.error.detail, t)
           : result.error.kind === 'wrong_status'
-            ? 'Ese pedido ya no admite esta decisión. Vuelve a cargar la página.'
-            : 'No pudimos guardar la decisión. Inténtalo en un momento.',
+            ? t('Ese pedido ya no admite esta decisión. Vuelve a cargar la página.', 'That order no longer accepts this decision. Reload the page.')
+            : t('No pudimos guardar la decisión. Inténtalo en un momento.', 'We couldn’t save the decision. Try again in a moment.'),
     }
   }
 
@@ -240,15 +244,16 @@ async function aprovisionar(
   orderId: string,
   formData: FormData,
 ): Promise<{ message: string; eventSlug: string | null }> {
+  const t = await tr()
   const order = await orders.byId(orderId)
-  if (order === null) return { message: 'Pedido aprobado. No pudimos releerlo para crear el evento.', eventSlug: null }
+  if (order === null) return { message: t('Pedido aprobado. No pudimos releerlo para crear el evento.', 'Order approved. We couldn’t reread it to create the event.'), eventSlug: null }
 
   // **Un pedido de extra no crea boda**: sube la capacidad del evento que lo compró, una sola
   // vez aunque se apruebe dos veces.
   if (order.addonSlug !== null) {
     const aplicado = await plans.applyExtra(order.id)
     await admin.record(actor, { action: 'extra.aplicado', subject: order.eventSlug ?? order.publicRef, detail: order.addonName ?? order.addonSlug })
-    return { message: aplicado ? `Extra «${order.addonName ?? order.addonSlug}» aplicado.` : 'El extra ya estaba aplicado.', eventSlug: order.eventSlug }
+    return { message: aplicado ? t(`Extra «${order.addonName ?? order.addonSlug}» aplicado.`, `Extra “${order.addonName ?? order.addonSlug}” applied.`) : t('El extra ya estaba aplicado.', 'The extra was already applied.'), eventSlug: order.eventSlug }
   }
 
   // El correo: el que viene de la ficha, el del pedido (`0080`) o, en los anteriores, el contacto
@@ -258,10 +263,10 @@ async function aprovisionar(
   const clave = randomBytes(12).toString('base64url')
 
   if (order.eventDate === null) {
-    return { message: 'Pedido aprobado. Sin fecha de evento no se puede crear el evento: créalo a mano.', eventSlug: null }
+    return { message: t('Pedido aprobado. Sin fecha de evento no se puede crear el evento: créalo a mano.', 'Order approved. Without an event date the event can’t be created: create it by hand.'), eventSlug: null }
   }
   if (correo === '') {
-    return { message: 'Pedido aprobado. Falta el correo del cliente: créale el evento desde «Crear el evento».', eventSlug: null }
+    return { message: t('Pedido aprobado. Falta el correo del cliente: créale el evento desde «Crear el evento».', 'Order approved. The client’s email is missing: create their event from “Create the event”.'), eventSlug: null }
   }
 
   // **El acceso del cliente se comprueba ANTES de crear nada.**
@@ -275,7 +280,7 @@ async function aprovisionar(
   if (existente === null) {
     const credencial = createCredential({ email: correo, password: clave })
     if (isErr(credencial)) {
-      return { message: `Pedido aprobado, sin crear el evento: ${credencial.error.detail}.`, eventSlug: null }
+      return { message: t(`Pedido aprobado, sin crear el evento: ${credencial.error.detail}.`, `Order approved, without creating the event: ${traducir(credencial.error.detail, t)}.`), eventSlug: null }
     }
   } else {
     // Ya tiene cuenta. Si su rol no es `cliente` **no entraría**: el acceso se decide por
@@ -284,7 +289,7 @@ async function aprovisionar(
     const suyo = await identity.actorOf(existente.id)
     if (suyo !== null && parseRole(suyo.role) !== 'cliente') {
       return {
-        message: `Pedido aprobado, sin crear el evento: ${correo} ya tiene cuenta con rol «${parseRole(suyo.role)}» y no entraría como cliente. Usa otro correo.`,
+        message: t(`Pedido aprobado, sin crear el evento: ${correo} ya tiene cuenta con rol «${parseRole(suyo.role)}» y no entraría como cliente. Usa otro correo.`, `Order approved, without creating the event: ${correo} already has an account with role “${parseRole(suyo.role)}” and wouldn’t sign in as a client. Use another email.`),
         eventSlug: null,
       }
     }
@@ -313,8 +318,8 @@ async function aprovisionar(
     return {
       message:
         evento.error.kind === 'duplicate_slug'
-          ? 'Pedido aprobado. Su evento ya estaba creado.'
-          : 'Pedido aprobado, pero no pudimos crear el evento. Créalo a mano desde el panel.',
+          ? t('Pedido aprobado. Su evento ya estaba creado.', 'Order approved. Their event was already created.')
+          : t('Pedido aprobado, pero no pudimos crear el evento. Créalo a mano desde el panel.', 'Order approved, but we couldn’t create the event. Create it by hand from the panel.'),
       eventSlug: null,
     }
   }
@@ -359,16 +364,16 @@ async function aprovisionar(
   // base—, y si el correo ya existía **no se toca su contraseña**: cambiarla escribiendo
   // su correo sería una forma de robarle la cuenta.
   let clienteId = existente?.id ?? null
-  let avisoDeClave = `${correo} ya tenía cuenta: entra con su contraseña de siempre.`
+  let avisoDeClave = t(`${correo} ya tenía cuenta: entra con su contraseña de siempre.`, `${correo} already had an account: they sign in with their usual password.`)
 
   if (clienteId === null) {
     const credencial = createCredential({ email: correo, password: clave })
     if (isErr(credencial)) {
-      return { message: `Evento creado, sin acceso del cliente: ${credencial.error.detail}.`, eventSlug: evento.value.slug }
+      return { message: t(`Evento creado, sin acceso del cliente: ${credencial.error.detail}.`, `Event created, without client access: ${traducir(credencial.error.detail, t)}.`), eventSlug: evento.value.slug }
     }
     const creado = await admin.createUser({ email: credencial.value.email, password: credencial.value.password, role: 'cliente' })
     clienteId = creado.id
-    avisoDeClave = `${correo} recibe por correo su contraseña provisional; la cambia al entrar.`
+    avisoDeClave = t(`${correo} recibe por correo su contraseña provisional; la cambia al entrar.`, `${correo} gets their temporary password by email; they change it when signing in.`)
   }
 
   await events.staff.add(evento.value.id, clienteId, 'cliente')
@@ -396,7 +401,7 @@ async function aprovisionar(
   }
 
   return {
-    message: `Evento creado con el diseño «${themeFor(themeKey).label}». ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
+    message: t(`Evento creado con el diseño «${themeFor(themeKey).label}». ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`, `Event created with the “${themeFor(themeKey).label}” design. ${avisoDeClave}${avisado ? ' We emailed them their access.' : ''}`),
     eventSlug: evento.value.slug,
   }
 }

@@ -14,6 +14,7 @@ import { VIEWPORT } from '@/shared/config/viewport'
 import '../../globals.css'
 import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormularios'
+import { IdiomaProvider } from '@/shared/i18n/idioma-navegador'
 
 export const viewport = VIEWPORT
 
@@ -38,7 +39,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
-      <body>
+      <body><IdiomaProvider locale={locale}>
         <CapturaDeFallos />
         <ValidacionDeFormularios />
         <Suspense fallback={null}>
@@ -48,7 +49,7 @@ export default async function LocaleLayout({
         <main id="top">{children}</main>
         <SiteFooter dictionary={dictionary} locale={locale} sitio={sitio} />
         <WhatsAppFloat href={enlaceWhatsapp(ajustes.whatsapp, ajustes.mensajes.general[locale])} label={dictionary.footer.whatsappFloat} />
-      </body>
+      </IdiomaProvider></body>
     </html>
   )
 }

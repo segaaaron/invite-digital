@@ -1,5 +1,7 @@
 import { cargaPush, destinatariosDelEvento, leEnviamosPush, type Aviso, type CargaPush } from '../domain/avisos'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { traducir } from '@/shared/i18n/en-ingles'
+import { traductor } from '@/shared/i18n/t'
 
 /** Un aparato con las push activadas, con lo que su dueño tiene silenciado. */
 export type AparatoPush = {
@@ -9,6 +11,8 @@ export type AparatoPush = {
   readonly p256dh: string
   readonly auth: string
   readonly silenciados: readonly string[]
+  /** El idioma de su dueño (`users.locale`): la push se dice en él. Sin él, español. */
+  readonly locale?: string | null
 }
 
 type Persona = { readonly userId: string; readonly role: string }
@@ -45,7 +49,9 @@ async function entregar(deps: Deps, userIds: readonly string[], eventId: string 
   const aparatos = (await deps.store.aparatosDe(userIds)).filter((a) => leEnviamosPush(a.silenciados, aviso.kind))
   await Promise.all(
     aparatos.map(async (a) => {
-      const r = await deps.emisor.enviar(a, carga)
+      // El aviso se guarda en español; al aparato le llega en el idioma de su dueño.
+      const t = traductor(a.locale === 'en' ? 'en' : 'es')
+      const r = await deps.emisor.enviar(a, { ...carga, title: traducir(carga.title, t), body: traducir(carga.body, t) })
       if (r === 'caducada') await deps.store.olvidarAparato(a.id)
       else if (r === 'ok') await deps.store.aparatoUsado(a.id)
     }),

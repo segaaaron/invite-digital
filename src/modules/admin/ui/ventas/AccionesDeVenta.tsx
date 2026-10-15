@@ -7,6 +7,8 @@ import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { FIELD_CLASS, LABEL_CLASS, botonClases } from '@/shared/design/ui/panel/PanelKit'
 import { CheckIcon, PlusIcon } from '@/shared/design/ui/icons'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { traducir } from '@/shared/i18n/en-ingles'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * **Abre y anota a la vez**: el WhatsApp, el correo o el enlace se abre en el mismo clic —Safari
@@ -30,6 +32,7 @@ export function AbrirYAnotar({
   /** `mailto:` no abre pestaña: se navega en la misma. */
   externo?: boolean
 }) {
+  const t = useT()
   const [pendiente, empezar] = useTransition()
   return (
     <button
@@ -46,7 +49,7 @@ export function AbrirYAnotar({
       type="button"
     >
       {children}
-      {externo ? <span className="sr-only"> (se abre en una pestaña nueva)</span> : null}
+      {externo ? <span className="sr-only">{t(' (se abre en una pestaña nueva)', ' (opens in a new tab)')}</span> : null}
     </button>
   )
 }
@@ -58,20 +61,21 @@ const INICIAL: VentaActionState = { status: 'idle' }
  * sin cobrar, se cancela; sin él, la consulta pasa a perdida. Plegada: es la última opción.
  */
 export function PerderVenta({ consultaId, orderId }: { consultaId: string | null; orderId: string | null }) {
+  const t = useT()
   const [estado, accion] = useActionState(sinCaerse(perderVentaAction), INICIAL)
   const [motivo, setMotivo] = useState('')
   const id = useId()
   return (
     <details className="group rounded-[16px] border border-line-panel bg-white/60 open:bg-white" open={estado.status === 'error'}>
       <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-[13px] text-ink-soft [&::-webkit-details-marker]:hidden">
-        <span>{orderId === null ? 'Marcar como perdida' : 'Cancelar el pedido y perder la venta'}</span>
+        <span>{orderId === null ? t('Marcar como perdida', 'Mark as lost') : t('Cancelar el pedido y perder la venta', 'Cancel the order and lose the sale')}</span>
         <PlusIcon className="size-3.5 text-ink-mute transition-transform group-open:rotate-45" />
       </summary>
       <form action={accion} className="flex flex-col gap-3 border-t border-line-panel px-4 pt-3 pb-4">
         {consultaId === null ? null : <input name="consultaId" type="hidden" value={consultaId} />}
         {orderId === null ? null : <input name="orderId" type="hidden" value={orderId} />}
         <fieldset className="flex flex-col gap-2">
-          <legend className={`${LABEL_CLASS} mb-2`}>¿Por qué no sigue?</legend>
+          <legend className={`${LABEL_CLASS} mb-2`}>{t('¿Por qué no sigue?', 'Why is it not going ahead?')}</legend>
           <div className="grid gap-2 min-[480px]:grid-cols-2">
             {MOTIVOS_DE_PERDIDA.map((m) => (
               <label
@@ -79,19 +83,21 @@ export function PerderVenta({ consultaId, orderId }: { consultaId: string | null
                 key={m.clave}
               >
                 <input className="accent-ink" name="motivo" onChange={() => setMotivo(m.clave)} required type="radio" value={m.clave} />
-                {m.etiqueta}
+                {traducir(m.etiqueta, t)}
               </label>
             ))}
           </div>
         </fieldset>
         <label className="flex flex-col gap-2" htmlFor={id}>
-          <span className={LABEL_CLASS}>Nota {motivo === 'otro' ? '· obligatoria' : '· opcional'}</span>
-          <input className={FIELD_CLASS} id={id} maxLength={500} name="nota" placeholder="Qué pasó, para retomarla si vuelve" required={motivo === 'otro'} type="text" />
+          <span className={LABEL_CLASS}>
+            {t('Nota', 'Note')} {motivo === 'otro' ? t('· obligatoria', '· required') : t('· opcional', '· optional')}
+          </span>
+          <input className={FIELD_CLASS} id={id} maxLength={500} name="nota" placeholder={t('Qué pasó, para retomarla si vuelve', 'What happened, to pick it up if they come back')} required={motivo === 'otro'} type="text" />
         </label>
         <ActionFeedback errorsOnly state={estado} />
         <div>
-          <SubmitButton pendingLabel="Guardando…" variant="danger">
-            {orderId === null ? 'Marcar como perdida' : 'Cancelar y perder'}
+          <SubmitButton pendingLabel={t('Guardando…', 'Saving…')} variant="danger">
+            {orderId === null ? t('Marcar como perdida', 'Mark as lost') : t('Cancelar y perder', 'Cancel and lose')}
           </SubmitButton>
         </div>
       </form>
@@ -101,13 +107,16 @@ export function PerderVenta({ consultaId, orderId }: { consultaId: string | null
 
 /** El saldo de un pedido con anticipo, recibido. */
 export function RegistrarSaldo({ orderId, nombre, publicRef, saldo }: { orderId: string; nombre: string; publicRef: string; saldo: string }) {
+  const t = useT()
   const [estado, accion] = useActionState(sinCaerse(registrarSaldoAction), INICIAL)
   return (
     <form action={accion} className="flex flex-col gap-2">
       <input name="orderId" type="hidden" value={orderId} />
       <input name="nombre" type="hidden" value={nombre} />
       <input name="ref" type="hidden" value={publicRef} />
-      <SubmitButton pendingLabel="Registrando…">Registrar el saldo · {saldo}</SubmitButton>
+      <SubmitButton pendingLabel={t('Registrando…', 'Recording…')}>
+        {t('Registrar el saldo', 'Record the balance')} · {saldo}
+      </SubmitButton>
       <ActionFeedback state={estado} />
     </form>
   )
@@ -115,6 +124,7 @@ export function RegistrarSaldo({ orderId, nombre, publicRef, saldo }: { orderId:
 
 /** Copiar al portapapeles con su confirmación, sin `alert`. */
 export function Copiar({ texto, children }: { texto: string; children: ReactNode }) {
+  const t = useT()
   const [copiado, setCopiado] = useState(false)
   return (
     <button
@@ -131,7 +141,7 @@ export function Copiar({ texto, children }: { texto: string; children: ReactNode
     >
       {copiado ? (
         <>
-          <CheckIcon className="size-4 text-sage" /> Copiado
+          <CheckIcon className="size-4 text-sage" /> {t('Copiado', 'Copied')}
         </>
       ) : (
         children

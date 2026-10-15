@@ -14,8 +14,15 @@ import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
 import { isErr } from '@/shared/result'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
+import type { T } from '@/shared/i18n/t'
+import type { Locale } from '@/shared/i18n/locales'
 
-export const metadata = { title: 'Agenda' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Agenda', 'Calendar') }
+}
 export const dynamic = 'force-dynamic'
 
 const hoyEnBolivia = () => new Date(Date.now() - 4 * 3_600_000).toISOString().slice(0, 10)
@@ -23,16 +30,16 @@ const moverMes = (mes: string, n: number) => {
   const [a, m] = mes.split('-').map(Number) as [number, number]
   return new Date(Date.UTC(a, m - 1 + n, 1)).toISOString().slice(0, 7)
 }
-const mayuscula = (t: string) => t.replace(/^./, (c) => c.toUpperCase())
+const mayuscula = (texto: string) => texto.replace(/^./, (c) => c.toUpperCase())
 
 /** «Faltan 64 días · sábado 12 de diciembre», «Es mañana», «Es hoy» o «Fue el …». */
-function cuentaRegresiva(hoy: string, dia: string): string {
+function cuentaRegresiva(hoy: string, dia: string, t: T, locale: Locale): string {
   const faltan = diasHasta(hoy, dia)
-  const cuando = diaLargo(dia)
-  if (faltan > 1) return `Faltan ${faltan} días · ${cuando}`
-  if (faltan === 1) return `Es mañana · ${cuando}`
-  if (faltan === 0) return `Es hoy · ${cuando}`
-  return `Fue el ${cuando}`
+  const cuando = diaLargo(dia, locale)
+  if (faltan > 1) return t(`Faltan ${faltan} días · ${cuando}`, `${faltan} days to go · ${cuando}`)
+  if (faltan === 1) return t(`Es mañana · ${cuando}`, `It’s tomorrow · ${cuando}`)
+  if (faltan === 0) return t(`Es hoy · ${cuando}`, `It’s today · ${cuando}`)
+  return t(`Fue el ${cuando}`, `It was on ${cuando}`)
 }
 
 type Busqueda = { mes?: string; dia?: string; cita?: string; vista?: string; ocultar?: string; hecho?: string; mover?: string }
@@ -48,6 +55,7 @@ type Busqueda = { mes?: string; dia?: string; cita?: string; vista?: string; ocu
  */
 export default async function AgendaPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Busqueda> }) {
   const actor = await requireSession()
+  const [t, locale] = await Promise.all([tr(), idiomaDeLaPeticion()])
   const { slug } = await params
   const q = await searchParams
   const event = await events.getFor(actor, slug, { section: 'planner' })
@@ -93,7 +101,7 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
   const marcar = (e: EntradaDeAgenda, despues: (e: EntradaDeAgenda) => string) =>
     (e.clase === 'tarea' || e.clase === 'pago') && !e.hecha ? (
       <MarcarEnLaAgenda despues={despues(e)} entrada={e} evento={evento} hecha>
-        {e.clase === 'pago' ? 'Pagado' : 'Hecha'}
+        {e.clase === 'pago' ? t('Pagado', 'Paid') : t('Hecha', 'Done')}
       </MarcarEnLaAgenda>
     ) : null
   const trasMarcar = (dia: string | null) => (e: EntradaDeAgenda) => url({ hecho: `${e.clase}.${e.id}`, dia })
@@ -103,12 +111,12 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
       <PanelHeader
         actions={
           <PanelButton href={url({ cita: 'nueva', dia: diaElegido })} variant="primary">
-            Nueva cita
+            {t('Nueva cita', 'New appointment')}
           </PanelButton>
         }
         kicker="Planner"
-        meta={cuentaRegresiva(hoy, event.value.eventDate)}
-        title="Agenda"
+        meta={cuentaRegresiva(hoy, event.value.eventDate, t, locale)}
+        title={t('Agenda', 'Calendar')}
       />
 
       {q.cita === 'nueva' || editando ? (
@@ -116,7 +124,7 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
       ) : moviendo && (moviendo.clase === 'tarea' || moviendo.clase === 'pago') ? (
         <ReprogramarDialog cerrarEn={url()} entrada={moviendo} evento={evento} hoy={hoy} key={q.mover} />
       ) : diaElegido !== null ? (
-        <PanelDialog closeHref={url()} title={mayuscula(diaLargo(diaElegido))} width={560}>
+        <PanelDialog closeHref={url()} title={mayuscula(diaLargo(diaElegido, locale))} width={560}>
           <div className="flex flex-col gap-4">
             <ListaDeAgenda
               accion={(e) => marcar(e, trasMarcar(diaElegido))}
@@ -124,11 +132,11 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
               entradas={delDia}
               enlace={enlace}
               hoy={hoy}
-              vacio={{ titulo: 'Nada este día', texto: 'Agenda una cita: la prueba del vestido, una degustación, una visita al salón.' }}
+              vacio={{ titulo: t('Nada este día', 'Nothing this day'), texto: t('Agenda una cita: la prueba del vestido, una degustación, una visita al salón.', 'Book an appointment: the dress fitting, a tasting, a venue visit.') }}
             />
             <div className="flex justify-end border-t border-line-panel pt-4">
               <PanelButton href={url({ cita: 'nueva', dia: diaElegido })} variant="primary">
-                Agendar este día
+                {t('Agendar este día', 'Book this day')}
               </PanelButton>
             </div>
           </div>
@@ -141,15 +149,15 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
           role="status"
         >
           <span>
-            «{hecho.titulo}» {hecho.hecha ? (hecho.clase === 'pago' ? 'quedó pagado' : 'quedó hecha') : 'volvió a la agenda'}.
+            {t('«', '“')}{traducir(hecho.titulo, t)}{t('»', '”')} {hecho.hecha ? (hecho.clase === 'pago' ? t('quedó pagado', 'is paid') : t('quedó hecha', 'is done')) : t('volvió a la agenda', 'is back on the calendar')}.
           </span>
           <span className="flex items-center gap-2">
             {hecho.hecha ? (
               <MarcarEnLaAgenda despues={url({ dia: diaElegido, hecho: q.hecho ?? null })} entrada={hecho} evento={evento} hecha={false}>
-                Deshacer
+                {t('Deshacer', 'Undo')}
               </MarcarEnLaAgenda>
             ) : null}
-            <Link aria-label="Cerrar el aviso" className="grid size-9 place-items-center rounded-full text-ink-mute hover:bg-bg-top hover:text-ink" href={url({ dia: diaElegido })} scroll={false}>
+            <Link aria-label={t('Cerrar el aviso', 'Close the notice')} className="grid size-9 place-items-center rounded-full text-ink-mute hover:bg-bg-top hover:text-ink" href={url({ dia: diaElegido })} scroll={false}>
               ×
             </Link>
           </span>
@@ -157,13 +165,13 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
       ) : null}
 
       {atrasadas.length > 0 ? (
-        <PanelCard className="mb-4.5 border-l-4 border-l-pill-no-ink/70" title={`Atrasado · ${atrasadas.length}`}>
+        <PanelCard className="mb-4.5 border-l-4 border-l-pill-no-ink/70" title={`${t('Atrasado', 'Overdue')} · ${atrasadas.length}`}>
           <ListaDeAtrasadas
             accion={(e) => (
               <>
                 {marcar(e, trasMarcar(null))}
-                <PanelButton aria-label={`Cambiar la fecha de «${e.titulo}»`} href={url({ mover: `${e.clase}.${e.id}` })}>
-                  Cambiar fecha
+                <PanelButton aria-label={t(`Cambiar la fecha de «${e.titulo}»`, `Change the date of “${traducir(e.titulo, t)}”`)} href={url({ mover: `${e.clase}.${e.id}` })}>
+                  {t('Cambiar fecha', 'Change date')}
                 </PanelButton>
               </>
             )}
@@ -180,24 +188,24 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
             <div className="flex flex-wrap items-center gap-2">
               <SegmentedTabs
                 current={vista}
-                label="Cómo se ve la agenda"
+                label={t('Cómo se ve la agenda', 'How the calendar looks')}
                 segments={[
-                  { key: 'mes', label: 'Mes', href: url({ vista: 'mes' }) },
-                  { key: 'lista', label: 'Lista', href: url({ vista: 'lista' }) },
+                  { key: 'mes', label: t('Mes', 'Month'), href: url({ vista: 'mes' }) },
+                  { key: 'lista', label: t('Lista', 'List'), href: url({ vista: 'lista' }) },
                 ]}
               />
-              <nav aria-label="Cambiar de mes" className="flex items-center gap-1.5">
-                <PanelButton aria-label="Mes anterior" href={url({ mes: moverMes(mes, -1) })}>
+              <nav aria-label={t('Cambiar de mes', 'Change month')} className="flex items-center gap-1.5">
+                <PanelButton aria-label={t('Mes anterior', 'Previous month')} href={url({ mes: moverMes(mes, -1) })}>
                   ‹
                 </PanelButton>
-                <PanelButton href={url({ mes: hoy.slice(0, 7) })}>Hoy</PanelButton>
-                <PanelButton aria-label="Mes siguiente" href={url({ mes: moverMes(mes, 1) })}>
+                <PanelButton href={url({ mes: hoy.slice(0, 7) })}>{t('Hoy', 'Today')}</PanelButton>
+                <PanelButton aria-label={t('Mes siguiente', 'Next month')} href={url({ mes: moverMes(mes, 1) })}>
                   ›
                 </PanelButton>
               </nav>
             </div>
           }
-          title={mayuscula(nombreDelMes(mes))}
+          title={mayuscula(nombreDelMes(mes, locale))}
         >
           <div className="mb-4">
             <FiltrosDeAgenda enlace={(o) => url({ ocultar: o.join(',') || null })} ocultas={ocultas} />
@@ -211,9 +219,9 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
               enlace={enlace}
               hoy={hoy}
               vacio={{
-                titulo: `Nada en ${nombreDelMes(mes)}`,
-                texto: ocultas.length > 0 ? 'Hay tipos ocultos: tócalos arriba para volver a verlos.' : 'Lo que tenga fecha —tareas, pagos, citas— aparece aquí solo.',
-                accion: <PanelButton href={url({ cita: 'nueva' })}>Nueva cita</PanelButton>,
+                titulo: t(`Nada en ${nombreDelMes(mes)}`, `Nothing in ${nombreDelMes(mes, 'en')}`),
+                texto: ocultas.length > 0 ? t('Hay tipos ocultos: tócalos arriba para volver a verlos.', 'Some types are hidden: tap them above to show them again.') : t('Lo que tenga fecha —tareas, pagos, citas— aparece aquí solo.', 'Anything with a date —tasks, payments, appointments— shows up here on its own.'),
+                accion: <PanelButton href={url({ cita: 'nueva' })}>{t('Nueva cita', 'New appointment')}</PanelButton>,
               }}
             />
           )}
@@ -222,28 +230,28 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
         <div className="flex flex-col gap-4.5 min-[1200px]:sticky min-[1200px]:top-6">
           {vista === 'mes' ? (
             <>
-              <PanelCard title="Hoy">
+              <PanelCard title={t('Hoy', 'Today')}>
                 <ListaDeAgenda
                   accion={(e) => marcar(e, trasMarcar(null))}
                   agrupar={false}
                   entradas={deHoy}
                   enlace={enlace}
                   hoy={hoy}
-                  vacio={{ titulo: 'Nada para hoy', texto: proximas[0] ? `Lo próximo: ${proximas[0].titulo}, el ${diaLargo(proximas[0].dia)}.` : 'Disfruta el día.' }}
+                  vacio={{ titulo: t('Nada para hoy', 'Nothing for today'), texto: proximas[0] ? t(`Lo próximo: ${proximas[0].titulo}, el ${diaLargo(proximas[0].dia)}.`, `Up next: ${traducir(proximas[0].titulo, t)}, ${diaLargo(proximas[0].dia, 'en')}.`) : t('Disfruta el día.', 'Enjoy the day.') }}
                 />
               </PanelCard>
-              <PanelCard title="Lo que viene">
-                <ListaDeAgenda enlace={enlace} entradas={proximas} hoy={hoy} vacio={{ titulo: 'Nada en los próximos 14 días' }} />
+              <PanelCard title={t('Lo que viene', 'Coming up')}>
+                <ListaDeAgenda enlace={enlace} entradas={proximas} hoy={hoy} vacio={{ titulo: t('Nada en los próximos 14 días', 'Nothing in the next 14 days') }} />
               </PanelCard>
             </>
           ) : null}
-          <PanelCard title="Avisos">
+          <PanelCard title={t('Avisos', 'Notifications')}>
             <div className="flex flex-col gap-3 text-[13px] leading-relaxed text-ink-soft">
-              <p>Cada mañana a las 8:00 te aviso lo de hoy y de mañana —tareas, pagos, citas, ensayos y el cierre de confirmaciones—, lo que se atrasó y cuánto falta para tu evento.</p>
+              <p>{t('Cada mañana a las 8:00 te aviso lo de hoy y de mañana —tareas, pagos, citas, ensayos y el cierre de confirmaciones—, lo que se atrasó y cuánto falta para tu evento.', 'Every morning at 8:00 I let you know what’s on today and tomorrow —tasks, payments, appointments, rehearsals and the RSVP deadline—, what’s overdue and how long until your event.')}</p>
               <ActivarAvisos clavePublica={avisos.clavePublica} />
             </div>
           </PanelCard>
-          <PanelCard title="En tu teléfono">
+          <PanelCard title={t('En tu teléfono', 'On your phone')}>
             <SuscripcionAlCalendario evento={evento} />
           </PanelCard>
         </div>

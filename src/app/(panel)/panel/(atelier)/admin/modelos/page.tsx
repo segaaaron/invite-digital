@@ -12,8 +12,13 @@ import { PestanasDeAdmin } from '@/modules/admin'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { EyeIcon } from '@/shared/design/ui/icons'
 import { isErr } from '@/shared/result'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
-export const metadata = { title: 'Modelos · Administración' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Modelos · Administración', 'Designs · Administration') }
+}
 export const dynamic = 'force-dynamic'
 
 /**
@@ -37,6 +42,8 @@ const FILTROS = [
 ] as const
 
 export default async function AdminModelosPage({ searchParams }: { searchParams: Promise<{ filtro?: string }> }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   await requireAdmin()
   const pedido = (await searchParams).filtro
   const filtro = FILTROS.find((f) => f.key === pedido)?.key ?? 'todos'
@@ -82,16 +89,16 @@ export default async function AdminModelosPage({ searchParams }: { searchParams:
       <PanelHeader
         actions={
           <PanelButton className="max-[767px]:hidden" external href="/es">
-            <EyeIcon className="size-4" /> Ver la web
+            <EyeIcon className="size-4" /> {t('Ver la web', 'See the website')}
           </PanelButton>
         }
-        meta="Lo que vende la web: diseños, planes y extras."
+        meta={t('Lo que vende la web: diseños, planes y extras.', 'What the website sells: designs, plans and extras.')}
         pestanas={<PestanasDeAdmin />}
-        title="Catálogo"
+        title={t('Catálogo', 'Catalog')}
       />
 
       {/* Por fiesta a la izquierda; lo que no se vende, a la derecha (maqueta E05). */}
-      <nav aria-label="Mostrar" className="mb-7 flex flex-wrap items-center gap-2.5">
+      <nav aria-label={t('Mostrar', 'Show')} className="mb-7 flex flex-wrap items-center gap-2.5">
         {FILTROS.map((f, i) => {
           const n = cuenta(f.key)
           if (f.key !== 'todos' && n === 0 && filtro !== f.key) return null
@@ -102,7 +109,7 @@ export default async function AdminModelosPage({ searchParams }: { searchParams:
               href={f.key === 'todos' ? '/panel/admin/modelos' : `/panel/admin/modelos?filtro=${f.key}`}
               key={f.key}
             >
-              {f.label} {n}
+              {traducir(f.label, t)} {n}
             </Link>
           )
         })}
@@ -110,7 +117,7 @@ export default async function AdminModelosPage({ searchParams }: { searchParams:
 
       {isErr(musica) || isErr(publicacion) ? (
         <p className="text-[14px] text-danger" role="alert">
-          No pudimos leer los modelos. La base no responde; vuelve a intentarlo en un momento.
+          {t('No pudimos leer los modelos. La base no responde; vuelve a intentarlo en un momento.', 'We could not read the designs. The database is not responding; try again in a moment.')}
         </p>
       ) : (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-x-5.5 gap-y-7 max-[559px]:grid-cols-2 max-[559px]:gap-x-3.5">
@@ -118,7 +125,7 @@ export default async function AdminModelosPage({ searchParams }: { searchParams:
             <ShowcaseMusicRow
               key={tema.key}
               coverSrc={`/templates/${tema.key}.avif`}
-              fiesta={{ boda: 'Boda', xv: 'XV años', cumple: 'Cumpleaños' }[fiestaDe(tema.key)]}
+              fiesta={{ boda: t('Boda', 'Wedding'), xv: t('XV años', 'Quinceañera'), cumple: t('Cumpleaños', 'Birthday') }[fiestaDe(tema.key)]}
               label={tema.label}
               themeKey={tema.key}
               cancion={canciones[tema.key] ?? null}
@@ -127,7 +134,7 @@ export default async function AdminModelosPage({ searchParams }: { searchParams:
               publicado={publicacion.value[tema.key] ?? false}
               ventas={(() => {
                 const v = ventas.get(tema.key)
-                return { veces: v?.veces ?? 0, ultima: v?.ultima == null ? null : hace(v.ultima, ahora) }
+                return { veces: v?.veces ?? 0, ultima: v?.ultima == null ? null : hace(v.ultima, ahora, locale) }
               })()}
             />
           ))}
@@ -137,9 +144,11 @@ export default async function AdminModelosPage({ searchParams }: { searchParams:
       <div className="mt-8">
         <Ayuda>
           <p>
-            La canción de cada modelo suena en su muestra de <span className="font-mono">/modelos</span>, no en las invitaciones de los clientes, que
-            tienen la suya. Sube la canción entera, en MP3, M4A o WAV: se ajusta sola en un MP3 ligero y suena en bucle hasta que quien mira el modelo
-            la pausa. Si la grabación tiene dueño, publicarla es responsabilidad del atelier.
+            {t('La canción de cada modelo suena en su muestra de', 'Each design’s song plays in its sample at')} <span className="font-mono">/modelos</span>
+            {t(
+              ', no en las invitaciones de los clientes, que tienen la suya. Sube la canción entera, en MP3, M4A o WAV: se ajusta sola en un MP3 ligero y suena en bucle hasta que quien mira el modelo la pausa. Si la grabación tiene dueño, publicarla es responsabilidad del atelier.',
+              ', not in the clients’ invitations, which have their own. Upload the whole song, in MP3, M4A or WAV: it is adjusted automatically into a light MP3 and loops until whoever views the design pauses it. If the recording has an owner, publishing it is the atelier’s responsibility.',
+            )}
           </p>
         </Ayuda>
       </div>

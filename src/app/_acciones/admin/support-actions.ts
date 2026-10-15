@@ -8,6 +8,7 @@ import { requireAdmin, requireSession, SESSION_COOKIE } from '@/app/_acciones/se
 import { campo } from '@/shared/forms/campo'
 import { isErr } from '@/shared/result'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 // ============================================================================
 // Modo soporte: el admin entra **como el cliente** a su evento, sin conocer su contraseña, y regresa
@@ -40,18 +41,19 @@ async function sesionActual(): Promise<string | null> {
  * anfitrión de **ese** evento (`0091`). Con cliente, como él.
  */
 export async function enterAsClientAction(input: { eventId: string; clientUserId: string | null }): Promise<Navegar> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const evento = await events.getByIdUnscoped(input.eventId)
-  if (isErr(evento)) return { status: 'error', message: 'Ese evento ya no existe.' }
+  if (isErr(evento)) return { status: 'error', message: t('Ese evento ya no existe.', 'That event no longer exists.') }
 
   let como = 'anfitrión (sin cliente)'
   if (input.clientUserId !== null) {
     // Solo como **el anfitrión de ese evento**: el id llega del navegador y no se le cree.
     const clases = await events.staff.membershipsOf(evento.value.id, input.clientUserId)
-    if (!clases.includes('cliente')) return { status: 'error', message: 'Esa persona no es anfitriona de este evento.' }
+    if (!clases.includes('cliente')) return { status: 'error', message: t('Esa persona no es anfitriona de este evento.', 'That person is not a host of this event.') }
     const cliente = await identity.actorOf(input.clientUserId)
-    if (cliente === null) return { status: 'error', message: 'Esa cuenta ya no existe.' }
+    if (cliente === null) return { status: 'error', message: t('Esa cuenta ya no existe.', 'That account no longer exists.') }
     como = cliente.email
   }
 
@@ -85,19 +87,20 @@ export async function leaveSupportAction(): Promise<Navegar> {
  * correo no salió, y una sola vez.
  */
 export async function resetClientAccessAction(_previo: SupportState, fd: FormData): Promise<SupportState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const evento = await events.getByIdUnscoped(campo(fd, 'eventId'))
-  if (isErr(evento)) return { status: 'error', message: 'Ese evento ya no existe.' }
+  if (isErr(evento)) return { status: 'error', message: t('Ese evento ya no existe.', 'That event no longer exists.') }
   const clientUserId = campo(fd, 'clientUserId')
   if (!(await events.staff.membershipsOf(evento.value.id, clientUserId)).includes('cliente')) {
-    return { status: 'error', message: 'Esa persona no es anfitriona de esta boda.' }
+    return { status: 'error', message: t('Esa persona no es anfitriona de esta boda.', 'That person is not a host of this wedding.') }
   }
 
   const hecho = await identity.resetClientAccess(clientUserId)
   if (isErr(hecho)) {
     registrarFallo('admin/support-actions', 'restablecer acceso rechazado', hecho.error.kind, hecho.error.detail)
-    return { status: 'error', message: 'No se pudo restablecer ese acceso.' }
+    return { status: 'error', message: t('No se pudo restablecer ese acceso.', 'That access couldn’t be reset.') }
   }
 
   await admin.record(actor, { action: 'acceso.restablecido', subject: evento.value.slug, detail: hecho.value.email })
@@ -110,6 +113,6 @@ export async function resetClientAccessAction(_previo: SupportState, fd: FormDat
   }
 
   return avisado
-    ? { status: 'success', message: `Le mandamos a ${hecho.value.email} una contraseña provisional. La cambia al entrar.` }
-    : { status: 'success', message: `El correo no salió. Pásale esta contraseña provisional a ${hecho.value.email}; no se vuelve a mostrar.`, password: hecho.value.password }
+    ? { status: 'success', message: t(`Le mandamos a ${hecho.value.email} una contraseña provisional. La cambia al entrar.`, `We sent ${hecho.value.email} a temporary password. They change it when signing in.`) }
+    : { status: 'success', message: t(`El correo no salió. Pásale esta contraseña provisional a ${hecho.value.email}; no se vuelve a mostrar.`, `The email didn’t go out. Give ${hecho.value.email} this temporary password; it won’t be shown again.`), password: hecho.value.password }
 }

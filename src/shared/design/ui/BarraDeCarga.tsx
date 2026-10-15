@@ -3,6 +3,7 @@
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * La barra fina de arriba que dice «ya va» al pulsar un enlace.
@@ -61,9 +62,10 @@ export function BarraDeCarga({ esqueleto = false }: { esqueleto?: boolean }) {
 }
 
 function Esqueleto() {
+  const t = useT()
   const bloque = 'rounded-[8px] bg-line-panel/55 motion-safe:animate-pulse'
   return (
-    <div aria-busy="true" aria-label="Cargando" className="absolute inset-0 z-20 overflow-hidden bg-bg px-6 pt-10 min-[1280px]:px-12" role="status">
+    <div aria-busy="true" aria-label={t('Cargando', 'Loading')} className="absolute inset-0 z-20 overflow-hidden bg-bg px-6 pt-10 min-[1280px]:px-12" role="status">
       <div className={`${bloque} h-10 w-[280px] max-w-[70%]`} />
       <div className={`${bloque} mt-3 h-3.5 w-[460px] max-w-[90%]`} />
       <div className="mt-10 grid grid-cols-4 gap-6 max-[767px]:grid-cols-2">

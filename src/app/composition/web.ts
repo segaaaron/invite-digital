@@ -16,6 +16,26 @@ import { drizzleConsultationInbox } from '@/modules/leads/infrastructure/drizzle
 import { lecturaCacheada, ETIQUETAS_WEB } from '@/shared/cache/lectura-cacheada'
 import { leerSitio } from './base'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { eq } from 'drizzle-orm'
+import { db } from '@/shared/db/client'
+import { users } from '@/shared/db/schema'
+import { isLocale, type Locale } from '@/shared/i18n/locales'
+import { idiomaDeLaPeticion } from '@/shared/i18n/idioma-servidor'
+
+/**
+ * El idioma de quien recibe un correo: el de su cuenta (`users.locale`, el de su aparato al entrar). Sin cuenta
+ * o sin haber entrado nunca, `porDefecto`. Nunca lanza: un correo no se pierde por no saber el idioma.
+ */
+async function idiomaDelCorreo(correo: string, porDefecto: () => Promise<Locale> | Locale): Promise<Locale> {
+  try {
+    const fila = await db.select({ locale: users.locale }).from(users).where(eq(users.email, correo.trim())).limit(1)
+    const valor = fila[0]?.locale ?? null
+    if (valor !== null && isLocale(valor)) return valor
+  } catch {
+    // Sin base, el idioma por defecto.
+  }
+  return porDefecto()
+}
 
 export const catalog = {
   listPlans: listPlans({ plans: drizzlePlanRepository }),
@@ -77,6 +97,8 @@ export const notifications = {
         minutos: 10,
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
         siteUrl: sitioPublicoUrl,
+        // Quien pide el código está en esta petición: su aparato, si la cuenta aún no lo guardó.
+        locale: await idiomaDelCorreo(input.to, idiomaDeLaPeticion),
       }),
     }),
   sendClientAccess: async (input: { to: string; password: string | null; eventTitle: string }) =>
@@ -89,6 +111,8 @@ export const notifications = {
         panelUrl: `${sitioPublicoUrl}/panel/entrar`,
         siteUrl: sitioPublicoUrl,
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
+        // La petición es del admin, no de quien lo recibe: sin cuenta suya con idioma, español (el mercado es Bolivia).
+        locale: await idiomaDelCorreo(input.to, () => 'es'),
       }),
     }),
   /** El acceso de quien se da de alta en Ajustes › Equipo. Devuelve booleano y no lanza. */
@@ -102,6 +126,7 @@ export const notifications = {
         panelUrl: `${sitioPublicoUrl}/panel/entrar`,
         siteUrl: sitioPublicoUrl,
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
+        locale: await idiomaDelCorreo(input.to, () => 'es'),
       }),
     }),
 } as const

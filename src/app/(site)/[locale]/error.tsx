@@ -1,17 +1,19 @@
 'use client'
 
 import { PantallaDeError } from '@/shared/design/ui/PantallaDeError'
+import { useIdioma, useT } from '@/shared/i18n/idioma-navegador'
 
-/** La web pública: en español y en inglés, porque aquí no se sabe si el idioma cargó. */
 export default function ErrorDeLaWeb({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const t = useT()
+  const locale = useIdioma()
   return (
     <PantallaDeError
       error={error}
-      reintentar="Volver a intentar · Try again"
+      reintentar={t('Volver a intentar', 'Try again')}
       reset={reset}
-      salida={{ href: '/', rotulo: 'Inicio · Home' }}
-      texto="No se pudo cargar esta página. Vuelve a intentarlo en un momento. — This page couldn't load; please try again."
-      titulo="Algo no salió bien"
+      salida={{ href: `/${locale}`, rotulo: t('Inicio', 'Home') }}
+      texto={t('No se pudo cargar esta página. Vuelve a intentarlo en un momento.', 'This page couldn’t load. Please try again in a moment.')}
+      titulo={t('Algo no salió bien', 'Something went wrong')}
     />
   )
 }

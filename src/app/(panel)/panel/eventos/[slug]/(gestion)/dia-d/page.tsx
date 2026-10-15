@@ -13,11 +13,16 @@ import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { ScanIcon } from '@/shared/design/ui/icons'
 import { AccionDeLaIsla } from '@/shared/design/ui/panel/AccionDeLaIsla'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Día D' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Día D', 'D-Day') }
+}
 export const dynamic = 'force-dynamic'
 
 export default async function DiaDPage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const event = await events.getFor(actor, slug, { section: 'planner' })
@@ -26,7 +31,7 @@ export default async function DiaDPage({ params }: { params: Promise<{ slug: str
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerTotal'))) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El Día D en el teléfono viene con Imperial." title="Día D" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El Día D en el teléfono viene con Imperial." title={t('Día D', 'D-Day')} />
   }
 
   const ahora = new Date()
@@ -69,7 +74,7 @@ export default async function DiaDPage({ params }: { params: Promise<{ slug: str
             .slice(0, 5)
             .map((a) => ({
               id: a.guestGroupId,
-              nombre: estadoPuerta.groups.find((g) => g.id === a.guestGroupId)?.label ?? 'Invitación',
+              nombre: estadoPuerta.groups.find((g) => g.id === a.guestGroupId)?.label ?? t('Invitación', 'Invitation'),
               cuantos: a.arrivedCount,
               hora: horaEnBolivia(a.arrivedAt),
             })),
@@ -102,12 +107,12 @@ export default async function DiaDPage({ params }: { params: Promise<{ slug: str
         <>
           <p className="mb-2 max-[767px]:hidden">
             <Pill tone="ok">
-              <span aria-hidden className="size-1.5 rounded-full bg-current" /> En vivo
+              <span aria-hidden className="size-1.5 rounded-full bg-current" /> {t('En vivo', 'Live')}
             </Pill>
           </p>
           <AccionDeLaIsla>
             <Pill tone="ok">
-              <span aria-hidden className="size-1.5 rounded-full bg-current" /> En vivo
+              <span aria-hidden className="size-1.5 rounded-full bg-current" /> {t('En vivo', 'Live')}
             </Pill>
           </AccionDeLaIsla>
         </>
@@ -116,12 +121,12 @@ export default async function DiaDPage({ params }: { params: Promise<{ slug: str
         actions={
           <span className="max-[767px]:hidden">
             <PanelButton href={dia.ingreso}>
-              <ScanIcon className="size-4" /> Ingreso al evento
+              <ScanIcon className="size-4" /> {t('Ingreso al evento', 'Event check-in')}
             </PanelButton>
           </span>
         }
-        meta={enDia ? undefined : 'El día de la fiesta, en vivo: qué pasa ahora, qué sigue, quién llegó y qué proveedor falta.'}
-        title="Día D"
+        meta={enDia ? undefined : t('El día de la fiesta, en vivo: qué pasa ahora, qué sigue, quién llegó y qué proveedor falta.', 'The day of the party, live: what’s happening now, what’s next, who arrived and which vendor is missing.')}
+        title={t('Día D', 'D-Day')}
       />
       <DayOfBoard dia={dia} evento={{ eventId: event.value.id, eventSlug: event.value.slug }} />
     </>

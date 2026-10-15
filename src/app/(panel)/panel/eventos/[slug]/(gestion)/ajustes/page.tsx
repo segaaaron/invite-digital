@@ -17,8 +17,12 @@ import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { FONT_VARIABLES } from '@/shared/design/font-manifest'
 import { themeFonts } from '@/shared/design/fonts'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Configuración' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Configuración', 'Settings') }
+}
 export const dynamic = 'force-dynamic'
 
 const DIA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
@@ -32,6 +36,7 @@ const DIA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', 
  * más, en la ficha del evento.
  */
 export default async function AjustesDelEventoPage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const event = await events.getFor(actor, slug, { section: 'configuracion' })
@@ -63,34 +68,34 @@ export default async function AjustesDelEventoPage({ params }: { params: Promise
 
   return (
     <>
-      <PanelHeader meta="Los datos del evento y lo que acompaña a tu invitación." title="Configuración" />
+      <PanelHeader meta={t('Los datos del evento y lo que acompaña a tu invitación.', 'The event details and what goes with your invitation.')} title={t('Configuración', 'Settings')} />
       <div className="grid items-start gap-6 min-[1100px]:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-6">
-          <PanelCard title="Datos del evento">
+          <PanelCard title={t('Datos del evento', 'Event details')}>
             <NombreDelEvento eventId={event.value.id} title={event.value.title} />
             <p className="mt-4 text-[13.5px] text-ink-mute">
-              La fecha, el idioma y el diseño los cambia el atelier: escríbenos si hace falta.
+              {t('La fecha, el idioma y el diseño los cambia el atelier: escríbenos si hace falta.', 'The date, language and design are changed by the atelier: message us if needed.')}
             </p>
           </PanelCard>
 
-          <PanelCard title="Mensaje de las invitaciones">
+          <PanelCard title={t('Mensaje de las invitaciones', 'Invitation message')}>
             {/* Así sale por WhatsApp; el nombre de cada invitado y su enlace se ponen solos. */}
             <blockquote className="m-0 rounded-[12px] bg-bg px-4.5 py-4 font-display text-[16px] leading-relaxed whitespace-pre-line italic" data-cita>
               «{muestra.replace('…', '').trim()}»
             </blockquote>
             <div className="mt-4">
-              <PanelButton href={`${base}/invitados?panel=envio`}>Ver cómo sale al enviar</PanelButton>
+              <PanelButton href={`${base}/invitados?panel=envio`}>{t('Ver cómo sale al enviar', 'See how it goes out')}</PanelButton>
             </div>
           </PanelCard>
 
-          <PanelCard title="Preguntas al confirmar">
+          <PanelCard title={t('Preguntas al confirmar', 'RSVP questions')}>
             <PreguntasAlConfirmar eventId={event.value.id} eventSlug={event.value.slug} preguntas={preguntas} />
           </PanelCard>
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
           {tema.estilo === undefined ? null : (
-            <PanelCard title="Colores y letra">
+            <PanelCard title={t('Colores y letra', 'Colors and lettering')}>
               <EstiloDelEventoCard
                 acentoDelDiseno={tema.estilo.acento?.principal ?? null}
                 acentos={tema.estilo.acento === undefined ? [] : acentosPara(tema.estilo.acento)}
@@ -105,7 +110,7 @@ export default async function AjustesDelEventoPage({ params }: { params: Promise
             </PanelCard>
           )}
 
-          <PanelCard title="Save the date">
+          <PanelCard title={t('Save the date', 'Save the date')}>
             <SaveTheDateCard
               disponible={comprado}
               eventId={event.value.id}

@@ -2,6 +2,9 @@ import { notFound } from 'next/navigation'
 import { events, planner, plans } from '@/app/composition/container'
 import { yaSeCelebro } from '@/modules/events'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { fecha } from '@/shared/format/fecha'
+import { idiomaDeLaPeticion } from '@/shared/i18n/idioma-servidor'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +16,8 @@ export const dynamic = 'force-dynamic'
  */
 export default async function VendorPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   const vista = await planner.dia.viewAsVendor(token)
   if (vista === null) notFound()
   if (isErr(await plans.requireFeature(vista.eventId, 'plannerTotal'))) notFound()
@@ -27,20 +32,20 @@ export default async function VendorPage({ params }: { params: Promise<{ token: 
         <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">{proveedor.service}</p>
         <h1 className="font-display text-[30px] leading-tight font-light text-ink">{evento.value.title}</h1>
         <p className="text-[14px] text-ink-soft">
-          {evento.value.eventDate}
+          {fecha(new Date(`${evento.value.eventDate}T12:00:00Z`), locale)}
           {evento.value.venue ? ` · ${evento.value.venue}` : ''}
         </p>
       </header>
 
       <section className="flex flex-col gap-2 rounded-[18px] border border-line bg-bg-raised p-5">
-        <p className="text-[15px] text-ink">{proveedor.arrivalTime ? `Llegas a las ${proveedor.arrivalTime}` : 'Hora de llegada por confirmar'}</p>
+        <p className="text-[15px] text-ink">{proveedor.arrivalTime ? t(`Llegas a las ${proveedor.arrivalTime}`, `You arrive at ${proveedor.arrivalTime}`) : t('Hora de llegada por confirmar', 'Arrival time to be confirmed')}</p>
         {proveedor.setupNotes ? <p className="text-[14px] leading-[1.6] whitespace-pre-line text-ink-soft">{proveedor.setupNotes}</p> : null}
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-display text-[22px] font-light text-ink">Tus momentos</h2>
+        <h2 className="font-display text-[22px] font-light text-ink">{t('Tus momentos', 'Your moments')}</h2>
         {momentos.length === 0 ? (
-          <p className="text-[14px] text-ink-mute">Todavía no te asignaron momentos del cronograma.</p>
+          <p className="text-[14px] text-ink-mute">{t('Todavía no te asignaron momentos del cronograma.', 'You have not been assigned schedule moments yet.')}</p>
         ) : (
           <ol className="flex flex-col">
             {momentos.map((m) => (
@@ -49,7 +54,7 @@ export default async function VendorPage({ params }: { params: Promise<{ token: 
                 <span className="flex min-w-0 flex-col">
                   <span className="text-[15px] text-ink">{m.title}</span>
                   <span className="text-[12px] text-ink-mute">
-                    {[`${m.durationMin} min`, m.place, m.cue ? `♪ ${m.cue}` : null, m.owner ? `a cargo de ${m.owner}` : null].filter(Boolean).join(' · ')}
+                    {[`${m.durationMin} min`, m.place, m.cue ? `♪ ${m.cue}` : null, m.owner ? t(`a cargo de ${m.owner}`, `led by ${m.owner}`) : null].filter(Boolean).join(' · ')}
                   </span>
                 </span>
               </li>

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRef, useState, type ReactNode } from 'react'
 import { ArrowLeftIcon, MusicIcon } from '@/shared/design/ui/icons'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * «Ver invitación» desde el panel (E56): arriba volver, a quién se la estamos enseñando y si en el celular o en la
@@ -10,6 +11,7 @@ import { ArrowLeftIcon, MusicIcon } from '@/shared/design/ui/icons'
  * de un teléfono, con la pantalla alrededor: eso es lo que se enseña.
  */
 export function VistaPreviaDelPanel({ children, volver, invitado, fuentes }: { children: ReactNode; volver: string; invitado: string; fuentes: string }) {
+  const t = useT()
   const [aparato, setAparato] = useState<'celular' | 'computadora'>('celular')
   const [sonando, setSonando] = useState(false)
   const [sinCancion, setSinCancion] = useState(false)
@@ -41,12 +43,12 @@ export function VistaPreviaDelPanel({ children, volver, invitado, fuentes }: { c
             }
           }}
         >
-          <ArrowLeftIcon className="size-4" /> <span className="max-[559px]:sr-only">Volver al panel</span>
+          <ArrowLeftIcon className="size-4" /> <span className="max-[559px]:sr-only">{t('Volver al panel', 'Back to the panel')}</span>
         </Link>
         <p className="min-w-0 flex-1 truncate text-center text-[14.5px] text-shell-ink/75">
-          Así la ve {invitado} en su {aparato}
+          {t(`Así la ve ${invitado} en su ${aparato}`, `How ${invitado} sees it on their ${aparato === 'celular' ? 'phone' : 'computer'}`)}
         </p>
-        <div aria-label="Ver en" className="flex rounded-[12px] bg-shell-ink/10 p-1" role="group">
+        <div aria-label={t('Ver en', 'View on')} className="flex rounded-[12px] bg-shell-ink/10 p-1" role="group">
           {(['celular', 'computadora'] as const).map((a) => (
             <button
               aria-pressed={aparato === a}
@@ -55,7 +57,7 @@ export function VistaPreviaDelPanel({ children, volver, invitado, fuentes }: { c
               onClick={() => setAparato(a)}
               type="button"
             >
-              {a}
+              {a === 'celular' ? t('celular', 'phone') : t('computadora', 'computer')}
             </button>
           ))}
         </div>
@@ -91,17 +93,17 @@ export function VistaPreviaDelPanel({ children, volver, invitado, fuentes }: { c
 
       <footer className="flex items-center justify-center gap-3 px-4 pt-1 pb-4 text-[14px] text-shell-ink/75">
         {sinCancion ? (
-          <span>Esta invitación todavía no tiene canción.</span>
+          <span>{t('Esta invitación todavía no tiene canción.', 'This invitation doesn’t have a song yet.')}</span>
         ) : (
           <>
-            <span>Con sonido:</span>
+            <span>{t('Con sonido:', 'With sound:')}</span>
             <button
               aria-pressed={sonando}
               className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-[10px] border border-shell-ink/25 px-4 font-medium text-shell-ink hover:border-gold"
               onClick={escuchar}
               type="button"
             >
-              <MusicIcon className="size-4" /> {sonando ? 'Pausar la canción' : 'Escuchar la canción'}
+              <MusicIcon className="size-4" /> {sonando ? t('Pausar la canción', 'Pause the song') : t('Escuchar la canción', 'Play the song')}
             </button>
           </>
         )}

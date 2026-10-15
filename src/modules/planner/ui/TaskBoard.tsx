@@ -18,10 +18,13 @@ import type { EstadoDeTarea, Responsable, Tarea } from '../domain/tareas'
 import { Accion, type Evento, Ocultos } from './Accion'
 import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 const INICIAL: PlannerActionState = { status: 'idle' }
 
-export const NOMBRE_RESPONSABLE: Record<Responsable, string> = { anfitrion: 'Anfitriones', planner: 'Planner', familia: 'Familia' }
+export const nombreResponsable = (t: T): Record<Responsable, string> => ({ anfitrion: t('Anfitriones', 'Hosts'), planner: 'Planner', familia: t('Familia', 'Family') })
 
 export type TareaVista = Omit<Tarea, 'doneAt'> & {
   readonly estado: EstadoDeTarea
@@ -43,30 +46,31 @@ const valoresDeTarea = (tarea: TareaVista | undefined, enviados: Record<string, 
     : { title: tarea?.title ?? '', stage: tarea?.stage ?? '', dueDate: tarea?.dueDate ?? '', assignee: tarea?.assignee ?? 'anfitrion', notes: tarea?.notes ?? '' }
 
 function CamposDeTarea({ etapas, inicial }: { etapas: readonly Etapa[]; inicial: ValoresTarea }) {
+  const t = useT()
   const id = useId()
   return (
     <div className="grid gap-3 min-[560px]:grid-cols-2">
-      <Field htmlFor={`${id}-t`} label="Tarea">
+      <Field htmlFor={`${id}-t`} label={t('Tarea', 'Task')}>
         <input className={FIELD_CLASS} defaultValue={inicial.title} id={`${id}-t`} maxLength={200} name="title" required />
       </Field>
-      <Field htmlFor={`${id}-e`} label="Etapa">
+      <Field htmlFor={`${id}-e`} label={t('Etapa', 'Stage')}>
         <select className={FIELD_CLASS} defaultValue={inicial.stage || etapas[0]?.clave} id={`${id}-e`} name="stage">
           {etapas.map((e) => (
             <option key={e.clave} value={e.clave}>
-              {e.nombre}
+              {traducir(e.nombre, t)}
             </option>
           ))}
-          <option value="propias">Tareas propias</option>
+          <option value="propias">{t('Tareas propias', 'Own tasks')}</option>
         </select>
       </Field>
-      <Field htmlFor={`${id}-f`} label="Vence">
+      <Field htmlFor={`${id}-f`} label={t('Vence', 'Due')}>
         <CampoFecha defaultValue={inicial.dueDate} id={`${id}-f`} name="dueDate" />
       </Field>
-      <Field htmlFor={`${id}-r`} label="Se encarga">
+      <Field htmlFor={`${id}-r`} label={t('Se encarga', 'In charge')}>
         <select className={FIELD_CLASS} defaultValue={inicial.assignee} id={`${id}-r`} name="assignee">
-          {(Object.keys(NOMBRE_RESPONSABLE) as Responsable[]).map((r) => (
+          {(Object.keys(nombreResponsable(t)) as Responsable[]).map((r) => (
             <option key={r} value={r}>
-              {NOMBRE_RESPONSABLE[r]}
+              {nombreResponsable(t)[r]}
             </option>
           ))}
         </select>
@@ -77,9 +81,11 @@ function CamposDeTarea({ etapas, inicial }: { etapas: readonly Etapa[]; inicial:
 
 /** La casilla de la tarea (E12): marcarla la cierra, desmarcarla la reabre. Su propio formulario. */
 function Casilla({ tarea, evento }: { tarea: TareaVista; evento: Evento }) {
+  const t = useT()
   const [estado, enviar, enviando] = useActionState(sinCaerse(toggleTaskAction), INICIAL)
   const hecha = tarea.estado === 'hecha'
-  const label = hecha ? `Reabrir «${tarea.title}»` : `Marcar hecha «${tarea.title}»`
+  const titulo = traducir(tarea.title, t)
+  const label = hecha ? t(`Reabrir «${tarea.title}»`, `Reopen “${titulo}”`) : t(`Marcar hecha «${tarea.title}»`, `Mark done “${titulo}”`)
   return (
     <form action={enviar} className="flex shrink-0 flex-col">
       <Ocultos {...evento} extra={{ taskId: tarea.id }} />
@@ -107,6 +113,7 @@ function Casilla({ tarea, evento }: { tarea: TareaVista; evento: Evento }) {
 }
 
 function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Evento; etapas: readonly Etapa[] }) {
+  const t = useT()
   const [edicion, guardar, guardando] = useActionState(sinCaerse(editTaskAction), INICIAL)
   const id = useId()
   const enviados = edicion.status === 'error' ? edicion.valores : undefined
@@ -117,7 +124,7 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
     <li aria-label={tarea.title} className="group/fila relative border-b border-line-panel py-3.5">
       <div className="flex items-center gap-3">
         {tarea.porLaApp ? (
-          <span className="grid size-11 shrink-0 place-items-center" title="Resuelta en su pantalla">
+          <span className="grid size-11 shrink-0 place-items-center" title={t('Resuelta en su pantalla', 'Solved on its screen')}>
             <span className="grid size-6 place-items-center rounded-[6px] bg-ink-mute text-white">
               <CheckIcon className="size-3.5" />
             </span>
@@ -126,10 +133,10 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
           <Casilla evento={evento} tarea={tarea} />
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className={`text-[15px] font-medium ${hecha ? 'text-ink-mute line-through' : 'text-ink'}`}>{tarea.title}</span>
+          <span className={`text-[15px] font-medium ${hecha ? 'text-ink-mute line-through' : 'text-ink'}`}>{traducir(tarea.title, t)}</span>
           <span className="text-[13.5px] text-ink-mute">
-            {NOMBRE_RESPONSABLE[tarea.assignee]}
-            {tarea.porLaApp ? ' · resuelta en su pantalla' : ''}
+            {nombreResponsable(t)[tarea.assignee]}
+            {tarea.porLaApp ? t(' · resuelta en su pantalla', ' · solved on its screen') : ''}
           </span>
         </div>
         {tarea.atajo && !hecha ? (
@@ -146,31 +153,31 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
         <details className="group ml-14">
           {/* En escritorio aparece al pasar por la fila, sin sumarle alto; en el celular, siempre a la vista. */}
           <summary className="inline-flex min-h-8 max-[767px]:min-h-11 cursor-pointer list-none items-center text-[12.5px] text-ink-mute hover:text-ink focus-visible:opacity-100 min-[860px]:absolute min-[860px]:right-0 min-[860px]:bottom-0 min-[860px]:min-h-6 min-[860px]:opacity-0 min-[860px]:group-hover/fila:opacity-100 min-[860px]:group-open:opacity-100 [&::-webkit-details-marker]:hidden">
-            Editar, mover o quitar
+            {t('Editar, mover o quitar', 'Edit, move or remove')}
           </summary>
           <div className="mt-3 flex flex-col gap-3 pb-1">
             <form action={guardar} className="flex flex-col gap-3">
               <Ocultos {...evento} extra={extra} />
               <div className="flex flex-col gap-3" key={enviados ? JSON.stringify(enviados) : 'base'}>
                 <CamposDeTarea etapas={etapas} inicial={valoresDeTarea(tarea, enviados)} />
-                <Field htmlFor={`${id}-n`} label="Notas">
+                <Field htmlFor={`${id}-n`} label={t('Notas', 'Notes')}>
                   <textarea className={FIELD_CLASS} defaultValue={valoresDeTarea(tarea, enviados).notes} id={`${id}-n`} maxLength={2000} name="notes" rows={2} />
                 </Field>
               </div>
               <ActionFeedback errorsOnly state={edicion} />
               <div>
-                <SubmitButton variant="default" pending={guardando} pendingLabel={'Guardando…'}>{'Guardar tarea'}</SubmitButton>
+                <SubmitButton variant="default" pending={guardando} pendingLabel={t('Guardando…', 'Saving…')}>{t('Guardar tarea', 'Save task')}</SubmitButton>
               </div>
             </form>
             <div className="flex flex-wrap gap-2">
-              <Accion action={moveTaskAction} evento={evento} extra={{ ...extra, dir: 'arriba' }} label={`Subir «${tarea.title}»`}>
-                Subir
+              <Accion action={moveTaskAction} evento={evento} extra={{ ...extra, dir: 'arriba' }} label={t(`Subir «${tarea.title}»`, `Move up “${traducir(tarea.title, t)}”`)}>
+                {t('Subir', 'Up')}
               </Accion>
-              <Accion action={moveTaskAction} evento={evento} extra={{ ...extra, dir: 'abajo' }} label={`Bajar «${tarea.title}»`}>
-                Bajar
+              <Accion action={moveTaskAction} evento={evento} extra={{ ...extra, dir: 'abajo' }} label={t(`Bajar «${tarea.title}»`, `Move down “${traducir(tarea.title, t)}”`)}>
+                {t('Bajar', 'Down')}
               </Accion>
-              <Accion action={removeTaskAction} evento={evento} extra={extra} label={`Quitar «${tarea.title}»`} variant="danger">
-                Quitar
+              <Accion action={removeTaskAction} evento={evento} extra={extra} label={t(`Quitar «${tarea.title}»`, `Remove “${traducir(tarea.title, t)}”`)} variant="danger">
+                {t('Quitar', 'Remove')}
               </Accion>
             </div>
           </div>
@@ -193,14 +200,15 @@ export function TaskBoard({
   grupos,
   filtrando,
 }: Evento & { etapas: readonly Etapa[]; grupos: readonly GrupoDeTareas[]; filtrando: boolean }) {
+  const t = useT()
   const evento = { eventId, eventSlug }
   const conTareas = grupos.filter((g) => g.tareas.length > 0)
 
   if (conTareas.length === 0) {
     return filtrando ? (
-      <EmptyState compact title="Nada en este filtro" />
+      <EmptyState compact title={t('Nada en este filtro', 'Nothing in this filter')} />
     ) : (
-      <EmptyState description="Suma lo que tienes que hacer antes de la fiesta, con su fecha y quién se encarga." icon={<CheckIcon />} title="Tu plan de tareas está en blanco" />
+      <EmptyState description={t('Suma lo que tienes que hacer antes de la fiesta, con su fecha y quién se encarga.', 'Add what you need to do before the party, with its date and who is in charge.')} icon={<CheckIcon />} title={t('Tu plan de tareas está en blanco', 'Your task plan is empty')} />
     )
   }
 
@@ -210,8 +218,8 @@ export function TaskBoard({
         <section aria-label={g.titulo} key={g.clave}>
           <h2 className={`border-b border-line-panel pb-2.5 font-display text-[24px] font-medium ${g.atrasada ? 'text-danger-deep' : 'text-ink'}`}>{g.titulo}</h2>
           <ul className="flex flex-col">
-            {g.tareas.map((t) => (
-              <FilaDeTarea etapas={etapas} evento={evento} key={t.id} tarea={t} />
+            {g.tareas.map((tarea) => (
+              <FilaDeTarea etapas={etapas} evento={evento} key={tarea.id} tarea={tarea} />
             ))}
           </ul>
         </section>
@@ -222,15 +230,16 @@ export function TaskBoard({
 
 /** Sumar una tarea propia. */
 export function NewTaskForm({ eventId, eventSlug, etapas }: Evento & { etapas: readonly Etapa[] }) {
+  const t = useT()
   const [estado, enviar, enviando] = useActionState(sinCaerse(addTaskAction), INICIAL)
   return (
     <form action={enviar} className="flex flex-col gap-3">
       <Ocultos eventId={eventId} eventSlug={eventSlug} />
       <CamposDeTarea etapas={etapas} inicial={valoresDeTarea(undefined, estado.status === 'error' ? estado.valores : undefined)} key={estado.status === 'error' ? JSON.stringify(estado.valores) : 'base'} />
       <ActionFeedback errorsOnly state={estado} />
-      {estado.status === 'success' ? <PanelAlert tone="ok">Tarea añadida.</PanelAlert> : null}
+      {estado.status === 'success' ? <PanelAlert tone="ok">{t('Tarea añadida.', 'Task added.')}</PanelAlert> : null}
       <div className="flex justify-end">
-        <SubmitButton variant="primary" pending={enviando} pendingLabel={'Añadiendo…'}>{'Añadir tarea'}</SubmitButton>
+        <SubmitButton variant="primary" pending={enviando} pendingLabel={t('Añadiendo…', 'Adding…')}>{t('Añadir tarea', 'Add task')}</SubmitButton>
       </div>
     </form>
   )
@@ -238,11 +247,12 @@ export function NewTaskForm({ eventId, eventSlug, etapas }: Evento & { etapas: r
 
 /** El plan está vacío hasta que se pide: la plantilla de su fiesta, con un toque. */
 export function SeedTasksButton({ eventId, eventSlug }: Evento) {
+  const t = useT()
   const [estado, enviar, enviando] = useActionState(sinCaerse(seedTasksAction), INICIAL)
   return (
     <form action={enviar} className="flex flex-col items-center gap-3">
       <Ocultos eventId={eventId} eventSlug={eventSlug} />
-      <SubmitButton variant="primary" pending={enviando} pendingLabel={'Creando…'}>{'Crear el plan con la plantilla'}</SubmitButton>
+      <SubmitButton variant="primary" pending={enviando} pendingLabel={t('Creando…', 'Creating…')}>{t('Crear el plan con la plantilla', 'Create the plan from the template')}</SubmitButton>
       <ActionFeedback errorsOnly state={estado} />
     </form>
   )

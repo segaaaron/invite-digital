@@ -24,8 +24,14 @@ import { hayFormas } from '@/modules/registry'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducirTodo } from '@/shared/i18n/en-ingles'
+import type { T } from '@/shared/i18n/t'
 
-export const metadata = { title: 'Regalos' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Regalos', 'Gifts') }
+}
 
 // Los invitados reservan mientras el atelier mira la lista: esta página no se cachea.
 export const dynamic = 'force-dynamic'
@@ -37,6 +43,7 @@ export default async function RegalosPage({
   params: Promise<{ slug: string }>
   searchParams: Promise<{ panel?: string; vista?: string }>
 }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const { panel, vista } = await searchParams
@@ -84,31 +91,31 @@ export default async function RegalosPage({
         actions={
           conMesa && enFondos ? (
             <PanelButton href={`${base}?panel=fondo&vista=fondos`} variant="primary">
-              <PlusIcon className="size-4" /> Nuevo fondo
+              <PlusIcon className="size-4" /> {t('Nuevo fondo', 'New fund')}
             </PanelButton>
           ) : conMesa ? (
             <>
               <PanelButton href={abierto === 'fondo' ? base : `${base}?panel=fondo&vista=fondos`}>
-                <PlusIcon className="size-4" /> Fondo
+                <PlusIcon className="size-4" /> {t('Fondo', 'Fund')}
               </PanelButton>
               <PanelButton href={abierto === 'regalo' ? base : `${base}?panel=regalo`} variant="primary">
-                <PlusIcon className="size-4" /> Añadir regalo
+                <PlusIcon className="size-4" /> {t('Añadir regalo', 'Add gift')}
               </PanelButton>
             </>
           ) : undefined
         }
         accionesSoloEnEscritorio
-        kicker="Regalos"
-        meta="Cómo pueden regalarte tus invitados. Lo que enciendas aparece en tu invitación."
+        kicker={t('Regalos', 'Gifts')}
+        meta={t('Cómo pueden regalarte tus invitados. Lo que enciendas aparece en tu invitación.', 'How your guests can give you gifts. Whatever you turn on shows on your invitation.')}
         menu={conMesa ? <CurrencyPicker current={event.value.currency} eventId={event.value.id} eventSlug={event.value.slug} /> : undefined}
-        title="Regalos"
+        title={t('Regalos', 'Gifts')}
       />
 
       {conMesa ? (
         <AccionDeLaIsla>
-          <Link aria-label="Añadir regalo" className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=regalo`}>
+          <Link aria-label={t('Añadir regalo', 'Add gift')} className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=regalo`}>
             <PlusIcon className="size-4.5" />
-          Añadir
+          {t('Añadir', 'Add')}
           </Link>
         </AccionDeLaIsla>
       ) : null}
@@ -116,37 +123,37 @@ export default async function RegalosPage({
       <section aria-labelledby="formas-de-regalar" className={`${TARJETA_DESTACADA} mb-8 flex flex-wrap gap-x-10 gap-y-5 p-6.5 max-[559px]:p-5 ${enFondos ? 'hidden' : ''}`}>
         <div className="min-w-0 flex-[1_1_240px] max-[767px]:sr-only">
           <h2 className="font-display text-[26px] leading-tight font-medium" id="formas-de-regalar">
-            Formas de regalar
+            {t('Formas de regalar', 'Ways to give')}
           </h2>
           <p className="mt-1.5 text-[14px] text-ink-mute">
-            {conFormas ? 'En todos los planes. Tus invitados ven solo lo que enciendas.' : 'Tu plan no las incluye.'}{' '}
-            {muestra.length === 0 ? 'Tu invitación no muestra regalos todavía.' : `Tu invitación muestra: ${muestra.join(', ')}.`}
+            {conFormas ? t('En todos los planes. Tus invitados ven solo lo que enciendas.', 'On every plan. Your guests only see what you turn on.') : t('Tu plan no las incluye.', 'Your plan doesn’t include them.')}{' '}
+            {muestra.length === 0 ? t('Tu invitación no muestra regalos todavía.', 'Your invitation doesn’t show gifts yet.') : t(`Tu invitación muestra: ${muestra.join(', ')}.`, `Your invitation shows: ${muestra.join(', ')}.`)}
           </p>
         </div>
         <ul className="flex min-w-0 flex-[2_1_360px] flex-col">
-          <Forma
-            descripcion="Un aviso con la caja de sobres en la recepción."
+          <Forma t={t}
+            descripcion={t('Un aviso con la caja de sobres en la recepción.', 'A note about the envelope box at the reception.')}
             encendida={formas.sobres}
             href={conFormas ? `${base}?panel=sobres` : (mejorarFormas?.href ?? base)}
             incluida={conFormas}
-            titulo="Lluvia de sobres"
+            titulo={t('Lluvia de sobres', 'Envelope shower')}
           />
-          <Forma
-            descripcion={formas.transferencia ? `Con sus datos${formas.tieneQr ? ' y el QR de tu banco' : ''}.` : 'Te transfieren directo a tu cuenta o con el QR de tu banco.'}
+          <Forma t={t}
+            descripcion={formas.transferencia ? t(`Con sus datos${formas.tieneQr ? ' y el QR de tu banco' : ''}.`, `With its details${formas.tieneQr ? ' and your bank’s QR' : ''}.`) : t('Te transfieren directo a tu cuenta o con el QR de tu banco.', 'They transfer straight to your account or with your bank’s QR.')}
             editar={formas.transferencia ? `${base}?panel=transferencia` : null}
             encendida={formas.transferencia}
             href={conFormas ? `${base}?panel=transferencia` : (mejorarFormas?.href ?? base)}
             incluida={conFormas}
-            titulo="Transferencia"
+            titulo={t('Transferencia', 'Bank transfer')}
           />
           {conMesa ? null : (
-            <Forma descripcion="Regalos que reservan de tu lista, y fondos para algo grande. No viene en tu plan." encendida={false} href={mejorar?.href ?? base} incluida={false} titulo="Lista de regalos" />
+            <Forma t={t} descripcion={t('Regalos que reservan de tu lista, y fondos para algo grande. No viene en tu plan.', 'Gifts they reserve from your list, and funds for something big. Not included in your plan.')} encendida={false} href={mejorar?.href ?? base} incluida={false} titulo={t('Lista de regalos', 'Gift list')} />
           )}
         </ul>
       </section>
 
       {conFormas && (panel === 'sobres' || panel === 'transferencia') ? (
-        <PanelDialog closeHref={base} title={panel === 'sobres' ? 'Lluvia de sobres' : 'Transferencia o QR'}>
+        <PanelDialog closeHref={base} title={panel === 'sobres' ? t('Lluvia de sobres', 'Envelope shower') : t('Transferencia o QR', 'Transfer or QR')}>
           <FormasDeRegalarForm cerrarEn={base} eventId={event.value.id} eventSlug={event.value.slug} formas={formas} seccion={panel} sobresPorDefecto={getDictionary(event.value.locale).registry.sobresDefault} />
         </PanelDialog>
       ) : null}
@@ -156,14 +163,14 @@ export default async function RegalosPage({
         {/* Las altas son los modales de la maqueta (`#modal-gift`, `#modal-fund`), no
             paneles desplegados sobre la lista. */}
         {abierto === 'regalo' ? (
-          <PanelDialog closeHref={base} kicker="Regalos" lado="derecha" title="Añadir regalo" width={520}>
+          <PanelDialog closeHref={base} kicker={t('Regalos', 'Gifts')} lado="derecha" title={t('Añadir regalo', 'Add gift')} width={520}>
             <GiftForm doneHref={base} eventId={event.value.id} eventSlug={event.value.slug} />
           </PanelDialog>
         ) : null}
 
         {abierto === 'fondo' ? (
-          <PanelDialog closeHref={base} kicker="Regalos" lado="derecha" title="Añadir fondo en efectivo" width={520}>
-            <FundForm doneHref={`${base}?vista=fondos`} ejemplo={vocabularioDeCategoria(themeFor(event.value.themeKey).categorySlug).ejemplos} eventId={event.value.id} eventSlug={event.value.slug} />
+          <PanelDialog closeHref={base} kicker={t('Regalos', 'Gifts')} lado="derecha" title={t('Añadir fondo en efectivo', 'Add cash fund')} width={520}>
+            <FundForm doneHref={`${base}?vista=fondos`} ejemplo={traducirTodo(vocabularioDeCategoria(themeFor(event.value.themeKey).categorySlug).ejemplos, t)} eventId={event.value.id} eventSlug={event.value.slug} />
           </PanelDialog>
         ) : null}
 
@@ -178,9 +185,9 @@ export default async function RegalosPage({
               <PanelCard>
                 <EmptyState
                   compact
-                  description="Un fondo junta aportes para algo grande —el viaje, la luna de miel— por transferencia o en sobre. Lo que llega lo anotas tú."
+                  description={t('Un fondo junta aportes para algo grande —el viaje, la luna de miel— por transferencia o en sobre. Lo que llega lo anotas tú.', 'A fund collects contributions for something big —the trip, the honeymoon— by transfer or in an envelope. You record what comes in.')}
                   icon={<CardIcon />}
-                  title="Sin fondos abiertos"
+                  title={t('Sin fondos abiertos', 'No open funds')}
                 />
               </PanelCard>
             ) : (
@@ -193,7 +200,7 @@ export default async function RegalosPage({
                 {aportes.length === 0 ? null : (
                   <section aria-labelledby="ultimos-aportes">
                     <h2 className="border-b border-line-panel pb-2.5 font-display text-[24px] font-medium" id="ultimos-aportes">
-                      Últimos aportes
+                      {t('Últimos aportes', 'Latest contributions')}
                     </h2>
                     <ul>
                       {aportes.map((a) => (
@@ -214,7 +221,7 @@ export default async function RegalosPage({
           gifts={
             <>
               <GiftList currency={event.value.currency} eventId={event.value.id} eventSlug={event.value.slug} gifts={gifts} />
-              {gifts.length === 0 ? null : <p className="text-[14px] text-ink-mute">Tú ves quién reservó cada regalo. Tus invitados solo ven que ya está reservado.</p>}
+              {gifts.length === 0 ? null : <p className="text-[14px] text-ink-mute">{t('Tú ves quién reservó cada regalo. Tus invitados solo ven que ya está reservado.', 'You see who reserved each gift. Your guests only see that it is already reserved.')}</p>}
             </>
           }
         />
@@ -225,7 +232,7 @@ export default async function RegalosPage({
 }
 
 /** Una forma de regalar en su fila (maqueta E11): qué es, si se editan sus datos y su interruptor. */
-function Forma({ titulo, descripcion, encendida, incluida, href, editar = null }: { titulo: string; descripcion: string; encendida: boolean; incluida: boolean; href: string; editar?: string | null }) {
+function Forma({ titulo, descripcion, encendida, incluida, href, editar = null, t }: { titulo: string; descripcion: string; encendida: boolean; incluida: boolean; href: string; editar?: string | null; t: T }) {
   return (
     <li className="flex items-center gap-4 border-b border-line-panel py-3 last:border-b-0">
       <span className="min-w-0 flex-1">
@@ -234,11 +241,11 @@ function Forma({ titulo, descripcion, encendida, incluida, href, editar = null }
       </span>
       {editar === null ? null : (
         <Link className="shrink-0 text-[14px] text-gold-deep max-[559px]:hidden" href={editar}>
-          Editar datos
+          {t('Editar datos', 'Edit details')}
         </Link>
       )}
       <Link
-        aria-label={incluida ? `${titulo}: ${encendida ? 'encendida, cambiar' : 'apagada, encender'}` : `${titulo}: no viene en tu plan`}
+        aria-label={incluida ? t(`${titulo}: ${encendida ? 'encendida, cambiar' : 'apagada, encender'}`, `${titulo}: ${encendida ? 'on, change' : 'off, turn on'}`) : t(`${titulo}: no viene en tu plan`, `${titulo}: not included in your plan`)}
         className={`grid min-h-11 shrink-0 place-items-center ${incluida ? '' : 'opacity-50'}`}
         href={href}
       >

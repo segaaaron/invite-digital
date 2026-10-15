@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { setEventCurrencyAction } from '@/app/_acciones/events/actions'
 import { CURRENCIES, type Currency } from '../domain/event'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const ETIQUETA: Record<Currency, string> = { BOB: 'BOB Bs', USD: 'USD $', CAD: 'CAD $' }
 
@@ -24,6 +25,7 @@ export function CurrencyPicker({
   eventSlug: string
   current: Currency
 }) {
+  const t = useT()
   const [pending, start] = useTransition()
   const [elegida, setElegida] = useState<Currency>(current)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +33,7 @@ export function CurrencyPicker({
   return (
     <div className="flex flex-col items-end gap-1.5">
     <label className="flex items-center gap-2.5">
-      <span className={LABEL_CLASS}>Moneda</span>
+      <span className={LABEL_CLASS}>{t('Moneda', 'Currency')}</span>
       <select
         className="rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-60 max-[859px]:min-h-11 max-[859px]:text-[16px]"
         disabled={pending}
@@ -51,7 +53,7 @@ export function CurrencyPicker({
             })
           })
         }}
-        title="Cambia la moneda del evento. Los importes ya cargados no se convierten: se reetiquetan."
+        title={t('Cambia la moneda del evento. Los importes ya cargados no se convierten: se reetiquetan.', 'Changes the event currency. Amounts already entered are not converted: they are relabeled.')}
         value={elegida}
       >
         {CURRENCIES.map((moneda) => (

@@ -8,7 +8,8 @@ import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
 import { EstiloDeLaInvitacion } from '@/modules/events/ui/EstiloDeLaInvitacion'
 import { leerEstilo, SIN_ESTILO } from '@/modules/events/domain/estilo'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
-import { THEME_KEYS, themeFor } from '@/modules/events/ui/themes/registry'
+import { muestraDe, THEME_KEYS, themeFor } from '@/modules/events/ui/themes/registry'
+import { textoDeMuestraEnIngles } from '@/modules/events/ui/themes/muestra-en'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { isOk } from '@/shared/result'
@@ -116,8 +117,11 @@ export default async function ModelPreviewPage({
   // «LA CANCIÓN DE LA NOCHE · BODA 1», el nombre del archivo subido). El nombre de la subida solo se usa si el
   // diseño no trae canción de muestra.
   // Fechas siempre por delante de hoy: con las fijas del modelo, la cuenta regresiva quedaba en cero.
-  const fechas = fechasDeMuestra(fechaEnBolivia(new Date()), tema.defaultContent.schedule?.startsAt)
-  const base = { ...tema.defaultContent, schedule: { startsAt: fechas.startsAt } }
+  const muestra = muestraDe(tema, locale)
+  const invitado = tema.invitadoDeMuestra ?? INVITADO_DE_MUESTRA
+  const invitadoDeMuestra = locale === 'es' ? invitado : { ...invitado, label: textoDeMuestraEnIngles(invitado.label) }
+  const fechas = fechasDeMuestra(fechaEnBolivia(new Date()), muestra.schedule?.startsAt)
+  const base = { ...muestra, schedule: { startsAt: fechas.startsAt } }
   const contenido = tieneMusica
     ? {
         ...base,
@@ -175,7 +179,7 @@ export default async function ModelPreviewPage({
         content={contenido}
         dictionary={diccionario.invitation}
         event={eventoDeMuestra}
-        guestInfo={tema.invitadoDeMuestra ?? INVITADO_DE_MUESTRA}
+        guestInfo={invitadoDeMuestra}
         slots={ranurasDeVistaPrevia(diccionario, tema.rsvp, tema.categorySlug === 'xv-anos')}
         themes={diccionario.themes}
       />

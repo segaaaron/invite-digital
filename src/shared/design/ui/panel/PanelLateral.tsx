@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { ArrowLeftIcon, CloseIcon } from '../icons'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * El detalle de algo **sin salir de su lista**: un panel que entra por la derecha, como en
@@ -30,6 +31,7 @@ export function PanelLateral({
   acciones?: ReactNode
   children: ReactNode
 }) {
+  const t = useT()
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const id = useId()
@@ -70,7 +72,7 @@ export function PanelLateral({
             <ArrowLeftIcon className="size-5" />
           </span>
           <span className="truncate text-[16px] font-medium">{title}</span>
-          <span className="sr-only">: cerrar</span>
+          <span className="sr-only">{t(': cerrar', ': close')}</span>
         </button>
         <header className="flex items-start justify-between gap-4 px-7 pt-7 pb-3 max-[639px]:px-4 max-[639px]:pt-5">
           <div className="min-w-0">
@@ -80,7 +82,7 @@ export function PanelLateral({
             {subtitle === undefined ? null : <p className="mt-1 text-[15px] text-ink-mute">{subtitle}</p>}
           </div>
           <button
-            aria-label="Cerrar"
+            aria-label={t('Cerrar', 'Close')}
             className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised transition-colors hover:border-gold max-[639px]:hidden"
             onClick={cerrar}
             type="button"

@@ -4,11 +4,13 @@ import { useActionState } from 'react'
 import { guardarPreferenciasAction, type PreferenciasState } from '@/app/_acciones/notifications/avisos-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: PreferenciasState = { status: 'idle' }
 
 /** Qué avisos van a tus aparatos. Lo apagado se sigue viendo en la campana: silenciar no es perderlo. */
 export function PreferenciasDeAvisos({ tipos, silenciados }: { tipos: readonly { tipo: string; titulo: string; ayuda: string }[]; silenciados: readonly string[] }) {
+  const t = useT()
   const [estado, guardar] = useActionState(sinCaerse(guardarPreferenciasAction), INICIAL)
   return (
     // Casillas en rejilla, como la maqueta (E21); lo que hace cada una, al pasar por encima.
@@ -26,8 +28,8 @@ export function PreferenciasDeAvisos({ tipos, silenciados }: { tipos: readonly {
         <input key={`m-${t.tipo}`} name="mostrado" type="hidden" value={t.tipo} />
       ))}
       <div className="mt-3 flex items-center gap-3">
-        <SubmitButton pendingLabel="Guardando…" variant="default">
-          Guardar
+        <SubmitButton pendingLabel={t('Guardando…', 'Saving…')} variant="default">
+          {t('Guardar', 'Save')}
         </SubmitButton>
         <ActionFeedback state={estado} />
       </div>

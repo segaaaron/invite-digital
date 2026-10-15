@@ -10,6 +10,7 @@ import { PortadasQueEsperan } from '@/modules/events/ui/themes/kit/PortadasQueEs
 import { SinVerCodigo } from '@/modules/events/ui/themes/kit/SinVerCodigo'
 import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormularios'
+import { IdiomaProvider } from '@/shared/i18n/idioma-navegador'
 
 export const viewport = VIEWPORT
 
@@ -40,13 +41,13 @@ export default async function ModelPreviewLayout({
 
   return (
     <html className={variables} lang={locale} suppressHydrationWarning>
-      <body className="antialiased theme-protegida">
+      <body className="antialiased theme-protegida"><IdiomaProvider locale={locale}>
         <SinVerCodigo />
         <CapturaDeFallos />
         <ValidacionDeFormularios />
         {children}
         <PortadasQueEsperan />
-      </body>
+      </IdiomaProvider></body>
     </html>
   )
 }

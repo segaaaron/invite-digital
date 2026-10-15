@@ -23,6 +23,8 @@ export const users = pgTable('users', {
   phone: varchar('phone', { length: 32 }),
   /** Los tipos de aviso que no quiere en sus aparatos (`0074`). La campana los guarda igual. */
   avisosSilenciados: text('avisos_silenciados').array().notNull().default(sql`'{}'::text[]`),
+  /** El idioma del último aparato con que entró (`0094`): `es` o `en`, para sus correos. */
+  locale: varchar('locale', { length: 2 }),
   // El plan que compró. Lo asigna el admin al darlo de alta. `set null`: retirar un plan no
   // borra la cuenta.
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

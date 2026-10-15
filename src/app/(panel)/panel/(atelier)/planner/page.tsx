@@ -10,11 +10,16 @@ import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { fecha } from '@/shared/format/fecha'
 import { Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
+import type { Locale } from '@/shared/i18n/locales'
 
-export const metadata = { title: 'Mesa del planner' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Mesa del planner', 'Planner desk') }
+}
 export const dynamic = 'force-dynamic'
 
-const dia = (iso: string) => fecha(new Date(`${iso}T12:00:00.000Z`))
+const diaEn = (locale: Locale) => (iso: string) => fecha(new Date(`${iso}T12:00:00.000Z`), locale)
 
 /**
  * La mesa de una planner con varios eventos: todos donde la sumaron, por cercanía, y lo que
@@ -22,6 +27,8 @@ const dia = (iso: string) => fecha(new Date(`${iso}T12:00:00.000Z`))
  * pago ni el plan.
  */
 export default async function MesaDelPlannerPage() {
+  const t = await tr()
+  const dia = diaEn(await idiomaDeLaPeticion())
   const actor = await requireSession()
   const ids = await events.staff.eventIdsOf(actor.userId, ['planner'])
   if (ids.length === 0) notFound()
@@ -44,16 +51,16 @@ export default async function MesaDelPlannerPage() {
   const proximos = filas.filter((f) => f.evento.eventDate >= hoy)
   const pasados = filas.filter((f) => f.evento.eventDate < hoy)
   const vencen = filas.flatMap((f) => [
-    ...f.tareas.map(({ t, estado }) => ({ clave: `t-${t.id}`, evento: f.evento, texto: t.title, tipo: 'Tarea', vence: t.dueDate!, atrasada: estado === 'atrasada', href: `/panel/eventos/${f.evento.slug}/planner/tareas` })),
-    ...f.pagos.map((g) => ({ clave: `g-${g.id}`, evento: f.evento, texto: `${g.concepto} · ${formatAmount(g.amountCents, DEFAULT_CURRENCY)}`, tipo: 'Pago', vence: g.dueDate!, atrasada: g.dueDate! < hoy, href: `/panel/eventos/${f.evento.slug}/planner/presupuesto` })),
+    ...f.tareas.map(({ t: tarea, estado }) => ({ clave: `t-${tarea.id}`, evento: f.evento, texto: tarea.title, tipo: t('Tarea', 'Task'), vence: tarea.dueDate!, atrasada: estado === 'atrasada', href: `/panel/eventos/${f.evento.slug}/planner/tareas` })),
+    ...f.pagos.map((g) => ({ clave: `g-${g.id}`, evento: f.evento, texto: `${g.concepto} · ${formatAmount(g.amountCents, DEFAULT_CURRENCY)}`, tipo: t('Pago', 'Payment'), vence: g.dueDate!, atrasada: g.dueDate! < hoy, href: `/panel/eventos/${f.evento.slug}/planner/presupuesto` })),
   ]).sort((a, b) => (a.vence < b.vence ? -1 : 1))
 
   return (
     <>
-      <PanelHeader kicker="Planner" meta={`${proximos.length} evento${proximos.length === 1 ? '' : 's'} por delante · ${vencen.length} cosa${vencen.length === 1 ? '' : 's'} que vencen`} title="Mesa del planner" />
+      <PanelHeader kicker="Planner" meta={t(`${proximos.length} evento${proximos.length === 1 ? '' : 's'} por delante · ${vencen.length} cosa${vencen.length === 1 ? '' : 's'} que vencen`, `${proximos.length} event${proximos.length === 1 ? '' : 's'} ahead · ${vencen.length} thing${vencen.length === 1 ? '' : 's'} due`)} title={t('Mesa del planner', 'Planner desk')} />
 
       <div className="grid items-start gap-4.5 min-[900px]:grid-cols-[1fr_1.2fr]">
-        <PanelCard title="Tus eventos">
+        <PanelCard title={t('Tus eventos', 'Your events')}>
           <ul className="flex flex-col">
             {[...proximos, ...pasados].map((f) => {
               const faltan = diasEntre(hoy, f.evento.eventDate)
@@ -63,7 +70,7 @@ export default async function MesaDelPlannerPage() {
                     <span className="flex min-w-0 flex-col">
                       <span className="truncate text-[14px] text-ink">{f.evento.title}</span>
                       <span className="text-[11px] text-ink-mute">
-                        {dia(f.evento.eventDate)} · {faltan > 1 ? `faltan ${faltan} días` : faltan === 1 ? 'mañana' : faltan === 0 ? 'es hoy' : 'celebrado'}
+                        {dia(f.evento.eventDate)} · {faltan > 1 ? t(`faltan ${faltan} días`, `${faltan} days to go`) : faltan === 1 ? t('mañana', 'tomorrow') : faltan === 0 ? t('es hoy', 'today') : t('celebrado', 'held')}
                       </span>
                     </span>
                     <span className="font-mono text-[11px] text-ink-soft [font-variant-numeric:tabular-nums]">{f.avance} %</span>
@@ -74,9 +81,9 @@ export default async function MesaDelPlannerPage() {
           </ul>
         </PanelCard>
 
-        <PanelCard title="Vence esta semana, en todos">
+        <PanelCard title={t('Vence esta semana, en todos', 'Due this week, across all')}>
           {vencen.length === 0 ? (
-            <p className="text-[13px] text-ink-mute">Nada vence esta semana.</p>
+            <p className="text-[13px] text-ink-mute">{t('Nada vence esta semana.', 'Nothing is due this week.')}</p>
           ) : (
             <ul className="flex flex-col">
               {vencen.map((v) => (
@@ -85,10 +92,10 @@ export default async function MesaDelPlannerPage() {
                     <span className="flex min-w-0 flex-col">
                       <span className="text-[13px] text-ink">{v.texto}</span>
                       <span className="text-[11px] text-ink-mute">
-                        {v.tipo} · {v.evento.title} · vence {dia(v.vence)}
+                        {v.tipo} · {v.evento.title} · {t('vence', 'due')} {dia(v.vence)}
                       </span>
                     </span>
-                    <Pill tone={v.atrasada ? 'no' : 'maybe'}>{v.atrasada ? 'Atrasada' : 'Esta semana'}</Pill>
+                    <Pill tone={v.atrasada ? 'no' : 'maybe'}>{v.atrasada ? t('Atrasada', 'Overdue') : t('Esta semana', 'This week')}</Pill>
                   </Link>
                 </li>
               ))}

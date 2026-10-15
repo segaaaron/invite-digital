@@ -3,10 +3,16 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { ArrowLeftIcon, ArrowRightIcon, CalendarIcon } from '@/shared/design/ui/icons'
 import { FIELD_CLASS } from './PanelKit'
+import { useIdioma, useT } from '@/shared/i18n/idioma-navegador'
+import { INTL } from '@/shared/i18n/t'
+import type { Locale } from '@/shared/i18n/locales'
 
-const FECHA_LARGA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
-const MES = new Intl.DateTimeFormat('es-BO', { month: 'long', year: 'numeric', timeZone: 'UTC' })
-const DIAS = ['lu', 'ma', 'mi', 'ju', 'vi', 'sá', 'do']
+const formatos = (locale: Locale) => ({
+  largo: new Intl.DateTimeFormat(INTL[locale], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }),
+  mes: new Intl.DateTimeFormat(INTL[locale], { month: 'long', year: 'numeric', timeZone: 'UTC' }),
+})
+const FORMATOS = { es: formatos('es'), en: formatos('en') }
+const DIAS = { es: ['lu', 'ma', 'mi', 'ju', 'vi', 'sá', 'do'], en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] }
 
 /** `YYYY-MM-DD` a medianoche UTC: el día del calendario, sin la zona del servidor ni del navegador. */
 const aFecha = (iso: string): Date => new Date(`${iso}T00:00:00Z`)
@@ -52,6 +58,9 @@ export function SelectorDeFecha({
   /** El día de hoy, `YYYY-MM-DD`. Entra por prop para que las pruebas no dependan del reloj. */
   hoy?: string
 }) {
+  const t = useT()
+  const locale = useIdioma()
+  const FECHA_LARGA = FORMATOS[locale].largo
   const [abierto, setAbierto] = useState(false)
   const hoyIso = hoy ?? aIso(new Date())
   const [enFoco, setEnFoco] = useState(valor === '' ? hoyIso : valor)
@@ -101,7 +110,7 @@ export function SelectorDeFecha({
   }
 
   const mes = primeroDelMes(enFoco)
-  const texto = valor === '' ? 'Elige el día' : FECHA_LARGA.format(aFecha(valor))
+  const texto = valor === '' ? t('Elige el día', 'Choose the day') : FECHA_LARGA.format(aFecha(valor))
 
   return (
     <div className="relative min-w-0" ref={contenedor}>
@@ -122,14 +131,14 @@ export function SelectorDeFecha({
 
       {abierto ? (
         <div
-          aria-label="Elegir fecha"
+          aria-label={t('Elegir fecha', 'Choose date')}
           className="absolute top-[calc(100%+6px)] left-0 z-30 w-[300px] max-[767px]:w-[min(340px,calc(100vw-32px))] rounded-[16px] border border-line-panel bg-white p-4 shadow-float"
           onKeyDown={teclado}
           role="dialog"
         >
           <div className="mb-3 flex items-center justify-between">
             <button
-              aria-label="Mes anterior"
+              aria-label={t('Mes anterior', 'Previous month')}
               className="grid size-8 max-[767px]:size-11 cursor-pointer place-items-center rounded-full text-ink-soft hover:bg-bg-top hover:text-ink"
               onClick={() => setEnFoco(sumarMeses(mes, -1))}
               type="button"
@@ -137,10 +146,10 @@ export function SelectorDeFecha({
               <ArrowLeftIcon className="size-4" />
             </button>
             <p aria-live="polite" className="font-display text-[17px] text-ink first-letter:uppercase">
-              {MES.format(aFecha(mes))}
+              {FORMATOS[locale].mes.format(aFecha(mes))}
             </p>
             <button
-              aria-label="Mes siguiente"
+              aria-label={t('Mes siguiente', 'Next month')}
               className="grid size-8 max-[767px]:size-11 cursor-pointer place-items-center rounded-full text-ink-soft hover:bg-bg-top hover:text-ink"
               onClick={() => setEnFoco(sumarMeses(mes, 1))}
               type="button"
@@ -152,7 +161,7 @@ export function SelectorDeFecha({
           <table className="w-full border-collapse" ref={rejilla} role="grid">
             <thead>
               <tr>
-                {DIAS.map((dia) => (
+                {DIAS[locale].map((dia) => (
                   <th className="pb-1.5 text-center text-[11px] font-normal text-ink-mute" key={dia} scope="col">
                     {dia}
                   </th>
@@ -195,11 +204,11 @@ export function SelectorDeFecha({
 
           <div className="mt-3 flex justify-between border-t border-line-panel pt-3 text-[12px]">
             <button className="cursor-pointer text-ink-soft underline-offset-4 hover:underline" onClick={() => elegir(hoyIso)} type="button">
-              Hoy
+              {t('Hoy', 'Today')}
             </button>
             {valor === '' ? null : (
               <button className="cursor-pointer text-ink-soft underline-offset-4 hover:underline" onClick={() => elegir('')} type="button">
-                Quitar fecha
+                {t('Quitar fecha', 'Clear date')}
               </button>
             )}
           </div>

@@ -2,8 +2,13 @@ import Link from 'next/link'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { CardIcon, ChevronIcon, ClockIcon, GlobeIcon, MessageIcon, ShieldIcon, SparkIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
-export const metadata = { title: 'Ajustes · Administración' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Ajustes · Administración', 'Settings · Administration') }
+}
 export const dynamic = 'force-dynamic'
 
 const ENTRADAS = [
@@ -21,10 +26,11 @@ const ENTRADAS = [
  * pantalla con «← Ajustes» arriba. En la computadora, Ajustes son pestañas (E06); esta lista también sirve allí.
  */
 export default async function AjustesPage() {
+  const t = await tr()
   await requireAdmin()
   return (
     <>
-      <PanelHeader title="Ajustes" />
+      <PanelHeader title={t('Ajustes', 'Settings')} />
       <ul className="flex max-w-[720px] flex-col">
         {ENTRADAS.map(({ href, titulo, detalle, Icono }) => (
           <li className="border-b border-line-panel last:border-b-0" key={href}>
@@ -33,8 +39,8 @@ export default async function AjustesPage() {
                 <Icono className="size-4" />
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[15.5px] font-medium">{titulo}</span>
-                <span className="text-[13.5px] text-ink-mute">{detalle}</span>
+                <span className="text-[15.5px] font-medium">{traducir(titulo, t)}</span>
+                <span className="text-[13.5px] text-ink-mute">{traducir(detalle, t)}</span>
               </span>
               <ChevronIcon className="size-4 shrink-0 -rotate-90 text-ink-mute" />
             </Link>

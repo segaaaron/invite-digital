@@ -7,6 +7,8 @@ import { removePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 import { PenIcon, QrIcon, SendIcon, TrashIcon } from '@/shared/design/ui/icons'
 import { hora } from '@/shared/format/fecha'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import { INTL, type T } from '@/shared/i18n/t'
 
 export type PersonRowView = {
   readonly id: string
@@ -38,37 +40,37 @@ const CASA: Record<Filtro, (fila: PersonRowView) => boolean> = {
   'sin-enviar': (f) => (f.sentAt ?? null) === null,
 }
 
-const ETIQUETA: Record<Filtro, string> = {
-  todos: 'Todos',
-  asistiran: 'Asistirán',
-  'por-responder': 'Por responder',
-  'no-vienen': 'No vienen',
-  'sin-enviar': 'Sin enviar',
-}
+const etiqueta = (t: T): Record<Filtro, string> => ({
+  todos: t('Todos', 'All'),
+  asistiran: t('Asistirán', 'Attending'),
+  'por-responder': t('Por responder', 'Awaiting reply'),
+  'no-vienen': t('No vienen', 'Not coming'),
+  'sin-enviar': t('Sin enviar', 'Not sent'),
+})
 
-const ESTADO = { yes: 'Asistirá', no: 'No vendrá', maybe: 'Tal vez' } as const
+const estado = (t: T) => ({ yes: t('Asistirá', 'Attending'), no: t('No vendrá', 'Not coming'), maybe: t('Tal vez', 'Maybe') }) as const
 const TONO = { yes: 'ok', no: 'no', maybe: 'maybe' } as const
 
 /** Diez invitaciones más cada vez: una familia no se parte. */
 const POR_TANDA = 10
 
-const DIA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'long', timeZone: 'America/La_Paz' })
+const DIA = { es: new Intl.DateTimeFormat(INTL.es, { day: 'numeric', month: 'long', timeZone: 'America/La_Paz' }), en: new Intl.DateTimeFormat(INTL.en, { day: 'numeric', month: 'long', timeZone: 'America/La_Paz' }) }
 
 /** Lo que dice la invitación entera, una vez, en su cabecera o bajo el nombre. */
-function estadoDeInvitacion(filas: readonly PersonRowView[]): string {
+function estadoDeInvitacion(filas: readonly PersonRowView[], t: T): string {
   const primera = filas[0]!
-  if ((primera.sentAt ?? null) === null) return 'Sin enviar'
-  if ((primera.respondedAt ?? null) === null) return 'Enviada, sin respuesta'
-  return `Respondió el ${DIA.format(primera.respondedAt!)}`
+  if ((primera.sentAt ?? null) === null) return t('Sin enviar', 'Not sent')
+  if ((primera.respondedAt ?? null) === null) return t('Enviada, sin respuesta', 'Sent, no reply')
+  return t(`Respondió el ${DIA.es.format(primera.respondedAt!)}`, `Replied on ${DIA.en.format(primera.respondedAt!)}`)
 }
 
 /** La píldora de una invitación en el celular (maqueta M08): «Vienen 3», «Sin responder», «Sin enviar». */
-function pildoraDeInvitacion(filas: readonly PersonRowView[]): { tono: 'ok' | 'no' | 'pending' | 'neutro'; texto: string } {
+function pildoraDeInvitacion(filas: readonly PersonRowView[], t: T): { tono: 'ok' | 'no' | 'pending' | 'neutro'; texto: string } {
   const vienen = filas.filter((f) => f.attending === 'yes').length
-  if (vienen > 0) return { tono: 'ok', texto: vienen === 1 && filas.length === 1 ? 'Viene' : `Vienen ${vienen}` }
-  if (filas.every((f) => f.attending === 'no')) return { tono: 'no', texto: filas.length === 1 ? 'No viene' : 'No vienen' }
-  if ((filas[0]?.sentAt ?? null) === null) return { tono: 'neutro', texto: 'Sin enviar' }
-  return { tono: 'pending', texto: 'Sin responder' }
+  if (vienen > 0) return { tono: 'ok', texto: vienen === 1 && filas.length === 1 ? t('Viene', 'Coming') : t(`Vienen ${vienen}`, `${vienen} coming`) }
+  if (filas.every((f) => f.attending === 'no')) return { tono: 'no', texto: filas.length === 1 ? t('No viene', 'Not coming') : t('No vienen', 'Not coming') }
+  if ((filas[0]?.sentAt ?? null) === null) return { tono: 'neutro', texto: t('Sin enviar', 'Not sent') }
+  return { tono: 'pending', texto: t('Sin responder', 'No reply') }
 }
 
 /**
@@ -78,6 +80,9 @@ function pildoraDeInvitacion(filas: readonly PersonRowView[]): { tono: 'ok' | 'n
  * Una invitación de una sola persona es una sola fila. En el celular, una tarjeta por invitación.
  */
 export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[]; eventSlug: string }) {
+  const t = useT()
+  const ETIQUETA = etiqueta(t)
+  const ESTADO = estado(t)
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -108,7 +113,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
 
   const aplicar = (accion: Promise<{ status: string; message?: string }>) => {
     void accion.then((estado) => {
-      if (estado.status === 'error') setError(estado.message ?? 'No se pudo guardar el cambio.')
+      if (estado.status === 'error') setError(estado.message ?? t('No se pudo guardar el cambio.', 'The change couldn’t be saved.'))
     })
   }
 
@@ -121,26 +126,26 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
             setPorQuitar(null)
             aplicar(removePersonAction({ eventSlug, id: fila.id }))
           }}
-          title="Si es la última persona de su invitación, su enlace se borra con ella."
+          title={t('Si es la última persona de su invitación, su enlace se borra con ella.', 'If they are the last person on their invitation, its link is deleted with them.')}
           type="button"
         >
-          Confirmar
+          {t('Confirmar', 'Confirm')}
         </button>
         <button className="min-h-9 max-[767px]:min-h-11 cursor-pointer rounded-lg border border-line-panel-strong px-3 text-[13px]" onClick={() => setPorQuitar(null)} type="button">
-          Cancelar
+          {t('Cancelar', 'Cancel')}
         </button>
       </span>
     ) : (
       <span className="flex justify-end gap-1.5">
         {conPase ? (
-          <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
+          <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={t(`Ver el pase de ${fila.fullName}`, `View ${fila.fullName}’s pass`)}>
             <QrIcon />
           </IconLink>
         ) : null}
-        <IconLink href={`${base}?panel=editar&persona=${fila.id}`} label={`Editar a ${fila.fullName}`}>
+        <IconLink href={`${base}?panel=editar&persona=${fila.id}`} label={t(`Editar a ${fila.fullName}`, `Edit ${fila.fullName}`)}>
           <PenIcon />
         </IconLink>
-        <IconButton className="hover:border-danger hover:text-danger" label={`Eliminar a ${fila.fullName}`} onClick={() => setPorQuitar(fila.id)}>
+        <IconButton className="hover:border-danger hover:text-danger" label={t(`Eliminar a ${fila.fullName}`, `Delete ${fila.fullName}`)} onClick={() => setPorQuitar(fila.id)}>
           <TrashIcon />
         </IconButton>
       </span>
@@ -150,11 +155,11 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   const botonDeInvitacion = (primera: PersonRowView) =>
     (primera.sentAt ?? null) === null ? (
       <PanelButton href={`${base}?panel=envio`} size="sm" variant="primary">
-        <SendIcon className="size-4" /> Enviar
+        <SendIcon className="size-4" /> {t('Enviar', 'Send')}
       </PanelButton>
     ) : (primera.respondedAt ?? null) === null ? (
       <PanelButton href={`${base}?panel=recordar`} size="sm">
-        Recordar
+        {t('Recordar', 'Remind')}
       </PanelButton>
     ) : null
 
@@ -164,12 +169,12 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
         <SearchField
           autoComplete="off"
           className="min-w-0 flex-[1_1_280px]"
-          label="Buscar invitado"
+          label={t('Buscar invitado', 'Search guest')}
           onChange={(e) => {
             setQuery(e.target.value)
             setCuantas(POR_TANDA)
           }}
-          placeholder="Buscar por nombre"
+          placeholder={t('Buscar por nombre', 'Search by name')}
           value={query}
         />
         {/* Cada filtro con cuántos trae; en el celular, una sola fila que se desliza (v2.1: en dos filas empujaban la lista
@@ -198,7 +203,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
       )}
 
       {grupos.length === 0 ? (
-        <p className="py-8 text-center text-[15px] text-ink-mute">Ningún invitado coincide.</p>
+        <p className="py-8 text-center text-[15px] text-ink-mute">{t('Ningún invitado coincide.', 'No guest matches.')}</p>
       ) : (
         <>
           {/* Computadora: la tabla de la maqueta (E09). */}
@@ -206,13 +211,13 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
             <table className="w-full min-w-[760px] border-collapse text-left text-[14.5px]">
               <thead>
                 <tr>
-                  {['Invitado', 'Confirmación', 'Restricciones', 'Mesa'].map((columna) => (
+                  {[t('Invitado', 'Guest'), t('Confirmación', 'RSVP'), t('Restricciones', 'Dietary'), t('Mesa', 'Table')].map((columna) => (
                     <th className="border-b border-line-panel-strong px-3.5 pb-2.5 text-[13px] font-medium whitespace-nowrap text-ink-mute" key={columna} scope="col">
                       {columna}
                     </th>
                   ))}
                   <th className="border-b border-line-panel-strong pb-2.5" scope="col">
-                    <span className="sr-only">Acciones</span>
+                    <span className="sr-only">{t('Acciones', 'Actions')}</span>
                   </th>
                 </tr>
               </thead>
@@ -230,22 +235,22 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                             <span>
                               <span className="block font-semibold">{primera.groupLabel}</span>
                               <span className="text-[13px] text-ink-mute">
-                                {todas.length} personas, {(primera.sentAt ?? null) === null ? 'sin enviar' : 'enviada'}
+                                {t(`${todas.length} personas`, `${todas.length} people`)}, {(primera.sentAt ?? null) === null ? t('sin enviar', 'not sent') : t('enviada', 'sent')}
                               </span>
                             </span>
                           </span>
                         </td>
                         <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3 text-[13.5px] text-ink-mute" colSpan={2}>
-                          {estadoDeInvitacion(todas)}
+                          {estadoDeInvitacion(todas, t)}
                         </td>
                         <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3 [font-variant-numeric:tabular-nums]">{primera.tableLabel ?? '—'}</td>
                         <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3 text-right whitespace-nowrap">
                           <span className="inline-flex items-center gap-1.5">
                             {botonDeInvitacion(primera)}
-                            <IconLink href={`${base}?panel=pase&persona=${primera.id}`} label={`Ver el pase de ${primera.groupLabel}`}>
+                            <IconLink href={`${base}?panel=pase&persona=${primera.id}`} label={t(`Ver el pase de ${primera.groupLabel}`, `View ${primera.groupLabel}’s pass`)}>
                               <QrIcon />
                             </IconLink>
-                            <IconLink href={`${base}?panel=invitacion&grupo=${primera.groupId}`} label={`Editar la invitación ${primera.groupLabel}`}>
+                            <IconLink href={`${base}?panel=invitacion&grupo=${primera.groupId}`} label={t(`Editar la invitación ${primera.groupLabel}`, `Edit the ${primera.groupLabel} invitation`)}>
                               <PenIcon />
                             </IconLink>
                           </span>
@@ -266,16 +271,16 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                                   </span>
                                 ) : null}
                               </span>
-                              {familia ? null : <span className="text-[13px] text-ink-mute">{estadoDeInvitacion([fila])}</span>}
-                              {fila.llegoA === undefined || fila.llegoA === null ? null : <span className="block text-[12.5px] text-pill-ok-ink">{`Llegó ${hora(fila.llegoA)}`}</span>}
+                              {familia ? null : <span className="text-[13px] text-ink-mute">{estadoDeInvitacion([fila], t)}</span>}
+                              {fila.llegoA === undefined || fila.llegoA === null ? null : <span className="block text-[12.5px] text-pill-ok-ink">{t(`Llegó ${hora(fila.llegoA)}`, `Arrived ${hora(fila.llegoA)}`)}</span>}
                             </span>
                           </span>
                         </td>
                         <td className="border-b border-line-panel px-3.5 py-3.25">
                           {/* Lo que respondió el invitado. Corregirlo a mano es de «Editar». */}
-                          <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>{fila.attending === null ? 'Sin responder' : ESTADO[fila.attending]}</Pill>
+                          <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>{fila.attending === null ? t('Sin responder', 'No reply') : ESTADO[fila.attending]}</Pill>
                         </td>
-                        <td className="border-b border-line-panel px-3.5 py-3.25 text-ink-mute">{fila.dietaryNote ?? (fila.attending === 'yes' ? 'Sin restricciones' : '')}</td>
+                        <td className="border-b border-line-panel px-3.5 py-3.25 text-ink-mute">{fila.dietaryNote ?? (fila.attending === 'yes' ? t('Sin restricciones', 'No restrictions') : '')}</td>
                         <td className="border-b border-line-panel px-3.5 py-3.25 [font-variant-numeric:tabular-nums]">{fila.tableLabel ?? '—'}</td>
                         <td className="border-b border-line-panel px-3.5 py-3.25 text-right whitespace-nowrap">
                           <span className="inline-flex items-center gap-1.5">
@@ -303,7 +308,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                   {enVista.map((filas) => {
                     const p0 = filas[0]!
                     const suyas = todasDe(p0.groupId)
-                    const pildora = pildoraDeInvitacion(suyas)
+                    const pildora = pildoraDeInvitacion(suyas, t)
                     const activa = p0.groupId === primera.groupId
                     return (
                       <li className="border-b border-line-panel" key={p0.groupId}>
@@ -316,7 +321,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                           <span className="min-w-0 flex-1">
                             <span className="block truncate font-display text-[20px] leading-tight font-medium">{suyas.length > 1 ? p0.groupLabel : p0.fullName}</span>
                             <span className="text-[13.5px] text-ink-mute">
-                              {suyas.length === 1 ? '1 persona' : `${suyas.length} personas`}
+                              {suyas.length === 1 ? t('1 persona', '1 person') : t(`${suyas.length} personas`, `${suyas.length} people`)}
                               {p0.tableLabel === null ? '' : `, ${p0.tableLabel.toLowerCase()}`}
                             </span>
                           </span>
@@ -326,12 +331,12 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     )
                   })}
                 </ul>
-                <section aria-label={`Invitación ${primera.groupLabel}`} className="sticky top-24 flex flex-col gap-4 self-start rounded-[16px] border border-line-panel bg-bg-raised p-5.5">
+                <section aria-label={t(`Invitación ${primera.groupLabel}`, `${primera.groupLabel} invitation`)} className="sticky top-24 flex flex-col gap-4 self-start rounded-[16px] border border-line-panel bg-bg-raised p-5.5">
                   <div>
                     <h2 className="font-display text-[28px] leading-tight font-medium">{todas.length > 1 ? primera.groupLabel : primera.fullName}</h2>
                     <p className="mt-1 text-[14.5px] text-ink-mute">
-                      {todas.length === 1 ? '1 persona' : `${todas.length} personas`}
-                      {primera.tableLabel === null ? '' : ` en la ${primera.tableLabel.toLowerCase()}`}. {estadoDeInvitacion(todas)}.
+                      {todas.length === 1 ? t('1 persona', '1 person') : t(`${todas.length} personas`, `${todas.length} people`)}
+                      {primera.tableLabel === null ? '' : t(` en la ${primera.tableLabel.toLowerCase()}`, ` at ${primera.tableLabel.toLowerCase()}`)}. {estadoDeInvitacion(todas, t)}.
                     </p>
                   </div>
                   <ul className="flex flex-col">
@@ -342,20 +347,20 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                           {f.dietaryNote === null ? null : <span className="ml-2 text-[13px] text-ink-mute">{f.dietaryNote}</span>}
                         </Link>
                         {f.vip ? <Pill tone="vip">VIP</Pill> : null}
-                        <Pill tone={f.attending === null ? 'pending' : TONO[f.attending]}>{f.attending === null ? 'Sin responder' : ESTADO[f.attending]}</Pill>
+                        <Pill tone={f.attending === null ? 'pending' : TONO[f.attending]}>{f.attending === null ? t('Sin responder', 'No reply') : ESTADO[f.attending]}</Pill>
                       </li>
                     ))}
                   </ul>
                   <div className="flex flex-wrap gap-2.5">
                     {(primera.sentAt ?? null) === null ? (
                       <a className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[14.5px] font-medium text-white no-underline hover:bg-whatsapp-hover" href={`${base}?panel=envio`}>
-                        <SendIcon className="size-4" /> Enviar por WhatsApp
+                        <SendIcon className="size-4" /> {t('Enviar por WhatsApp', 'Send via WhatsApp')}
                       </a>
                     ) : null}
                     <PanelButton href={`${base}?panel=pase&persona=${primera.id}`}>
-                      <QrIcon className="size-4" /> Ver el pase
+                      <QrIcon className="size-4" /> {t('Ver el pase', 'View pass')}
                     </PanelButton>
-                    <PanelButton href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>Editar</PanelButton>
+                    <PanelButton href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>{t('Editar', 'Edit')}</PanelButton>
                   </div>
                 </section>
               </div>
@@ -367,7 +372,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
             {enVista.map((filas) => {
               const primera = filas[0]!
               const todas = todasDe(primera.groupId)
-              const pildora = pildoraDeInvitacion(todas)
+              const pildora = pildoraDeInvitacion(todas, t)
               return (
                 <li className="border-b border-line-panel" key={primera.groupId}>
                   <button className="flex min-h-[84px] w-full cursor-pointer items-center gap-3 py-3.5 text-left text-ink" onClick={() => setEnCelular(primera.groupId)} type="button">
@@ -379,7 +384,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                         <Pill tone={pildora.tono}>{pildora.texto}</Pill>
                         {todas.some((f) => f.vip) ? <Pill tone="vip">VIP</Pill> : null}
                         <span>
-                          {todas.length === 1 ? '1 persona' : `${todas.length} personas`}
+                          {todas.length === 1 ? t('1 persona', '1 person') : t(`${todas.length} personas`, `${todas.length} people`)}
                           {primera.tableLabel === null ? '' : ` · ${primera.tableLabel.toLowerCase()}`}
                         </span>
                       </span>
@@ -399,25 +404,25 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
             if (filas === undefined || primera === undefined) return null
             const cerrarFicha = () => setEnCelular(null)
             return (
-              <div aria-label={`Invitación ${primera.groupLabel}`} aria-modal="true" className="fixed inset-0 z-[60] overflow-y-auto bg-bg px-4 pt-2.5 pb-[max(24px,env(safe-area-inset-bottom))] min-[768px]:hidden" role="dialog">
+              <div aria-label={t(`Invitación ${primera.groupLabel}`, `${primera.groupLabel} invitation`)} aria-modal="true" className="fixed inset-0 z-[60] overflow-y-auto bg-bg px-4 pt-2.5 pb-[max(24px,env(safe-area-inset-bottom))] min-[768px]:hidden" role="dialog">
                 <div className="mb-5 flex min-h-15 items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised px-1.5 shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)]">
-                  <button aria-label="Volver a invitados" className="grid size-11 shrink-0 cursor-pointer place-items-center" onClick={cerrarFicha} type="button">
+                  <button aria-label={t('Volver a invitados', 'Back to guests')} className="grid size-11 shrink-0 cursor-pointer place-items-center" onClick={cerrarFicha} type="button">
                     <svg aria-hidden className="size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" viewBox="0 0 24 24">
                       <path d="M15 6l-6 6 6 6" />
                     </svg>
                   </button>
                   <span className="flex min-w-0 flex-1 flex-col leading-tight">
-                    <span className="text-[13px] text-ink-mute">Invitados</span>
+                    <span className="text-[13px] text-ink-mute">{t('Invitados', 'Guests')}</span>
                     <span className="truncate text-[16px] font-medium">{filas.length > 1 ? primera.groupLabel : primera.fullName}</span>
                   </span>
                   <Link className="flex min-h-11 items-center px-3 text-[15px] font-medium text-gold-deep no-underline" href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>
-                    Editar
+                    {t('Editar', 'Edit')}
                   </Link>
                 </div>
                 <h2 className="font-display text-[30px] leading-tight font-medium">{filas.length > 1 ? primera.groupLabel : primera.fullName}</h2>
                 <p className="mt-1.5 text-[15px] text-ink-mute">
-                  {filas.length === 1 ? '1 persona' : `${filas.length} personas`}
-                  {primera.tableLabel === null ? '' : ` en la ${primera.tableLabel.toLowerCase()}`}. {estadoDeInvitacion(filas)}.
+                  {filas.length === 1 ? t('1 persona', '1 person') : t(`${filas.length} personas`, `${filas.length} people`)}
+                  {primera.tableLabel === null ? '' : t(` en la ${primera.tableLabel.toLowerCase()}`, ` at ${primera.tableLabel.toLowerCase()}`)}. {estadoDeInvitacion(filas, t)}.
                 </p>
                 <ul className="mt-5 flex flex-col">
                   {filas.map((f) => (
@@ -427,24 +432,24 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                           {f.fullName}
                           {f.vip ? <Pill tone="vip">VIP</Pill> : null}
                         </span>
-                        <span className="text-[13px] text-ink-mute">{f.dietaryNote ?? (f.attending === 'no' ? 'Avisó que no puede' : 'Sin restricciones')}</span>
+                        <span className="text-[13px] text-ink-mute">{f.dietaryNote ?? (f.attending === 'no' ? t('Avisó que no puede', 'Said they can’t come') : t('Sin restricciones', 'No restrictions'))}</span>
                       </span>
-                      <Pill tone={f.attending === null ? 'pending' : TONO[f.attending]}>{f.attending === null ? 'Sin responder' : ESTADO[f.attending]}</Pill>
+                      <Pill tone={f.attending === null ? 'pending' : TONO[f.attending]}>{f.attending === null ? t('Sin responder', 'No reply') : ESTADO[f.attending]}</Pill>
                     </li>
                   ))}
                 </ul>
                 <Link className="mt-5 flex items-center gap-4 rounded-[14px] border border-line-panel bg-bg-raised px-4 py-4 text-ink no-underline" href={`${base}?panel=pase&persona=${primera.id}`}>
                   <QrIcon className="size-9 shrink-0" />
                   <span className="flex flex-col">
-                    <span className="text-[13px] text-ink-mute">Pase de ingreso</span>
-                    <span className="text-[15px] font-medium text-gold-deep">Ver el pase y copiar el enlace</span>
+                    <span className="text-[13px] text-ink-mute">{t('Pase de ingreso', 'Entry pass')}</span>
+                    <span className="text-[15px] font-medium text-gold-deep">{t('Ver el pase y copiar el enlace', 'View the pass and copy the link')}</span>
                   </span>
                 </Link>
                 <div className="mt-5 flex flex-col gap-2.5">
                   <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[15.5px] font-medium text-white no-underline" href={`${base}?panel=${(primera.sentAt ?? null) === null ? 'envio' : 'recordar'}`}>
-                    <SendIcon className="size-4" /> {(primera.sentAt ?? null) === null ? 'Enviar por WhatsApp' : 'Enviar recordatorio'}
+                    <SendIcon className="size-4" /> {(primera.sentAt ?? null) === null ? t('Enviar por WhatsApp', 'Send via WhatsApp') : t('Enviar recordatorio', 'Send reminder')}
                   </a>
-                  <PanelButton href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>Editar la invitación</PanelButton>
+                  <PanelButton href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>{t('Editar la invitación', 'Edit the invitation')}</PanelButton>
                 </div>
               </div>
             )
@@ -452,11 +457,14 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-[14px] text-ink-mute">
-              Mostrando {enVista.length} de {grupos.length} {grupos.length === 1 ? 'invitación' : 'invitaciones'}
+              {t(`Mostrando ${enVista.length} de ${grupos.length} ${grupos.length === 1 ? 'invitación' : 'invitaciones'}`, `Showing ${enVista.length} of ${grupos.length} ${grupos.length === 1 ? 'invitation' : 'invitations'}`)}
             </span>
             {enVista.length < grupos.length ? (
               <PanelButton onClick={() => setCuantas((n) => n + POR_TANDA)}>
-                Ver {Math.min(POR_TANDA, grupos.length - enVista.length)} {Math.min(POR_TANDA, grupos.length - enVista.length) === 1 ? 'invitación' : 'invitaciones'} más
+                {(() => {
+                  const n = Math.min(POR_TANDA, grupos.length - enVista.length)
+                  return t(`Ver ${n} ${n === 1 ? 'invitación' : 'invitaciones'} más`, `See ${n} more ${n === 1 ? 'invitation' : 'invitations'}`)
+                })()}
               </PanelButton>
             ) : null}
           </div>

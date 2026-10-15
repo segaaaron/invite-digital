@@ -14,22 +14,24 @@ import type { ThemeDefinition } from './themes/contract'
 import { themeDefinitions, themeFor } from './themes/registry'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useIdioma, useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 const INITIAL: EventActionState = { status: 'idle', message: '' }
 
-const MESSAGES: Record<EventErrorKind, string> = {
-  invalid_slug: 'El enlace del evento solo admite minúsculas, números y guiones.',
-  invalid_title: 'El título va de 1 a 160 caracteres.',
-  invalid_date: 'Revisa las fechas.',
-  deadline_after_event: 'La fecha límite no puede ser posterior al evento.',
-  invalid_locale: 'Idioma no soportado.',
-  invalid_status: 'Estado desconocido.',
-  invalid_theme: 'Elige un diseño de la lista.',
-  invalid_retention: 'La retención se mide en días enteros y positivos.',
-  duplicate_slug: 'Ya existe un evento con ese enlace.',
-  not_found: 'Ese evento ya no existe.',
-  storage_failure: 'No pudimos guardar el evento. Inténtalo en un momento.',
-}
+const mensajes = (t: T): Record<EventErrorKind, string> => ({
+  invalid_slug: t('El enlace del evento solo admite minúsculas, números y guiones.', 'The event link only allows lowercase letters, numbers and hyphens.'),
+  invalid_title: t('El título va de 1 a 160 caracteres.', 'The title must be 1 to 160 characters.'),
+  invalid_date: t('Revisa las fechas.', 'Check the dates.'),
+  deadline_after_event: t('La fecha límite no puede ser posterior al evento.', 'The deadline can’t be after the event.'),
+  invalid_locale: t('Idioma no soportado.', 'Unsupported language.'),
+  invalid_status: t('Estado desconocido.', 'Unknown status.'),
+  invalid_theme: t('Elige un diseño de la lista.', 'Choose a design from the list.'),
+  invalid_retention: t('La retención se mide en días enteros y positivos.', 'Retention is measured in whole, positive days.'),
+  duplicate_slug: t('Ya existe un evento con ese enlace.', 'An event with that link already exists.'),
+  not_found: t('Ese evento ya no existe.', 'That event no longer exists.'),
+  storage_failure: t('No pudimos guardar el evento. Inténtalo en un momento.', 'We couldn’t save the event. Try again in a moment.'),
+})
 
 /**
  * Crear o editar un evento, con la piel del panel y en tres bloques: el evento, su diseño y
@@ -43,6 +45,8 @@ export function EventForm({
   /** Si el plan fija el modelo, el motivo. Sin esto se ofrecen los de su misma fiesta. */
   diseno?: { fijo: string } | undefined
 }) {
+  const t = useT()
+  const locale = useIdioma()
   const [state, formAction, isPending] = useActionState(sinCaerse(event ? updateEventAction : createEventAction), INITIAL)
   const slugId = useId()
   const titleId = useId()
@@ -55,14 +59,14 @@ export function EventForm({
   const templateId = useId()
   const errorId = useId()
 
-  const error = state.status === 'error' && state.message !== '' ? MESSAGES[state.message] : null
+  const error = state.status === 'error' && state.message !== '' ? mensajes(t)[state.message] : null
 
   return (
     <form action={formAction} className="@container flex max-w-[640px] flex-col gap-8">
       {event ? <input name="id" type="hidden" value={event.id} readOnly /> : null}
 
-      <Bloque titulo="El evento">
-        <Campo etiqueta="Título" htmlFor={titleId}>
+      <Bloque titulo={t('El evento', 'The event')}>
+        <Campo etiqueta={t('Título', 'Title')} htmlFor={titleId}>
           <input className={FIELD_CLASS} defaultValue={event?.title} id={titleId} maxLength={160} name="title" required type="text" />
         </Campo>
 
@@ -71,7 +75,7 @@ export function EventForm({
         {event ? (
           <input name="slug" readOnly type="hidden" value={event.slug} />
         ) : (
-          <Campo ayuda="Minúsculas, números y guiones. Es la dirección del evento dentro del panel." etiqueta="Enlace del evento" htmlFor={slugId}>
+          <Campo ayuda={t('Minúsculas, números y guiones. Es la dirección del evento dentro del panel.', 'Lowercase letters, numbers and hyphens. It is the event’s address inside the panel.')} etiqueta={t('Enlace del evento', 'Event link')} htmlFor={slugId}>
             <div className="flex items-center overflow-hidden rounded-[14px] border border-line-panel-strong bg-white focus-within:border-ink">
               <span aria-hidden className="shrink-0 pl-4 font-mono text-[12px] text-ink-mute">
                 /panel/eventos/
@@ -89,36 +93,36 @@ export function EventForm({
         )}
 
         <div className="grid gap-5 @min-[560px]:grid-cols-2">
-          <Campo etiqueta="Fecha del evento" htmlFor={dateId}>
+          <Campo etiqueta={t('Fecha del evento', 'Event date')} htmlFor={dateId}>
             <CampoFecha defaultValue={event?.eventDate ?? ''} id={dateId} name="eventDate" required />
           </Campo>
-          <Campo etiqueta="Fecha límite de confirmación" htmlFor={deadlineId}>
+          <Campo etiqueta={t('Fecha límite de confirmación', 'RSVP deadline')} htmlFor={deadlineId}>
             <CampoFecha defaultValue={event?.rsvpDeadline ?? ''} id={deadlineId} name="rsvpDeadline" required />
           </Campo>
         </div>
 
         <div className="grid gap-5 @min-[440px]:grid-cols-2">
-          <Campo etiqueta="Idioma de la invitación" htmlFor={localeId}>
+          <Campo etiqueta={t('Idioma de la invitación', 'Invitation language')} htmlFor={localeId}>
             <select className={FIELD_CLASS} defaultValue={event?.locale ?? 'es'} id={localeId} name="locale">
-              <option value="es">Español</option>
-              <option value="en">Inglés</option>
+              <option value="es">{t('Español', 'Spanish')}</option>
+              <option value="en">{t('Inglés', 'English')}</option>
             </select>
           </Campo>
-          <Campo etiqueta="Lugar" htmlFor={venueId}>
+          <Campo etiqueta={t('Lugar', 'Place')} htmlFor={venueId}>
             <input
               className={FIELD_CLASS}
               defaultValue={event?.venue ?? ''}
               id={venueId}
               maxLength={160}
               name="venue"
-              placeholder="Hacienda Los Encinos, Cochabamba"
+              placeholder={t('Hacienda Los Encinos, Cochabamba', 'Hacienda Los Encinos, Cochabamba')}
               type="text"
             />
           </Campo>
         </div>
       </Bloque>
 
-      <Bloque titulo="Diseño">
+      <Bloque titulo={t('Diseño', 'Design')}>
         {event && diseno ? (
           // El plan no deja cambiarlo: se enseña cuál es y por qué. El servidor lo conserva
           // igual aunque llegue otro por POST.
@@ -133,50 +137,50 @@ export function EventForm({
           // `updateEventAction` lo rechaza también en el servidor.
           <ThemePicker
             defaultValue={event.themeKey}
-            definitions={opcionesDeDiseno(themeDefinitions().filter((definicion) => mismaFiesta(definicion.categorySlug, themeFor(event.themeKey).categorySlug)), event.themeKey)}
+            definitions={opcionesDeDiseno(themeDefinitions().filter((definicion) => mismaFiesta(definicion.categorySlug, themeFor(event.themeKey).categorySlug)), event.themeKey, t)}
             locale={event.locale}
           />
         ) : (
           // El diseño se elige mirándolo, primero el tipo de fiesta y luego sus modelos.
-          <ThemePicker defaultValue="" definitions={opcionesDeDiseno(themeDefinitions())} locale="es" />
+          <ThemePicker defaultValue="" definitions={opcionesDeDiseno(themeDefinitions(), undefined, t)} locale={locale} />
         )}
       </Bloque>
 
-      <Bloque titulo="Reparto y datos">
+      <Bloque titulo={t('Reparto y datos', 'Sending and data')}>
         <div className="grid gap-5 @min-[440px]:grid-cols-2">
-          <Campo etiqueta="Estado" htmlFor={statusId}>
+          <Campo etiqueta={t('Estado', 'Status')} htmlFor={statusId}>
             <select className={FIELD_CLASS} defaultValue={event?.status ?? 'draft'} id={statusId} name="status">
-              <option value="draft">Borrador · sin enlaces activos</option>
-              <option value="live">En marcha · los invitados responden</option>
-              <option value="closed">Cerrado · enlaces válidos, respuestas cerradas</option>
+              <option value="draft">{t('Borrador · sin enlaces activos', 'Draft · no active links')}</option>
+              <option value="live">{t('En marcha · los invitados responden', 'Live · guests are replying')}</option>
+              <option value="closed">{t('Cerrado · enlaces válidos, respuestas cerradas', 'Closed · links valid, replies closed')}</option>
             </select>
           </Campo>
           <div className="flex flex-col gap-1">
-            <span className={LABEL_CLASS}>Tiempo en línea</span>
+            <span className={LABEL_CLASS}>{t('Tiempo en línea', 'Time online')}</span>
             <p className="text-[13px] text-ink">
-              {event ? `${event.retentionDays} días tras el evento` : 'Lo que diga el plan'}
+              {event ? t(`${event.retentionDays} días tras el evento`, `${event.retentionDays} days after the event`) : t('Lo que diga el plan', 'Whatever the plan says')}
             </p>
-            <p className="text-[11px] text-ink-mute">Lo fija el plan. Pasado ese tiempo, los datos de los invitados se anonimizan.</p>
+            <p className="text-[11px] text-ink-mute">{t('Lo fija el plan. Pasado ese tiempo, los datos de los invitados se anonimizan.', 'The plan sets it. After that time, guests’ data is anonymized.')}</p>
           </div>
         </div>
 
-        <Campo ayuda="{nombre}, {fecha}, {evento} y {enlace} se sustituyen al enviar. Si no pones {nombre}, empieza con «Hola Nombre»; si no pones {enlace}, el enlace va al final. Vacío, se usa un mensaje cordial con la fecha." etiqueta="Mensaje para repartir la invitación" htmlFor={templateId}>
+        <Campo ayuda={t('{nombre}, {fecha}, {evento} y {enlace} se sustituyen al enviar. Si no pones {nombre}, empieza con «Hola Nombre»; si no pones {enlace}, el enlace va al final. Vacío, se usa un mensaje cordial con la fecha.', '{nombre}, {fecha}, {evento} and {enlace} are replaced when sending. If you don’t include {nombre}, it starts with “Hi Name”; if you don’t include {enlace}, the link goes at the end. Empty, a friendly message with the date is used.')} etiqueta={t('Mensaje para repartir la invitación', 'Message to send the invitation')} htmlFor={templateId}>
           <textarea
             className={FIELD_CLASS}
             defaultValue={event?.messageTemplate ?? ''}
             id={templateId}
             name="messageTemplate"
-            placeholder="Hola {nombre} ✨ Con mucha alegría queremos compartir contigo un día muy especial: el {fecha}. Aquí está tu invitación: {enlace}"
+            placeholder={t('Hola {nombre} ✨ Con mucha alegría queremos compartir contigo un día muy especial: el {fecha}. Aquí está tu invitación: {enlace}', 'Hi {nombre} ✨ We’re so happy to share a very special day with you: {fecha}. Here is your invitation: {enlace}')}
             rows={3}
           />
         </Campo>
 
         <div className="grid gap-5 @min-[440px]:grid-cols-2">
-          <Campo etiqueta="Moneda de la mesa de regalos" htmlFor={currencyId}>
+          <Campo etiqueta={t('Moneda de la mesa de regalos', 'Gift registry currency')} htmlFor={currencyId}>
             <select className={FIELD_CLASS} defaultValue={event?.currency ?? 'BOB'} id={currencyId} name="currency">
-              <option value="BOB">BOB — Boliviano</option>
-              <option value="USD">USD — Dólar (EE. UU.)</option>
-              <option value="CAD">CAD — Dólar canadiense</option>
+              <option value="BOB">{t('BOB — Boliviano', 'BOB — Boliviano')}</option>
+              <option value="USD">{t('USD — Dólar (EE. UU.)', 'USD — US Dollar')}</option>
+              <option value="CAD">{t('CAD — Dólar canadiense', 'CAD — Canadian Dollar')}</option>
             </select>
           </Campo>
         </div>
@@ -190,18 +194,18 @@ export function EventForm({
 
       {state.status === 'success' ? (
         <p aria-live="polite" className="text-[13px] text-ink-soft" role="status">
-          Evento guardado.{' '}
+          {t('Evento guardado.', 'Event saved.')}{' '}
           {event ? null : (
             <Link className="underline underline-offset-4" href="/panel">
-              Ver mis eventos
+              {t('Ver mis eventos', 'See my events')}
             </Link>
           )}
         </p>
       ) : null}
 
       {/* Un alta hecha no se repite: otro clic crearía el mismo evento dos veces. */}
-      <SubmitButton disabled={!event && state.status === 'success'} variant="primary" pending={isPending} pendingLabel={'Guardando…'}>
-        {event ? 'Guardar cambios' : state.status === 'success' ? 'Creado ✓' : 'Crear evento'}
+      <SubmitButton disabled={!event && state.status === 'success'} variant="primary" pending={isPending} pendingLabel={t('Guardando…', 'Saving…')}>
+        {event ? t('Guardar cambios', 'Save changes') : state.status === 'success' ? t('Creado ✓', 'Created ✓') : t('Crear evento', 'Create event')}
       </SubmitButton>
     </form>
   )
@@ -233,13 +237,13 @@ function Campo({ etiqueta, htmlFor, ayuda, children }: { etiqueta: string; htmlF
  * respaldo de una clave desconocida y nadie lo elige mirando la web. Los retirados tampoco,
  * salvo el que el evento ya tiene (`actual`): quitárselo de la vista lo cambiaría sin querer.
  */
-function opcionesDeDiseno(definiciones: readonly ThemeDefinition[], actual?: string) {
+function opcionesDeDiseno(definiciones: readonly ThemeDefinition[], actual: string | undefined, t: T) {
   // Un evento con un diseño que ya no existe en el registro (anterior al catálogo): se ofrece
   // igual, **marcado**, como «su diseño actual». Sin esto el selector marcaba el primero de la
   // lista y guardar cualquier otro dato le cambiaba el diseño sin que nadie lo pidiera.
   const huerfano =
     actual !== undefined && actual !== '' && !definiciones.some((d) => d.key === actual)
-      ? [{ key: actual, label: 'Su diseño actual (ya no está en el catálogo)', categorySlug: themeFor(actual).categorySlug, palette: themeFor(actual).palette, cover: null, sample: null }]
+      ? [{ key: actual, label: t('Su diseño actual (ya no está en el catálogo)', 'Their current design (no longer in the catalog)'), categorySlug: themeFor(actual).categorySlug, palette: themeFor(actual).palette, cover: null, sample: null }]
       : []
   return [
     ...huerfano,

@@ -2,8 +2,12 @@ import { notFound } from 'next/navigation'
 import { events, plans, venue } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Plan del banquete' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Plan del banquete', 'Seating plan') }
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +17,7 @@ export const dynamic = 'force-dynamic'
  * impresa, y un botón que sale en la impresión es tinta desperdiciada.
  */
 export default async function PlanImprimiblePage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
 
@@ -50,7 +55,7 @@ export default async function PlanImprimiblePage({ params }: { params: Promise<{
             </span>
           </h2>
           {table.groups.length === 0 ? (
-            <p className="text-[13px] text-ink-mute">Sin asignar.</p>
+            <p className="text-[13px] text-ink-mute">{t('Sin asignar.', 'Unassigned.')}</p>
           ) : (
             <ul className="flex flex-col gap-1">
               {table.groups.map((group) => (
@@ -68,7 +73,7 @@ export default async function PlanImprimiblePage({ params }: { params: Promise<{
 
       {unseated.length === 0 ? null : (
         <section className="flex flex-col gap-2 border-t border-line pt-4">
-          <h2 className="font-display text-[20px] font-light text-danger">Sin mesa</h2>
+          <h2 className="font-display text-[20px] font-light text-danger">{t('Sin mesa', 'No table')}</h2>
           <ul className="flex flex-col gap-1">
             {unseated.map((group) => (
               <li key={group.id} className="flex items-baseline justify-between text-[14px] text-ink-soft">

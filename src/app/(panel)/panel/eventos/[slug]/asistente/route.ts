@@ -5,6 +5,7 @@ import { leerHistorial, TURNOS_QUE_SE_MANDAN } from '@/modules/asistente/domain/
 import { idiomaDe, MENSAJE_DE_CIERRE, puedeConversar, type Salida } from '@/modules/asistente'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { escribir } from './escritura'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -24,18 +25,19 @@ const limite = createRateLimiter({ windowMs: 60_000, max: Number(process.env.ASI
  * del mes. El evento sale de la sesión y de la dirección, **nunca** del modelo ni del cuerpo.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const acceso = await accesoAlAsistente(actor, slug)
-  if (acceso === null) return new Response('No encontrado', { status: 404 })
+  if (acceso === null) return new Response(t('No encontrado', 'Not found'), { status: 404 })
 
-  if (limite.isLimited(actor.userId, Date.now())) return new Response('Demasiados mensajes seguidos', { status: 429 })
+  if (limite.isLimited(actor.userId, Date.now())) return new Response(t('Demasiados mensajes seguidos', 'Too many messages in a row'), { status: 429 })
 
   const cuerpo = (await request.json().catch(() => null)) as { mensajes?: unknown; idioma?: unknown; porVoz?: unknown; destinos?: unknown } | null
   // Las pantallas de la barra de quien habla: «ir_a» solo lleva a esas. Del navegador, pero solo restringe.
   const destinos = Array.isArray(cuerpo?.destinos) ? cuerpo.destinos.filter((d): d is string => typeof d === 'string').slice(0, 80) : undefined
   const mensajes = leerHistorial(cuerpo?.mensajes)
-  if (mensajes === null) return new Response('Conversación no válida', { status: 400 })
+  if (mensajes === null) return new Response(t('Conversación no válida', 'Invalid conversation'), { status: 400 })
 
   const ahora = new Date()
   const permiso = puedeConversar(acceso.config, acceso.capacidad.planSlug, await asistente.usoDe(acceso.evento.id, ahora), acceso.capacidad.asistente === true)

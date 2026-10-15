@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { Allowance } from '../domain/allowance'
 import { hasAnnual, PlanCard, type PlanPrice } from './PlanCard'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 export type PlanCardData = {
   readonly id: string
@@ -27,6 +28,7 @@ export type PlanCardData = {
  * ejecución sin que el typecheck diga nada.
  */
 export function BillingToggle({ plans }: { plans: readonly PlanCardData[] }) {
+  const t = useT()
   const [billing, setBilling] = useState<'once' | 'annual'>('once')
 
   const hayAnual = plans.some((plan) => plan.price !== undefined && hasAnnual(plan.price))
@@ -67,8 +69,8 @@ export function BillingToggle({ plans }: { plans: readonly PlanCardData[] }) {
   return (
     <div className="flex flex-col gap-4.5">
       <div className="flex flex-wrap items-center gap-2.5">
-        {boton('once', 'Por evento')}
-        {boton('annual', 'Anual')}
+        {boton('once', t('Por evento', 'Per event'))}
+        {boton('annual', t('Anual', 'Annual'))}
       </div>
       {tarjetas}
     </div>

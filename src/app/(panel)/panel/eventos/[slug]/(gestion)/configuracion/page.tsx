@@ -20,7 +20,7 @@ import { DangerZone } from '@/modules/events/ui/DangerZone'
 import { EventClients } from '@/modules/events/ui/EventClients'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
-import { themeFor } from '@/modules/events/ui/themes/registry'
+import { muestraDe, themeFor } from '@/modules/events/ui/themes/registry'
 import { fiestaDeCategoria } from '@/modules/events/domain/fiesta'
 import { canManageStaff, gestionaElEvento, isAdmin, rolEnEquipo } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -38,16 +38,19 @@ import { themeFonts } from '@/shared/design/fonts'
 import { EncargoDelEquipo } from '@/modules/events/ui/EncargoDelEquipo'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr, isOk } from '@/shared/result'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 /**
  * El título de la pestaña dice **qué evento** es: con varias fichas abiertas, «Configuración» en
  * todas no distinguía ninguna. Se lee con la misma guardia que la página: sin acceso, genérico.
  */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const event = await events.getFor(actor, (await params).slug, { section: 'configuracion' })
-  if (isErr(event)) return { title: 'Configuración' }
-  return { title: isAdmin(actor) ? `${event.value.title} · Ficha` : `${event.value.title} · Mi invitación` }
+  if (isErr(event)) return { title: t('Configuración', 'Settings') }
+  return { title: isAdmin(actor) ? `${event.value.title} · ${t('Ficha', 'Record')}` : `${event.value.title} · ${t('Mi invitación', 'My invitation')}` }
 }
 
 export const dynamic = 'force-dynamic'
@@ -66,6 +69,8 @@ export default async function ConfiguracionPage({
   params: Promise<{ slug: string }>
   searchParams: Promise<{ vista?: string; ver?: string }>
 }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   const actor = await requireSession()
   const { slug } = await params
   // El admin escribe la invitación del cliente en `?vista=invitacion`: el editor solo, sin la ficha.
@@ -127,7 +132,7 @@ export default async function ConfiguracionPage({
   // cliente publicara «El Bar de Miki» con solo pulsar Guardar sin mirar.
   const contenido = await events.contenidoEscrito(event.value.id)
   const avance = avanceDeLaInvitacion(tema.sections, contenido ?? {})
-  const contenidoDeLaVistaPrevia = await events.contenidoParaVistaPrevia(event.value.id, tema.defaultContent, event.value.eventDate)
+  const contenidoDeLaVistaPrevia = await events.contenidoParaVistaPrevia(event.value.id, muestraDe(tema, event.value.locale), event.value.eventDate)
   const conCronograma = !esAdmin && isOk(await plans.requireFeature(event.value.id, 'plannerCompleto'))
 
   // Lo que ya subió el atelier: las fotografías y, desde que la invitación puede sonar,
@@ -154,12 +159,12 @@ export default async function ConfiguracionPage({
   // El modelo lo cambia el plan; el admin, siempre. La misma regla la aplica `updateEventAction`.
   const diseno = await (async (): Promise<{ fijo: string } | undefined> => {
     if (actor.role === 'admin') return undefined
-    if (isErr(capacidad)) return { fijo: 'No pudimos leer tu plan: el modelo se queda como está.' }
-    if (capacidad.value.designChange === 'ninguno') return { fijo: 'Tu plan no incluye cambiar de modelo.' }
+    if (isErr(capacidad)) return { fijo: t('No pudimos leer tu plan: el modelo se queda como está.', 'We couldn’t read your plan: the design stays as it is.') }
+    if (capacidad.value.designChange === 'ninguno') return { fijo: t('Tu plan no incluye cambiar de modelo.', 'Your plan doesn’t include changing the design.') }
     if (capacidad.value.designChange === 'siempre') return undefined
     const grupos = await guests.list(event.value.id)
     if (isErr(grupos) || grupos.value.some((g) => g.invitationSentAt !== null)) {
-      return { fijo: 'El modelo ya no cambia: ya salieron invitaciones. Cambiarlo ahora confundiría a quien ya la vio.' }
+      return { fijo: t('El modelo ya no cambia: ya salieron invitaciones. Cambiarlo ahora confundiría a quien ya la vio.', 'The design no longer changes: invitations have already gone out. Changing it now would confuse anyone who has seen it.') }
     }
     return undefined
   })()
@@ -193,9 +198,9 @@ export default async function ConfiguracionPage({
     const salud = fila === undefined ? null : saludDelEvento({ ...fila, fiesta: fiestaDeTema(fila.themeKey) }, hoy)
     const planNombre = isErr(capacidad) ? null : (opcionesDePlan.find((p) => p.slug === capacidad.value.planSlug)?.nombre ?? null)
     const metricas = [
-      { nombre: 'Confirmados', n: vienen, de: personas.length, tono: 'bg-shell-deep' },
-      { nombre: 'Invitaciones enviadas', n: fila?.enviados ?? 0, de: fila?.grupos ?? 0, tono: 'bg-shell-deep' },
-      { nombre: 'Tareas al día', n: tareasHechas, de: tareas.length, tono: 'bg-gold' },
+      { nombre: t('Confirmados', 'Confirmed'), n: vienen, de: personas.length, tono: 'bg-shell-deep' },
+      { nombre: t('Invitaciones enviadas', 'Invitations sent'), n: fila?.enviados ?? 0, de: fila?.grupos ?? 0, tono: 'bg-shell-deep' },
+      { nombre: t('Tareas al día', 'Tasks up to date'), n: tareasHechas, de: tareas.length, tono: 'bg-gold' },
     ]
     const portada = portadaParaCompartir(event.value.themeKey)
     const TARJETA = 'flex flex-col gap-4 rounded-[16px] border border-line-panel bg-tarjeta p-6 max-[767px]:p-5'
@@ -212,12 +217,12 @@ export default async function ConfiguracionPage({
               actions={
                 <span className="flex gap-2.5 max-[767px]:hidden">
                   <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>
-                    <EyeIcon className="size-4" /> Ver la invitación
+                    <EyeIcon className="size-4" /> {t('Ver la invitación', 'View the invitation')}
                   </PanelButton>
                   <EntrarComoCliente anfitriones={hostsDelEvento} eventId={event.value.id} variant="primary" />
                 </span>
               }
-              meta={`${diaDelEvento(event.value.eventDate)}${event.value.venue ? `, ${event.value.venue}` : ''}. Diseño «${themeFor(event.value.themeKey).key === event.value.themeKey ? tema.label : 'retirado'}», plan ${planNombre ?? 'sin asignar'}.`}
+              meta={t(`${diaDelEvento(event.value.eventDate)}${event.value.venue ? `, ${event.value.venue}` : ''}. Diseño «${themeFor(event.value.themeKey).key === event.value.themeKey ? tema.label : 'retirado'}», plan ${planNombre ?? 'sin asignar'}.`, `${diaDelEvento(event.value.eventDate, 'en')}${event.value.venue ? `, ${event.value.venue}` : ''}. “${themeFor(event.value.themeKey).key === event.value.themeKey ? tema.label : 'retired'}” design, ${planNombre ?? 'unassigned'} plan.`)}
               title={event.value.title}
             />
           </div>
@@ -231,10 +236,10 @@ export default async function ConfiguracionPage({
             <section aria-labelledby="como-va" className={TARJETA}>
               <div>
                 <h2 className="font-display text-[24px] font-medium" id="como-va">
-                  Cómo va
+                  {t('Cómo va', 'Progress')}
                 </h2>
                 <p className="mt-1 text-[14px] text-ink-mute">
-                  {faltaPara(diasEntre(hoy, event.value.eventDate)).replace(/^./, (c) => c.toUpperCase())}. {salud?.texto ?? 'Sin datos todavía.'}
+                  {faltaPara(diasEntre(hoy, event.value.eventDate), locale).replace(/^./, (c) => c.toUpperCase())}. {salud === null || salud === undefined ? t('Sin datos todavía.', 'No data yet.') : traducir(salud.texto, t)}
                 </p>
               </div>
               <div className="grid gap-5 min-[700px]:grid-cols-3">
@@ -258,10 +263,10 @@ export default async function ConfiguracionPage({
               <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} puerta={personal} />
             </section>
 
-            <PlegableEnMovil titulo="Plan, diseño y dirección">
+            <PlegableEnMovil titulo={t('Plan, diseño y dirección', 'Plan, design and address')}>
               <section aria-labelledby="detalles" className={`${TARJETA} scroll-mt-24`} id="datos">
                 <h2 className="font-display text-[24px] font-medium" id="detalles">
-                  Detalles
+                  {t('Detalles', 'Details')}
                 </h2>
                 <ResponsableYPlan
                   eventId={event.value.id}
@@ -284,16 +289,16 @@ export default async function ConfiguracionPage({
           <aside className="flex flex-col gap-5">
             {portada ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img alt={`Portada de «${tema.label}»`} className="aspect-[9/14] w-full rounded-[16px] border border-line-panel object-cover max-[1099px]:hidden" src={portada} />
+              <img alt={t(`Portada de «${tema.label}»`, `“${tema.label}” cover`)} className="aspect-[9/14] w-full rounded-[16px] border border-line-panel object-cover max-[1099px]:hidden" src={portada} />
             ) : null}
-            <section aria-label="La invitación" className={TARJETA}>
-              <p className="text-[14px] text-ink-mute">Escribe sus textos, fotos y canción como lo haría el cliente, sin entrar como él. Cada guardado queda en la auditoría.</p>
+            <section aria-label={t('La invitación', 'The invitation')} className={TARJETA}>
+              <p className="text-[14px] text-ink-mute">{t('Escribe sus textos, fotos y canción como lo haría el cliente, sin entrar como él. Cada guardado queda en la auditoría.', 'Write its text, photos and song as the client would, without signing in as them. Every save is recorded in the audit log.')}</p>
               <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion?vista=invitacion`} size="sm">
-                Escribir la invitación
+                {t('Escribir la invitación', 'Write the invitation')}
               </PanelButton>
             </section>
             {encargo === null ? null : (
-              <section aria-label="Diseño por encargo" className={TARJETA} id="diseno">
+              <section aria-label={t('Diseño por encargo', 'Custom design')} className={TARJETA} id="diseno">
                 <EncargoDelEquipo
                   encargo={encargo}
                   escribir={`/panel/eventos/${event.value.slug}/configuracion?vista=invitacion`}
@@ -319,20 +324,20 @@ export default async function ConfiguracionPage({
       <PanelHeader
         actions={
           <>
-            {escribiendo ? <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Volver a la ficha</PanelButton> : null}
+            {escribiendo ? <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>{t('Volver a la ficha', 'Back to the record')}</PanelButton> : null}
             {/* Verla entera, como la abrirá un invitado: el botón principal de la pantalla, no solo el
                 «Pantalla completa» pequeño junto al teléfono, que no se veía (7 de octubre). */}
             {/* Quien no gestiona el evento ya lo tiene arriba, en la barra («Ver mi invitación»). */}
             {contenido === null || !esDelAtelier ? null : (
               <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`} variant="primary">
-                <EyeIcon className="size-4" /> Ver mi invitación
+                <EyeIcon className="size-4" /> {t('Ver mi invitación', 'View my invitation')}
               </PanelButton>
             )}
           </>
         }
-        kicker={escribiendo ? `Invitación de ${event.value.title}` : 'Evento'}
-        meta="Escríbela en el orden en que se lee. A la derecha la ves como la verá tu invitado."
-        title={escribiendo ? 'Escribir la invitación' : !esDelAtelier ? 'Mi invitación' : 'Configuración del evento'}
+        kicker={escribiendo ? t(`Invitación de ${event.value.title}`, `${event.value.title} invitation`) : t('Evento', 'Event')}
+        meta={t('Escríbela en el orden en que se lee. A la derecha la ves como la verá tu invitado.', 'Write it in the order it reads. On the right you see it as your guest will.')}
+        title={escribiendo ? t('Escribir la invitación', 'Write the invitation') : !esDelAtelier ? t('Mi invitación', 'My invitation') : t('Configuración del evento', 'Event settings')}
       />
 
       {contenido === null ? null : (
@@ -353,7 +358,7 @@ export default async function ConfiguracionPage({
               </span>
             </div>
             <Link className="inline-flex min-h-11 w-fit items-center text-[16px] font-medium text-gold-deep underline underline-offset-4" href={`/panel/eventos/${event.value.slug}/configuracion${escribiendo ? '?vista=invitacion' : ''}${viendo ? '' : `${escribiendo ? '&' : '?'}ver=1`}`}>
-              {viendo ? 'Seguir escribiendo' : 'Ver cómo queda'}
+              {viendo ? t('Seguir escribiendo', 'Keep writing') : t('Ver cómo queda', 'See how it looks')}
             </Link>
           </div>
         </div>
@@ -366,7 +371,7 @@ export default async function ConfiguracionPage({
         {contenido === null ? null : (
         <div className={`flex min-w-0 flex-col gap-4.5 ${viendo ? 'max-[1023px]:hidden' : ''}`}>
         {encargo === null || esAdmin ? null : (
-          <PanelCard title="Tu invitación, paso a paso">
+          <PanelCard title={t('Tu invitación, paso a paso', 'Your invitation, step by step')}>
             <EncargoDelCliente
               decide={decideElEncargo}
               encargo={encargo}
@@ -395,7 +400,7 @@ export default async function ConfiguracionPage({
           />
         {/* Quien organiza por pertenencia tiene estas tarjetas en «Configuración» (maqueta E31): aquí, solo escribir. */}
         {tema.estilo === undefined || !esDelAtelier ? null : (
-          <PanelCard title="Colores y letra">
+          <PanelCard title={t('Colores y letra', 'Colors and lettering')}>
             <EstiloDelEventoCard
               acentoDelDiseno={tema.estilo.acento?.principal ?? null}
               acentos={tema.estilo.acento === undefined ? [] : acentosPara(tema.estilo.acento)}
@@ -404,13 +409,13 @@ export default async function ConfiguracionPage({
               estilo={await events.estilo.leer(event.value.id)}
               eventId={event.value.id}
               eventSlug={event.value.slug}
-              mejorar={esDelAtelier ? { href: `/panel/eventos/${event.value.slug}/plan`, label: 'Ver planes' } : null}
+              mejorar={esDelAtelier ? { href: `/panel/eventos/${event.value.slug}/plan`, label: t('Ver planes', 'See plans') } : null}
               titulares={tema.estilo.titulares === undefined ? [] : TITULARES.filter((c) => c.clave !== tema.estilo?.titulares).map((c) => ({ ...c, clase: themeFonts[c.clave].variable, familia: `var(${FONT_VARIABLES[c.clave]})` }))}
             />
           </PanelCard>
         )}
         {!esDelAtelier ? null : (
-        <PanelCard title="Save the date">
+        <PanelCard title={t('Save the date', 'Save the date')}>
           <SaveTheDateCard
             disponible={esAdmin || (await events.saveTheDate.comprado(event.value.id))}
             eventId={event.value.id}
@@ -424,7 +429,7 @@ export default async function ConfiguracionPage({
         </PanelCard>
         )}
         {esAdmin || !esDelAtelier ? null : (
-          <PanelCard title="Preguntas al confirmar">
+          <PanelCard title={t('Preguntas al confirmar', 'RSVP questions')}>
             <PreguntasAlConfirmar eventId={event.value.id} eventSlug={event.value.slug} preguntas={await rsvp.preguntas.leer(event.value.id)} />
           </PanelCard>
         )}
@@ -438,7 +443,7 @@ export default async function ConfiguracionPage({
         )}
 
         {esDelAtelier && !escribiendo && !viendo ? (
-          <PanelCard title="Detalles del evento">
+          <PanelCard title={t('Detalles del evento', 'Event details')}>
             <div className="flex flex-col gap-6">
               <EventForm diseno={diseno} event={event.value} />
               <PrivacyForm contrasenaIncluida={contrasenaIncluida} eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
@@ -456,7 +461,7 @@ export default async function ConfiguracionPage({
         ) : null}
 
         {esAdmin && !escribiendo ? (
-          <PanelCard title="Plan y responsable">
+          <PanelCard title={t('Plan y responsable', 'Plan and owner')}>
             <ResponsableYPlan
               eventId={event.value.id}
               eventSlug={event.value.slug}

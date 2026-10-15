@@ -4,13 +4,15 @@ import { revalidatePath } from 'next/cache'
 import { guestbook } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 export type GuestbookActionResult = { ok: true } | { ok: false; kind: string; message: string }
 
-const fallo = (error: { kind: string; detail: string }): GuestbookActionResult => ({
+const fallo = async (error: { kind: string; detail: string }): Promise<GuestbookActionResult> => ({
   ok: false,
   kind: error.kind,
-  message: error.detail,
+  message: traducir(error.detail, await tr()),
 })
 
 // ============================================================================

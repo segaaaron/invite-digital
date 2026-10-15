@@ -10,6 +10,8 @@ import { resendInvitationAction, sendInvitationAction, setGroupPhoneAction, type
 import { QrDigital } from '@/shared/design/ui/QrDigital'
 import { renderMessage, whatsappLink } from '../domain/message-template'
 import { conCanal } from '../domain/invitation-url'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 export type DeliveryRow = {
   readonly id: string
@@ -29,10 +31,10 @@ export type DeliveryRow = {
 
 type Pestana = 'pendientes' | 'enviadas'
 
-function respuesta(fila: DeliveryRow): { tone: PillTone; text: string } {
-  if (fila.revoked) return { tone: 'no', text: 'Revocada' }
-  if (fila.confirmed === null) return { tone: 'pending', text: 'Sin responder' }
-  return fila.confirmed > 0 ? { tone: 'ok', text: 'Confirmó' } : { tone: 'no', text: 'No viene' }
+function respuesta(fila: DeliveryRow, t: T): { tone: PillTone; text: string } {
+  if (fila.revoked) return { tone: 'no', text: t('Revocada', 'Revoked') }
+  if (fila.confirmed === null) return { tone: 'pending', text: t('Sin responder', 'No reply') }
+  return fila.confirmed > 0 ? { tone: 'ok', text: t('Confirmó', 'Confirmed') } : { tone: 'no', text: t('No viene', 'Not coming') }
 }
 
 /** Cada otra forma de enviar: un botón cuadrado con icono y su nombre debajo, como en la hoja de compartir del teléfono. */
@@ -71,6 +73,7 @@ export function DeliveryPanel({
   /** La portada de su invitación: la vista previa del mensaje la enseña como la verá en WhatsApp. */
   portada?: string | null
 }) {
+  const t = useT()
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const [pestana, setPestana] = useState<Pestana>('pendientes')
@@ -114,7 +117,7 @@ export function DeliveryPanel({
     datos.set('groupId', fila.id)
     const r: ResendState = await (modo === 'nuevo' ? resendInvitationAction : sendInvitationAction)({ status: 'idle' }, datos)
     if (r.status !== 'success') {
-      setError(r.status === 'error' ? r.message : 'No se pudo preparar el enlace.')
+      setError(r.status === 'error' ? r.message : t('No se pudo preparar el enlace.', 'The link couldn’t be prepared.'))
       return null
     }
     setUrls((previas) => ({ ...previas, [fila.id]: r.url }))
@@ -227,20 +230,20 @@ export function DeliveryPanel({
     const muestra = mensaje(fila, url === undefined ? '' : conCanal(url, 'whatsapp')).trim()
     return (
       <section
-        aria-label={`Enviar a ${fila.label}`}
+        aria-label={t(`Enviar a ${fila.label}`, `Send to ${fila.label}`)}
         className={`flex flex-col gap-3 max-[767px]:fixed max-[767px]:inset-x-0 max-[767px]:bottom-0 max-[767px]:z-20 max-[767px]:max-h-[88dvh] max-[767px]:overflow-y-auto max-[767px]:rounded-t-[24px] max-[767px]:bg-bg max-[767px]:px-5 max-[767px]:pt-2.5 max-[767px]:pb-[max(env(safe-area-inset-bottom),20px)] max-[767px]:shadow-float motion-safe:max-[767px]:animate-slide-up ${elegida === fila.id ? '' : 'max-[767px]:hidden'}`}
         id={`otras-${fila.id}`}
       >
         <span aria-hidden className="mx-auto mb-1 h-1 w-10 rounded-full bg-line-panel-strong min-[768px]:hidden" />
         <div className="flex items-start justify-between gap-3 min-[768px]:hidden">
-          <p className="font-display text-[26px] leading-tight font-medium">Enviar a {fila.label}</p>
-          <button aria-label="Volver a la lista" className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised" onClick={() => setElegida(null)} type="button">
+          <p className="font-display text-[26px] leading-tight font-medium">{t(`Enviar a ${fila.label}`, `Send to ${fila.label}`)}</p>
+          <button aria-label={t('Volver a la lista', 'Back to the list')} className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised" onClick={() => setElegida(null)} type="button">
             <CloseIcon className="size-4" />
           </button>
         </div>
 
         {fila.revoked ? (
-          <p className="text-[14px] text-ink-soft">Esta invitación está revocada: se reabre desde «Editar invitado».</p>
+          <p className="text-[14px] text-ink-soft">{t('Esta invitación está revocada: se reabre desde «Editar invitado».', 'This invitation is revoked: reopen it from “Edit guest”.')}</p>
         ) : (
           <>
             {/* Así le llega: la portada y el mensaje, como en el chat. */}
@@ -256,43 +259,43 @@ export function DeliveryPanel({
             </div>
 
             <button
-              aria-label={`Enviar por WhatsApp a ${fila.label}`}
+              aria-label={t(`Enviar por WhatsApp a ${fila.label}`, `Send via WhatsApp to ${fila.label}`)}
               className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4 text-[15px] font-medium text-white transition-colors hover:bg-whatsapp-hover disabled:cursor-not-allowed disabled:opacity-40"
               disabled={bloqueado}
               onClick={() => porWhatsapp(fila)}
               type="button"
             >
               <WhatsAppIcon className="size-5" />
-              {preparando ? 'Preparando…' : 'Enviar por WhatsApp'}
+              {preparando ? t('Preparando…', 'Preparing…') : t('Enviar por WhatsApp', 'Send via WhatsApp')}
             </button>
 
             {url === undefined && fila.sent ? (
               <p className="text-[13px] text-ink-soft" role="status">
-                Este invitado ya tiene su enlace: se envió antes de que el panel lo guardara, así que aquí no se puede mostrar.
+                {t('Este invitado ya tiene su enlace: se envió antes de que el panel lo guardara, así que aquí no se puede mostrar.', 'This guest already has their link: it was sent before the panel stored it, so it can’t be shown here.')}
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-2">
                 <button className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, (u) => copiar(fila, conCanal(u, 'enlace'), 'enlace'))} type="button">
                   <CopyIcon />
-                  {copiado === `${fila.id}:enlace` ? 'Copiado' : (
+                  {copiado === `${fila.id}:enlace` ? t('Copiado', 'Copied') : (
                     <span>
-                      <span className="min-[768px]:hidden">Copiar e</span>
-                      <span className="max-[767px]:hidden">E</span>nlace
+                      <span className="min-[768px]:hidden">{t('Copiar enlace', 'Copy link')}</span>
+                      <span className="max-[767px]:hidden">{t('Enlace', 'Link')}</span>
                     </span>
                   )}
                 </button>
                 <button className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, (u) => copiar(fila, mensaje(fila, conCanal(u, 'mensaje')), 'mensaje'))} type="button">
                   <MessageIcon />
-                  {copiado === `${fila.id}:mensaje` ? 'Copiado' : (
+                  {copiado === `${fila.id}:mensaje` ? t('Copiado', 'Copied') : (
                     <span>
-                      <span className="min-[768px]:hidden">Copiar m</span>
-                      <span className="max-[767px]:hidden">M</span>ensaje
+                      <span className="min-[768px]:hidden">{t('Copiar mensaje', 'Copy message')}</span>
+                      <span className="max-[767px]:hidden">{t('Mensaje', 'Message')}</span>
                     </span>
                   )}
                 </button>
                 <button aria-pressed={conQr} className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, () => setConQr((v) => !v))} type="button">
                   <QrIcon />
-                  Código QR
+                  {t('Código QR', 'QR code')}
                 </button>
               </div>
             )}
@@ -303,16 +306,16 @@ export function DeliveryPanel({
               </div>
             )}
 
-            <p className="text-center text-[13px] text-ink-mute min-[768px]:hidden">Al enviarla, la marcamos como enviada.</p>
+            <p className="text-center text-[13px] text-ink-mute min-[768px]:hidden">{t('Al enviarla, la marcamos como enviada.', 'Once you send it, we mark it as sent.')}</p>
 
             <details className="group text-[14px]">
               <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-ink-mute hover:text-ink [&::-webkit-details-marker]:hidden">
-                Su teléfono, el enlace y otras formas
+                {t('Su teléfono, el enlace y otras formas', 'Their phone, the link and other ways')}
               </summary>
               <div className="mt-2 flex flex-col gap-3">
                 <div>
                   <label className="mb-1 block text-[13px] text-ink-soft" htmlFor={`tel-${fila.id}`}>
-                    Teléfono de {fila.label}
+                    {t(`Teléfono de ${fila.label}`, `${fila.label}’s phone`)}
                   </label>
                   <CampoTelefono
                     id={`tel-${fila.id}`}
@@ -323,7 +326,7 @@ export function DeliveryPanel({
                 </div>
                 {url === undefined ? null : (
                   <input
-                    aria-label={`Enlace de la invitación de ${fila.label}`}
+                    aria-label={t(`Enlace de la invitación de ${fila.label}`, `${fila.label}’s invitation link`)}
                     className="w-full min-w-0 rounded-[10px] border border-line-panel bg-bg-raised px-3 py-2 font-codigo text-[12.5px] text-ink-soft"
                     onFocus={(e) => e.currentTarget.select()}
                     readOnly
@@ -334,12 +337,12 @@ export function DeliveryPanel({
                   {url === undefined ? (
                     <button className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, (u) => window.location.assign(mailto(u)))} type="button">
                       <MailIcon />
-                      Correo
+                      {t('Correo', 'Email')}
                     </button>
                   ) : (
                     <a className={OTRA_FORMA} href={mailto(url)} onClick={() => marcar(fila)}>
                       <MailIcon />
-                      Correo
+                      {t('Correo', 'Email')}
                     </a>
                   )}
                   {url === undefined ? (
@@ -356,7 +359,7 @@ export function DeliveryPanel({
                   {puedeCompartir ? (
                     <button className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, (u) => compartir(fila, u))} type="button">
                       <ShareIcon />
-                      Compartir
+                      {t('Compartir', 'Share')}
                     </button>
                   ) : null}
                 </div>
@@ -367,18 +370,18 @@ export function DeliveryPanel({
               confirmarNuevo === fila.id ? (
                 <div className="flex flex-col gap-2 border-t border-line-panel pt-3" role="alert">
                   <p className="text-[13.5px] leading-[1.6] text-ink">
-                    El enlace actual y su pase de entrada <strong className="font-medium">dejarán de servir</strong>. Úsalo solo si lo perdió o llegó a quien no debía.
+                    {t('El enlace actual y su pase de entrada', 'The current link and its entry pass')} <strong className="font-medium">{t('dejarán de servir', 'will stop working')}</strong>. {t('Úsalo solo si lo perdió o llegó a quien no debía.', 'Only use this if they lost it or it reached the wrong person.')}
                   </p>
                   <div className="flex gap-2">
                     <PanelButton disabled={bloqueado} onClick={() => enlaceNuevo(fila)} variant="danger">
-                      Sí, generar uno nuevo
+                      {t('Sí, generar uno nuevo', 'Yes, generate a new one')}
                     </PanelButton>
-                    <PanelButton onClick={() => setConfirmarNuevo(null)}>Cancelar</PanelButton>
+                    <PanelButton onClick={() => setConfirmarNuevo(null)}>{t('Cancelar', 'Cancel')}</PanelButton>
                   </div>
                 </div>
               ) : (
                 <button className="min-h-11 w-fit cursor-pointer text-[13px] text-ink-mute underline underline-offset-4 hover:text-danger" onClick={() => setConfirmarNuevo(fila.id)} type="button">
-                  ¿Lo perdió? Generar un enlace nuevo
+                  {t('¿Lo perdió? Generar un enlace nuevo', 'Lost it? Generate a new link')}
                 </button>
               )
             ) : null}
@@ -404,14 +407,14 @@ export function DeliveryPanel({
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="font-display text-[30px] leading-tight font-medium max-[767px]:text-[26px]" id="enviar-titulo">
-              Enviar invitaciones
+              {t('Enviar invitaciones', 'Send invitations')}
             </h2>
             <p className="mt-1 text-[15px] text-ink-mute">
-              <span>{`${hechas} de ${total} enviadas`}</span>. Al enviar una, la marcamos para que no la repitas.
+              <span>{t(`${hechas} de ${total} enviadas`, `${hechas} of ${total} sent`)}</span>. {t('Al enviar una, la marcamos para que no la repitas.', 'When you send one, we mark it so you don’t repeat it.')}
             </p>
           </div>
           <button
-            aria-label="Cerrar"
+            aria-label={t('Cerrar', 'Close')}
             className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold"
             onClick={cerrar}
             type="button"
@@ -427,8 +430,8 @@ export function DeliveryPanel({
         <div className="flex gap-6 border-b border-line-panel" role="tablist">
           {(
             [
-              ['pendientes', 'Por enviar', pendientes.length],
-              ['enviadas', 'Enviadas', enviadas.length],
+              ['pendientes', t('Por enviar', 'To send'), pendientes.length],
+              ['enviadas', t('Enviadas', 'Sent'), enviadas.length],
             ] as const
           ).map(([clave, texto, cuenta]) => (
             <button
@@ -463,9 +466,9 @@ export function DeliveryPanel({
           <div className="min-[768px]:col-span-2">
             <EmptyState
               compact
-              description={pestana === 'pendientes' ? 'Las enviadas siguen en su pestaña, por si hay que volver a mandarlas.' : 'Empieza por «Por enviar»: WhatsApp o su enlace, por donde quieras.'}
+              description={pestana === 'pendientes' ? t('Las enviadas siguen en su pestaña, por si hay que volver a mandarlas.', 'Sent ones stay in their tab, in case you need to send them again.') : t('Empieza por «Por enviar»: WhatsApp o su enlace, por donde quieras.', 'Start with “To send”: WhatsApp or the link, whichever you like.')}
               icon={pestana === 'pendientes' ? <CheckIcon /> : <MailIcon />}
-              title={pestana === 'pendientes' ? 'Todas tus invitaciones salieron' : 'Aún no enviaste ninguna'}
+              title={pestana === 'pendientes' ? t('Todas tus invitaciones salieron', 'All your invitations went out') : t('Aún no enviaste ninguna', 'You haven’t sent any yet')}
             />
           </div>
         ) : (
@@ -473,14 +476,14 @@ export function DeliveryPanel({
             <ul className="flex min-w-0 flex-col gap-1.5">
               {lista.map((fila) => {
                 const telefono = (telefonos[fila.id] ?? '').replace(/[^0-9+]/g, '')
-                const estado = pestana === 'enviadas' ? respuesta(fila) : recienEnviadas.has(fila.id) ? { tone: 'ok' as const, text: 'Enviada' } : null
+                const estado = pestana === 'enviadas' ? respuesta(fila, t) : recienEnviadas.has(fila.id) ? { tone: 'ok' as const, text: t('Enviada', 'Sent') } : null
                 const activa = enVista?.id === fila.id
                 return (
                   <li aria-label={fila.label} key={fila.id}>
                     <button
                       aria-controls={`otras-${fila.id}`}
                       aria-expanded={elegida === fila.id}
-                      aria-label={`Formas de enviar a ${fila.label}`}
+                      aria-label={t(`Formas de enviar a ${fila.label}`, `Ways to send to ${fila.label}`)}
                       className={`flex min-h-15 w-full cursor-pointer items-center gap-3 rounded-[12px] border px-3 py-2.5 text-left transition-colors ${activa ? 'min-[768px]:border-gold min-[768px]:bg-bg-raised' : 'border-transparent hover:bg-fila'} max-[767px]:border-line-panel max-[767px]:bg-bg-raised`}
                       onClick={() => elegir(fila)}
                       type="button"
@@ -489,7 +492,7 @@ export function DeliveryPanel({
                       <span className="min-w-0 flex-1">
                         <span className="block text-[15px] leading-snug font-medium [overflow-wrap:anywhere]">{fila.label}</span>
                         <span className="block truncate text-[13px] text-ink-mute">
-                          {fila.seats ?? 1} {(fila.seats ?? 1) === 1 ? 'persona' : 'personas'}, {telefono === '' ? 'sin teléfono' : telefono}
+                          {fila.seats ?? 1} {(fila.seats ?? 1) === 1 ? t('persona', 'person') : t('personas', 'people')}, {telefono === '' ? t('sin teléfono', 'no phone') : telefono}
                         </span>
                       </span>
                       {estado === null ? null : <Pill tone={estado.tone}>{estado.text}</Pill>}

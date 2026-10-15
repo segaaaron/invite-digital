@@ -9,6 +9,8 @@ import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { CheckIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { Copiar } from './AccionesDeVenta'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import type { T } from '@/shared/i18n/t'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 type Fiesta = 'boda' | 'xv' | 'cumple'
 
@@ -18,10 +20,10 @@ export type ExtraCotizable = { readonly slug: string; readonly name: string; rea
 
 const BS = new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB', minimumFractionDigits: 2 })
 const bs = (cents: number) => BS.format(cents / 100).replace('BOB', 'Bs').replace(/ /g, ' ')
-const FIESTAS: readonly { clave: Fiesta; texto: string }[] = [
-  { clave: 'boda', texto: 'Boda' },
-  { clave: 'xv', texto: 'XV años' },
-  { clave: 'cumple', texto: 'Cumpleaños' },
+const fiestas = (t: T): readonly { clave: Fiesta; texto: string }[] => [
+  { clave: 'boda', texto: t('Boda', 'Wedding') },
+  { clave: 'xv', texto: t('XV años', 'Quinceañera') },
+  { clave: 'cumple', texto: t('Cumpleaños', 'Birthday') },
 ]
 
 const INICIAL: CotizacionState = { status: 'idle' }
@@ -53,6 +55,7 @@ export function Cotizador({
   /** Adónde vuelve al cerrar: lo pone el panel lateral que lo envuelve. */
   cerrarHref?: string
 }) {
+  const t = useT()
   const [estado, accion] = useActionState(sinCaerse(cotizarAction), INICIAL)
   const [fiesta, setFiesta] = useState<Fiesta>(consulta?.fiesta ?? 'boda')
   const [plan, setPlan] = useState(planes[1]?.slug ?? planes[0]?.slug ?? '')
@@ -91,25 +94,26 @@ export function Cotizador({
         <div className="flex items-center gap-3 rounded-[18px] border border-sage/30 bg-pill-ok px-5 py-4 text-pill-ok-ink">
           <CheckIcon className="size-5 shrink-0" />
           <p className="text-[14px]">
-            Cotización <b className="font-codigo font-medium">{estado.ref}</b> lista. Mándasela y, cuando pague, llega a «Por revisar».
+            {t('Cotización', 'Quote')} <b className="font-codigo font-medium">{estado.ref}</b>{' '}
+            {t('lista. Mándasela y, cuando pague, llega a «Por revisar».', 'ready. Send it and, once they pay, it reaches “To review”.')}
           </p>
         </div>
         <div className="rounded-[16px] border border-line-panel bg-white px-4 py-3.5 text-[13px] leading-relaxed text-ink-soft">{estado.mensaje}</div>
         <div className="flex flex-wrap gap-2.5">
           {estado.whatsapp === null ? null : (
             <PanelButton external href={estado.whatsapp} variant="primary">
-              <WhatsAppIcon className="size-4" /> Enviar por WhatsApp
+              <WhatsAppIcon className="size-4" /> {t('Enviar por WhatsApp', 'Send on WhatsApp')}
             </PanelButton>
           )}
           <div className="rounded-full border border-line-panel-strong bg-white">
-            <Copiar texto={estado.mensaje}>Copiar el mensaje</Copiar>
+            <Copiar texto={estado.mensaje}>{t('Copiar el mensaje', 'Copy the message')}</Copiar>
           </div>
           <div className="rounded-full border border-line-panel-strong bg-white">
-            <Copiar texto={estado.enlace}>Copiar el enlace</Copiar>
+            <Copiar texto={estado.enlace}>{t('Copiar el enlace', 'Copy the link')}</Copiar>
           </div>
         </div>
         <Link className="text-[13px] text-ink underline underline-offset-4" href={`/panel/admin/ventas?venta=p-${estado.ref}`} scroll={false}>
-          Ver la venta
+          {t('Ver la venta', 'See the sale')}
         </Link>
       </div>
     )
@@ -123,35 +127,40 @@ export function Cotizador({
       <input name="precio" type="hidden" value={String(final / 100)} />
 
       <div className="grid gap-4 min-[480px]:grid-cols-2">
-        <Campo etiqueta="Cliente" id={`${id}-n`}>
-          <input className={FIELD_CLASS} defaultValue={consulta?.nombre ?? ''} id={`${id}-n`} maxLength={160} name="nombre" placeholder="Carla y Diego" required />
+        <Campo etiqueta={t('Cliente', 'Client')} id={`${id}-n`}>
+          <input className={FIELD_CLASS} defaultValue={consulta?.nombre ?? ''} id={`${id}-n`} maxLength={160} name="nombre" placeholder={t('Carla y Diego', 'Carla and Diego')} required />
         </Campo>
         <Campo etiqueta="WhatsApp" id={`${id}-c`}>
           <input className={FIELD_CLASS} defaultValue={consulta?.contacto ?? ''} id={`${id}-c`} maxLength={160} name="contacto" placeholder="+591 70000000" required />
         </Campo>
-        <Campo etiqueta="Fiesta" id={`${id}-fi`}>
+        <Campo etiqueta={t('Fiesta', 'Party')} id={`${id}-fi`}>
           <select className={FIELD_CLASS} id={`${id}-fi`} name="fiesta" onChange={(e) => setFiesta(e.target.value as Fiesta)} value={fiesta}>
-            {FIESTAS.map((f) => (
+            {fiestas(t).map((f) => (
               <option key={f.clave} value={f.clave}>
                 {f.texto}
               </option>
             ))}
           </select>
         </Campo>
-        <Campo etiqueta="Fecha del evento" id={`${id}-f`}>
+        <Campo etiqueta={t('Fecha del evento', 'Event date')} id={`${id}-f`}>
           <CampoFecha hoy={hoy} id={`${id}-f`} name="fecha" onChange={setFecha} valor={fecha} />
         </Campo>
       </div>
       {ocupados >= capacidad ? (
         <p className="rounded-[12px] bg-pill-pending px-4 py-3 text-[14px] text-pill-pending-ink" role="status">
-          Ese día ya tienes {ocupados} {ocupados === 1 ? 'evento' : 'eventos'}: tu agenda aguanta {capacidad}. Confírmalo antes de cotizar.
+          {t(
+            `Ese día ya tienes ${ocupados} ${ocupados === 1 ? 'evento' : 'eventos'}: tu agenda aguanta ${capacidad}. Confírmalo antes de cotizar.`,
+            `That day you already have ${ocupados} ${ocupados === 1 ? 'event' : 'events'}: your calendar holds ${capacidad}. Confirm it before quoting.`,
+          )}
         </p>
       ) : ocupados > 0 ? (
-        <p className="text-[13px] text-ink-mute">Ese día ya tienes {ocupados} {ocupados === 1 ? 'evento' : 'eventos'}.</p>
+        <p className="text-[13px] text-ink-mute">
+          {t(`Ese día ya tienes ${ocupados} ${ocupados === 1 ? 'evento' : 'eventos'}.`, `That day you already have ${ocupados} ${ocupados === 1 ? 'event' : 'events'}.`)}
+        </p>
       ) : null}
 
       <div className="grid gap-4 min-[480px]:grid-cols-2">
-        <Campo etiqueta="Plan" id={`${id}-pl`}>
+        <Campo etiqueta={t('Plan', 'Plan')} id={`${id}-pl`}>
           <select className={FIELD_CLASS} id={`${id}-pl`} name="plan" onChange={(e) => setPlan(e.target.value)} required value={plan}>
             {planes.map((p) => (
               <option key={p.slug} value={p.slug}>
@@ -160,9 +169,9 @@ export function Cotizador({
             ))}
           </select>
         </Campo>
-        <Campo etiqueta="Diseño sugerido (opcional)" id={`${id}-m`}>
+        <Campo etiqueta={t('Diseño sugerido (opcional)', 'Suggested design (optional)')} id={`${id}-m`}>
           <select className={FIELD_CLASS} defaultValue="" id={`${id}-m`} key={fiesta} name="modelo">
-            <option value="">Lo elige después</option>
+            <option value="">{t('Lo elige después', 'They choose later')}</option>
             {modelosDeFiesta.map((m) => (
               <option key={m.key} value={m.key}>
                 {m.label}
@@ -174,7 +183,7 @@ export function Cotizador({
 
       {extras.length === 0 ? null : (
         <fieldset className="flex flex-col">
-          <legend className={`${LABEL_CLASS} mb-1.5`}>Extras</legend>
+          <legend className={`${LABEL_CLASS} mb-1.5`}>{t('Extras', 'Extras')}</legend>
           {extras.map((x) => (
             <label className="flex min-h-11 cursor-pointer items-center gap-3 py-1.5 text-[15px]" key={x.slug}>
               <input
@@ -197,22 +206,22 @@ export function Cotizador({
 
       <div className="flex flex-col gap-2 rounded-[14px] border border-line-panel bg-bg-raised px-4.5 py-4">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-[15px]">Total</span>
+          <span className="text-[15px]">{t('Total', 'Total')}</span>
           <span className="font-display text-[34px] leading-none font-medium [font-variant-numeric:lining-nums]">{bs(final).replace(/,00$/, '')}</span>
         </div>
-        {descuento > 0 ? <Linea etiqueta="Descuento" tono="ok" valor={`− ${bs(descuento)}`} /> : null}
-        {descuento < 0 ? <Linea etiqueta="Por encima de lista" tono="no" valor={bs(-descuento)} /> : null}
-        {anticipo === null ? null : <Linea etiqueta={reservaFija !== null ? 'Reserva' : `Anticipo para reservar (${elPlan?.depositPct} %)`} valor={bs(anticipo)} />}
+        {descuento > 0 ? <Linea etiqueta={t('Descuento', 'Discount')} tono="ok" valor={`− ${bs(descuento)}`} /> : null}
+        {descuento < 0 ? <Linea etiqueta={t('Por encima de lista', 'Above list price')} tono="no" valor={bs(-descuento)} /> : null}
+        {anticipo === null ? null : <Linea etiqueta={reservaFija !== null ? t('Reserva', 'Booking fee') : t(`Anticipo para reservar (${elPlan?.depositPct} %)`, `Deposit to book (${elPlan?.depositPct} %)`)} valor={bs(anticipo)} />}
         {/* El precio especial, plegado: casi siempre se cobra el de lista. */}
         <details className="group text-[14px]" open={precioEscrito !== null}>
           <summary className="inline-flex min-h-11 cursor-pointer list-none items-center font-medium text-gold-deep [&::-webkit-details-marker]:hidden">
-            {precioEscrito === null ? 'Cambiar el precio' : 'Precio especial'}
+            {precioEscrito === null ? t('Cambiar el precio', 'Change the price') : t('Precio especial', 'Special price')}
           </summary>
           <div className="flex items-center gap-2.5">
             <div className="relative flex-1">
               <span className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[14px] text-ink-mute">Bs</span>
               <input
-                aria-label="Precio final"
+                aria-label={t('Precio final', 'Final price')}
                 className={`${FIELD_CLASS} pl-10`}
                 inputMode="decimal"
                 onChange={(e) => setPrecioEscrito(e.target.value.trim() === '' ? null : e.target.value)}
@@ -220,14 +229,14 @@ export function Cotizador({
               />
             </div>
             <PanelButton disabled={precioEscrito === null} onClick={() => setPrecioEscrito(null)}>
-              Precio de lista
+              {t('Precio de lista', 'List price')}
             </PanelButton>
           </div>
         </details>
       </div>
 
-      <Campo etiqueta="Nota para el cliente (opcional)" id={`${id}-nota`}>
-        <textarea className={`${FIELD_CLASS} min-h-24`} id={`${id}-nota`} maxLength={1000} name="nota" placeholder="Incluye la sesión de fotos de la portada." />
+      <Campo etiqueta={t('Nota para el cliente (opcional)', 'Note for the client (optional)')} id={`${id}-nota`}>
+        <textarea className={`${FIELD_CLASS} min-h-24`} id={`${id}-nota`} maxLength={1000} name="nota" placeholder={t('Incluye la sesión de fotos de la portada.', 'Includes the cover photo shoot.')} />
       </Campo>
 
       {estado.status === 'error' ? (
@@ -237,8 +246,8 @@ export function Cotizador({
       ) : null}
 
       <div className="flex flex-wrap justify-end gap-2.5 border-t border-line-panel pt-5 max-[767px]:flex-col-reverse max-[767px]:items-stretch">
-        <SubmitButton pendingLabel="Guardando…" variant="default">
-          Guardar sin enviar
+        <SubmitButton pendingLabel={t('Guardando…', 'Saving…')} variant="default">
+          {t('Guardar sin enviar', 'Save without sending')}
         </SubmitButton>
         <button
           className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[14.5px] font-medium text-white transition-colors hover:bg-whatsapp-hover"
@@ -248,7 +257,7 @@ export function Cotizador({
           }}
           type="submit"
         >
-          <WhatsAppIcon className="size-4" /> Enviar por WhatsApp
+          <WhatsAppIcon className="size-4" /> {t('Enviar por WhatsApp', 'Send on WhatsApp')}
         </button>
       </div>
     </form>

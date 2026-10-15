@@ -18,9 +18,13 @@ import { PanelButton, Pill, TARJETA_DESTACADA } from '@/shared/design/ui/panel/P
 import { isErr } from '@/shared/result'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { NAV_ICONS } from '@/modules/shell/ui/nav-icons'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
+import { T } from '@/shared/i18n/idioma-navegador'
+import { INTL } from '@/shared/i18n/t'
+import { traducir } from '@/shared/i18n/en-ingles'
 
-const DIA_LARGO = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
-const HORA = new Intl.DateTimeFormat('es-BO', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/La_Paz' })
+const DIA_LARGO = { es: new Intl.DateTimeFormat(INTL.es, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }), en: new Intl.DateTimeFormat(INTL.en, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }) }
+const HORA = new Intl.DateTimeFormat(INTL.es, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/La_Paz' })
 
 type Pendiente = { readonly clave: string; readonly titulo: string; readonly detalle: string; readonly accion: string; readonly href: string; readonly externo?: boolean }
 
@@ -32,6 +36,7 @@ type Pendiente = { readonly clave: string; readonly titulo: string; readonly det
  */
 export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const actor = await requireSession()
+  const [t, locale] = await Promise.all([tr(), idiomaDeLaPeticion()])
   const { slug } = await params
 
   const event = await events.getFor(actor, slug, { section: 'cliente' })
@@ -78,68 +83,68 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   // ── La cabecera: el día, la hora y el lugar, y cuánto falta.
   const fiesta = fiestaDeTema(event.value.themeKey)
   const dias = diasHasta(event.value.eventDate, ahora)
-  const diaTexto = DIA_LARGO.format(new Date(`${event.value.eventDate}T00:00:00Z`))
+  const diaTexto = DIA_LARGO[locale].format(new Date(`${event.value.eventDate}T00:00:00Z`))
   const inicio = contenido.schedule?.startsAt === undefined ? null : new Date(contenido.schedule.startsAt)
   const lugares = [contenido.ceremony?.place, contenido.reception?.place].filter((l): l is string => (l ?? '').trim() !== '')
   const cuando = `${diaTexto.charAt(0).toUpperCase()}${diaTexto.slice(1)}${inicio === null || Number.isNaN(inicio.getTime()) ? '' : `, ${HORA.format(inicio)}`}`
-  const donde = lugares.length === 0 ? '' : `${lugares.join(' y ')}.`
-  const enGrande = dias > 1 ? { n: String(dias), palabra: 'días' } : dias === 1 ? { n: '1', palabra: 'día' } : dias === 0 ? { n: 'Hoy', palabra: '' } : null
+  const donde = lugares.length === 0 ? '' : `${lugares.join(t(' y ', ' and '))}.`
+  const enGrande = dias > 1 ? { n: String(dias), palabra: t('días', 'days') } : dias === 1 ? { n: '1', palabra: t('día', 'day') } : dias === 0 ? { n: t('Hoy', 'Today'), palabra: '' } : null
 
   // ── Lo próximo: lo único que toca hacer ahora, con su botón (y uno secundario cuando ayuda).
   const porEnviar = filas.filter((f) => f.revokedAt === null && (f.invitationSentAt ?? null) === null).length
   const algunaEnviada = filas.some((f) => (f.invitationSentAt ?? null) !== null)
   const pendientes = filas.filter((f) => f.revokedAt === null && f.confirmed === null).length
   const escribir = {
-    titulo: 'Escribe tu invitación',
-    detalle: 'Para enviarla basta con quién celebra y sus papás. Lo que no escribas sale como el ejemplo del diseño.',
-    accion: 'Escribirla',
+    titulo: t('Escribe tu invitación', 'Write your invitation'),
+    detalle: t('Para enviarla basta con quién celebra y sus papás. Lo que no escribas sale como el ejemplo del diseño.', 'To send it you only need who is celebrating and their parents. Anything you don’t write shows as the design’s example.'),
+    accion: t('Escribirla', 'Write it'),
     href: `${base}/configuracion`,
-    secundaria: { accion: 'Verla', href: `${base}/vista-previa` },
+    secundaria: { accion: t('Verla', 'View it'), href: `${base}/vista-previa` },
   }
   const proximo =
     !invitacionLista && !algunaEnviada
       ? escribir
       : filas.length === 0
-        ? { titulo: 'Carga a tus invitados', detalle: 'Cada uno recibe su enlace; sus acompañantes entran con el mismo.', accion: 'Añadir invitados', href: `${base}/invitados?panel=alta`, secundaria: { accion: 'Importar una lista', href: `${base}/invitados?panel=importar` } }
+        ? { titulo: t('Carga a tus invitados', 'Add your guests'), detalle: t('Cada uno recibe su enlace; sus acompañantes entran con el mismo.', 'Each one gets their link; their companions come in with the same one.'), accion: t('Añadir invitados', 'Add guests'), href: `${base}/invitados?panel=alta`, secundaria: { accion: t('Importar una lista', 'Import a list'), href: `${base}/invitados?panel=importar` } }
         : porEnviar > 0
-          ? { titulo: porEnviar === 1 ? 'Falta 1 invitación por enviar' : `Faltan ${porEnviar} invitaciones por enviar`, detalle: 'Se envían por WhatsApp o con su enlace, una por una.', accion: 'Enviar ahora', href: `${base}/invitados?panel=envio`, secundaria: { accion: 'Ver quiénes son', href: `${base}/invitados` } }
+          ? { titulo: porEnviar === 1 ? t('Falta 1 invitación por enviar', '1 invitation left to send') : t(`Faltan ${porEnviar} invitaciones por enviar`, `${porEnviar} invitations left to send`), detalle: t('Se envían por WhatsApp o con su enlace, una por una.', 'They are sent via WhatsApp or with their link, one by one.'), accion: t('Enviar ahora', 'Send now'), href: `${base}/invitados?panel=envio`, secundaria: { accion: t('Ver quiénes son', 'See who they are'), href: `${base}/invitados` } }
           : !invitacionLista
             ? escribir
             : pendientes > 0
-              ? { titulo: `${pendientes} ${pendientes === 1 ? 'invitado aún no responde' : 'invitados aún no responden'}`, detalle: 'Un recordatorio por WhatsApp suele traer la mitad de vuelta.', accion: 'Enviar recordatorios', href: `${base}/invitados`, secundaria: { accion: 'Ver quiénes son', href: `${base}/invitados` } }
-              : { titulo: 'Todos respondieron', detalle: `${vienen} ${vienen === 1 ? 'persona viene' : 'personas vienen'}.`, accion: 'Ver invitados', href: `${base}/invitados`, secundaria: null }
+              ? { titulo: pendientes === 1 ? t('1 invitado aún no responde', '1 guest hasn’t replied yet') : t(`${pendientes} invitados aún no responden`, `${pendientes} guests haven’t replied yet`), detalle: t('Un recordatorio por WhatsApp suele traer la mitad de vuelta.', 'A WhatsApp reminder usually brings half of them back.'), accion: t('Enviar recordatorios', 'Send reminders'), href: `${base}/invitados`, secundaria: { accion: t('Ver quiénes son', 'See who they are'), href: `${base}/invitados` } }
+              : { titulo: t('Todos respondieron', 'Everyone replied'), detalle: vienen === 1 ? t('1 persona viene.', '1 person is coming.') : t(`${vienen} personas vienen.`, `${vienen} people are coming.`), accion: t('Ver invitados', 'View guests'), href: `${base}/invitados`, secundaria: null }
 
   // ── Esta semana: lo que vence o ya venció, cada cosa con adónde ir.
   const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY)
-  const dia = (iso: string) => diaCorto(new Date(`${iso}T12:00:00.000Z`))
+  const dia = (iso: string) => diaCorto(new Date(`${iso}T12:00:00.000Z`), locale)
   const semana: Pendiente[] = [
     ...pagosQueVencen(partidas, hoyBolivia).map((g) => ({
       clave: `pago-${g.id}`,
-      titulo: `Pagar ${g.concepto.charAt(0).toLowerCase()}${g.concepto.slice(1)}`,
-      detalle: `${bs(g.amountCents)}, ${g.dueDate! < hoyBolivia ? 'venció' : 'vence'} el ${dia(g.dueDate!)}`,
-      accion: 'Ver pago',
+      titulo: t(`Pagar ${g.concepto.charAt(0).toLowerCase()}${g.concepto.slice(1)}`, `Pay ${g.concepto}`),
+      detalle: t(`${bs(g.amountCents)}, ${g.dueDate! < hoyBolivia ? 'venció' : 'vence'} el ${dia(g.dueDate!)}`, `${bs(g.amountCents)}, ${g.dueDate! < hoyBolivia ? 'was due' : 'due'} ${dia(g.dueDate!)}`),
+      accion: t('Ver pago', 'View payment'),
       href: `${base}/planner/presupuesto`,
     })),
     ...(mesas !== null && mesas.unseated.length > 0
-      ? [{ clave: 'mesas', titulo: `Sentar ${mesas.unseated.length === 1 ? 'a 1 invitación' : `a ${mesas.unseated.length} invitaciones`}`, detalle: 'Aún no tienen mesa', accion: 'Ir a mesas', href: `${base}/mesas` }]
+      ? [{ clave: 'mesas', titulo: mesas.unseated.length === 1 ? t('Sentar a 1 invitación', 'Seat 1 invitation') : t(`Sentar a ${mesas.unseated.length} invitaciones`, `Seat ${mesas.unseated.length} invitations`), detalle: t('Aún no tienen mesa', 'They don’t have a table yet'), accion: t('Ir a mesas', 'Go to tables'), href: `${base}/mesas` }]
       : []),
     ...proveedoresSinConfirmar(proveedores).map((v): Pendiente => {
-      const whatsapp = v.whatsapp ? buildWhatsAppLink(v.whatsapp, `Hola, ¿nos confirmas para ${event.value.title}?`) : null
+      const whatsapp = v.whatsapp ? buildWhatsAppLink(v.whatsapp, t(`Hola, ¿nos confirmas para ${event.value.title}?`, `Hi, can you confirm for ${event.value.title}?`)) : null
       return {
         clave: `prov-${v.id}`,
-        titulo: `Confirmar ${v.service.charAt(0).toLowerCase()}${v.service.slice(1)}`,
-        detalle: 'Todavía no confirmó',
-        accion: whatsapp === null ? 'Ver' : 'Escribirle',
+        titulo: t(`Confirmar ${v.service.charAt(0).toLowerCase()}${v.service.slice(1)}`, `Confirm ${v.service}`),
+        detalle: t('Todavía no confirmó', 'Hasn’t confirmed yet'),
+        accion: whatsapp === null ? t('Ver', 'View') : t('Escribirle', 'Message them'),
         href: whatsapp ?? `${base}/planner/proveedores`,
         externo: whatsapp !== null,
       }
     }),
     ...tareas
-      .map((t) => ({ t, estado: estadoDeTarea(t, hoyBolivia) }))
+      .map((tarea) => ({ tarea, estado: estadoDeTarea(tarea, hoyBolivia) }))
       .filter(({ estado }) => estado === 'atrasada' || estado === 'semana')
-      .map(({ t, estado }) => ({ clave: `tarea-${t.id}`, titulo: t.title, detalle: `${estado === 'atrasada' ? 'Venció' : 'Vence'} el ${dia(t.dueDate!)}`, accion: 'Ver', href: `${base}/planner/tareas` })),
+      .map(({ tarea, estado }) => ({ clave: `tarea-${tarea.id}`, titulo: tarea.title, detalle: estado === 'atrasada' ? t(`Venció el ${dia(tarea.dueDate!)}`, `Was due ${dia(tarea.dueDate!)}`) : t(`Vence el ${dia(tarea.dueDate!)}`, `Due ${dia(tarea.dueDate!)}`), accion: t('Ver', 'View'), href: `${base}/planner/tareas` })),
     ...(porAgradecer > 0
-      ? [{ clave: 'firmas', titulo: `Agradecer ${porAgradecer === 1 ? '1 firma nueva' : `${porAgradecer} firmas nuevas`}`, detalle: 'En tu libro de firmas', accion: 'Leer', href: `${base}/mensajes` }]
+      ? [{ clave: 'firmas', titulo: porAgradecer === 1 ? t('Agradecer 1 firma nueva', 'Thank 1 new entry') : t(`Agradecer ${porAgradecer} firmas nuevas`, `Thank ${porAgradecer} new entries`), detalle: t('En tu libro de firmas', 'In your guestbook'), accion: t('Leer', 'Read'), href: `${base}/mensajes` }]
       : []),
   ].slice(0, 5)
 
@@ -170,14 +175,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       <section aria-label={event.value.title} className="rounded-[16px] bg-shell-deep bg-[radial-gradient(140%_80%_at_0%_0%,var(--color-shell)_0%,var(--color-shell-deep)_65%)] p-5.5 text-shell-ink min-[768px]:hidden">
         <p className="text-[14px] text-gold-light">{cuando}</p>
         <h1 className="mt-1 font-display text-[36px] leading-tight font-medium">
-          {dias > 1 ? `Faltan ${dias} días` : dias === 1 ? 'Es mañana' : dias === 0 ? `Hoy es ${fiesta === 'xv' ? 'la fiesta' : fiesta === 'cumple' ? 'el cumpleaños' : 'la boda'}` : event.value.title}
+          {dias > 1 ? t(`Faltan ${dias} días`, `${dias} days to go`) : dias === 1 ? t('Es mañana', 'It’s tomorrow') : dias === 0 ? t(`Hoy es ${fiesta === 'xv' ? 'la fiesta' : fiesta === 'cumple' ? 'el cumpleaños' : 'la boda'}`, `${fiesta === 'xv' ? 'The party' : fiesta === 'cumple' ? 'The birthday' : 'The wedding'} is today`) : event.value.title}
         </h1>
         {donde === '' ? null : <p className="mt-1 text-[15px] text-shell-ink/85">{donde}</p>}
       </section>
 
       <article className={`${TARJETA_DESTACADA} flex flex-wrap items-center gap-6 px-7.5 py-7 max-[559px]:p-5.5`}>
         <div className="min-w-0 flex-[1_1_320px]">
-          <Pill tone="pending">Lo próximo</Pill>
+          <Pill tone="pending">{t('Lo próximo', 'Up next')}</Pill>
           <h2 className="mt-2.5 font-display text-[26px] leading-tight font-medium max-[559px]:text-[24px]">{proximo.titulo}</h2>
           <p className="mt-1.5 text-[15px] text-ink-mute">{proximo.detalle}</p>
         </div>
@@ -195,37 +200,37 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {/* **Tu evento** en el celular (v2.1, 14 oct): cada parte con cómo va, a un toque. Junto al botón «Menú» de arriba,
           es la otra puerta visible a todo (sin barra fija abajo: el panel es web). */}
-      <nav aria-label="Tu evento" className="min-[768px]:hidden">
-        <p className="mb-2.5 text-[13px] font-medium text-gold-deep">Tu evento</p>
+      <nav aria-label={t('Tu evento', 'Your event')} className="min-[768px]:hidden">
+        <p className="mb-2.5 text-[13px] font-medium text-gold-deep">{t('Tu evento', 'Your event')}</p>
         <ul className="grid grid-cols-2 gap-2.5">
           {[
-            { href: `${base}/configuracion`, icono: NAV_ICONS.editar, titulo: 'Mi invitación', estado: invitacionLista ? 'Lista para enviar' : 'Por terminar', atencion: !invitacionLista },
+            { href: `${base}/configuracion`, icono: NAV_ICONS.editar, titulo: t('Mi invitación', 'My invitation'), estado: invitacionLista ? t('Lista para enviar', 'Ready to send') : t('Por terminar', 'To finish'), atencion: !invitacionLista },
             {
               href: `${base}/invitados`,
               icono: NAV_ICONS.invitados,
-              titulo: 'Invitados',
-              estado: filas.length === 0 ? 'Sin cargar' : porEnviar > 0 ? `${porEnviar} sin enviar` : `${vienen} ${vienen === 1 ? 'viene' : 'vienen'}`,
+              titulo: t('Invitados', 'Guests'),
+              estado: filas.length === 0 ? t('Sin cargar', 'None added') : porEnviar > 0 ? t(`${porEnviar} sin enviar`, `${porEnviar} not sent`) : t(`${vienen} ${vienen === 1 ? 'viene' : 'vienen'}`, `${vienen} coming`),
               atencion: filas.length === 0 || porEnviar > 0,
             },
             ...(mesas === null
               ? []
-              : [{ href: `${base}/mesas`, icono: NAV_ICONS.mesas, titulo: 'Mesas', estado: mesas.unseated.length > 0 ? `${mesas.unseated.length} sin mesa` : 'Todos sentados', atencion: mesas.unseated.length > 0 }]),
-            { href: `${base}/regalos`, icono: NAV_ICONS.regalos, titulo: 'Regalos', estado: 'Cómo te regalan', atencion: false },
+              : [{ href: `${base}/mesas`, icono: NAV_ICONS.mesas, titulo: t('Mesas', 'Tables'), estado: mesas.unseated.length > 0 ? t(`${mesas.unseated.length} sin mesa`, `${mesas.unseated.length} without a table`) : t('Todos sentados', 'Everyone seated'), atencion: mesas.unseated.length > 0 }]),
+            { href: `${base}/regalos`, icono: NAV_ICONS.regalos, titulo: t('Regalos', 'Gifts'), estado: t('Cómo te regalan', 'How they give to you'), atencion: false },
             {
               href: `${base}/mensajes`,
               icono: NAV_ICONS.mensajes,
-              titulo: 'Libro de firmas',
-              estado: porAgradecer > 0 ? `${porAgradecer} por agradecer` : firmas.length === 0 ? 'Aún sin firmas' : `${firmas.length} ${firmas.length === 1 ? 'firma' : 'firmas'}`,
+              titulo: t('Libro de firmas', 'Guestbook'),
+              estado: porAgradecer > 0 ? t(`${porAgradecer} por agradecer`, `${porAgradecer} to thank`) : firmas.length === 0 ? t('Aún sin firmas', 'No entries yet') : t(`${firmas.length} ${firmas.length === 1 ? 'firma' : 'firmas'}`, `${firmas.length} ${firmas.length === 1 ? 'entry' : 'entries'}`),
               atencion: porAgradecer > 0,
             },
-          ].map((t) => (
-            <li key={t.href}>
-              <Link className="flex min-h-[112px] flex-col gap-2 rounded-[16px] border border-line-panel bg-bg-raised p-3.5 text-ink no-underline" href={t.href}>
+          ].map((parte) => (
+            <li key={parte.href}>
+              <Link className="flex min-h-[112px] flex-col gap-2 rounded-[16px] border border-line-panel bg-bg-raised p-3.5 text-ink no-underline" href={parte.href}>
                 <span aria-hidden className="grid size-9 place-items-center rounded-full border border-line-panel text-shell-deep [&_svg]:size-[18px]">
-                  {t.icono}
+                  {parte.icono}
                 </span>
-                <span className="text-[15.5px] font-medium">{t.titulo}</span>
-                <span className={`-mt-1.5 text-[13.5px] ${t.atencion ? 'font-medium text-pill-pending-ink' : 'text-ink-mute'}`}>{t.estado}</span>
+                <span className="text-[15.5px] font-medium">{parte.titulo}</span>
+                <span className={`-mt-1.5 text-[13.5px] ${parte.atencion ? 'font-medium text-pill-pending-ink' : 'text-ink-mute'}`}>{parte.estado}</span>
               </Link>
             </li>
           ))}
@@ -236,35 +241,35 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <section aria-labelledby="invitacion-titulo" className="min-w-0 flex-[1_1_360px] scroll-mt-24" id="invitacion">
           <div className="mb-3.5 flex items-baseline justify-between gap-3">
             <h2 className="font-display text-[24px] font-medium max-[767px]:sr-only" id="invitacion-titulo">
-              Cómo va tu invitación
+              {t('Cómo va tu invitación', 'How your invitation is doing')}
             </h2>
             <Link className="inline-flex min-h-11 items-center text-[14px]" href={`${base}/informe`}>
-              Informe del evento
+              {t('Informe del evento', 'Event report')}
             </Link>
           </div>
           <div className="flex items-center gap-6">
             <Aro porcentaje={respondio} />
             <dl className="grid grid-cols-[auto_auto] gap-x-4.5 gap-y-2 text-[14.5px]">
-              <Fila color="bg-shell-deep" etiqueta="Asisten" valor={vienen} />
-              <Fila color="bg-gold" etiqueta="No vienen" valor={noVienen} />
-              <Fila color="bg-line-panel" destacar={sinResponder > 0} etiqueta="Sin responder" valor={sinResponder} />
-              <dt className="text-ink-mute max-[767px]:hidden">La vieron</dt>
-              <dd className="m-0 [font-variant-numeric:tabular-nums] max-[767px]:hidden">{vistas === null ? '—' : vistas.total === 1 ? '1 vez' : `${vistas.total} veces`}</dd>
+              <Fila color="bg-shell-deep" etiqueta={t('Asisten', 'Attending')} valor={vienen} />
+              <Fila color="bg-gold" etiqueta={t('No vienen', 'Not coming')} valor={noVienen} />
+              <Fila color="bg-line-panel" destacar={sinResponder > 0} etiqueta={t('Sin responder', 'No reply')} valor={sinResponder} />
+              <dt className="text-ink-mute max-[767px]:hidden">{t('La vieron', 'Viewed')}</dt>
+              <dd className="m-0 [font-variant-numeric:tabular-nums] max-[767px]:hidden">{vistas === null ? '—' : vistas.total === 1 ? t('1 vez', 'once') : t(`${vistas.total} veces`, `${vistas.total} times`)}</dd>
             </dl>
           </div>
           {aparato === undefined || camino === undefined ? null : (
             <p className="mt-4.5 text-[14px] text-ink-mute max-[767px]:hidden">
-              La abren sobre todo desde {aparato.label === 'Móvil' ? 'el celular' : aparato.label === 'Tableta' ? 'la tablet' : 'la computadora'} ({aparato.percent} %) y les llega por {camino.label} ({camino.percent} %).
+              {t(`La abren sobre todo desde ${aparato.label === 'Móvil' ? 'el celular' : aparato.label === 'Tableta' ? 'la tablet' : 'la computadora'} (${aparato.percent} %) y les llega por ${camino.label} (${camino.percent} %).`, `Mostly opened on ${aparato.label === 'Móvil' ? 'a phone' : aparato.label === 'Tableta' ? 'a tablet' : 'a computer'} (${aparato.percent} %) and received via ${traducir(camino.label, t)} (${camino.percent} %).`)}
             </p>
           )}
         </section>
 
         <section aria-labelledby="semana-titulo" className="min-w-0 flex-[1_1_360px]">
           <h2 className="mb-1.5 font-display text-[24px] font-medium" id="semana-titulo">
-            Esta semana
+            {t('Esta semana', 'This week')}
           </h2>
           {semana.length === 0 ? (
-            <p className="border-t border-line-panel py-4 text-[15px] text-ink-mute">Nada vence esta semana.</p>
+            <p className="border-t border-line-panel py-4 text-[15px] text-ink-mute">{t('Nada vence esta semana.', 'Nothing is due this week.')}</p>
           ) : (
             <ul>
               {semana.map((p) => (
@@ -287,7 +292,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </div>
 
       {hayPreguntas(preguntas) ? (
-        <PanelCard action={<PanelButton href={`${base}/ajustes`}>Cambiar preguntas</PanelButton>} title="Lo que contestaron">
+        <PanelCard action={<PanelButton href={`${base}/ajustes`}>{t('Cambiar preguntas', 'Change questions')}</PanelButton>} title={t('Lo que contestaron', 'What they answered')}>
           <LoQueContestaron resultados={await rsvp.preguntas.resultados(id)} />
         </PanelCard>
       ) : null}
@@ -296,7 +301,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <section aria-labelledby="firmas-titulo">
           <div aria-hidden className="mb-5.5 h-[3px] border-y border-gold max-[767px]:hidden" />
           <h2 className="mb-3.5 font-display text-[24px] font-medium max-[767px]:sr-only" id="firmas-titulo">
-            Lo último que escribieron
+            {t('Lo último que escribieron', 'What they wrote last')}
           </h2>
           <div className="grid gap-5 min-[768px]:grid-cols-3">
             {firmas.slice(0, 3).map((m, i) => (
@@ -305,7 +310,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   «{m.body}»
                 </p>
                 <footer className="mt-2.5 text-[13px] text-ink-mute">
-                  {m.responderName ?? m.groupLabel}, {hace(m.writtenAt, ahora)}
+                  {m.responderName ?? m.groupLabel}, {hace(m.writtenAt, ahora, locale)}
                 </footer>
               </blockquote>
             ))}
@@ -328,7 +333,9 @@ function Aro({ porcentaje }: { porcentaje: number | null }) {
       </svg>
       <span className="text-center">
         <span className="block font-display text-[34px] leading-none font-medium max-[767px]:text-[26px]">{porcentaje === null ? '—' : `${porcentaje}%`}</span>
-        <span className="text-[12.5px] text-ink-mute">respondió</span>
+        <span className="text-[12.5px] text-ink-mute">
+          <T en="replied" es="respondió" />
+        </span>
       </span>
     </div>
   )

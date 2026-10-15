@@ -11,6 +11,7 @@ import { FIELD_CLASS, Field, PanelButton, Pill } from '@/shared/design/ui/panel/
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { Accion, type Evento, Ocultos } from './Accion'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -68,6 +69,7 @@ export function MomentoDialog({
   /** Un momento de esa fiesta (`Vocabulario.ejemplos.momento`): el vals no es de todas. */
   ejemplo: string
 }) {
+  const t = useT()
   const router = useRouter()
   const [estado, enviar, enviando] = useActionState(sinCaerse(saveMomentAction), INICIAL)
   const id = useId()
@@ -82,16 +84,16 @@ export function MomentoDialog({
   const icono = e?.icono ?? momento?.icono ?? null
 
   return (
-    <PanelDialog closeHref={cerrarEn} title={momento ? 'Editar momento' : 'Añadir un momento'} width={520}>
+    <PanelDialog closeHref={cerrarEn} title={momento ? t('Editar momento', 'Edit moment') : t('Añadir un momento', 'Add a moment')} width={520}>
       <form action={enviar} className="group flex flex-col gap-5" key={e ? JSON.stringify(e) : 'form'}>
         <Ocultos {...evento} extra={{ momentId: momento?.id ?? '' }} />
 
         <div className="grid gap-3 min-[560px]:grid-cols-[150px_1fr]">
-          <Field htmlFor={`${id}-h`} label="Hora">
+          <Field htmlFor={`${id}-h`} label={t('Hora', 'Time')}>
             <CampoHora defaultValue={v('startsAt', momento?.startsAt)} id={`${id}-h`} name="startsAt" required />
           </Field>
-          <Field htmlFor={`${id}-t`} label="Momento">
-            <input className={FIELD_CLASS} defaultValue={v('title', momento?.title)} id={`${id}-t`} maxLength={160} name="title" placeholder={`Por ejemplo, ${ejemplo}`} required />
+          <Field htmlFor={`${id}-t`} label={t('Momento', 'Moment')}>
+            <input className={FIELD_CLASS} defaultValue={v('title', momento?.title)} id={`${id}-t`} maxLength={160} name="title" placeholder={t(`Por ejemplo, ${ejemplo}`, `For example, ${ejemplo}`)} required />
           </Field>
         </div>
 
@@ -99,8 +101,8 @@ export function MomentoDialog({
         <div className="flex flex-col gap-4 rounded-[16px] border border-line-panel bg-white p-4">
           <label className="flex cursor-pointer items-start justify-between gap-4">
             <span className="flex flex-col gap-0.5">
-              <span className="text-[14px] text-ink">Mostrar en la invitación</span>
-              <span className="text-[12px] leading-[1.5] text-ink-mute">Tus invitados lo ven en el itinerario, con su hora y su icono.</span>
+              <span className="text-[14px] text-ink">{t('Mostrar en la invitación', 'Show on the invitation')}</span>
+              <span className="text-[12px] leading-[1.5] text-ink-mute">{t('Tus invitados lo ven en el itinerario, con su hora y su icono.', 'Your guests see it in the itinerary, with its time and icon.')}</span>
             </span>
             <span className="relative mt-0.5 inline-flex h-6 w-11 shrink-0">
               <input className="peer absolute inset-0 z-10 m-0 cursor-pointer opacity-0" defaultChecked={enInvitacion} name="enInvitacion" role="switch" type="checkbox" />
@@ -110,9 +112,9 @@ export function MomentoDialog({
           </label>
           {iconos.length > 0 ? (
             <fieldset className="hidden flex-col gap-2 border-t border-line-panel pt-4 group-has-[input[name=enInvitacion]:checked]:flex">
-              <legend className="sr-only">Icono en la invitación</legend>
+              <legend className="sr-only">{t('Icono en la invitación', 'Icon on the invitation')}</legend>
               <p aria-hidden className="text-[12px] text-ink-soft">
-                Icono, como lo dibuja tu diseño
+                {t('Icono, como lo dibuja tu diseño', 'Icon, as your design draws it')}
               </p>
               <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(84px,1fr))]">
                 {iconos.map((opcion) => (
@@ -135,29 +137,29 @@ export function MomentoDialog({
         <details className="group/equipo rounded-[16px] border border-line-panel bg-bg-top/40" open={momento !== undefined && Boolean(momento.place || momento.owner || momento.cue || momento.notes || momento.vendorIds.length)}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-[13.5px] text-ink">
             <span className="flex flex-col gap-0.5">
-              <span>Para tu equipo</span>
-              <span className="text-[12px] text-ink-mute">Duración, lugar, responsable, canción y proveedores. Tus invitados no lo ven.</span>
+              <span>{t('Para tu equipo', 'For your team')}</span>
+              <span className="text-[12px] text-ink-mute">{t('Duración, lugar, responsable, canción y proveedores. Tus invitados no lo ven.', 'Duration, place, person in charge, song and vendors. Your guests don’t see it.')}</span>
             </span>
             <ChevronIcon className="size-4 shrink-0 text-ink-mute transition-transform group-open/equipo:rotate-180" />
           </summary>
           <div className="flex flex-col gap-3 border-t border-line-panel px-4 pt-3 pb-4">
             <div className="grid gap-3 min-[560px]:grid-cols-2">
-              <Field htmlFor={`${id}-d`} label="Duración (minutos)">
+              <Field htmlFor={`${id}-d`} label={t('Duración (minutos)', 'Duration (minutes)')}>
                 <input className={FIELD_CLASS} defaultValue={v('durationMin', momento?.durationMin ?? 15)} id={`${id}-d`} inputMode="numeric" name="durationMin" required />
               </Field>
-              <Field htmlFor={`${id}-l`} label="Dónde">
+              <Field htmlFor={`${id}-l`} label={t('Dónde', 'Where')}>
                 <input className={FIELD_CLASS} defaultValue={v('place', momento?.place)} id={`${id}-l`} maxLength={120} name="place" />
               </Field>
-              <Field htmlFor={`${id}-r`} label="Responsable">
+              <Field htmlFor={`${id}-r`} label={t('Responsable', 'Person in charge')}>
                 <input className={FIELD_CLASS} defaultValue={v('owner', momento?.owner)} id={`${id}-r`} maxLength={120} name="owner" />
               </Field>
-              <Field htmlFor={`${id}-c`} label="Canción o señal">
+              <Field htmlFor={`${id}-c`} label={t('Canción o señal', 'Song or cue')}>
                 <input className={FIELD_CLASS} defaultValue={v('cue', momento?.cue)} id={`${id}-c`} maxLength={200} name="cue" />
               </Field>
             </div>
             {proveedores.length === 0 ? null : (
               <fieldset className="flex flex-wrap gap-2">
-                <legend className="mb-2 text-[12px] text-ink-soft">Proveedores</legend>
+                <legend className="mb-2 text-[12px] text-ink-soft">{t('Proveedores', 'Vendors')}</legend>
                 {proveedores.map((p) => (
                   <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line-panel bg-white px-3 py-1.5 text-[12.5px] text-ink has-checked:border-ink has-checked:bg-ink has-checked:text-white" key={p.id}>
                     <input className="sr-only" defaultChecked={momento?.vendorIds.includes(p.id) ?? false} name="vendorIds" type="checkbox" value={p.id} />
@@ -166,7 +168,7 @@ export function MomentoDialog({
                 ))}
               </fieldset>
             )}
-            <Field htmlFor={`${id}-n`} label="Notas internas">
+            <Field htmlFor={`${id}-n`} label={t('Notas internas', 'Internal notes')}>
               <textarea className={FIELD_CLASS} defaultValue={v('notes', momento?.notes)} id={`${id}-n`} maxLength={2000} name="notes" rows={2} />
             </Field>
           </div>
@@ -174,16 +176,16 @@ export function MomentoDialog({
 
         <ActionFeedback errorsOnly state={estado} />
         <div className="flex items-center justify-end gap-3 border-t border-line-panel pt-4">
-          <PanelButton href={cerrarEn}>Cancelar</PanelButton>
-          <SubmitButton pending={enviando} pendingLabel="Guardando…" variant="primary">
-            {momento ? 'Guardar cambios' : 'Sumar momento'}
+          <PanelButton href={cerrarEn}>{t('Cancelar', 'Cancel')}</PanelButton>
+          <SubmitButton pending={enviando} pendingLabel={t('Guardando…', 'Saving…')} variant="primary">
+            {momento ? t('Guardar cambios', 'Save changes') : t('Sumar momento', 'Add moment')}
           </SubmitButton>
         </div>
       </form>
       {momento ? (
         <div className="mt-4 flex justify-start">
-          <Accion action={removeMomentAction} evento={evento} extra={{ momentId: momento.id }} label={`Quitar «${momento.title}»`} variant="danger">
-            Quitar este momento
+          <Accion action={removeMomentAction} evento={evento} extra={{ momentId: momento.id }} label={t(`Quitar «${momento.title}»`, `Remove “${momento.title}”`)} variant="danger">
+            {t('Quitar este momento', 'Remove this moment')}
           </Accion>
         </div>
       ) : null}
@@ -193,20 +195,20 @@ export function MomentoDialog({
 
 /** Sin momentos todavía: qué es esta pantalla y el primer paso. */
 export function CronogramaVacio({ nuevo }: { nuevo: string }) {
+  const t = useT()
   return (
     <div className="flex flex-col items-center gap-4 px-4 py-10 text-center">
       <span aria-hidden className="grid size-14 place-items-center rounded-full bg-bg-top text-ink-soft">
         <ClockIcon className="size-6" />
       </span>
       <div className="flex flex-col gap-2">
-        <h2 className="font-display text-[26px] leading-tight font-light text-ink">Arma el cronograma de tu día</h2>
+        <h2 className="font-display text-[26px] leading-tight font-light text-ink">{t('Arma el cronograma de tu día', 'Build your day’s schedule')}</h2>
         <p className="max-w-[54ch] text-[13.5px] leading-[1.7] text-ink-soft">
-          Suma cada momento con su hora: la misa, la entrada, el vals, la cena. Lo que marques para la invitación es el itinerario que ven tus
-          invitados; lo demás queda para tu equipo.
+          {t('Suma cada momento con su hora: la misa, la entrada, el vals, la cena. Lo que marques para la invitación es el itinerario que ven tus invitados; lo demás queda para tu equipo.', 'Add each moment with its time: the mass, the entrance, the waltz, the dinner. What you check for the invitation is the itinerary your guests see; the rest stays with your team.')}
         </p>
       </div>
       <PanelButton href={nuevo} variant="primary">
-        Sumar el primer momento
+        {t('Sumar el primer momento', 'Add the first moment')}
       </PanelButton>
     </div>
   )
@@ -228,12 +230,13 @@ export function RunOfShowBoard({
   /** `?momento=` se le suma el id. */
   editarEn: string
 }) {
+  const t = useT()
   const nombre = (vid: string) => proveedores.find((p) => p.id === vid)?.service
   return (
     <ol className="flex flex-col">
       {momentos.map((m, i) => {
         const responsable = m.owner ?? m.vendorIds.map(nombre).filter(Boolean).join(', ')
-        const detalle = [m.place, responsable ? `Responsable: ${responsable}` : null, m.cue ? `♪ ${m.cue}` : null].filter(Boolean).join(' · ')
+        const detalle = [m.place, responsable ? `${t('Responsable', 'In charge')}: ${responsable}` : null, m.cue ? `♪ ${m.cue}` : null].filter(Boolean).join(' · ')
         return (
           <li
             aria-label={`${m.startsAt} ${m.title}`}
@@ -257,7 +260,7 @@ export function RunOfShowBoard({
               <span className="text-[15.5px] font-medium text-ink max-[767px]:text-[17px]">{m.title}</span>
               {detalle ? <span className="text-[13.5px] text-ink-mute max-[767px]:text-[15px]">{detalle}</span> : null}
               <span className="mt-1.5 flex flex-wrap items-center gap-2 min-[768px]:hidden">
-                <Pill tone={m.enInvitacion ? 'maybe' : 'neutro'}>{m.enInvitacion ? 'En la invitación' : 'Solo tu equipo'}</Pill>
+                <Pill tone={m.enInvitacion ? 'maybe' : 'neutro'}>{m.enInvitacion ? t('En la invitación', 'On the invitation') : t('Solo tu equipo', 'Team only')}</Pill>
                 {m.aviso ? <Pill tone="no">{m.aviso}</Pill> : null}
               </span>
               {m.aviso ? (
@@ -267,13 +270,13 @@ export function RunOfShowBoard({
               ) : null}
             </div>
             <span className="flex items-center gap-5 max-[767px]:col-span-3 max-[767px]:hidden">
-              <Pill tone={m.enInvitacion ? 'maybe' : 'neutro'}>{m.enInvitacion ? 'En la invitación' : 'Solo para tu equipo'}</Pill>
-              <Link aria-label={`Editar ${m.title}`} className="text-[14px] font-medium text-gold-deep no-underline hover:underline" href={`${editarEn}${m.id}`} scroll={false}>
-                Editar
+              <Pill tone={m.enInvitacion ? 'maybe' : 'neutro'}>{m.enInvitacion ? t('En la invitación', 'On the invitation') : t('Solo para tu equipo', 'Team only')}</Pill>
+              <Link aria-label={t(`Editar ${m.title}`, `Edit ${m.title}`)} className="text-[14px] font-medium text-gold-deep no-underline hover:underline" href={`${editarEn}${m.id}`} scroll={false}>
+                {t('Editar', 'Edit')}
               </Link>
             </span>
             {/* En el celular, la fila entera abre su edición. */}
-            <Link aria-label={`Editar ${m.title}`} className="absolute inset-0 min-[768px]:hidden" href={`${editarEn}${m.id}`} scroll={false} />
+            <Link aria-label={t(`Editar ${m.title}`, `Edit ${m.title}`)} className="absolute inset-0 min-[768px]:hidden" href={`${editarEn}${m.id}`} scroll={false} />
           </li>
         )
       })}
@@ -294,21 +297,22 @@ export function ItinerarioEnLaInvitacion({
   ejemplo: readonly FilaDeInvitacion[]
   vistaPrevia: string
 }) {
+  const t = useT()
   const deEjemplo = filas.length === 0
   const lista = deEjemplo ? ejemplo : filas
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-[15px] font-medium">Así lo leen tus invitados</h2>
-      {deEjemplo ? <p className="text-[13px] leading-[1.6] text-ink-mute">Todavía no marcaste momentos: tus invitados ven el itinerario de ejemplo del diseño.</p> : null}
+      <h2 className="text-[15px] font-medium">{t('Así lo leen tus invitados', 'How your guests read it')}</h2>
+      {deEjemplo ? <p className="text-[13px] leading-[1.6] text-ink-mute">{t('Todavía no marcaste momentos: tus invitados ven el itinerario de ejemplo del diseño.', 'You haven’t checked any moments yet: your guests see the design’s sample itinerary.')}</p> : null}
       <Link className={`flex flex-col items-center gap-5 rounded-[16px] border border-line-panel bg-tarjeta px-6 py-7 text-center text-ink no-underline transition-colors hover:border-gold ${deEjemplo ? 'opacity-55' : ''}`} href={vistaPrevia}>
-        <span className="text-[11px] tracking-[0.3em] text-ink-mute uppercase">Itinerario</span>
+        <span className="text-[11px] tracking-[0.3em] text-ink-mute uppercase">{t('Itinerario', 'Itinerary')}</span>
         {lista.map((f, i) => (
           <span className="flex flex-col" key={`${f.time}-${f.label}-${i}`}>
             <span className="font-display text-[26px] leading-tight font-medium [font-variant-numeric:lining-nums_tabular-nums]">{f.time}</span>
             <span className="text-[13px] text-ink-mute">{f.label}</span>
           </span>
         ))}
-        <span className="sr-only">Ver en la invitación</span>
+        <span className="sr-only">{t('Ver en la invitación', 'View on the invitation')}</span>
       </Link>
     </div>
   )

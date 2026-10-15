@@ -7,10 +7,13 @@ import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import { diaDelEvento } from '@/shared/format/fecha'
+import { useIdioma, useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 const INICIAL: DisenoState = { status: 'idle', message: '' }
 
-const PASOS = ['Tus datos', 'La diseñamos', 'La revisas', 'Aprobada'] as const
+const pasos = (t: T) => [t('Tus datos', 'Your details'), t('La diseñamos', 'We design it'), t('La revisas', 'You review it'), t('Aprobada', 'Approved')] as const
 
 /** Las preguntas del formulario según el plan (documento de cambios, sección 7). */
 const PREGUNTA: Record<PreguntaDelEncargo, { titulo: string; ejemplo: string }> = {
@@ -45,6 +48,8 @@ export function EncargoDelCliente({
   /** Lo que su plan le pregunta además de la invitación: secciones (Gala), temática y más (Imperial). */
   preguntas?: readonly PreguntaDelEncargo[]
 }) {
+  const t = useT()
+  const locale = useIdioma()
   const [enviado, enviar] = useActionState(sinCaerse(enviarADisenoAction), INICIAL)
   const [cambios, pedir] = useActionState(sinCaerse(pedirCambiosAction), INICIAL)
   const [aprobado, aprobar] = useActionState(sinCaerse(aprobarVersionAction), INICIAL)
@@ -54,15 +59,15 @@ export function EncargoDelCliente({
 
   return (
     <div className="flex flex-col gap-4">
-      <ol className="grid grid-cols-2 gap-2 min-[560px]:grid-cols-4" aria-label="Pasos de tu invitación">
-        {PASOS.map((nombre, i) => (
+      <ol className="grid grid-cols-2 gap-2 min-[560px]:grid-cols-4" aria-label={t('Pasos de tu invitación', 'Your invitation’s steps')}>
+        {pasos(t).map((nombre, i) => (
           <li
             aria-current={i === paso ? 'step' : undefined}
             className={`rounded-[12px] border px-3 py-2 text-[12px] ${i === paso ? 'border-ink bg-ink text-bg-raised' : i < paso ? 'border-line-panel text-ink' : 'border-line-panel text-ink-mute'}`}
             key={nombre}
           >
             <span className="tabular-nums">{i + 1}.</span> {nombre}
-            {i < paso ? <span className="sr-only"> (hecho)</span> : null}
+            {i < paso ? <span className="sr-only">{t(' (hecho)', ' (done)')}</span> : null}
           </li>
         ))}
       </ol>
@@ -71,40 +76,39 @@ export function EncargoDelCliente({
         <form action={enviar} className="flex flex-col gap-3">
           <input name="eventId" type="hidden" value={eventId} />
           <p className="text-[13px] leading-relaxed text-ink-soft">
-            Escribe aquí abajo los datos de tu fiesta y sube tus fotos. Cuando termines, envíanoslos y diseñamos tu invitación en{' '}
-            {encargo.diasDeEntrega} {encargo.diasDeEntrega === 1 ? 'día' : 'días'}.
+            {t(`Escribe aquí abajo los datos de tu fiesta y sube tus fotos. Cuando termines, envíanoslos y diseñamos tu invitación en ${encargo.diasDeEntrega} ${encargo.diasDeEntrega === 1 ? 'día' : 'días'}.`, `Write your party’s details below and upload your photos. When you’re done, send them to us and we’ll design your invitation in ${encargo.diasDeEntrega} ${encargo.diasDeEntrega === 1 ? 'day' : 'days'}.`)}
           </p>
           {preguntas.map((pregunta) => (
             <label className="flex flex-col gap-2" key={pregunta}>
-              <span className={LABEL_CLASS}>{PREGUNTA[pregunta].titulo}</span>
+              <span className={LABEL_CLASS}>{traducir(PREGUNTA[pregunta].titulo, t)}</span>
               <textarea
                 className={`${FIELD_CLASS} min-h-[80px]`}
                 defaultValue={encargo.brief?.[pregunta] ?? ''}
                 maxLength={MAX_RESPUESTA_DEL_ENCARGO}
                 name={`brief_${pregunta}`}
-                placeholder={PREGUNTA[pregunta].ejemplo}
+                placeholder={traducir(PREGUNTA[pregunta].ejemplo, t)}
               />
             </label>
           ))}
           <ActionFeedback state={enviado} />
           <div>
-            <SubmitButton>Enviar mis datos para diseñar</SubmitButton>
+            <SubmitButton>{t('Enviar mis datos para diseñar', 'Send my details for design')}</SubmitButton>
           </div>
         </form>
       ) : null}
 
       {encargo.estado === 'en_diseno' ? (
         <p className="text-[13px] leading-relaxed text-ink-soft" role="status">
-          Estamos diseñando tu invitación.
-          {encargo.entregaHasta === null ? null : <> Te la entregamos hasta el <b className="font-medium text-ink">{diaDelEvento(encargo.entregaHasta)}</b>.</>} Te avisamos en la campana cuando esté lista.
+          {t('Estamos diseñando tu invitación.', 'We’re designing your invitation.')}
+          {encargo.entregaHasta === null ? null : <> {t('Te la entregamos hasta el', 'We’ll deliver it by')} <b className="font-medium text-ink">{diaDelEvento(encargo.entregaHasta, locale)}</b>.</>} {t('Te avisamos en la campana cuando esté lista.', 'We’ll let you know in the bell when it’s ready.')}
         </p>
       ) : null}
 
       {encargo.estado === 'version_enviada' && !decide ? (
         <p className="text-[13px] leading-relaxed text-ink-soft" role="status">
-          La invitación está lista para revisar. La aprueba o pide cambios quien la compró.{' '}
+          {t('La invitación está lista para revisar. La aprueba o pide cambios quien la compró.', 'The invitation is ready to review. Whoever bought it approves it or asks for changes.')}{' '}
           <a className="underline underline-offset-2" href={vistaPrevia}>
-            Verla en pantalla completa
+            {t('Verla en pantalla completa', 'View it full screen')}
           </a>
           .
         </p>
@@ -112,12 +116,12 @@ export function EncargoDelCliente({
 
       {encargo.estado === 'version_enviada' && decide ? (
         <div className="flex flex-col gap-4">
-          <p className="text-[13px] leading-relaxed text-ink-soft">Tu invitación está lista. Mírala entera y apruébala, o pídenos cambios.</p>
+          <p className="text-[13px] leading-relaxed text-ink-soft">{t('Tu invitación está lista. Mírala entera y apruébala, o pídenos cambios.', 'Your invitation is ready. Look at it in full and approve it, or ask us for changes.')}</p>
           <div className="flex flex-wrap gap-2">
-            <PanelButton href={vistaPrevia}>Verla en pantalla completa</PanelButton>
+            <PanelButton href={vistaPrevia}>{t('Verla en pantalla completa', 'View it full screen')}</PanelButton>
             <form action={aprobar}>
               <input name="eventId" type="hidden" value={eventId} />
-              <SubmitButton>Aprobar mi invitación</SubmitButton>
+              <SubmitButton>{t('Aprobar mi invitación', 'Approve my invitation')}</SubmitButton>
             </form>
           </div>
           <ActionFeedback state={aprobado} />
@@ -126,28 +130,28 @@ export function EncargoDelCliente({
               <input name="eventId" type="hidden" value={eventId} />
               <label className="flex flex-col gap-2" htmlFor={id}>
                 <span className={LABEL_CLASS}>
-                  Pedir cambios · te {quedan === 1 ? 'queda 1 ronda' : `quedan ${quedan} rondas`} de {encargo.rondasIncluidas}
+                  {t(`Pedir cambios · te ${quedan === 1 ? 'queda 1 ronda' : `quedan ${quedan} rondas`} de ${encargo.rondasIncluidas}`, `Ask for changes · ${quedan === 1 ? '1 round' : `${quedan} rounds`} left of ${encargo.rondasIncluidas}`)}
                 </span>
                 <textarea
                   className={`${FIELD_CLASS} min-h-[110px]`}
                   id={id}
                   maxLength={3000}
                   name="mensaje"
-                  placeholder="Cambia la hora a 20:00, pon otra foto en la portada y corrige el nombre de mi mamá."
+                  placeholder={t('Cambia la hora a 20:00, pon otra foto en la portada y corrige el nombre de mi mamá.', 'Change the time to 8:00 pm, put another photo on the cover and fix my mom’s name.')}
                   required
                 />
-                <span className="text-[11px] text-ink-mute">Una ronda es un solo mensaje con todos tus cambios juntos. Los errores nuestros no cuentan.</span>
+                <span className="text-[11px] text-ink-mute">{t('Una ronda es un solo mensaje con todos tus cambios juntos. Los errores nuestros no cuentan.', 'A round is a single message with all your changes together. Our own mistakes don’t count.')}</span>
               </label>
               <ActionFeedback state={cambios} />
               <div>
-                <SubmitButton variant="default">Enviar mis cambios</SubmitButton>
+                <SubmitButton variant="default">{t('Enviar mis cambios', 'Send my changes')}</SubmitButton>
               </div>
             </form>
           ) : (
             <p className="border-t border-line-panel pt-4 text-[13px] text-ink-soft">
-              Ya usaste tus {encargo.rondasIncluidas} rondas de corrección. Puedes aprobarla o pedir un cambio adicional en{' '}
+              {t(`Ya usaste tus ${encargo.rondasIncluidas} rondas de corrección. Puedes aprobarla o pedir un cambio adicional en`, `You’ve used your ${encargo.rondasIncluidas} revision rounds. You can approve it or request an additional change in`)}{' '}
               <a className="underline underline-offset-2" href={extras}>
-                Extras
+                {t('Extras', 'Extras')}
               </a>
               .
             </p>
@@ -157,7 +161,7 @@ export function EncargoDelCliente({
 
       {encargo.estado === 'aprobada' ? (
         <p className="text-[13px] leading-relaxed text-ink-soft" role="status">
-          Aprobada y lista.
+          {t('Aprobada y lista.', 'Approved and ready.')}
         </p>
       ) : null}
     </div>

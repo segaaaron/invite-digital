@@ -1,3 +1,5 @@
+import { muestraEnIngles } from './muestra-en'
+import type { InvitationContent } from '../../domain/invitation-content'
 import { clasicoDefinition } from './ClasicoTheme'
 import { bodaDefinition } from './bodas/boda'
 import { bodaBotDefinition } from './bodas/boda-bot'
@@ -82,3 +84,9 @@ export const themeDefinitions = (): readonly ThemeDefinition[] => Object.values(
  */
 export const themeFor = (key: string): ThemeDefinition =>
   (THEMES as Record<string, ThemeDefinition>)[key] ?? THEMES.clasico
+
+/**
+ * La muestra de un diseño en el idioma pedido (14 oct): la del escaparate (`/en/designs/*`) y la que rellena lo que un
+ * evento aún no escribió. Español, la de la maqueta; cualquier otro, la de `muestra-en.ts`.
+ */
+export const muestraDe = (tema: ThemeDefinition, locale: string): InvitationContent => (locale === 'es' ? tema.defaultContent : muestraEnIngles(tema.defaultContent))

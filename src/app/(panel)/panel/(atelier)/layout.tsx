@@ -4,7 +4,8 @@ import { Campana } from '@/modules/notifications/ui/Campana'
 import { BarraSuperior } from '@/modules/shell/ui/BarraSuperior'
 import { isAdmin, rolEnEquipo } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
-import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
+import { panelNav, rotuloDeRol } from '@/modules/shell/ui/nav'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { MenuCrearMovil } from '@/modules/admin/ui/MenuCrear'
@@ -29,6 +30,7 @@ import { cuandoEs } from '../_carcasa/cuenta-atras'
  */
 export default async function AtelierLayout({ children }: { children: ReactNode }) {
   const actor = await requireSession()
+  const [t, locale] = await Promise.all([tr(), idiomaDeLaPeticion()])
 
   const admin = isAdmin(actor)
   const listed = admin ? null : await events.listFor(actor)
@@ -53,19 +55,19 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
   // Un cliente con varios eventos elige cuál organizar: fuera de un evento su barra es solo «Tu cuenta» (E32).
   const variosEventos = actor.role === 'cliente' && listed !== null && !isErr(listed) && listed.value.length > 1
   const sections = variosEventos
-    ? [{ label: 'Tu cuenta', items: [{ href: '/panel', label: 'Mis eventos', icon: 'eventos' as const }, { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'equipo' as const }] }]
+    ? [{ label: t('Tu cuenta', 'Your account'), items: [{ href: '/panel', label: t('Mis eventos', 'My events'), icon: 'eventos' as const }, { href: '/panel/cuenta', label: t('Mi cuenta', 'My account'), icon: 'equipo' as const }] }]
     : panelNav(activo?.slug ?? null, {
     invitados: grupos,
     pedidos: insignias.pedidos,
     consultas: insignias.consultas,
-  }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner, misEventos: actor.role === 'cliente' && listed !== null && !isErr(listed) && listed.value.length > 1, fueraDelPlan: capacidad === null || isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value) })
+  }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner, misEventos: actor.role === 'cliente' && listed !== null && !isErr(listed) && listed.value.length > 1, fueraDelPlan: capacidad === null || isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value), t })
   return (
     <PanelFrame
       barra={
         admin ? (
-          <BarraDelAdmin campana={campana} hoy={diaLargo(new Date())} menu={<MenuMovil crear={<MenuCrearMovil />} />} />
+          <BarraDelAdmin campana={campana} hoy={diaLargo(new Date(), locale)} menu={<MenuMovil crear={<MenuCrearMovil />} />} />
         ) : (
-          <BarraSuperior izquierda={nombre === null ? undefined : <span className="text-[15px] text-ink-soft">Hola, {nombre.split(' ')[0]}</span>}>{campana}</BarraSuperior>
+          <BarraSuperior izquierda={nombre === null ? undefined : <span className="text-[15px] text-ink-soft">{t('Hola', 'Hi')}, {nombre.split(' ')[0]}</span>}>{campana}</BarraSuperior>
         )
       }
       brandSub={admin ? 'ADMINISTRACIÓN' : 'PANEL'}
@@ -77,15 +79,15 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
           : {
               title: activo.title,
               planLabel: nombreDelPlan === null ? 'Plan —' : `Plan ${nombreDelPlan}`,
-              cuando: cuandoEs(fiestaDeTema(activo.themeKey), activo.eventDate),
+              cuando: cuandoEs(fiestaDeTema(activo.themeKey), activo.eventDate, locale),
               portada: portadaParaCompartir(activo.themeKey),
               salirHref: null,
               salirLabel: '',
             }
       }
-      user={{ email: actor.email, nombre, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
+      user={{ email: actor.email, nombre, rol: rotuloDeRol(actor.role, t), soporte: actor.soporte !== undefined }}
     >
-      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : 'anfitrión del evento (sin cliente)'} />}
+      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : t('anfitrión del evento (sin cliente)', 'event host (no client)')} />}
       {children}
     </PanelFrame>
   )

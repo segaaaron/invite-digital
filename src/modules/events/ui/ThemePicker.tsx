@@ -5,6 +5,8 @@ import { useId, useState } from 'react'
 import { FIESTAS, fiestaDeCategoria, VOCABULARIO, type Fiesta } from '../domain/fiesta'
 import type { ThemeDefinition } from './themes/contract'
 import { rutaDe } from '@/shared/i18n/rutas'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 type Props = {
   readonly definitions: readonly {
@@ -42,38 +44,39 @@ type Props = {
  * pública: la excepción del dorado es para lo que va sobre tarjeta oscura, y esto no lo es.
  */
 export function ThemePicker({ definitions, defaultValue, locale }: Props) {
+  const t = useT()
   const grupo = useId()
   const inicial = definitions.find((d) => d.key === defaultValue) ?? definitions[0]
   const [tipo, setTipo] = useState<Fiesta>(inicial === undefined ? 'boda' : fiestaDeCategoria(inicial.categorySlug))
   const [elegido, setElegido] = useState(inicial?.key ?? '')
   // Las fiestas que de verdad tienen diseños entre los que se le pasan: el cumpleaños solo
   // sale cuando alguien puede elegirlo, que hoy es únicamente el admin.
-  const tipos = FIESTAS.filter((t) => definitions.some((d) => fiestaDeCategoria(d.categorySlug) === t))
+  const tipos = FIESTAS.filter((f) => definitions.some((d) => fiestaDeCategoria(d.categorySlug) === f))
   const porCategoria = { [tipo]: definitions.filter((d) => fiestaDeCategoria(d.categorySlug) === tipo) }
 
   return (
     <fieldset className="flex flex-col gap-6 border-0 p-0">
-      <legend className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Diseño</legend>
+      <legend className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{t('Diseño', 'Design')}</legend>
 
       {/* Primero el tipo de fiesta, y solo sus diseños. Cambiar de tipo elige el primero del
           nuevo: un diseño de la otra fiesta no puede quedar elegido fuera de la vista. */}
       {tipos.length < 2 ? null : (
-      <div aria-label="Tipo de fiesta" className="flex flex-wrap gap-1.5" role="group">
-        {tipos.map((t) => (
+      <div aria-label={t('Tipo de fiesta', 'Party type')} className="flex flex-wrap gap-1.5" role="group">
+        {tipos.map((f) => (
           <button
-            aria-pressed={tipo === t}
+            aria-pressed={tipo === f}
             className={`cursor-pointer rounded-[var(--radius-pill)] border px-4 py-2 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors ${
-              tipo === t ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink-soft hover:border-ink hover:text-ink'
+              tipo === f ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink-soft hover:border-ink hover:text-ink'
             }`}
-            key={t}
+            key={f}
             onClick={() => {
-              setTipo(t)
-              const primero = definitions.find((d) => fiestaDeCategoria(d.categorySlug) === t)
+              setTipo(f)
+              const primero = definitions.find((d) => fiestaDeCategoria(d.categorySlug) === f)
               if (primero !== undefined) setElegido(primero.key)
             }}
             type="button"
           >
-            {VOCABULARIO[t].plural}
+            {traducir(VOCABULARIO[f].plural, t)}
           </button>
         ))}
       </div>
@@ -145,7 +148,7 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
                       rel="noreferrer"
                       target="_blank"
                     >
-                      Ver
+                      {t('Ver', 'View')}
                     </a>
                   </span>
                 </label>

@@ -4,6 +4,7 @@ import { useId, useRef, useState, useTransition } from 'react'
 import { botonClases } from '@/shared/design/ui/panel/PanelKit'
 import { enterAsClientAction } from '@/app/_acciones/admin/support-actions'
 import type { Anfitrion } from './SoporteDeBoda'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * «Entrar como el cliente», **de un clic** (28 de septiembre: antes pedía un motivo que se repetía y
@@ -24,6 +25,7 @@ export function EntrarComoCliente({
   /** Para pintarlo como una opción de un menú «⋯» en vez de como botón. */
   claseDelBoton?: string
 }) {
+  const t = useT()
   const [entrando, empezar] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const dialogo = useRef<HTMLDialogElement>(null)
@@ -48,10 +50,10 @@ export function EntrarComoCliente({
         onClick={() =>
           anfitriones.length > 1 ? dialogo.current?.showModal() : entrarComo(anfitriones[0]?.userId ?? null)
         }
-        title={anfitriones.length === 1 ? `Entrar como ${anfitriones[0]!.email}` : anfitriones.length === 0 ? 'Sin cliente: entras como anfitrión del evento' : undefined}
+        title={anfitriones.length === 1 ? t(`Entrar como ${anfitriones[0]!.email}`, `Sign in as ${anfitriones[0]!.email}`) : anfitriones.length === 0 ? t('Sin cliente: entras como anfitrión del evento', 'No client: you enter as the event host') : undefined}
         type="button"
       >
-        {entrando ? 'Entrando…' : anfitriones.length === 0 ? 'Entrar al panel del evento' : 'Entrar como el cliente'}
+        {entrando ? t('Entrando…', 'Entering…') : anfitriones.length === 0 ? t('Entrar al panel del evento', 'Open the event panel') : t('Entrar como el cliente', 'Sign in as the client')}
       </button>
       {error !== null && anfitriones.length <= 1 ? (
         <span className="text-[12px] text-danger" role="alert">
@@ -65,9 +67,9 @@ export function EntrarComoCliente({
           ref={dialogo}
         >
           <h2 className="font-display text-[28px] leading-tight font-medium" id={`${id}-titulo`}>
-            Entrar como el cliente
+            {t('Entrar como el cliente', 'Sign in as the client')}
           </h2>
-          <p className="mt-2 text-[13px] leading-[1.6] text-ink-soft">Elige la cuenta. La entrada queda registrada en la auditoría.</p>
+          <p className="mt-2 text-[13px] leading-[1.6] text-ink-soft">{t('Elige la cuenta. La entrada queda registrada en la auditoría.', 'Choose the account. The sign-in is recorded in the audit log.')}</p>
           <div className="mt-4 flex flex-col gap-2">
             {anfitriones.map((a) => (
               <button className={botonClases('default')} disabled={entrando} key={a.userId} onClick={() => entrarComo(a.userId)} type="button">
@@ -82,7 +84,7 @@ export function EntrarComoCliente({
           )}
           <div className="mt-4 flex justify-end">
             <button className="text-[13px] text-ink-soft underline underline-offset-4" onClick={() => dialogo.current?.close()} type="button">
-              Cancelar
+              {t('Cancelar', 'Cancel')}
             </button>
           </div>
         </dialog>

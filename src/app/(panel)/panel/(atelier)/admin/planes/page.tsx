@@ -8,8 +8,12 @@ import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { Pill } from '@/shared/design/ui/panel/PanelKit'
 import { CheckIcon } from '@/shared/design/ui/icons'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Planes · Administración' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Planes · Administración', 'Plans · Administration') }
+}
 export const dynamic = 'force-dynamic'
 
 /** `69000` → `690`; `145050` → `1450,50`. Lo que `parseAmount` vuelve a leer igual. */
@@ -22,17 +26,18 @@ const aCampo = (cents: number) => (cents % 100 === 0 ? String(cents / 100) : `${
  * cambiarlos exigía SQL, que es peor. Y el seed ya no los pisa en cada despliegue.
  */
 export default async function AdminPlanesPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
+  const t = await tr()
   await requireAdmin()
   const [planes, { plan: pedido }] = await Promise.all([admin.plans(), searchParams])
 
   return (
     <>
-      <PanelHeader title="Catálogo" meta="Precio y límites de cada plan. Los cambios valen para las ventas nuevas." pestanas={<PestanasDeAdmin />} />
+      <PanelHeader title={t('Catálogo', 'Catalog')} meta={t('Precio y límites de cada plan. Los cambios valen para las ventas nuevas.', 'Price and limits of each plan. Changes apply to new sales.')} pestanas={<PestanasDeAdmin />} />
 
       {isErr(planes) ? (
         <PanelCard>
           <p className="text-[13px] text-danger" role="alert">
-            No pudimos leer los planes. La base no responde; vuelve a intentarlo en un momento.
+            {t('No pudimos leer los planes. La base no responde; vuelve a intentarlo en un momento.', 'We could not read the plans. The database is not responding; try again in a moment.')}
           </p>
         </PanelCard>
       ) : (
@@ -45,10 +50,10 @@ export default async function AdminPlanesPage({ searchParams }: { searchParams: 
                 {planes.value.map((plan) => {
                   const activo = plan.slug === elegido?.slug
                   const rasgos = [
-                    plan.maxGuestGroups === null ? 'Sin límite de invitaciones' : `Hasta ${plan.maxGuestGroups} invitaciones`,
-                    plan.maxGalleryPhotos === null ? 'Fotos sin límite' : `${plan.maxGalleryPhotos} fotos`,
-                    plan.correctionRounds === null ? null : `${plan.correctionRounds} rondas de diseño`,
-                    `${plan.onlineDays} días en línea`,
+                    plan.maxGuestGroups === null ? t('Sin límite de invitaciones', 'Unlimited invitations') : t(`Hasta ${plan.maxGuestGroups} invitaciones`, `Up to ${plan.maxGuestGroups} invitations`),
+                    plan.maxGalleryPhotos === null ? t('Fotos sin límite', 'Unlimited photos') : t(`${plan.maxGalleryPhotos} fotos`, `${plan.maxGalleryPhotos} photos`),
+                    plan.correctionRounds === null ? null : t(`${plan.correctionRounds} rondas de diseño`, `${plan.correctionRounds} design rounds`),
+                    t(`${plan.onlineDays} días en línea`, `${plan.onlineDays} days online`),
                   ].filter((x): x is string => x !== null)
                   return (
                     <a
@@ -59,7 +64,7 @@ export default async function AdminPlanesPage({ searchParams }: { searchParams: 
                     >
                       <span className="flex items-center justify-between gap-2">
                         <span className="font-display text-[24px] font-medium">{plan.es?.name ?? plan.slug}</span>
-                        {activo ? <Pill tone="maybe">Editando</Pill> : plan.isActive ? null : <Pill tone="neutro">Sin vender</Pill>}
+                        {activo ? <Pill tone="maybe">{t('Editando', 'Editing')}</Pill> : plan.isActive ? null : <Pill tone="neutro">{t('Sin vender', 'Not for sale')}</Pill>}
                       </span>
                       <span className="mt-1.5 mb-2.5 font-display text-[34px] font-medium">{formatAmount(plan.priceCents, plan.currency).replace(/,00$/, '')}</span>
                       <ul>

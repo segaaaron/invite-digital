@@ -3,6 +3,7 @@
 import { useId, useRef, useState } from 'react'
 import { CheckIcon, CloseIcon, UploadIcon } from '../icons'
 import { reducirEnElCampo } from '../reducir-foto'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /** Lo más que admite cualquier subida del sitio (el tope del servidor es 32 MB con el sobre del envío). */
 const MAXIMO_POR_ARCHIVO = 30 * 1024 * 1024
@@ -36,6 +37,7 @@ export function FilePicker({
   /** Para quien quiera leer el archivo al elegirlo —el nombre de una canción, por ejemplo—. */
   onElegir?: (archivo: File | null) => void
 }) {
+  const t = useT()
   const [demasiado, setDemasiado] = useState(false)
   const id = useId()
   const [elegido, setElegido] = useState<{ nombre: string; bytes: number } | null>(null)
@@ -60,7 +62,7 @@ export function FilePicker({
         <span aria-live="polite" className="truncate pr-8 text-[13px] text-ink">
           {elegido ? elegido.nombre : label}
         </span>
-        <span className="text-[11px] text-ink-mute">{elegido ? `${tamano(elegido.bytes)} · pulsa para cambiarlo` : hint}</span>
+        <span className="text-[11px] text-ink-mute">{elegido ? `${tamano(elegido.bytes)} · ${t('pulsa para cambiarlo', 'tap to change it')}` : hint}</span>
       </span>
       <input
         accept={accept}
@@ -97,7 +99,7 @@ export function FilePicker({
       {/* Quitar lo elegido: sin esto, equivocarse de archivo obligaba a elegir otro encima. */}
       {elegido ? (
         <button
-          aria-label={`Quitar ${elegido.nombre}`}
+          aria-label={t(`Quitar ${elegido.nombre}`, `Remove ${elegido.nombre}`)}
           className="absolute top-1/2 right-3 grid size-7 max-[767px]:size-10 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-line-panel bg-white text-ink-soft hover:border-ink hover:text-ink"
           onClick={() => {
             if (campo.current) campo.current.value = ''
@@ -111,7 +113,7 @@ export function FilePicker({
       ) : null}
       {demasiado ? (
         <p className="mt-2 text-[12px] text-danger" role="alert">
-          Ese archivo pesa más de 30 MB. Elige uno más liviano.
+          {t('Ese archivo pesa más de 30 MB. Elige uno más liviano.', 'That file is over 30 MB. Choose a lighter one.')}
         </p>
       ) : null}
     </div>

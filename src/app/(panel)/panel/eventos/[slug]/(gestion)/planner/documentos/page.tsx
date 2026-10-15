@@ -6,13 +6,18 @@ import { DocumentsBoard } from '@/modules/planner/ui/DocumentsBoard'
 import { FeatureLocked } from '@/modules/plans'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Documentos' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Documentos', 'Documents') }
+}
 export const dynamic = 'force-dynamic'
 
 const peso = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`)
 
 export default async function DocumentosPage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const event = await events.getFor(actor, slug, { section: 'cliente' })
@@ -21,7 +26,7 @@ export default async function DocumentosPage({ params }: { params: Promise<{ slu
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="Los documentos y las referencias vienen con Gala e Imperial." title="Documentos" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="Los documentos y las referencias vienen con Gala e Imperial." title={t('Documentos', 'Documents')} />
   }
 
   const proveedores = (await planner.dia.listVendors(event.value.id)).map((v) => ({ id: v.id, nombre: v.company ?? v.service }))
@@ -38,7 +43,7 @@ export default async function DocumentosPage({ params }: { params: Promise<{ slu
 
   return (
     <>
-      <PanelHeader meta="Contratos, cotizaciones y facturas, cada uno junto a su proveedor." title="Documentos" />
+      <PanelHeader meta={t('Contratos, cotizaciones y facturas, cada uno junto a su proveedor.', 'Contracts, quotes and invoices, each next to its vendor.')} title={t('Documentos', 'Documents')} />
       <DocumentsBoard documentos={documentos} evento={{ eventId: event.value.id, eventSlug: event.value.slug }} proveedores={proveedores} />
     </>
   )

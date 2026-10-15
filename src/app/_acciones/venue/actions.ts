@@ -7,6 +7,8 @@ import { isErr } from '@/shared/result'
 import type { TableShape } from '@/modules/venue/domain/venue-table'
 import type { ZoneKind } from '@/modules/venue/domain/venue-zone'
 import type { ElementMove } from '@/modules/venue/application/move-element'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 /**
  * Lo que la UI recibe de vuelta. Un fallo del salón no es excepcional —una etiqueta
@@ -28,7 +30,7 @@ const refresh = (slug: string) => revalidatePath(`/panel/eventos/${slug}/mesas`)
  */
 const sinSalon = async (eventId: string): Promise<VenueActionResult | null> => {
   const permitido = await plans.requireFeature(eventId, 'seating')
-  return isErr(permitido) ? { ok: false, kind: permitido.error.kind, message: permitido.error.detail } : null
+  return isErr(permitido) ? { ok: false, kind: permitido.error.kind, message: traducir(permitido.error.detail, await tr()) } : null
 }
 
 export async function addTableAction(input: {
@@ -39,6 +41,7 @@ export async function addTableAction(input: {
   shape: TableShape
   notes?: string | null
 }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -52,12 +55,12 @@ export async function addTableAction(input: {
     shape: input.shape,
     notes: input.notes ?? null,
   })
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   // Se dice cuál se creó y dónde mirarla: sin aviso, quien pulsa «Añadir mesa» no sabe
   // si pasó algo hasta que encuentra el círculo nuevo en el plano.
-  return { ok: true, message: `«${result.value.label}» creada. Ya está en el plano; arrástrala a su sitio.` }
+  return { ok: true, message: t(`«${result.value.label}» creada. Ya está en el plano; arrástrala a su sitio.`, `“${result.value.label}” created. It’s on the floor plan now; drag it into place.`) }
 }
 
 export async function updateTableAction(input: {
@@ -69,6 +72,7 @@ export async function updateTableAction(input: {
   shape: TableShape
   notes?: string | null
 }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -76,7 +80,7 @@ export async function updateTableAction(input: {
   if (cerrado) return cerrado
 
   const result = await venue.updateTable(input)
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   return { ok: true }
@@ -87,6 +91,7 @@ export async function removeTableAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -94,15 +99,15 @@ export async function removeTableAction(input: {
   if (cerrado) return cerrado
 
   const result = await venue.removeTable({ id: input.id, eventId: input.eventId })
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   return {
     ok: true,
     message:
       result.value.orphaned === 0
-        ? 'Mesa eliminada.'
-        : `Mesa eliminada. ${result.value.orphaned} grupo${result.value.orphaned === 1 ? '' : 's'} quedó sin mesa.`,
+        ? t('Mesa eliminada.', 'Table deleted.')
+        : t(`Mesa eliminada. ${result.value.orphaned} grupo${result.value.orphaned === 1 ? '' : 's'} quedó sin mesa.`, `Table deleted. ${result.value.orphaned} group${result.value.orphaned === 1 ? '' : 's'} left without a table.`),
   }
 }
 
@@ -112,6 +117,7 @@ export async function assignGroupAction(input: {
   groupId: string
   tableId: string
 }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -119,7 +125,7 @@ export async function assignGroupAction(input: {
   if (cerrado) return cerrado
 
   const result = await venue.assign({ eventId: input.eventId, groupId: input.groupId, tableId: input.tableId })
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   return { ok: true }
@@ -130,6 +136,7 @@ export async function unassignGroupAction(input: {
   eventSlug: string
   groupId: string
 }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -137,13 +144,14 @@ export async function unassignGroupAction(input: {
   if (cerrado) return cerrado
 
   const result = await venue.unassign({ eventId: input.eventId, groupId: input.groupId })
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   return { ok: true }
 }
 
 export async function autoAssignAction(input: { eventId: string; eventSlug: string }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -151,7 +159,7 @@ export async function autoAssignAction(input: { eventId: string; eventSlug: stri
   if (cerrado) return cerrado
 
   const result = await venue.autoAssign({ eventId: input.eventId })
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   const { assigned, unplaced } = result.value
@@ -159,8 +167,8 @@ export async function autoAssignAction(input: { eventId: string; eventSlug: stri
     ok: true,
     message:
       unplaced.length === 0
-        ? `${assigned} grupo${assigned === 1 ? '' : 's'} repartido${assigned === 1 ? '' : 's'}.`
-        : `${assigned} repartido${assigned === 1 ? '' : 's'}. Sin sitio: ${unplaced.map((g) => g.label).join(', ')}.`,
+        ? t(`${assigned} grupo${assigned === 1 ? '' : 's'} repartido${assigned === 1 ? '' : 's'}.`, `${assigned} group${assigned === 1 ? '' : 's'} seated.`)
+        : t(`${assigned} repartido${assigned === 1 ? '' : 's'}. Sin sitio: ${unplaced.map((g) => g.label).join(', ')}.`, `${assigned} seated. No room for: ${unplaced.map((g) => g.label).join(', ')}.`),
   }
 }
 
@@ -170,6 +178,7 @@ export async function addZoneAction(input: {
   kind: ZoneKind
   label: string
 }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -185,7 +194,7 @@ export async function addZoneAction(input: {
     w: 20,
     h: 15,
   })
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   return { ok: true }
@@ -207,6 +216,7 @@ export async function updateZoneAction(input: {
   w: number
   h: number
 }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -214,7 +224,7 @@ export async function updateZoneAction(input: {
   if (cerrado) return cerrado
 
   const result = await venue.updateZone(input)
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   return { ok: true }
@@ -225,6 +235,7 @@ export async function removeZoneAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -232,7 +243,7 @@ export async function removeZoneAction(input: {
   if (cerrado) return cerrado
 
   const result = await venue.removeZone({ id: input.id, eventId: input.eventId })
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   return { ok: true }
@@ -248,6 +259,7 @@ export async function moveElementsAction(input: {
   eventSlug: string
   moves: ElementMove[]
 }): Promise<VenueActionResult> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -255,7 +267,7 @@ export async function moveElementsAction(input: {
   if (cerrado) return cerrado
 
   const result = await venue.moveElements({ eventId: input.eventId, moves: input.moves })
-  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: traducir(result.error.detail, t) }
 
   refresh(input.eventSlug)
   return { ok: true }

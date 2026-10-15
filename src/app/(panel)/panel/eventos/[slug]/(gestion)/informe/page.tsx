@@ -10,8 +10,12 @@ import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { diaDelEvento, fecha, hora } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Informe del evento' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Informe del evento', 'Event report') }
+}
 export const dynamic = 'force-dynamic'
 
 const HORA = new Intl.DateTimeFormat('es-BO', { timeZone: 'America/La_Paz', hour: '2-digit', hourCycle: 'h23' })
@@ -23,6 +27,7 @@ const HORA = new Intl.DateTimeFormat('es-BO', { timeZone: 'America/La_Paz', hour
  * El mejor momento para pedirle su opinión es cuando lo mira.
  */
 export default async function InformePage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const event = await events.getFor(actor, slug, { section: 'cliente' })
@@ -50,23 +55,23 @@ export default async function InformePage({ params }: { params: Promise<{ slug: 
 
   return (
     <div className="mx-auto flex max-w-[980px] flex-col gap-4.5 print:max-w-none">
-      <PanelHeader actions={<BotonImprimir>Guardar como PDF</BotonImprimir>} kicker="Informe del evento" meta={`${diaDelEvento(e.eventDate)} · ${themeFor(e.themeKey).label}`} title={e.title} />
+      <PanelHeader actions={<BotonImprimir>{t('Guardar como PDF', 'Save as PDF')}</BotonImprimir>} kicker={t('Informe del evento', 'Event report')} meta={`${diaDelEvento(e.eventDate, t('es', 'en') === 'es' ? 'es' : 'en')} · ${themeFor(e.themeKey).label}`} title={e.title} />
 
       <TiraDeCifras
         cifras={[
-          { label: 'Llegaron', value: tally === null ? '—' : tally.headsInside, detail: tally === null ? undefined : `De ${tally.expectedHeads} que confirmaron` },
-          { label: 'Asistencia', value: asistencia === null ? '—' : `${asistencia} %`, detail: 'Sobre lo confirmado' },
-          { label: 'Firmas', value: mensajes.length, detail: 'En el libro de la invitación' },
-          { label: 'Fotos', value: fotosDeInvitados, detail: 'Subidas por los invitados' },
+          { label: t('Llegaron', 'Arrived'), value: tally === null ? '—' : tally.headsInside, detail: tally === null ? undefined : t(`De ${tally.expectedHeads} que confirmaron`, `Of ${tally.expectedHeads} who confirmed`) },
+          { label: t('Asistencia', 'Attendance'), value: asistencia === null ? '—' : `${asistencia} %`, detail: t('Sobre lo confirmado', 'Of those confirmed') },
+          { label: t('Firmas', 'Entries'), value: mensajes.length, detail: t('En el libro de la invitación', 'In the invitation’s guestbook') },
+          { label: t('Fotos', 'Photos'), value: fotosDeInvitados, detail: t('Subidas por los invitados', 'Uploaded by guests') },
         ]}
       />
 
-      <PanelCard title="Cómo llegaron">
+      <PanelCard title={t('Cómo llegaron', 'How they arrived')}>
         {horas.length === 0 ? (
-          <EmptyState compact title="No se registraron llegadas en la puerta" />
+          <EmptyState compact title={t('No se registraron llegadas en la puerta', 'No arrivals were recorded at the door')} />
         ) : (
           <>
-            {primera === undefined ? null : <p className="-mt-2 mb-3 text-[12.5px] text-ink-mute">El primero entró a las {hora(primera)} del {fecha(primera)}.</p>}
+            {primera === undefined ? null : <p className="-mt-2 mb-3 text-[12.5px] text-ink-mute">{t(`El primero entró a las ${hora(primera)} del ${fecha(primera)}.`, `The first one arrived at ${hora(primera)} on ${fecha(primera, 'en')}.`)}</p>}
             <div className="flex flex-col">
               {horas.map(([h, n]) => (
                 <BarRow key={h} label={`${h}:00`} ratio={n / techo} value={String(n)} />
@@ -76,9 +81,9 @@ export default async function InformePage({ params }: { params: Promise<{ slug: 
         )}
       </PanelCard>
 
-      <PanelCard id="libro" title="El libro de firmas">
+      <PanelCard id="libro" title={t('El libro de firmas', 'The guestbook')}>
         {mensajes.length === 0 ? (
-          <EmptyState compact title="Nadie dejó un mensaje" />
+          <EmptyState compact title={t('Nadie dejó un mensaje', 'Nobody left a message')} />
         ) : (
           <ul className="columns-1 gap-4 min-[760px]:columns-2 print:columns-2">
             {mensajes.map((m) => (

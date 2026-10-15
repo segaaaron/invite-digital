@@ -21,8 +21,13 @@ import { faltaPara, diaDelEvento } from '@/shared/format/fecha'
 import { plural } from '@/shared/format/plural'
 import { isErr } from '@/shared/result'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
+import { traducir } from '@/shared/i18n/en-ingles'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Eventos · Administración' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Eventos · Administración', 'Events · Administration') }
+}
 export const dynamic = 'force-dynamic'
 
 const BASE = '/panel/admin/eventos'
@@ -47,6 +52,8 @@ type Params = { [K in 'etapa' | 'fiesta' | 'q' | 'n' | 'crear' | 'pedido' | 'con
  * ⌘K abre el resumen de uno (`?evento=`). El calendario es la pestaña de al lado.
  */
 export default async function AdminEventosPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   await requireAdmin()
   const p = await searchParams
   const hoy = fechaEnBolivia(new Date())
@@ -55,10 +62,10 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
   if (isErr(eventos)) {
     return (
       <>
-        <PanelHeader kicker="Eventos" title="Cartera" />
+        <PanelHeader kicker={t('Eventos', 'Events')} title={t('Cartera', 'Portfolio')} />
         <PanelCard>
           <p className="text-[13px] text-danger" role="alert">
-            No pudimos leer los eventos. La base no responde; vuelve a intentarlo en un momento.
+            {t('No pudimos leer los eventos. La base no responde; vuelve a intentarlo en un momento.', 'We could not read the events. The database is not responding; try again in a moment.')}
           </p>
         </PanelCard>
       </>
@@ -66,7 +73,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
   }
 
   const temas = themeDefinitions()
-  const nombreDeModelo = new Map(temas.map((t) => [t.key, t.label]))
+  const nombreDeModelo = new Map(temas.map((tema) => [tema.key, tema.label]))
   const nombreDePlan = new Map(planes.map((pl) => [pl.slug, pl.nombre]))
   const cartera = ordenarCartera(
     eventos.value.map((e) => {
@@ -111,7 +118,9 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
   const media = conRespuestas.length === 0 ? null : Math.round((conRespuestas.reduce((s2, e) => s2 + e.respondidos / e.grupos, 0) / conRespuestas.length) * 100)
   const borradores = deFiesta.filter((e) => e.etapa === 'borrador').length
   const sinInvitados = deFiesta.filter((e) => e.etapa === 'sin_invitados').length
-  const resumenRiesgo = [borradores > 0 ? plural(borradores, 'borrador', 'borradores') : null, sinInvitados > 0 ? `${sinInvitados} sin invitados` : null].filter(Boolean).join(' y ') || 'Con algo que resolver'
+  const resumenRiesgo =
+    [borradores > 0 ? plural(borradores, t('borrador', 'draft'), t('borradores', 'drafts')) : null, sinInvitados > 0 ? t(`${sinInvitados} sin invitados`, `${sinInvitados} without guests`) : null].filter(Boolean).join(t(' y ', ' and ')) ||
+    t('Con algo que resolver', 'With something to sort out')
   const conteo = new Map<string, number>()
   for (const e of deFiesta) conteo.set(e.etapa, (conteo.get(e.etapa) ?? 0) + 1)
 
@@ -123,14 +132,14 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
     ownerEmail: e.ownerEmail,
     planNombre: e.planSlug === null ? null : (nombreDePlan.get(e.planSlug) ?? e.planSlug),
     portada: CATALOG_KEYS.includes(e.themeKey) ? `/templates/${e.themeKey}.avif` : null,
-    modelo: nombreDeModelo.get(e.themeKey) ?? 'un diseño retirado',
+    modelo: nombreDeModelo.get(e.themeKey) ?? t('un diseño retirado', 'a withdrawn design'),
     fiesta: e.fiesta,
     grupos: e.grupos,
     enviados: e.enviados,
     respondidos: e.respondidos,
     etapa: e.etapa,
-    cuando: faltaPara(diasEntre(hoy, e.eventDate)),
-    salud: { tono: e.salud.tono, texto: e.salud.texto, mas: Math.max(0, e.salud.alertas.length - 1) },
+    cuando: faltaPara(diasEntre(hoy, e.eventDate), locale),
+    salud: { tono: e.salud.tono, texto: traducir(e.salud.texto, t), mas: Math.max(0, e.salud.alertas.length - 1) },
     anfitriones: anfitriones.get(e.id) ?? [],
   })
 
@@ -141,14 +150,14 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
 
   return (
     <>
-      <PanelHeader meta="Lo que se celebra pronto va primero. Abre uno para ver su ficha o entra como anfitrión." title="Eventos" />
+      <PanelHeader meta={t('Lo que se celebra pronto va primero. Abre uno para ver su ficha o entra como anfitrión.', 'What is celebrated soon comes first. Open one to see its record or enter as the host.')} title={t('Eventos', 'Events')} />
 
       {/* Buscador y filtros en una línea (maqueta E03). */}
       <div className="mb-7 flex flex-wrap items-center gap-2.5">
         <form action={BASE} className="relative min-w-0 flex-[1_1_280px] max-[1279px]:hidden" method="get" role="search">
           {filtroEtapa === 'todas' ? null : <input name="etapa" type="hidden" value={filtroEtapa} />}
           <label className="sr-only" htmlFor="buscar-evento">
-            Buscar evento
+            {t('Buscar evento', 'Search event')}
           </label>
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2 text-ink-mute" />
           <input
@@ -156,17 +165,17 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
             defaultValue={q}
             id="buscar-evento"
             name="q"
-            placeholder="Buscar por nombre, cliente o diseño"
+            placeholder={t('Buscar por nombre, cliente o diseño', 'Search by name, client or design')}
             type="search"
           />
         </form>
-        <nav aria-label="Etapa" className="flex flex-wrap gap-2.5">
+        <nav aria-label={t('Etapa', 'Stage')} className="flex flex-wrap gap-2.5">
           {[
             { key: 'todas', label: 'Próximos', n: deFiesta.length - celebrados },
-            ...(enRiesgo > 0 || filtroEtapa === 'riesgo' ? [{ key: 'riesgo', label: 'En riesgo', n: enRiesgo }] : []),
-            { key: 'borrador', label: 'Borradores', n: conteo.get('borrador') ?? 0 },
-            { key: 'sin_invitados', label: 'Sin invitados', n: conteo.get('sin_invitados') ?? 0 },
-            { key: 'celebrada', label: 'Celebrados', n: celebrados },
+            ...(enRiesgo > 0 || filtroEtapa === 'riesgo' ? [{ key: 'riesgo', label: t('En riesgo', 'At risk'), n: enRiesgo }] : []),
+            { key: 'borrador', label: t('Borradores', 'Drafts'), n: conteo.get('borrador') ?? 0 },
+            { key: 'sin_invitados', label: t('Sin invitados', 'No guests'), n: conteo.get('sin_invitados') ?? 0 },
+            { key: 'celebrada', label: t('Celebrados', 'Celebrated'), n: celebrados },
           ].map((f) => (
             <Link
               aria-current={filtroEtapa === f.key ? 'page' : undefined}
@@ -174,7 +183,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
               href={enlace({ etapa: f.key === 'todas' ? undefined : f.key, n: undefined })}
               key={f.key}
             >
-              {f.label} {f.n}
+              {traducir(f.label, t)} {f.n}
             </Link>
           ))}
         </nav>
@@ -182,10 +191,10 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
 
       {/* Las cifras en su tira con filetes (maqueta E03). */}
       <dl className="mb-9 flex flex-wrap gap-y-4 max-[1279px]:hidden">
-        <CifraDeTira etiqueta="Esta semana" valor={semana === 1 ? '1 evento' : `${semana} eventos`} primera />
-        <CifraDeTira detalle={enRiesgo === 0 ? undefined : resumenRiesgo} enlace={enRiesgo === 0 ? undefined : enlace({ etapa: 'riesgo', n: undefined })} etiqueta="Necesitan algo" valor={String(enRiesgo)} />
-        <CifraDeTira etiqueta="Confirmación media" valor={media === null ? '—' : `${media}%`} />
-        <CifraDeTira etiqueta="Este mes" valor={String(esteMes)} />
+        <CifraDeTira etiqueta={t('Esta semana', 'This week')} valor={semana === 1 ? t('1 evento', '1 event') : t(`${semana} eventos`, `${semana} events`)} primera />
+        <CifraDeTira detalle={enRiesgo === 0 ? undefined : resumenRiesgo} enlace={enRiesgo === 0 ? undefined : enlace({ etapa: 'riesgo', n: undefined })} etiqueta={t('Necesitan algo', 'Need something')} valor={String(enRiesgo)} />
+        <CifraDeTira etiqueta={t('Confirmación media', 'Average RSVP')} valor={media === null ? '—' : `${media}%`} />
+        <CifraDeTira etiqueta={t('Este mes', 'This month')} valor={String(esteMes)} />
       </dl>
 
       {/* Tableta (maqueta T03): la lista a la izquierda y la ficha del elegido al lado, con lo que falta y cómo entrar. */}
@@ -216,10 +225,10 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
                       </span>
                       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="truncate font-display text-[19px] leading-tight font-medium">{e.title}</span>
-                        <span className="truncate text-[13px] text-ink-mute">{diaDelEvento(e.eventDate)}</span>
+                        <span className="truncate text-[13px] text-ink-mute">{diaDelEvento(e.eventDate, locale)}</span>
                         <span className="flex items-center gap-2 text-[13px] text-ink-mute">
-                          <Pill tone={tono[e.salud.tono]}>{e.salud.tono === 'ok' ? 'Al día' : e.salud.alertas[0]?.texto ?? e.salud.texto}</Pill>
-                          {e.respondidos} de {e.grupos}
+                          <Pill tone={tono[e.salud.tono]}>{e.salud.tono === 'ok' ? t('Al día', 'On track') : traducir(e.salud.alertas[0]?.texto ?? e.salud.texto, t)}</Pill>
+                          {t(`${e.respondidos} de ${e.grupos}`, `${e.respondidos} of ${e.grupos}`)}
                         </span>
                       </span>
                       {dias < 0 ? null : (
@@ -233,7 +242,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
                 )
               })}
             </ul>
-            <section aria-label={`Ficha de ${ev.title}`} className="sticky top-24 flex flex-col gap-5 self-start">
+            <section aria-label={t(`Ficha de ${ev.title}`, `${ev.title} record`)} className="sticky top-24 flex flex-col gap-5 self-start">
               <div className="flex gap-5">
                 <span className="block w-28 shrink-0 overflow-hidden rounded-[16px] border-4 border-shell-deep bg-bg-sunken">
                   {ev.portada === null ? null : (
@@ -244,20 +253,20 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
                 <div className="flex min-w-0 flex-col gap-2">
                   <h2 className="font-display text-[28px] leading-tight font-medium">{ev.title}</h2>
                   <p className="text-[14.5px] text-ink-mute">
-                    Con el diseño {ev.modelo}
-                    {ev.planNombre === null ? '' : `, plan ${ev.planNombre}`}. {diaDelEvento(ev.eventDate)}.
+                    {t('Con el diseño', 'With the design')} {ev.modelo}
+                    {ev.planNombre === null ? '' : t(`, plan ${ev.planNombre}`, `, ${ev.planNombre} plan`)}. {diaDelEvento(ev.eventDate, locale)}.
                   </p>
                   <span className="flex flex-wrap gap-2">
-                    <Pill tone={tono[ev.salud.tono]}>{ev.salud.tono === 'ok' ? 'Al día' : 'Necesita algo'}</Pill>
+                    <Pill tone={tono[ev.salud.tono]}>{ev.salud.tono === 'ok' ? t('Al día', 'On track') : t('Necesita algo', 'Needs something')}</Pill>
                     <Pill tone="neutro">{ev.cuando}</Pill>
                   </span>
                 </div>
               </div>
               <dl className="grid grid-cols-3 border-y border-line-panel">
                 {[
-                  { n: ev.grupos, t: 'invitaciones' },
-                  { n: ev.respondidos, t: 'respondieron' },
-                  { n: ev.enviados, t: 'enviadas' },
+                  { n: ev.grupos, t: t('invitaciones', 'invitations') },
+                  { n: ev.respondidos, t: t('respondieron', 'replied') },
+                  { n: ev.enviados, t: t('enviadas', 'sent') },
                 ].map((c, i) => (
                   <div className={`py-3.5 ${i === 0 ? '' : 'border-l border-line-panel pl-4'}`} key={c.t}>
                     <dd className="m-0 font-display text-[28px] leading-none font-medium [font-variant-numeric:lining-nums]">{c.n}</dd>
@@ -267,17 +276,17 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
               </dl>
               {elegido.salud.alertas.length === 0 ? null : (
                 <div>
-                  <h3 className="mb-2 text-[15px] font-medium">Lo que falta</h3>
+                  <h3 className="mb-2 text-[15px] font-medium">{t('Lo que falta', 'What is missing')}</h3>
                   <ul className="list-disc pl-5 text-[14.5px] leading-[1.7]">
                     {elegido.salud.alertas.map((a) => (
-                      <li key={a.clave}>{a.texto}</li>
+                      <li key={a.clave}>{traducir(a.texto, t)}</li>
                     ))}
                   </ul>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-2.5">
                 <PanelButton href={`/panel/eventos/${ev.slug}/configuracion`} variant="primary">
-                  Abrir el panel del evento
+                  {t('Abrir el panel del evento', 'Open the event panel')}
                 </PanelButton>
                 <EntrarComoCliente anfitriones={ev.anfitriones} eventId={ev.id} />
               </div>
@@ -287,28 +296,28 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
       })()}
 
       <div className="min-[768px]:max-[1279px]:hidden">
-      <h2 className="mb-2 font-display text-[24px] font-medium max-[767px]:sr-only">{filtroEtapa === 'celebrada' ? 'Celebrados' : filtroEtapa === 'todas' ? 'Próximos' : 'Eventos'}</h2>
+      <h2 className="mb-2 font-display text-[24px] font-medium max-[767px]:sr-only">{filtroEtapa === 'celebrada' ? t('Celebrados', 'Celebrated') : filtroEtapa === 'todas' ? t('Próximos', 'Upcoming') : t('Eventos', 'Events')}</h2>
       {visibles.length === 0 ? (
         <PanelCard>
           <EmptyState
             action={
               cartera.length === 0 ? (
                 <PanelButton href={`${BASE}?crear=evento`} variant="primary">
-                  Crear el primer evento
+                  {t('Crear el primer evento', 'Create the first event')}
                 </PanelButton>
               ) : undefined
             }
-            title={cartera.length === 0 ? 'Todavía no hay ningún evento en el sistema' : 'Ningún evento con ese filtro'}
+            title={cartera.length === 0 ? t('Todavía no hay ningún evento en el sistema', 'There are no events in the system yet') : t('Ningún evento con ese filtro', 'No events with that filter')}
           />
         </PanelCard>
       ) : (
         <>
           <div aria-hidden className={`grid border-b border-line-panel-strong px-3.5 pb-2.5 text-[13px] font-medium text-ink-mute max-[859px]:hidden ${COLUMNAS_DE_CARTERA} gap-x-4`}>
-            <span>Fecha</span>
-            <span>Evento</span>
-            <span>Cliente</span>
-            <span>Etapa</span>
-            <span>Avance</span>
+            <span>{t('Fecha', 'Date')}</span>
+            <span>{t('Evento', 'Event')}</span>
+            <span>{t('Cliente', 'Client')}</span>
+            <span>{t('Etapa', 'Stage')}</span>
+            <span>{t('Avance', 'Progress')}</span>
             <span />
           </div>
           <ul className="flex flex-col">
@@ -319,7 +328,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
           {visibles.length > pagina.length ? (
             <div className="mt-4">
               <PanelButton href={enlace({ n: String(tope + PAGINA) })}>
-                Ver {plural(Math.min(PAGINA, visibles.length - pagina.length), 'evento más', 'eventos más')}
+                {t('Ver', 'See')} {plural(Math.min(PAGINA, visibles.length - pagina.length), t('evento más', 'more event'), t('eventos más', 'more events'))}
               </PanelButton>
             </div>
           ) : null}
@@ -328,21 +337,21 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
       </div>
 
       {abierto === undefined ? null : (
-        <PanelLateral closeHref={enlace({})} subtitle={`${diaDelEvento(abierto.eventDate)} · ${faltaPara(diasEntre(hoy, abierto.eventDate))}`} title={abierto.title}>
+        <PanelLateral closeHref={enlace({})} subtitle={`${diaDelEvento(abierto.eventDate, locale)} · ${faltaPara(diasEntre(hoy, abierto.eventDate), locale)}`} title={abierto.title}>
           <div className="flex flex-col gap-5">
             {/* `@container`: la fila decide sus columnas por el ancho de su lista, no por la ventana. */}
             <ul className="@container flex flex-col gap-2.5">
               <EventAdminRow event={vista(abierto)} />
             </ul>
             <section>
-              <h3 className="mb-3 font-mono text-[10px] tracking-[0.18em] text-ink-mute uppercase">Salud del evento</h3>
+              <h3 className="mb-3 font-mono text-[10px] tracking-[0.18em] text-ink-mute uppercase">{t('Salud del evento', 'Event health')}</h3>
               {abierto.salud.alertas.length === 0 ? (
-                <Semaforo tono="ok">{abierto.salud.texto}</Semaforo>
+                <Semaforo tono="ok">{traducir(abierto.salud.texto, t)}</Semaforo>
               ) : (
                 <ul className="flex flex-col gap-2">
                   {abierto.salud.alertas.map((a) => (
                     <li key={a.clave}>
-                      <Semaforo tono={a.tono}>{a.texto}</Semaforo>
+                      <Semaforo tono={a.tono}>{traducir(a.texto, t)}</Semaforo>
                     </li>
                   ))}
                 </ul>
@@ -350,9 +359,9 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
             </section>
             <div className="flex flex-wrap gap-2.5">
               <PanelButton href={`/panel/eventos/${abierto.slug}/configuracion`} variant="primary">
-                Abrir la ficha
+                {t('Abrir la ficha', 'Open the record')}
               </PanelButton>
-              <PanelButton href={`/panel/eventos/${abierto.slug}/vista-previa`}>Ver la invitación</PanelButton>
+              <PanelButton href={`/panel/eventos/${abierto.slug}/vista-previa`}>{t('Ver la invitación', 'See the invitation')}</PanelButton>
             </div>
           </div>
         </PanelLateral>
@@ -375,6 +384,7 @@ async function AltaDeEvento({
   temas: ReturnType<typeof themeDefinitions>
   planes: Awaited<ReturnType<typeof admin.planOptions>>
 }) {
+  const t = await tr()
   const desdePedido = await (async (): Promise<DesdePedido | undefined> => {
     if (pedidoRef === undefined) {
       // Una consulta que se cerró por fuera: el alta nace con su nombre, fecha y contacto.
@@ -394,19 +404,19 @@ async function AltaDeEvento({
     // Una página, no un panel (maqueta E51): «Eventos / Nuevo evento» arriba y el alta a lo ancho.
     <div className="flex flex-col gap-7">
       <header>
-        <h1 className="font-display text-[46px] leading-[1.06] font-medium max-[559px]:text-[34px]">Nuevo evento</h1>
+        <h1 className="font-display text-[46px] leading-[1.06] font-medium max-[559px]:text-[34px]">{t('Nuevo evento', 'New event')}</h1>
         <p className="mt-2 text-[17px] text-ink-mute max-[859px]:text-[16px]">
           {desdePedido === undefined
-            ? 'Para un cliente que ya pagó o que cobras por fuera. Lo dejamos listo para que entre.'
+            ? t('Para un cliente que ya pagó o que cobras por fuera. Lo dejamos listo para que entre.', 'For a client who already paid or whom you bill outside. We leave it ready for them to sign in.')
             : desdePedido.ref === null
-              ? `Desde la consulta de ${desdePedido.nombre}: sus datos ya están puestos.`
-              : `Desde el pedido ${desdePedido.ref}: lo que eligió ya está puesto.`}
+              ? t(`Desde la consulta de ${desdePedido.nombre}: sus datos ya están puestos.`, `From ${desdePedido.nombre}’s inquiry: their details are already filled in.`)
+              : t(`Desde el pedido ${desdePedido.ref}: lo que eligió ya está puesto.`, `From order ${desdePedido.ref}: what they chose is already filled in.`)}
         </p>
       </header>
       <NuevaBodaForm
         cancelar={cerrar}
         // Ni el clásico —el respaldo de una clave desconocida— ni los retirados: nadie los elige mirando la web.
-        modelos={temas.filter((t) => seAsigna(t.key)).map((t) => ({ key: t.key, label: t.label, categoria: vocabularioDeCategoria(t.categorySlug).plural }))}
+        modelos={temas.filter((tema) => seAsigna(tema.key)).map((tema) => ({ key: tema.key, label: tema.label, categoria: vocabularioDeCategoria(tema.categorySlug).plural }))}
         pedido={desdePedido}
         planes={planes.map((pl) => ({ slug: pl.slug, nombre: pl.nombre, precio: BS.format(pl.priceCents / 100) }))}
       />

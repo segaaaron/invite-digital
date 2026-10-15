@@ -2,8 +2,12 @@ import { redirect } from 'next/navigation'
 import { ChangePasswordForm } from '@/modules/identity/ui/ChangePasswordForm'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PuertaConFoto } from '../_carcasa/PuertaConFoto'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Elige tu contraseña · Panel' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Elige tu contraseña · Panel', 'Choose your password · Panel') }
+}
 export const dynamic = 'force-dynamic'
 
 /**
@@ -15,6 +19,7 @@ export const dynamic = 'force-dynamic'
  * salida más que elegirla, como en cualquier producto que reparte claves iniciales.
  */
 export default async function NuevaContrasenaPage() {
+  const t = await tr()
   const actor = await requireSession()
   // Quien ya eligió la suya no tiene nada que hacer aquí.
   if (!actor.mustChangePassword) redirect('/panel')
@@ -22,8 +27,8 @@ export default async function NuevaContrasenaPage() {
   return (
     <PuertaConFoto>
       <header className="flex flex-col gap-2">
-        <h1 className="font-display text-[36px] leading-tight font-medium text-ink">Elige tu contraseña</h1>
-        <p className="text-[15px] leading-[1.6] text-ink-mute">La que te enviamos era provisional. Con la tuya entras desde ahora.</p>
+        <h1 className="font-display text-[36px] leading-tight font-medium text-ink">{t('Elige tu contraseña', 'Choose your password')}</h1>
+        <p className="text-[15px] leading-[1.6] text-ink-mute">{t('La que te enviamos era provisional. Con la tuya entras desde ahora.', 'The one we sent you was temporary. From now on you sign in with yours.')}</p>
         <p className="text-[13.5px] text-ink-mute">Entrando como {actor.email}</p>
       </header>
       <ChangePasswordForm />

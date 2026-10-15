@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useRef } from 'react'
 import { CalendarIcon, CloseIcon, PlusIcon, ReceiptIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { traducir } from '@/shared/i18n/en-ingles'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * **El único punto de alta del admin.** Había cinco sueltos —«+ Nuevo evento», «Créalo sin
@@ -19,16 +21,17 @@ export const CREAR = [
 const ICONO = { evento: CalendarIcon, cotizacion: ReceiptIcon, persona: UsersIcon } as const
 
 export function MenuCrear() {
+  const t = useT()
   const menu = useRef<HTMLDetailsElement>(null)
   const cerrar = () => menu.current?.removeAttribute('open')
   return (
     <details className="group relative" ref={menu}>
       <summary
-        aria-label="Crear"
+        aria-label={t('Crear', 'Create')}
         className="flex min-h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-[10px] bg-gold px-4.5 text-[14.5px] font-medium text-shell-deep transition-colors hover:bg-gold-hover [&::-webkit-details-marker]:hidden"
       >
         <PlusIcon className="size-[18px] transition-transform duration-200 group-open:rotate-45" />
-        Crear
+        {t('Crear', 'Create')}
       </summary>
       {/* El menú de la maqueta (E50): cada alta con su icono, qué es y para qué. */}
       <div className="absolute top-[calc(100%+10px)] right-0 z-40 w-[320px] origin-top-right rounded-[16px] border border-line-panel bg-bg-raised p-2 shadow-lift motion-safe:animate-slide-up">
@@ -42,8 +45,8 @@ export function MenuCrear() {
                     <Icono className="size-4" />
                   </span>
                   <span className="flex flex-col gap-0.5">
-                    <span className="text-[15px] leading-tight font-medium">{c.titulo}</span>
-                    <span className="text-[13px] leading-snug text-ink-mute">{c.detalle}</span>
+                    <span className="text-[15px] leading-tight font-medium">{traducir(c.titulo, t)}</span>
+                    <span className="text-[13px] leading-snug text-ink-mute">{traducir(c.detalle, t)}</span>
                   </span>
                 </Link>
               </li>
@@ -57,6 +60,7 @@ export function MenuCrear() {
 
 /** «Crear» en el celular (maqueta M47): en el menú, sobre «Cerrar sesión», abre una hoja desde abajo con las mismas altas. */
 export function MenuCrearMovil() {
+  const t = useT()
   const hoja = useRef<HTMLDialogElement>(null)
   const cerrar = () => hoja.current?.close()
   return (
@@ -67,7 +71,7 @@ export function MenuCrearMovil() {
         onClick={() => hoja.current?.showModal()}
         type="button"
       >
-        <PlusIcon className="size-[18px]" /> Crear
+        <PlusIcon className="size-[18px]" /> {t('Crear', 'Create')}
       </button>
       <dialog
         aria-labelledby="crear-movil"
@@ -80,9 +84,9 @@ export function MenuCrearMovil() {
         <span aria-hidden className="mx-auto mb-3 block h-1 w-10 rounded-full bg-line-panel-strong" />
         <div className="flex items-center justify-between gap-4">
           <h2 className="font-display text-[26px] font-medium" id="crear-movil">
-            Crear
+            {t('Crear', 'Create')}
           </h2>
-          <button aria-label="Cerrar" className="grid size-11 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised" onClick={cerrar} type="button">
+          <button aria-label={t('Cerrar', 'Close')} className="grid size-11 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised" onClick={cerrar} type="button">
             <CloseIcon className="size-4" />
           </button>
         </div>
@@ -96,8 +100,8 @@ export function MenuCrearMovil() {
                     <Icono className="size-4" />
                   </span>
                   <span className="flex flex-col gap-0.5">
-                    <span className="text-[15.5px] font-medium">{c.titulo}</span>
-                    <span className="text-[13.5px] text-ink-mute">{c.detalle}</span>
+                    <span className="text-[15.5px] font-medium">{traducir(c.titulo, t)}</span>
+                    <span className="text-[13.5px] text-ink-mute">{traducir(c.detalle, t)}</span>
                   </span>
                 </Link>
               </li>

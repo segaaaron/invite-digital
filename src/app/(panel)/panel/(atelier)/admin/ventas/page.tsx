@@ -26,8 +26,13 @@ import { plural } from '@/shared/format/plural'
 import { isErr } from '@/shared/result'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { traducir } from '@/shared/i18n/en-ingles'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Ventas · Administración' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Ventas · Administración', 'Sales · Administration') }
+}
 export const dynamic = 'force-dynamic'
 
 const BASE = '/panel/admin/ventas'
@@ -61,6 +66,7 @@ type Params = { [K in 'etapa' | 'q' | 'n' | 'venta' | 'pedido' | 'consulta' | 'c
  * Todo filtro vive en la dirección: se enlaza, sobrevive a recargar y a la acción que remonta.
  */
 export default async function VentasPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const t = await tr()
   await requireAdmin()
   const p = await searchParams
   const ahora = new Date()
@@ -71,10 +77,10 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
     registrarFallo('panel/admin/ventas/page', 'VentasPage', cargadas.error)
     return (
       <>
-        <h1 className="font-display text-[40px] font-medium">Ventas</h1>
+        <h1 className="font-display text-[40px] font-medium">{t('Ventas', 'Sales')}</h1>
         <PanelCard className="mt-6">
           <p className="text-[14px] text-danger" role="alert">
-            No pudimos leer las ventas. La base no responde; vuelve a intentarlo en un momento.
+            {t('No pudimos leer las ventas. La base no responde; vuelve a intentarlo en un momento.', 'We could not read the sales. The database is not responding; try again in a moment.')}
           </p>
         </PanelCard>
       </>
@@ -108,13 +114,13 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
     <div className="flex flex-col gap-6">
       <div className={`flex flex-wrap items-end justify-between gap-5 ${pedida === undefined ? '' : 'max-[767px]:hidden'}`}>
         <div className="min-w-0">
-          <h1 className="font-display text-[34px] leading-[1.08] font-medium min-[560px]:text-[42px]">Ventas</h1>
-          <p className="mt-2.5 max-w-[560px] text-[16px] text-ink-mute max-[767px]:hidden">Consultas, pedidos y pagos en una sola lista. Cada venta dice qué toca ahora.</p>
+          <h1 className="font-display text-[34px] leading-[1.08] font-medium min-[560px]:text-[42px]">{t('Ventas', 'Sales')}</h1>
+          <p className="mt-2.5 max-w-[560px] text-[16px] text-ink-mute max-[767px]:hidden">{t('Consultas, pedidos y pagos en una sola lista. Cada venta dice qué toca ahora.', 'Inquiries, orders and payments in a single list. Each sale says what to do next.')}</p>
         </div>
         <form action={BASE} className="relative w-[280px] max-[559px]:w-full" method="get" role="search">
           {pestana.clave === 'todas' ? null : <input name="etapa" type="hidden" value={pestana.clave} />}
           <label className="sr-only" htmlFor="buscar-venta">
-            Buscar venta
+            {t('Buscar venta', 'Search sale')}
           </label>
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2 text-ink-mute" />
           <input
@@ -122,7 +128,7 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
             defaultValue={q}
             id="buscar-venta"
             name="q"
-            placeholder="Cliente o referencia"
+            placeholder={t('Cliente o referencia', 'Client or reference')}
             type="search"
           />
         </form>
@@ -133,7 +139,7 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
         <PanelAlert tone="error">
           Faltan tus datos de cobro: quien recibe una cotización no ve a dónde pagar.{' '}
           <Link className="font-medium underline underline-offset-4" href="/panel/admin/pagos">
-            Cargarlos
+            {t('Cargarlos', 'Add them')}
           </Link>
         </PanelAlert>
         </div>
@@ -144,10 +150,10 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
         <div className="min-[768px]:hidden">
           <SelectorDeFiltro
             actual={pestana.clave}
-            etiqueta="Mostrar"
+            etiqueta={t('Mostrar', 'Show')}
             opciones={PESTANAS.filter((x) => x.clave !== 'perdidas' || dePestana(x).length > 0).map((x) => ({
               key: x.clave,
-              label: x.clave === 'todas' ? 'Todas las etapas' : x.etiqueta,
+              label: x.clave === 'todas' ? t('Todas las etapas', 'All stages') : traducir(x.etiqueta, t),
               count: dePestana(x).length,
               href: enlace({ etapa: x.clave === 'todas' ? undefined : x.clave, n: undefined, venta: undefined }),
             }))}
@@ -155,13 +161,13 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
         </div>
       ) : null}
       <AccionDeLaIsla>
-        <Link aria-label="Nueva cotización" className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${BASE}?crear=cotizacion`}>
+        <Link aria-label={t('Nueva cotización', 'New quote')} className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${BASE}?crear=cotizacion`}>
           <PlusIcon className="size-4.5" />
-          Nueva
+          {t('Nueva', 'New')}
         </Link>
       </AccionDeLaIsla>
 
-      <nav aria-label="Etapas" className="-mt-1 overflow-x-auto border-b border-line-panel [scrollbar-width:none] max-[767px]:hidden">
+      <nav aria-label={t('Etapas', 'Stages')} className="-mt-1 overflow-x-auto border-b border-line-panel [scrollbar-width:none] max-[767px]:hidden">
         <ul className="flex min-w-max gap-7 max-[559px]:gap-5">
           {PESTANAS.filter((x) => x.clave !== 'perdidas' || dePestana(x).length > 0 || pestana.clave === 'perdidas').map((x) => {
             const n = dePestana(x).length
@@ -173,7 +179,7 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
                   className={`-mb-px flex h-[46px] items-center gap-2 border-b-[1.5px] px-0.5 text-[15px] font-medium whitespace-nowrap no-underline ${activa ? 'border-gold text-shell-deep' : 'border-transparent text-ink-mute hover:text-shell-deep'}`}
                   href={enlace({ etapa: x.clave === 'todas' ? undefined : x.clave, n: undefined, venta: undefined })}
                 >
-                  {x.etiqueta}
+                  {traducir(x.etiqueta, t)}
                   {x.alerta && n > 0 ? <Pill tone="pending">{n}</Pill> : <span className="text-[12px] font-normal text-ink-mute">{n}</span>}
                 </Link>
               </li>
@@ -187,18 +193,18 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
           <EmptyState
             action={
               <PanelButton href={`${BASE}?crear=cotizacion`} variant="primary">
-                Crear una cotización
+                {t('Crear una cotización', 'Create a quote')}
               </PanelButton>
             }
-            description="Aquí llega quien escribe desde la web o pide un plan, y lo que tú cotizas. Cada persona es una sola venta, de la consulta a su evento."
-            title="Todavía no hay ventas"
+            description={t('Aquí llega quien escribe desde la web o pide un plan, y lo que tú cotizas. Cada persona es una sola venta, de la consulta a su evento.', 'Here arrive those who write from the website or order a plan, and what you quote. Each person is a single sale, from inquiry to event.')}
+            title={t('Todavía no hay ventas', 'No sales yet')}
           />
         </PanelCard>
       ) : (
         <div className="flex flex-wrap items-start gap-8">
-          <section aria-label="Lista de ventas" className={`min-w-0 flex-[999_1_460px] border-t border-line-panel ${pedida === undefined ? '' : 'max-[767px]:hidden'}`}>
+          <section aria-label={t('Lista de ventas', 'Sales list')} className={`min-w-0 flex-[999_1_460px] border-t border-line-panel ${pedida === undefined ? '' : 'max-[767px]:hidden'}`}>
             {visibles.length === 0 ? (
-              <p className="py-8 text-center text-[15px] text-ink-mute">Ninguna venta {q === '' ? 'en esta etapa' : `con «${q}»`}.</p>
+              <p className="py-8 text-center text-[15px] text-ink-mute">{q === '' ? t('Ninguna venta en esta etapa.', 'No sales at this stage.') : t(`Ninguna venta con «${q}».`, `No sales matching “${q}”.`)}</p>
             ) : (
               <>
                 <ul>
@@ -210,7 +216,7 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
                 </ul>
                 {visibles.length > tope ? (
                   <div className="mt-4">
-                    <PanelButton href={enlace({ n: String(tope + PAGINA) })}>Ver {plural(Math.min(PAGINA, visibles.length - tope), 'venta más', 'ventas más')}</PanelButton>
+                    <PanelButton href={enlace({ n: String(tope + PAGINA) })}>{t('Ver', 'See')} {plural(Math.min(PAGINA, visibles.length - tope), t('venta más', 'more sale'), t('ventas más', 'more sales'))}</PanelButton>
                   </div>
                 ) : null}
               </>
@@ -230,9 +236,12 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
 }
 
 /** Una venta de la lista (maqueta E02 `.v`): nombre y etapa, de qué se trata, y lo que vale y cuánto espera. */
-function FilaDeVenta({ venta: v, href, abierta, ahora }: { venta: Venta; href: string; abierta: boolean; ahora: Date }) {
+async function FilaDeVenta({ venta: v, href, abierta, ahora }: { venta: Venta; href: string; abierta: boolean; ahora: Date }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   const e = etapaDeVenta(v.etapa)
-  const info = [v.fiesta === null ? null : FIESTAS.find((f) => f.fiesta === v.fiesta)?.una, v.fechaEvento === null ? null : diaDelEvento(v.fechaEvento), v.pedido?.producto ?? v.consulta?.categoria ?? null]
+  const una = v.fiesta === null ? undefined : FIESTAS.find((f) => f.fiesta === v.fiesta)?.una
+  const info = [una === undefined ? null : traducir(una, t), v.fechaEvento === null ? null : diaDelEvento(v.fechaEvento, locale), v.pedido?.producto ?? (v.consulta?.categoria ? traducir(v.consulta.categoria, t) : null)]
     .filter(Boolean)
     .join(', ')
   const importe = v.importeCents === null ? '—' : formatAmount(v.importeCents, 'BOB').replace(/,00$/, '')
@@ -248,23 +257,23 @@ function FilaDeVenta({ venta: v, href, abierta, ahora }: { venta: Venta; href: s
         <span className="flex flex-wrap items-center gap-2.5 max-[767px]:flex-nowrap max-[767px]:justify-between">
           <span className="font-display text-[20px] leading-tight font-medium max-[767px]:text-[22px]">{v.nombre}</span>
           <span className="max-[767px]:hidden">
-            <Pill tone={e.tono}>{e.una}</Pill>
+            <Pill tone={e.tono}>{traducir(e.una, t)}</Pill>
           </span>
           <span className="font-display text-[20px] font-medium min-[768px]:hidden">{importe}</span>
         </span>
         <span className="mt-0.5 block text-[14px] text-ink-mute">
-          {info || v.correo || v.telefono || 'Sin detalles'}
-          <span className="min-[768px]:hidden">, {hace(v.esperaDesde, ahora)}</span>
+          {info || v.correo || v.telefono || t('Sin detalles', 'No details')}
+          <span className="min-[768px]:hidden">, {hace(v.esperaDesde, ahora, locale)}</span>
         </span>
       </span>
       {/* En el celular, la etapa y lo que toca, debajo (maqueta M03). */}
       <span className="flex items-center justify-between gap-3 min-[768px]:hidden">
-        <Pill tone={e.tono}>{e.una}</Pill>
-        {paso === null ? null : <span className="text-[14.5px] font-medium text-gold-deep">{paso}</span>}
+        <Pill tone={e.tono}>{traducir(e.una, t)}</Pill>
+        {paso === null ? null : <span className="text-[14.5px] font-medium text-gold-deep">{traducir(paso, t)}</span>}
       </span>
       <span className="shrink-0 text-right max-[767px]:hidden">
         <span className="block font-display text-[19px] font-medium">{importe}</span>
-        <span className={`text-[12.5px] ${v.urgente ? 'text-danger' : 'text-ink-mute'}`}>{hace(v.esperaDesde, ahora)}</span>
+        <span className={`text-[12.5px] ${v.urgente ? 'text-danger' : 'text-ink-mute'}`}>{hace(v.esperaDesde, ahora, locale)}</span>
       </span>
     </Link>
   )
@@ -284,6 +293,8 @@ async function Ficha({
   plantillas: Mensajes | null
   ahora: Date
 }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   const leido = v.pedido === null ? null : await orders.byRef(v.pedido.publicRef)
   const pedido = leido === null || isErr(leido) ? null : leido.value.order
   const comprobantes = leido === null || isErr(leido) ? [] : leido.value.proofs
@@ -291,6 +302,7 @@ async function Ficha({
   const enlacePedido = v.pedido === null ? null : `${env.SITE_URL.replace(/\/$/, '')}/es/pedido/ref/${v.pedido.publicRef}`
   const aPagar = pedido === null ? null : montoAPagar(pedido)
   const fecha = v.fechaEvento === null ? null : diaDelEvento(v.fechaEvento)
+  const fechaVista = v.fechaEvento === null ? null : diaDelEvento(v.fechaEvento, locale)
   const vars = { nombre, fecha, enlace: enlacePedido, importe: aPagar === null ? null : formatAmount(aPagar, 'BOB'), plan: pedido?.planName ?? null, marca: BRAND.siteName }
   const saludo = v.etapa === 'nueva' && plantillas !== null ? rellenar(plantillas.contacto, vars) : `Hola ${nombre}, te escribimos de ${BRAND.siteName}.`
   const contacto = v.telefono ?? (v.pedido !== null && !v.pedido.contact.includes('@') ? v.pedido.contact : null)
@@ -303,18 +315,18 @@ async function Ficha({
           <ArrowLeftIcon className="size-5" />
         </span>
         <span className="flex min-w-0 flex-col leading-tight">
-          <span className="text-[13px] text-ink-mute">Ventas</span>
+          <span className="text-[13px] text-ink-mute">{t('Ventas', 'Sales')}</span>
           <span className="truncate text-[16px] font-medium">{v.nombre}</span>
         </span>
-        <span className="sr-only">: volver</span>
+        <span className="sr-only">{t(': volver', ': back')}</span>
       </Link>
       <div>
-        <p className="mb-1.5 text-[13.5px] text-ink-mute">{v.pedido === null ? 'Consulta desde la web' : `Pedido ${v.pedido.publicRef}`}</p>
+        <p className="mb-1.5 text-[13.5px] text-ink-mute">{v.pedido === null ? t('Consulta desde la web', 'Inquiry from the website') : t(`Pedido ${v.pedido.publicRef}`, `Order ${v.pedido.publicRef}`)}</p>
         <h2 className="font-display text-[32px] leading-[1.1] font-medium" id="ficha-de-venta">
           {v.nombre}
         </h2>
         <p className="mt-1.5 text-[15px] text-ink-mute">
-          {[v.fiesta === null ? null : FIESTAS.find((f) => f.fiesta === v.fiesta)?.una, fecha === null ? null : `el ${fecha}`, v.pedido?.producto ?? null, v.importeCents === null ? null : formatAmount(v.importeCents, 'BOB')]
+          {[v.fiesta === null ? null : traducir(FIESTAS.find((f) => f.fiesta === v.fiesta)?.una ?? '', t) || null, fechaVista === null ? null : t(`el ${fechaVista}`, `on ${fechaVista}`), v.pedido?.producto ?? null, v.importeCents === null ? null : formatAmount(v.importeCents, 'BOB')]
             .filter(Boolean)
             .join(', ')}
         </p>
@@ -323,7 +335,7 @@ async function Ficha({
       <FichaDeVenta
         ahora={ahora}
         comprobantes={comprobantes}
-        diseno={pedido?.templateSlug == null ? null : themeFor(pedido.templateSlug).key === pedido.templateSlug ? themeFor(pedido.templateSlug).label : 'Un diseño retirado'}
+        diseno={pedido?.templateSlug == null ? null : themeFor(pedido.templateSlug).key === pedido.templateSlug ? themeFor(pedido.templateSlug).label : t('Un diseño retirado', 'A withdrawn design')}
         enlaces={{
           contactar: enlaceWhatsapp(contacto, saludo),
           correo: v.correo === null ? null : `mailto:${v.correo}?subject=${encodeURIComponent(`${BRAND.siteName} · tu evento`)}&body=${encodeURIComponent(saludo)}`,
@@ -345,13 +357,14 @@ async function Ficha({
 }
 
 /** Los cuatro pasos de una venta (maqueta E02): consulta, pedido, comprobante y evento; el actual, en latón. */
-function PasosDeLaVenta({ venta: v }: { venta: Venta }) {
+async function PasosDeLaVenta({ venta: v }: { venta: Venta }) {
+  const t = await tr()
   const indice: Record<EtapaDeVenta, number> = { nueva: 0, contactada: 0, esperando_pago: 1, por_revisar: 2, por_crear_evento: 3, saldo_pendiente: 4, cerrada: 4, perdida: -1, cancelada: -1 }
   const actual = indice[v.etapa]
   if (actual < 0) return null
   return (
-    <ol aria-label="Pasos de la venta" className="grid grid-cols-4 gap-2 text-[13.5px]">
-      {['Consulta', 'Pedido', 'Comprobante', 'Evento'].map((paso, i) => (
+    <ol aria-label={t('Pasos de la venta', 'Sale steps')} className="grid grid-cols-4 gap-2 text-[13.5px]">
+      {[t('Consulta', 'Inquiry'), t('Pedido', 'Order'), t('Comprobante', 'Receipt'), t('Evento', 'Event')].map((paso, i) => (
         <li aria-current={i === actual ? 'step' : undefined} className={`flex flex-col gap-2 ${i === actual ? 'font-semibold text-shell-deep' : i > actual ? 'text-ink-mute' : ''}`} key={paso}>
           <span aria-hidden className={`h-[3px] ${i < actual ? 'bg-shell-deep' : i === actual ? 'bg-gold' : 'bg-line-panel'}`} />
           {paso}
@@ -363,15 +376,16 @@ function PasosDeLaVenta({ venta: v }: { venta: Venta }) {
 
 /** El cotizador en su panel: desde una consulta (con sus datos puestos) o desde «+ Crear». */
 async function Cotizacion({ venta, cerrar, hoy }: { venta: Venta | undefined; cerrar: string; hoy: string }) {
+  const t = await tr()
   const [planesAdmin, extras, eventos, agenda] = await Promise.all([admin.plans(), plans.listActiveExtras(), admin.events(), admin.mensajes()])
   const ocupacion: Record<string, number> = {}
   if (!isErr(eventos)) for (const e of eventos.value) if (e.eventDate >= hoy) ocupacion[e.eventDate] = (ocupacion[e.eventDate] ?? 0) + 1
   const c = venta?.consulta ?? null
   const modelos = themeDefinitions()
-    .filter((t) => seAsigna(t.key))
-    .map((t) => ({ key: t.key, label: t.label, fiesta: fiestaDeTema(t.key) }))
+    .filter((tema) => seAsigna(tema.key))
+    .map((tema) => ({ key: tema.key, label: tema.label, fiesta: fiestaDeTema(tema.key) }))
   return (
-    <PanelLateral closeHref={cerrar} subtitle={c === null ? 'Plan, diseño, extras y precio, con su enlace de pago' : `Para ${c.name}`} title="Nueva cotización">
+    <PanelLateral closeHref={cerrar} subtitle={c === null ? t('Plan, diseño, extras y precio, con su enlace de pago', 'Plan, design, extras and price, with its payment link') : t(`Para ${c.name}`, `For ${c.name}`)} title={t('Nueva cotización', 'New quote')}>
       <Cotizador
         capacidad={isErr(agenda) ? 3 : agenda.value.capacidad}
         cerrarHref={cerrar}

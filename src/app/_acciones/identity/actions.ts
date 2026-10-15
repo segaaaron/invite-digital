@@ -13,6 +13,7 @@ import { describirDispositivo } from '@/modules/identity/domain/dispositivo'
 import { SESSION_COOKIE, requireSession, sessionCookieOptions } from '@/app/_acciones/sesion'
 import { campo } from '@/shared/forms/campo'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 
 export type SignInActionState = {
   status: 'idle' | 'error'
@@ -43,6 +44,9 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
   // «Recordarme en este aparato» (E14): sin marcar, la cookie no lleva caducidad y se va al cerrar el navegador.
   const { expires, ...soloEstaVez } = sessionCookieOptions(outcome.expiresAt)
   jar.set(SESSION_COOKIE, outcome.token, formData.get('recordarme') === 'on' ? { ...soloEstaVez, expires } : soloEstaVez)
+  // El idioma del aparato con que entra queda en la cuenta: es el de sus correos.
+  const sesion = await identity.authenticateSession(outcome.token)
+  if (!isErr(sesion)) await identity.guardarIdioma(sesion.value.userId, await idiomaDeLaPeticion()).catch((e: unknown) => registrarFallo('identity/actions', 'no se pudo guardar el idioma de la cuenta', 'storage_failure', e))
   return entrarCon(outcome.token)
 }
 
@@ -108,11 +112,12 @@ export async function changePasswordAction(
   _previous: ChangePasswordState,
   formData: FormData,
 ): Promise<ChangePasswordState> {
+  const t = await tr()
   const actor = await requireSession()
   // Solo la provisional se cambia con sesión. Con la cuenta compartida por la familia, cualquiera
   // que entre podría quitarle el control a quien la compró: el resto va por «¿Olvidaste tu contraseña?»,
   // con el código que llega a su correo.
-  if (!actor.mustChangePassword) return { status: 'error', message: 'La contraseña se cambia desde «¿Olvidaste tu contraseña?», con el código de tu correo.' }
+  if (!actor.mustChangePassword) return { status: 'error', message: t('La contraseña se cambia desde «¿Olvidaste tu contraseña?», con el código de tu correo.', 'The password is changed from “Forgot your password?”, with the code from your email.') }
 
   const result = await identity.changePassword({
     userId: actor.userId,
@@ -127,8 +132,8 @@ export async function changePasswordAction(
       status: 'error',
       message:
         result.error.kind === 'weak_password'
-          ? 'La contraseña nueva necesita al menos 12 caracteres.'
-          : 'No pudimos guardarla. Inténtalo en un momento.',
+          ? t('La contraseña nueva necesita al menos 12 caracteres.', 'The new password needs at least 12 characters.')
+          : t('No pudimos guardarla. Inténtalo en un momento.', 'We couldn’t save it. Try again in a moment.'),
     }
   }
 
@@ -169,8 +174,9 @@ async function ipActual(): Promise<string> {
  * convertiría esta pantalla en una forma de averiguar quién es cliente del atelier.
  */
 export async function requestPasswordResetAction(_previo: ResetState, formData: FormData): Promise<ResetState> {
+  const t = await tr()
   if (limiteCodigo.isLimited(await ipActual(), Date.now())) {
-    return { status: 'error', message: 'Demasiados códigos seguidos. Espera un minuto.' }
+    return { status: 'error', message: t('Demasiados códigos seguidos. Espera un minuto.', 'Too many codes in a row. Wait a minute.') }
   }
 
   const email = campo(formData, 'email')
@@ -178,7 +184,7 @@ export async function requestPasswordResetAction(_previo: ResetState, formData: 
 
   if (isErr(emitido)) {
     registrarFallo('identity/actions', 'no se pudo emitir el código', emitido.error.kind, emitido.error.detail)
-    return { status: 'error', message: 'No pudimos enviarte el código. Inténtalo en un momento.' }
+    return { status: 'error', message: t('No pudimos enviarte el código. Inténtalo en un momento.', 'We couldn’t send you the code. Try again in a moment.') }
   }
 
   // `null` es «ese correo no tiene cuenta», y no se distingue del caso bueno.
@@ -186,13 +192,14 @@ export async function requestPasswordResetAction(_previo: ResetState, formData: 
     await notifications.sendPasswordCode({ to: email.trim().toLowerCase(), code: emitido.value.code })
   }
 
-  return { status: 'sent', message: 'Si ese correo tiene cuenta, le acabamos de enviar un código.' }
+  return { status: 'sent', message: t('Si ese correo tiene cuenta, le acabamos de enviar un código.', 'If that email has an account, we just sent it a code.') }
 }
 
 /** Confirma el código y escribe la contraseña nueva. */
 export async function confirmPasswordResetAction(_previo: ResetState, formData: FormData): Promise<ResetState> {
+  const t = await tr()
   if (limiteConfirmacion.isLimited(await ipActual(), Date.now())) {
-    return { status: 'error', message: 'Demasiados intentos. Espera un minuto.' }
+    return { status: 'error', message: t('Demasiados intentos. Espera un minuto.', 'Too many attempts. Wait a minute.') }
   }
 
   const result = await identity.confirmPasswordReset({
@@ -207,12 +214,12 @@ export async function confirmPasswordResetAction(_previo: ResetState, formData: 
       status: 'error',
       message:
         result.error.kind === 'weak_password'
-          ? 'La contraseña nueva necesita al menos 12 caracteres.'
-          : 'El código no es válido, ya se usó o caducó. Pide uno nuevo.',
+          ? t('La contraseña nueva necesita al menos 12 caracteres.', 'The new password needs at least 12 characters.')
+          : t('El código no es válido, ya se usó o caducó. Pide uno nuevo.', 'The code is not valid, was already used or expired. Request a new one.'),
     }
   }
 
-  return { status: 'done', message: 'Contraseña cambiada. Ya puedes entrar con ella.' }
+  return { status: 'done', message: t('Contraseña cambiada. Ya puedes entrar con ella.', 'Password changed. You can now sign in with it.') }
 }
 
 // ============================================================================
@@ -226,22 +233,24 @@ const limiteCodigoDeCuenta = createRateLimiter({ windowMs: 60_000, max: 1 })
 export type CodigoDeCuentaState = { status: 'idle' | 'sent' | 'done' | 'error'; message: string }
 
 export async function requestAccountCodeAction(): Promise<CodigoDeCuentaState> {
+  const t = await tr()
   const actor = await requireSession()
   if (limiteCodigoDeCuenta.isLimited(actor.userId, Date.now())) {
-    return { status: 'error', message: 'Ya te mandamos un código hace menos de un minuto. Revisa tu correo.' }
+    return { status: 'error', message: t('Ya te mandamos un código hace menos de un minuto. Revisa tu correo.', 'We sent you a code less than a minute ago. Check your email.') }
   }
   const emitido = await identity.requestAccountCode(actor.userId)
   if (isErr(emitido)) {
     registrarFallo('identity/actions', 'no se pudo emitir el código de cuenta', emitido.error.kind, emitido.error.detail)
-    return { status: 'error', message: 'No pudimos enviarte el código. Inténtalo en un momento.' }
+    return { status: 'error', message: t('No pudimos enviarte el código. Inténtalo en un momento.', 'We couldn’t send you the code. Try again in a moment.') }
   }
   const enviado = await notifications.sendPasswordCode({ to: actor.email, code: emitido.value })
-  if (!enviado) return { status: 'error', message: 'No pudimos enviar el correo. Escríbenos por WhatsApp.' }
-  return { status: 'sent', message: `Te mandamos un código a ${actor.email}. Caduca en 10 minutos.` }
+  if (!enviado) return { status: 'error', message: t('No pudimos enviar el correo. Escríbenos por WhatsApp.', 'We couldn’t send the email. Message us on WhatsApp.') }
+  return { status: 'sent', message: t(`Te mandamos un código a ${actor.email}. Caduca en 10 minutos.`, `We sent a code to ${actor.email}. It expires in 10 minutes.`) }
 }
 
 /** Cierra todas las sesiones de la cuenta menos esta. */
 export async function closeOtherSessionsAction(_previo: CodigoDeCuentaState, formData: FormData): Promise<CodigoDeCuentaState> {
+  const t = await tr()
   const actor = await requireSession()
   const sesion = await identity.authenticateSession((await cookies()).get(SESSION_COOKIE)?.value ?? null)
   if (isErr(sesion)) redirect('/panel/entrar')
@@ -250,31 +259,32 @@ export async function closeOtherSessionsAction(_previo: CodigoDeCuentaState, for
   if (isErr(cerradas)) {
     return {
       status: 'error',
-      message: cerradas.error.kind === 'storage_failure' ? 'No pudimos cerrarlas. Inténtalo en un momento.' : 'El código no es válido, ya se usó o caducó. Pide uno nuevo.',
+      message: cerradas.error.kind === 'storage_failure' ? t('No pudimos cerrarlas. Inténtalo en un momento.', 'We couldn’t sign them out. Try again in a moment.') : t('El código no es válido, ya se usó o caducó. Pide uno nuevo.', 'The code is not valid, was already used or expired. Request a new one.'),
     }
   }
   revalidatePath('/panel/cuenta')
-  return { status: 'done', message: 'Listo: solo queda abierta tu sesión en este dispositivo.' }
+  return { status: 'done', message: t('Listo: solo queda abierta tu sesión en este dispositivo.', 'Done: only your session on this device remains open.') }
 }
 
 export type MisDatosState = { status: 'idle' | 'success' | 'error'; message?: string }
 
 /** «Tus datos» (Mi cuenta): nombre y teléfono de la propia cuenta. En modo soporte no se tocan los del cliente. */
 export async function guardarMisDatosAction(_previo: MisDatosState, formData: FormData): Promise<MisDatosState> {
+  const t = await tr()
   const actor = await requireSession()
-  if (actor.soporte) return { status: 'error', message: 'En modo soporte no se cambian los datos del cliente.' }
+  if (actor.soporte) return { status: 'error', message: t('En modo soporte no se cambian los datos del cliente.', 'In support mode the client’s details are not changed.') }
   const nombre = campo(formData, 'nombre').trim().replace(/\s+/g, ' ')
   const telefono = campo(formData, 'telefono').replace(/[^\d+]/g, '')
-  if (nombre.length > 120) return { status: 'error', message: 'El nombre puede tener hasta 120 letras.' }
-  if (telefono !== '' && (telefono.replace('+', '').length < 7 || telefono.length > 20)) return { status: 'error', message: 'Revisa el teléfono: son de 7 a 15 números, con el código del país si es de fuera.' }
+  if (nombre.length > 120) return { status: 'error', message: t('El nombre puede tener hasta 120 letras.', 'The name can have up to 120 letters.') }
+  if (telefono !== '' && (telefono.replace('+', '').length < 7 || telefono.length > 20)) return { status: 'error', message: t('Revisa el teléfono: son de 7 a 15 números, con el código del país si es de fuera.', 'Check the phone: 7 to 15 digits, with the country code if it is from abroad.') }
   try {
     await identity.guardarMisDatos(actor.userId, { nombre: nombre === '' ? null : nombre, telefono: telefono === '' ? null : telefono })
   } catch (e) {
     registrarFallo('identity/actions', 'no se pudieron guardar los datos de la cuenta', 'storage_failure', e)
-    return { status: 'error', message: 'No pudimos guardarlos. Inténtalo en un momento.' }
+    return { status: 'error', message: t('No pudimos guardarlos. Inténtalo en un momento.', 'We couldn’t save them. Try again in a moment.') }
   }
   revalidatePath('/panel', 'layout')
-  return { status: 'success', message: 'Guardado.' }
+  return { status: 'success', message: t('Guardado.', 'Saved.') }
 }
 
 export async function signOutAction(): Promise<void> {

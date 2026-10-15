@@ -6,6 +6,7 @@ import { UploadIcon } from '@/shared/design/ui/icons'
 import { type ExtraActionState, orderExtraAction } from '@/app/_acciones/plans/extra-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: ExtraActionState = { status: 'idle' }
 
@@ -21,14 +22,15 @@ export type PedidoDeExtraVista = {
 }
 
 function Pedir({ eventId, eventSlug, extra, sinPedido }: { eventId: string; eventSlug: string; extra: ExtraVista; sinPedido: boolean }) {
+  const t = useT()
   const [estado, pedir, pidiendo] = useActionState(sinCaerse(orderExtraAction), INICIAL)
   return (
     <form action={pedir} className="flex flex-col items-end gap-1">
       <input name="eventId" readOnly type="hidden" value={eventId} />
       <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
       <input name="addonSlug" readOnly type="hidden" value={extra.slug} />
-      <SubmitButton aria-label={`${sinPedido ? 'Aplicar' : 'Pedir'} ${extra.name}`} size="sm" variant="default" pending={pidiendo} pendingLabel={sinPedido ? 'Aplicando…' : 'Creando pedido…'}>
-        {sinPedido ? 'Aplicar' : 'Pedir'}
+      <SubmitButton aria-label={`${sinPedido ? t('Aplicar', 'Apply') : t('Pedir', 'Order')} ${extra.name}`} size="sm" variant="default" pending={pidiendo} pendingLabel={sinPedido ? t('Aplicando…', 'Applying…') : t('Creando pedido…', 'Creating order…')}>
+        {sinPedido ? t('Aplicar', 'Apply') : t('Pedir', 'Order')}
       </SubmitButton>
       <ActionFeedback state={estado} />
     </form>
@@ -52,6 +54,7 @@ export function ExtrasCard({
   pedidos: readonly PedidoDeExtraVista[]
   sinPedido?: boolean
 }) {
+  const t = useT()
   // Lo pedido que sigue vivo pinta su estado en su tarjeta; lo activo ya no se vende y se ve como «Ya lo tienes».
   const vivos = pedidos.filter((p) => p.tono !== 'no')
   const tarjetas = [
@@ -63,23 +66,23 @@ export function ExtrasCard({
     <div className="flex flex-col gap-6">
       {sinPedido ? (
         <p className="max-w-[62ch] text-[14px] leading-[1.7] text-ink-soft">
-          Este evento no tiene cliente: lo llevas tú y su cobro va por fuera. El extra se aplica al momento, sin pedido ni comprobante, y queda en la auditoría.
+          {t('Este evento no tiene cliente: lo llevas tú y su cobro va por fuera. El extra se aplica al momento, sin pedido ni comprobante, y queda en la auditoría.', 'This event has no client: you run it and bill it outside. The extra applies right away, with no order or receipt, and is logged in the audit.')}
         </p>
       ) : null}
       {tarjetas.length === 0 ? (
-        <p className="text-[14px] text-ink-mute">Ahora mismo no hay extras a la venta.</p>
+        <p className="text-[14px] text-ink-mute">{t('Ahora mismo no hay extras a la venta.', 'There are no extras for sale right now.')}</p>
       ) : (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-5">
-          {tarjetas.map((t) => (
-            <li className="flex flex-col gap-2 rounded-[16px] border border-line-panel bg-tarjeta p-5" key={t.clave}>
-              <span className="font-display text-[22px] leading-tight font-medium">{t.nombre}</span>
-              {t.que ? <span className="text-[14px] text-ink-mute">{t.que}</span> : null}
+          {tarjetas.map((tj) => (
+            <li className="flex flex-col gap-2 rounded-[16px] border border-line-panel bg-tarjeta p-5" key={tj.clave}>
+              <span className="font-display text-[22px] leading-tight font-medium">{tj.nombre}</span>
+              {tj.que ? <span className="text-[14px] text-ink-mute">{tj.que}</span> : null}
               <span className="mt-auto flex items-center justify-between gap-3 pt-3">
-                <span className="font-display text-[24px] font-medium [font-variant-numeric:lining-nums]">{t.precio}</span>
-                {t.pedido ? (
-                  <Pill tone={t.pedido.tono === 'ok' ? 'ok' : 'vip'}>{t.pedido.tono === 'ok' ? 'Ya lo tienes' : t.pedido.porPagar ? 'Esperando tu pago' : t.pedido.estado}</Pill>
-                ) : t.extra ? (
-                  <Pedir eventId={eventId} eventSlug={eventSlug} extra={t.extra} sinPedido={sinPedido} />
+                <span className="font-display text-[24px] font-medium [font-variant-numeric:lining-nums]">{tj.precio}</span>
+                {tj.pedido ? (
+                  <Pill tone={tj.pedido.tono === 'ok' ? 'ok' : 'vip'}>{tj.pedido.tono === 'ok' ? t('Ya lo tienes', 'You have it') : tj.pedido.porPagar ? t('Esperando tu pago', 'Awaiting your payment') : tj.pedido.estado}</Pill>
+                ) : tj.extra ? (
+                  <Pedir eventId={eventId} eventSlug={eventSlug} extra={tj.extra} sinPedido={sinPedido} />
                 ) : null}
               </span>
             </li>
@@ -87,15 +90,15 @@ export function ExtrasCard({
         </ul>
       )}
       {porPagar.map((p) => (
-        <section aria-label={`Pedido ${p.ref}`} className="flex flex-wrap items-center gap-4 rounded-[16px] border border-line-panel bg-tarjeta px-6 py-4" key={p.ref}>
+        <section aria-label={t(`Pedido ${p.ref}`, `Order ${p.ref}`)} className="flex flex-wrap items-center gap-4 rounded-[16px] border border-line-panel bg-tarjeta px-6 py-4" key={p.ref}>
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-[15px] font-medium">
-              Pedido {p.ref}, {p.name}
+              {t(`Pedido ${p.ref}, ${p.name}`, `Order ${p.ref}, ${p.name}`)}
             </span>
-            <span className="text-[14px] text-ink-mute">Transfiere {p.monto} y sube el comprobante. Lo revisamos el mismo día.</span>
+            <span className="text-[14px] text-ink-mute">{t(`Transfiere ${p.monto} y sube el comprobante. Lo revisamos el mismo día.`, `Transfer ${p.monto} and upload the receipt. We review it the same day.`)}</span>
           </span>
           <a className={botonClases('primary')} href={`?pedido=${p.ref}`}>
-            <UploadIcon className="size-4" /> Subir comprobante
+            <UploadIcon className="size-4" /> {t('Subir comprobante', 'Upload receipt')}
           </a>
         </section>
       ))}

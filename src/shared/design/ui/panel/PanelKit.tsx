@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react'
 import { useId } from 'react'
+import { T } from '@/shared/i18n/idioma-navegador'
+import { EnlaceExterno } from './EnlaceExterno'
 
 /**
  * La piel del panel, portada de `docs/design-reference/dashboard/Dashboard.html`.
@@ -45,9 +47,6 @@ type PanelButtonProps = {
   className?: string
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'children'>
 
-/** Lo que dice un enlace que abre otra pestaña: sin aviso, quien usa lector se queda sin «atrás». */
-const PESTANA_NUEVA = 'se abre en una pestaña nueva'
-
 export function PanelButton({
   children,
   variant = 'default',
@@ -73,23 +72,9 @@ export function PanelButton({
 
   if (href && external) {
     return (
-      <a
-        aria-describedby={ariaDescribedBy}
-        aria-label={ariaLabel === undefined ? undefined : `${ariaLabel} (${PESTANA_NUEVA})`}
-        className={clases}
-        href={href}
-        rel="noopener noreferrer"
-        target="_blank"
-        title={title}
-      >
+      <EnlaceExterno ariaDescribedBy={ariaDescribedBy} ariaLabel={ariaLabel} className={clases} href={href} title={title}>
         {children}
-        {ariaLabel === undefined ? (
-          <>
-            {' '}
-            <span className="sr-only">({PESTANA_NUEVA})</span>
-          </>
-        ) : null}
-      </a>
+      </EnlaceExterno>
     )
   }
 
@@ -144,7 +129,9 @@ export function SkeletonBlock({ className = '' }: { className?: string }) {
 export function PanelSkeleton({ cards = 2 }: { cards?: number }) {
   return (
     <div aria-busy="true" aria-live="polite" role="status">
-      <span className="sr-only">Cargando…</span>
+      <span className="sr-only">
+        <T en="Loading…" es="Cargando…" />
+      </span>
 
       <header className="mb-6.5 flex flex-col gap-2.5">
         <SkeletonBlock className="h-2.5 w-24" />

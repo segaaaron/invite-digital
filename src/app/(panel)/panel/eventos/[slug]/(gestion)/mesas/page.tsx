@@ -22,8 +22,13 @@ import { SeatViewToggle } from '@/modules/venue/ui/SeatViewToggle'
 import { TableCard } from '@/modules/venue/ui/TableCard'
 import { UnseatedStrip } from '@/modules/venue/ui/UnseatedStrip'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir, traducirTodo } from '@/shared/i18n/en-ingles'
 
-export const metadata = { title: 'Mesas' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Mesas', 'Tables') }
+}
 
 // La ocupación cambia con cada RSVP y con cada reparto: esta página no se cachea.
 export const dynamic = 'force-dynamic'
@@ -35,6 +40,7 @@ export default async function MesasPage({
   params: Promise<{ slug: string }>
   searchParams: Promise<{ panel?: string; vista?: string; zona?: string }>
 }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const { panel, vista, zona } = await searchParams
@@ -49,7 +55,7 @@ export default async function MesasPage({
   // plan no permite tocar. Lo que protege es la del servidor, no esta.
   const permitido = await plans.requireFeature(event.value.id, 'seating')
   if (isErr(permitido)) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={permitido.error.detail} title="Mesas" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={traducir(permitido.error.detail, t)} title={t('Mesas', 'Tables')} />
   }
 
   // El reporte del catering sale de las personas cargadas. Sin personas no hay reporte,
@@ -68,7 +74,7 @@ export default async function MesasPage({
   const enTarjetas = vista === 'tarjetas'
 
   // La mesa principal se llama según la fiesta: en unos XV no hay novios.
-  const vocabulario = vocabularioDeCategoria(themeFor(event.value.themeKey).categorySlug)
+  const vocabulario = traducirTodo(vocabularioDeCategoria(themeFor(event.value.themeKey).categorySlug), t)
 
   return (
     <>
@@ -85,8 +91,8 @@ export default async function MesasPage({
           />
           </div>
         }
-        meta={`${asignados} de ${asignados + unseated.reduce((n, g) => n + g.seats, 0)} personas que asisten ya tienen mesa.`}
-        title="Mesas"
+        meta={t(`${asignados} de ${asignados + unseated.reduce((n, g) => n + g.seats, 0)} personas que asisten ya tienen mesa.`, `${asignados} of ${asignados + unseated.reduce((n, g) => n + g.seats, 0)} attending guests already have a table.`)}
+        title={t('Mesas', 'Tables')}
       />
 
       {/* Las altas son los diálogos de la maqueta, no paneles desplegados en la página. */}
@@ -101,10 +107,10 @@ export default async function MesasPage({
           </div>
           <SeatViewToggle base={base} current={enTarjetas ? 'tarjetas' : 'mapa'} />
           <PanelButton href={`${base}?panel=zona`} size="sm">
-            <PlusIcon className="size-4" /> Elemento del salón
+            <PlusIcon className="size-4" /> {t('Elemento del salón', 'Venue item')}
           </PanelButton>
           <PanelButton href={`/panel/eventos/${event.value.slug}/mesas/imprimir`} size="sm">
-            Imprimir plan
+            {t('Imprimir plan', 'Print plan')}
           </PanelButton>
         </div>
 
@@ -116,12 +122,12 @@ export default async function MesasPage({
                 // Con su botón (13 oct): en el celular la cabecera no lleva acciones y no había cómo crear la primera.
                 action={
                   <PanelButton href={`${base}?panel=mesa`} variant="primary">
-                    <PlusIcon className="size-4" /> Crear la primera mesa
+                    <PlusIcon className="size-4" /> {t('Crear la primera mesa', 'Create the first table')}
                   </PanelButton>
                 }
-                description="Crea las mesas con sus lugares y reparte a las familias. La puerta le dice a cada invitado dónde se sienta."
+                description={t('Crea las mesas con sus lugares y reparte a las familias. La puerta le dice a cada invitado dónde se sienta.', 'Create the tables with their seats and seat the families. The door tells each guest where they sit.')}
                 icon={<TableIcon />}
-                title="Aún no hay mesas en tu salón"
+                title={t('Aún no hay mesas en tu salón', 'No tables in your venue yet')}
               />
             </>
           ) : enTarjetas ? (
@@ -142,57 +148,57 @@ export default async function MesasPage({
                   <div className="flex items-center gap-3 rounded-[16px] border border-gold/45 bg-bg-raised p-4">
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="text-[15px] font-medium">
-                        {unseated.reduce((n, g) => n + g.seats, 0)} personas sin mesa
+                        {t(`${unseated.reduce((n, g) => n + g.seats, 0)} personas sin mesa`, `${unseated.reduce((n, g) => n + g.seats, 0)} people without a table`)}
                       </span>
                       <span className="truncate text-[13px] text-ink-mute">
                         {unseated
                           .slice(0, 2)
                           .map((g) => g.label)
                           .join(', ')}
-                        {unseated.length > 2 ? ` y ${unseated.length - 2} más` : ''}
+                        {unseated.length > 2 ? t(` y ${unseated.length - 2} más`, ` and ${unseated.length - 2} more`) : ''}
                       </span>
                     </span>
                     <PanelButton href={`${base}?vista=tarjetas`} size="sm" variant="primary">
-                      Sentarlas
+                      {t('Sentarlas', 'Seat them')}
                     </PanelButton>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-2.5">
                   <PanelButton href={`${base}?panel=mesa`}>
-                    <PlusIcon className="size-4" /> Mesa
+                    <PlusIcon className="size-4" /> {t('Mesa', 'Table')}
                   </PanelButton>
-                  <PanelButton href={`${base}?vista=plano`}>Ver el plano</PanelButton>
+                  <PanelButton href={`${base}?vista=plano`}>{t('Ver el plano', 'View the floor plan')}</PanelButton>
                 </div>
                 <ul className="flex flex-col">
-                  {tables.map((t, i) => (
-                    <li className="border-b border-line-panel last:border-b-0" key={t.id}>
-                      <Link className="flex min-h-15 items-center gap-3.5 py-3 text-ink no-underline" href={`${base}?vista=tarjetas#mesa-${t.id}`}>
+                  {tables.map((mesa, i) => (
+                    <li className="border-b border-line-panel last:border-b-0" key={mesa.id}>
+                      <Link className="flex min-h-15 items-center gap-3.5 py-3 text-ink no-underline" href={`${base}?vista=tarjetas#mesa-${mesa.id}`}>
                         <span className="grid size-10 shrink-0 place-items-center rounded-full border border-line-panel-strong font-display text-[18px] [font-variant-numeric:lining-nums]">
-                          {siglaDeMesa(t.label, i)}
+                          {siglaDeMesa(mesa.label, i)}
                         </span>
                         <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="text-[15px] font-medium">{t.label}</span>
-                          <span className="truncate text-[13px] text-ink-mute">{t.groups.length === 0 ? 'Vacía' : t.groups.map((g) => g.label).join(' y ')}</span>
+                          <span className="text-[15px] font-medium">{mesa.label}</span>
+                          <span className="truncate text-[13px] text-ink-mute">{mesa.groups.length === 0 ? t('Vacía', 'Empty') : mesa.groups.map((g) => g.label).join(t(' y ', ' and '))}</span>
                         </span>
                         {/* Con gente de más, se dice cuántos sobran (14 oct: «10/8» no avisaba de nada). */}
                         <span className="flex shrink-0 flex-col items-end gap-1">
-                          <span className={`text-[14px] [font-variant-numeric:tabular-nums] ${t.taken > t.capacity ? 'text-danger' : 'text-gold-deep'}`}>
-                            {t.taken}/{t.capacity}
+                          <span className={`text-[14px] [font-variant-numeric:tabular-nums] ${mesa.taken > mesa.capacity ? 'text-danger' : 'text-gold-deep'}`}>
+                            {mesa.taken}/{mesa.capacity}
                           </span>
-                          {t.taken > t.capacity ? <Pill tone="no">{t.taken - t.capacity} de más</Pill> : null}
+                          {mesa.taken > mesa.capacity ? <Pill tone="no">{t(`${mesa.taken - mesa.capacity} de más`, `${mesa.taken - mesa.capacity} too many`)}</Pill> : null}
                         </span>
                       </Link>
                     </li>
                   ))}
                 </ul>
-                <p className="text-[13px] text-ink-mute">El plano del salón se arma mejor en la computadora o la tablet. Aquí puedes sentar y mover a cada familia.</p>
+                <p className="text-[13px] text-ink-mute">{t('El plano del salón se arma mejor en la computadora o la tablet. Aquí puedes sentar y mover a cada familia.', 'The floor plan is easier to build on a computer or tablet. Here you can seat and move each family.')}</p>
               </div>
             )}
             <div className={vista === 'plano' ? '' : 'max-[767px]:hidden'}>
             <FloorPlan
               eventId={event.value.id}
               eventSlug={event.value.slug}
-              exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
+              exits={[{ href: `/panel/eventos/${event.value.slug}`, label: t('Volver al evento', 'Back to the event') }]}
               mesaPrincipal={vocabulario.mesaPrincipal}
               tables={tables}
               unseated={unseated}
@@ -203,13 +209,13 @@ export default async function MesasPage({
             </>
           )}
 
-          <PlegableEnMovil resumen={menus.length === 0 ? 'Sin restricciones cargadas' : `${menus.length} ${menus.length === 1 ? 'menú especial' : 'menús especiales'}`} titulo="Menús para el catering">
+          <PlegableEnMovil resumen={menus.length === 0 ? t('Sin restricciones cargadas', 'No restrictions added') : t(`${menus.length} ${menus.length === 1 ? 'menú especial' : 'menús especiales'}`, `${menus.length} special ${menus.length === 1 ? 'menu' : 'menus'}`)} titulo={t('Menús para el catering', 'Menus for the catering')}>
             <section aria-labelledby="menus" className="flex flex-col gap-2">
               <h2 className="border-b border-line-panel pb-2.5 font-display text-[24px] font-medium" id="menus">
-                Menús para el catering
+                {t('Menús para el catering', 'Menus for the catering')}
               </h2>
               {menus.length === 0 ? (
-                <p className="text-[14px] text-ink-mute">Ninguna persona cargada tiene restricción alimentaria. Se cargan en la sección Invitados.</p>
+                <p className="text-[14px] text-ink-mute">{t('Ninguna persona cargada tiene restricción alimentaria. Se cargan en la sección Invitados.', 'No one added has a dietary restriction. They are added in the Guests section.')}</p>
               ) : (
                 <>
                   <p className="text-[13.5px] text-ink-mute">{totalConfirmed} comensales confirmados · para compartir con el servicio de banquetes</p>

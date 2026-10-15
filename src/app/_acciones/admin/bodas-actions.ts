@@ -17,6 +17,8 @@ import { fiestaDeCategoria } from '@/modules/events'
 import { rsvpDeadlineFor } from '@/modules/orders/domain/provisioning'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 /** Días antes del evento en que cierran las confirmaciones, por fiesta: el catering necesita la lista. */
 // Documento de cambios: el plazo se sugiere solo, 3 semanas antes (también en XV).
@@ -24,14 +26,15 @@ const CIERRE_POR_FIESTA = { boda: 21, xv: 21, cumple: 10 } as const
 
 /** Reasignar el dueño de un evento. Es la salida cuando hay que borrar a alguien. */
 export async function reassignEventAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const eventId = texto(formData, 'eventId')
   const userId = texto(formData, 'userId')
-  if (eventId === '' || userId === '') return { status: 'error', message: 'Faltan datos. Vuelve a cargar la página.' }
+  if (eventId === '' || userId === '') return { status: 'error', message: t('Faltan datos. Vuelve a cargar la página.', 'Some data is missing. Reload the page.') }
 
   const evento = await events.getByIdFor(actor, eventId, { section: 'ficha' })
-  if (isErr(evento)) return { status: 'error', message: 'Ese evento ya no existe. Vuelve a cargar la página.' }
+  if (isErr(evento)) return { status: 'error', message: t('Ese evento ya no existe. Vuelve a cargar la página.', 'That event no longer exists. Reload the page.') }
 
   await events.setOwner(eventId, userId)
   await admin.record(actor, { action: 'evento.reasignado', subject: evento.value.slug, detail: userId })
@@ -39,10 +42,11 @@ export async function reassignEventAction(_previous: AdminActionState, formData:
   refrescar()
   // La ficha del evento también lo enseña: sin revalidarla seguía diciendo el responsable viejo.
   revalidatePath(`/panel/eventos/${evento.value.slug}`, 'layout')
-  return { status: 'success', message: 'Responsable cambiado.' }
+  return { status: 'success', message: t('Responsable cambiado.', 'Owner changed.') }
 }
 
 export async function setEventPlanAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const result = await admin.setEventPlan(actor, {
@@ -52,12 +56,12 @@ export async function setEventPlanAction(_previous: AdminActionState, formData: 
   })
   if (isErr(result)) {
     registrarFallo('admin/bodas-actions', 'cambio de plan rechazado', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   refrescar()
   revalidatePath(`/panel/eventos/${texto(formData, 'eventSlug')}`, 'layout')
-  return { status: 'success', message: 'Plan cambiado.' }
+  return { status: 'success', message: t('Plan cambiado.', 'Plan changed.') }
 }
 
 /** Cuatro caracteres del alfabeto sin `0`, `O`, `1`, `I` ni `L`: estos slug se dictan. */
@@ -92,6 +96,7 @@ export async function createWeddingForClientAction(
   _previous: NuevaBodaState,
   formData: FormData,
 ): Promise<NuevaBodaState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const titulo = texto(formData, 'title').trim()
@@ -107,18 +112,18 @@ export async function createWeddingForClientAction(
   const nombreCliente = texto(formData, 'clientName').trim().slice(0, 160)
   const telefonoCliente = normalizarWhatsapp(texto(formData, 'clientPhone'))
 
-  if (titulo === '') return { status: 'error', message: 'Escribe el nombre del evento.' }
-  if (fecha === '') return { status: 'error', message: 'Escribe la fecha del evento.' }
-  if (!sinAcceso && correo === '') return { status: 'error', message: 'Escribe el correo del cliente, o crea el evento sin acceso.' }
-  if (!sinAcceso && nombreCliente === '') return { status: 'error', message: 'Escribe el nombre del cliente.' }
-  if (telefonoCliente === null) return { status: 'error', message: 'Revisa el WhatsApp del cliente.' }
+  if (titulo === '') return { status: 'error', message: t('Escribe el nombre del evento.', 'Write the event name.') }
+  if (fecha === '') return { status: 'error', message: t('Escribe la fecha del evento.', 'Write the event date.') }
+  if (!sinAcceso && correo === '') return { status: 'error', message: t('Escribe el correo del cliente, o crea el evento sin acceso.', 'Write the client’s email, or create the event without access.') }
+  if (!sinAcceso && nombreCliente === '') return { status: 'error', message: t('Escribe el nombre del cliente.', 'Write the client’s name.') }
+  if (telefonoCliente === null) return { status: 'error', message: t('Revisa el WhatsApp del cliente.', 'Check the client’s WhatsApp.') }
 
   // El diseño, validado contra el registro: comparar la clave es lo único que impide que
   // entre un modelo que nadie eligió.
   const pedido = texto(formData, 'themeKey')
   const tema = themeFor(pedido)
-  if (tema.key !== pedido) return { status: 'error', message: 'Ese modelo no existe.' }
-  if (!seAsigna(pedido)) return { status: 'error', message: 'Ese modelo está retirado: elige otro.' }
+  if (tema.key !== pedido) return { status: 'error', message: t('Ese modelo no existe.', 'That design does not exist.') }
+  if (!seAsigna(pedido)) return { status: 'error', message: t('Ese modelo está retirado: elige otro.', 'That design is retired: choose another.') }
 
   // --- 1. El acceso, antes de crear nada.
   const existente = sinAcceso ? null : await admin.findUserByEmail(correo)
@@ -127,7 +132,7 @@ export async function createWeddingForClientAction(
     // Nada que comprobar: nadie va a entrar.
   } else if (existente === null) {
     const credencial = createCredential({ email: correo, password: clave })
-    if (isErr(credencial)) return { status: 'error', message: credencial.error.detail }
+    if (isErr(credencial)) return { status: 'error', message: traducir(credencial.error.detail, t) }
   } else {
     // Ya tiene cuenta. Si su rol no es `cliente` **no entraría**: el acceso lo decide el
     // rol, no la pertenencia, así que prometerle acceso sería mandarle a un 404.
@@ -135,7 +140,7 @@ export async function createWeddingForClientAction(
     if (suyo !== null && parseRole(suyo.role) !== 'cliente') {
       return {
         status: 'error',
-        message: `${correo} ya tiene cuenta con rol «${parseRole(suyo.role)}» y no entraría como cliente. Usa otro correo.`,
+        message: t(`${correo} ya tiene cuenta con rol «${parseRole(suyo.role)}» y no entraría como cliente. Usa otro correo.`, `${correo} already has an account with role “${parseRole(suyo.role)}” and wouldn’t sign in as a client. Use another email.`),
       }
     }
   }
@@ -163,7 +168,7 @@ export async function createWeddingForClientAction(
 
   if (isErr(evento)) {
     registrarFallo('admin/bodas-actions', 'alta de boda desde administración rechazada', evento.error.kind, evento.error.detail)
-    return { status: 'error', message: `No se pudo crear el evento: ${evento.error.detail}` }
+    return { status: 'error', message: t(`No se pudo crear el evento: ${evento.error.detail}`, `The event couldn’t be created: ${traducir(evento.error.detail, t)}`) }
   }
 
   // --- 2b. Si viene de un pedido aprobado que se quedó sin evento, se enlazan: la bandeja deja
@@ -208,28 +213,28 @@ export async function createWeddingForClientAction(
     })
     if (isErr(plan)) {
       registrarFallo('admin/bodas-actions', 'no se pudo asignar el plan', plan.error.kind, plan.error.detail)
-      avisoDePlan = ` Ojo: no se pudo asignar el plan «${planSlug}» y quedó con el más barato; cámbialo en su fila, en «Gestionar».`
+      avisoDePlan = t(` Ojo: no se pudo asignar el plan «${planSlug}» y quedó con el más barato; cámbialo en su fila, en «Gestionar».`, ` Careful: the “${planSlug}” plan couldn’t be assigned and it stayed on the cheapest one; change it on its row, under “Manage”.`)
     } else if (await diseno.empezarSegunPlan(evento.value.id, planSlug)) {
       // Plan por encargo: lo diseñamos nosotros; el cliente ve los pasos en su invitación.
-      avisoDePlan = ' Lo diseñamos nosotros: el cliente manda sus datos desde «Personalizar invitación».'
+      avisoDePlan = t(' Lo diseñamos nosotros: el cliente manda sus datos desde «Personalizar invitación».', ' We design it: the client sends their details from “Customize invitation”.')
     }
   }
 
   if (sinAcceso) {
     await admin.record(actor, { action: 'boda.alta', subject: evento.value.slug, detail: `${tema.label} · sin acceso de cliente` })
     refrescar()
-    return { status: 'success', eventSlug: evento.value.slug, message: `Evento creado con el diseño «${tema.label}», sin acceso de cliente: lo llevas tú.${avisoDePlan}` }
+    return { status: 'success', eventSlug: evento.value.slug, message: t(`Evento creado con el diseño «${tema.label}», sin acceso de cliente: lo llevas tú.${avisoDePlan}`, `Event created with the “${tema.label}” design, without client access: you run it.${avisoDePlan}`) }
   }
 
   // --- 5. La cuenta del cliente. Si ya existía **no se toca su contraseña**: cambiarla
   // escribiendo su correo sería una forma de robarle la cuenta.
   let clienteId = existente?.id ?? null
-  let avisoDeClave = `${correo} ya tenía cuenta: entra con su contraseña de siempre.`
+  let avisoDeClave = t(`${correo} ya tenía cuenta: entra con su contraseña de siempre.`, `${correo} already had an account: they sign in with their usual password.`)
 
   if (clienteId === null) {
     const credencial = createCredential({ email: correo, password: clave })
     if (isErr(credencial)) {
-      return { status: 'error', message: `Evento creado, sin acceso del cliente: ${credencial.error.detail}` }
+      return { status: 'error', message: t(`Evento creado, sin acceso del cliente: ${credencial.error.detail}`, `Event created, without client access: ${traducir(credencial.error.detail, t)}`) }
     }
     const creado = await admin.createUser({
       email: credencial.value.email,
@@ -237,7 +242,7 @@ export async function createWeddingForClientAction(
       role: 'cliente',
     })
     clienteId = creado.id
-    avisoDeClave = `${correo} recibe su contraseña provisional por correo y la cambia al entrar.`
+    avisoDeClave = t(`${correo} recibe su contraseña provisional por correo y la cambia al entrar.`, `${correo} gets their temporary password by email and changes it when signing in.`)
   }
 
   await events.staff.add(evento.value.id, clienteId, 'cliente')
@@ -264,8 +269,8 @@ export async function createWeddingForClientAction(
     // por WhatsApp: sin ella el cliente se quedaría fuera.
     message:
       existente === null && !avisado
-        ? `Evento creado con el diseño «${tema.label}».${avisoDePlan} El correo no salió: pásale a ${correo} esta contraseña provisional, que no se vuelve a mostrar: ${clave}`
-        : `Evento creado con el diseño «${tema.label}».${avisoDePlan} ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
+        ? t(`Evento creado con el diseño «${tema.label}».${avisoDePlan} El correo no salió: pásale a ${correo} esta contraseña provisional, que no se vuelve a mostrar: ${clave}`, `Event created with the “${tema.label}” design.${avisoDePlan} The email didn’t go out: give ${correo} this temporary password, which won’t be shown again: ${clave}`)
+        : t(`Evento creado con el diseño «${tema.label}».${avisoDePlan} ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`, `Event created with the “${tema.label}” design.${avisoDePlan} ${avisoDeClave}${avisado ? ' We emailed them their access.' : ''}`),
   }
 }
 
@@ -275,9 +280,10 @@ export async function createWeddingForClientAction(
  * familia que vuelve. Nace en borrador y lleva a su ficha.
  */
 export async function duplicarEventoAction(_previo: { status: 'idle' | 'error'; message?: string }, formData: FormData): Promise<{ status: 'idle' | 'error'; message?: string }> {
+  const t = await tr()
   const actor = await requireAdmin()
   const origen = await events.getByIdFor(actor, texto(formData, 'eventId'), { section: 'ficha' })
-  if (isErr(origen)) return { status: 'error', message: 'Ese evento ya no existe.' }
+  if (isErr(origen)) return { status: 'error', message: t('Ese evento ya no existe.', 'That event no longer exists.') }
   const o = origen.value
   const copia = await events.create({
     userId: o.userId ?? actor.userId,
@@ -292,7 +298,7 @@ export async function duplicarEventoAction(_previo: { status: 'idle' | 'error'; 
   })
   if (isErr(copia)) {
     registrarFallo('admin/bodas-actions', 'duplicarEventoAction', copia.error.kind, copia.error.detail)
-    return { status: 'error', message: 'No pudimos duplicarlo. Vuelve a intentarlo en un momento.' }
+    return { status: 'error', message: t('No pudimos duplicarlo. Vuelve a intentarlo en un momento.', 'We couldn’t duplicate it. Try again in a moment.') }
   }
   try {
     await events.seedContent(copia.value.id)

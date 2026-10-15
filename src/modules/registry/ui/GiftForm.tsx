@@ -6,6 +6,8 @@ import { useId, useState, useTransition } from 'react'
 import type { GiftRow } from '../application/ports'
 import { addGiftAction, updateGiftAction } from '@/app/_acciones/registry/actions'
 import { centsOrMessage, centsToInput, FIELD_CLASS, LABEL_CLASS, nullIfBlank, SUBMIT_CLASS } from './shared'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 /**
  * El mismo formulario da de alta y corrige. Con `gift` está en modo edición: llega
@@ -33,6 +35,7 @@ export function GiftForm({
   /** Adónde volver tras crear. Es lo que cierra el diálogo del alta. */
   doneHref?: string | undefined
 }) {
+  const t = useT()
   const editando = gift !== undefined
 
   const [name, setName] = useState(gift?.name ?? '')
@@ -51,7 +54,7 @@ export function GiftForm({
   const enviar = () => {
     const importe = centsOrMessage(price)
     if ('error' in importe) {
-      setError(importe.error)
+      setError(traducir(importe.error, t))
       return
     }
 
@@ -97,20 +100,20 @@ export function GiftForm({
     <div className={`flex flex-col gap-5 ${doneHref === undefined ? 'rounded-[18px] border border-line-panel p-6' : ''}`}>
       <div className="grid gap-5 sm:grid-cols-[2fr_1fr]">
         <label className={LABEL_CLASS} htmlFor={nameId}>
-          Regalo
+          {t('Regalo', 'Gift')}
           <input
             className={FIELD_CLASS}
             id={nameId}
             maxLength={160}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Cafetera italiana"
+            placeholder={t('Cafetera italiana', 'Espresso maker')}
             type="text"
             value={name}
           />
         </label>
 
         <label className={LABEL_CLASS} htmlFor={priceId}>
-          Precio
+          {t('Precio', 'Price')}
           <input
             className={FIELD_CLASS}
             id={priceId}
@@ -125,20 +128,20 @@ export function GiftForm({
 
       <div className="grid gap-5 sm:grid-cols-2">
         <label className={LABEL_CLASS} htmlFor={storeId}>
-          Tienda
+          {t('Tienda', 'Store')}
           <input
             className={FIELD_CLASS}
             id={storeId}
             maxLength={120}
             onChange={(e) => setStore(e.target.value)}
-            placeholder="Casa Ideal"
+            placeholder={t('Casa Ideal', 'Home Store')}
             type="text"
             value={store}
           />
         </label>
 
         <label className={LABEL_CLASS} htmlFor={urlId}>
-          Enlace a la tienda
+          {t('Enlace a la tienda', 'Store link')}
           <input
             className={FIELD_CLASS}
             id={urlId}
@@ -160,11 +163,11 @@ export function GiftForm({
         <button className={SUBMIT_CLASS} disabled={pendiente} onClick={enviar} type="button">
           {editando
             ? pendiente
-              ? 'Guardando…'
-              : 'Guardar cambios'
+              ? t('Guardando…', 'Saving…')
+              : t('Guardar cambios', 'Save changes')
             : pendiente
-              ? 'Añadiendo…'
-              : 'Añadir regalo'}
+              ? t('Añadiendo…', 'Adding…')
+              : t('Añadir regalo', 'Add gift')}
         </button>
 
         {editando ? (
@@ -174,7 +177,7 @@ export function GiftForm({
             onClick={() => onDone?.()}
             type="button"
           >
-            Cancelar
+            {t('Cancelar', 'Cancel')}
           </button>
         ) : null}
       </div>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { CountryCode } from 'libphonenumber-js'
 import { FIELD_CLASS } from './PanelKit'
 import { aGuardar, esValido, formatearMientrasEscribe, nacionalDe, PAIS_POR_DEFECTO, PAISES, paisDeNumero, prefijoDe } from '@/shared/phone/paises'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * Un teléfono internacional: se elige el país y se escribe el número local, como en cualquier
@@ -34,6 +35,7 @@ export function CampoTelefono({
   className?: string
   paisPorDefecto?: CountryCode
 }) {
+  const t = useT()
   const inicial = () => {
     if (value.trim() !== '') return paisDeNumero(value)
     if (paisPorDefecto !== undefined) return paisPorDefecto
@@ -62,7 +64,7 @@ export function CampoTelefono({
           Con las pistas de la rejilla el ancho lo pone el contenedor y no hay conflicto. */}
       <span className="grid min-w-0 grid-cols-[7rem_minmax(0,1fr)] items-stretch gap-2">
         <label className="sr-only" htmlFor={`${id}-pais`}>
-          País del teléfono
+          {t('País del teléfono', 'Phone country')}
         </label>
         <select
           className={`${FIELD_CLASS} min-w-0 px-2.5`}
@@ -88,7 +90,7 @@ export function CampoTelefono({
           inputMode="tel"
           onBlur={onBlur}
           onChange={(e) => escribir(e.target.value, pais)}
-          placeholder={pais === 'BO' ? '700 12345' : 'Número local'}
+          placeholder={pais === 'BO' ? '700 12345' : t('Número local', 'Local number')}
           type="tel"
           value={nacional}
         />
@@ -96,7 +98,7 @@ export function CampoTelefono({
       </span>
       {incompleto ? (
         <span className="text-[11.5px] text-ink-mute" id={`${id}-aviso`}>
-          Ese número parece incompleto para {PAISES.find((p) => p.code === pais)?.nombre}. Se guarda igual.
+          {t(`Ese número parece incompleto para ${new Intl.DisplayNames(['es'], { type: 'region' }).of(pais) ?? pais}. Se guarda igual.`, `That number looks incomplete for ${new Intl.DisplayNames(['en'], { type: 'region' }).of(pais) ?? pais}. It is saved anyway.`)}
         </span>
       ) : null}
     </span>

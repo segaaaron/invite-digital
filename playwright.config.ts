@@ -30,7 +30,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
-  use: { baseURL: BASE_URL, trace: 'on-first-retry' },
+  // El panel habla el idioma del aparato (14 oct): las pruebas son de un navegador en español, como el de los
+  // clientes de Bolivia. Las que prueban el inglés abren su propio contexto en inglés.
+  use: { baseURL: BASE_URL, trace: 'on-first-retry', locale: 'es-BO' },
   projects: [
     // Inicia sesión una vez y guarda la cookie para las pruebas del panel.
     // `teardown` borra el administrador de pruebas al terminar: la suite lo necesita
@@ -38,7 +40,7 @@ export default defineConfig({
     // ejecución es una puerta abierta con la contraseña escrita en el repositorio.
     { name: 'setup', testMatch: /auth\.setup\.ts/, teardown: 'cleanup' },
     { name: 'cleanup', testMatch: /auth\.teardown\.ts/ },
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, dependencies: ['setup'], testIgnore: /voz-propia\.spec\.ts/ },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], locale: 'es-BO' }, dependencies: ['setup'], testIgnore: /voz-propia\.spec\.ts/ },
     // El dictado propio de Luxury (Vosk en el navegador) con un micrófono de verdad: Chrome lo alimenta con una frase
     // dicha en español (la voz Paulina de macOS) en vez del micrófono del aparato.
     {
@@ -47,6 +49,7 @@ export default defineConfig({
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
+        locale: 'es-BO',
         permissions: ['microphone'],
         launchOptions: {
           args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--use-file-for-fake-audio-capture=tests/e2e/fixtures/voz/quien-falta.wav'],

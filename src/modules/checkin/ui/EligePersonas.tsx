@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { hora } from '@/shared/format/fecha'
 import type { DoorManifestGroup } from '../application/get-door-manifest'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * Quién entra ahora, de una invitación con varias personas por llegar.
@@ -22,6 +23,7 @@ export function EligePersonas({
   onRegistrar: (personIds: string[]) => void
   onCancelar: () => void
 }) {
+  const t = useT()
   const [marcadas, setMarcadas] = useState<ReadonlySet<string>>(
     () => new Set(group.people.filter((p) => dentro[p.id] === undefined).map((p) => p.id)),
   )
@@ -31,11 +33,11 @@ export function EligePersonas({
       aria-live="polite"
       className="fixed inset-x-0 bottom-0 z-30 rounded-t-3xl bg-bg-top p-6 text-ink shadow-float motion-safe:animate-slide-up md:bottom-5 md:mx-auto md:w-[min(560px,92vw)] md:rounded-3xl"
       role="dialog"
-      aria-label="Quién entra ahora"
+      aria-label={t('Quién entra ahora', 'Who is coming in now')}
     >
-      <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">¿Quién entra ahora?</p>
+      <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">{t('¿Quién entra ahora?', 'Who is coming in now?')}</p>
       <p className="mt-1.5 font-display text-[28px] leading-tight italic">{group.leadName ?? group.label}</p>
-      <p className="mt-1 text-[13px] text-ink-soft">{group.tableLabel ?? 'Mesa por asignar'}</p>
+      <p className="mt-1 text-[13px] text-ink-soft">{group.tableLabel ?? t('Mesa por asignar', 'Table to be assigned')}</p>
 
       <ul className="mt-4 flex flex-col gap-2">
         {group.people.map((persona) => {
@@ -76,7 +78,7 @@ export function EligePersonas({
           onClick={onCancelar}
           type="button"
         >
-          Cancelar
+          {t('Cancelar', 'Cancel')}
         </button>
         <button
           className="flex-[2] rounded-full bg-ok px-4 py-3.5 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase disabled:opacity-40"
@@ -84,7 +86,7 @@ export function EligePersonas({
           onClick={() => onRegistrar([...marcadas])}
           type="button"
         >
-          {`Registrar entrada (${marcadas.size})`}
+          {t(`Registrar entrada (${marcadas.size})`, `Check in (${marcadas.size})`)}
         </button>
       </div>
     </div>

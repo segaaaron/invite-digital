@@ -14,6 +14,8 @@ import { diaDelEvento } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 // ============================================================================
 // Las acciones de **una venta** (Ventas › panel lateral). Todas del admin: empiezan por
@@ -59,19 +61,20 @@ export type CotizacionState =
  * nueva, la consulta pasa a contactada: cotizar es contestar.
  */
 export async function cotizarAction(_previo: CotizacionState, formData: FormData): Promise<CotizacionState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const planes = await admin.planOptions()
   const planSlug = campo(formData, 'plan')
   const plan = planes.find((p) => p.slug === planSlug)
-  if (plan === undefined) return { status: 'error', message: 'Elige un plan de la lista.' }
+  if (plan === undefined) return { status: 'error', message: t('Elige un plan de la lista.', 'Choose a plan from the list.') }
 
   const extrasALaVenta = await plans.listActiveExtras()
   const elegidos = formData.getAll('extras').filter((x): x is string => typeof x === 'string')
   const extras = extrasALaVenta.filter((x) => elegidos.includes(x.slug)).map((x) => ({ slug: x.slug, name: x.name, cents: x.priceCents }))
 
   const leido = parseAmount(campo(formData, 'precio'))
-  if (isErr(leido)) return { status: 'error', message: 'Escribe el precio final en bolivianos, por ejemplo 1190.' }
+  if (isErr(leido)) return { status: 'error', message: t('Escribe el precio final en bolivianos, por ejemplo 1190.', 'Write the final price in bolivianos, for example 1190.') }
   const precio = leido.value
 
   // El diseño se valida contra el registro: `themeFor` cae al clásico con una clave desconocida.
@@ -95,9 +98,9 @@ export async function cotizarAction(_previo: CotizacionState, formData: FormData
   if (isErr(creada)) {
     if (creada.error.kind === 'storage_failure') {
       registrarFallo('admin/ventas-actions', 'cotizarAction', creada.error.detail)
-      return { status: 'error', message: 'No pudimos guardar la cotización. Vuelve a intentarlo en un momento.' }
+      return { status: 'error', message: t('No pudimos guardar la cotización. Vuelve a intentarlo en un momento.', 'We couldn’t save the quote. Try again in a moment.') }
     }
-    return { status: 'error', message: creada.error.detail }
+    return { status: 'error', message: traducir(creada.error.detail, t) }
   }
 
   const q = creada.value
@@ -135,16 +138,17 @@ export async function recordarPagoAction(formData: FormData): Promise<void> {
 
 /** El saldo de un pedido con anticipo, recibido: queda cobrado entero. */
 export async function registrarSaldoAction(_previo: VentaActionState, formData: FormData): Promise<VentaActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
   const orderId = campo(formData, 'orderId')
   const hecho = await orders.registerBalance(orderId)
   if (isErr(hecho)) {
     if (hecho.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'registrarSaldoAction', hecho.error.detail)
-    return { status: 'error', message: hecho.error.kind === 'wrong_status' ? 'Este pedido ya no tiene saldo pendiente.' : 'No pudimos registrarlo. Vuelve a intentarlo.' }
+    return { status: 'error', message: hecho.error.kind === 'wrong_status' ? t('Este pedido ya no tiene saldo pendiente.', 'This order no longer has a balance due.') : t('No pudimos registrarlo. Vuelve a intentarlo.', 'We couldn’t record it. Try again.') }
   }
   await admin.record(actor, { action: 'pedido.saldo', subject: campo(formData, 'nombre'), detail: campo(formData, 'ref') })
   revalidarVentas()
-  return { status: 'success', message: 'Saldo registrado: la venta queda cobrada entera.' }
+  return { status: 'success', message: t('Saldo registrado: la venta queda cobrada entera.', 'Balance recorded: the sale is fully paid.') }
 }
 
 /**
@@ -152,11 +156,12 @@ export async function registrarSaldoAction(_previo: VentaActionState, formData: 
  * pedido, se cancela; sin él, la consulta pasa a perdida. Una sola salida para las dos.
  */
 export async function perderVentaAction(_previo: VentaActionState, formData: FormData): Promise<VentaActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
   const motivo = parseMotivo(campo(formData, 'motivo'))
   const nota = campo(formData, 'nota').trim()
-  if (motivo === null) return { status: 'error', message: 'Elige por qué se pierde.' }
-  if (motivo === 'otro' && nota === '') return { status: 'error', message: 'Cuenta en la nota cuál fue el motivo.' }
+  if (motivo === null) return { status: 'error', message: t('Elige por qué se pierde.', 'Choose why it is lost.') }
+  if (motivo === 'otro' && nota === '') return { status: 'error', message: t('Cuenta en la nota cuál fue el motivo.', 'Explain the reason in the note.') }
 
   const orderId = campo(formData, 'orderId')
   const consultaId = campo(formData, 'consultaId')
@@ -165,7 +170,7 @@ export async function perderVentaAction(_previo: VentaActionState, formData: For
     const cancelado = await orders.cancel({ orderId, reason: [etiquetaDeMotivo(motivo), nota].filter(Boolean).join(' · ') })
     if (isErr(cancelado)) {
       if (cancelado.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'perderVentaAction', cancelado.error.detail)
-      return { status: 'error', message: cancelado.error.kind === 'wrong_status' ? 'Este pedido ya está cobrado o cancelado.' : 'No pudimos guardarlo. Vuelve a intentarlo.' }
+      return { status: 'error', message: cancelado.error.kind === 'wrong_status' ? t('Este pedido ya está cobrado o cancelado.', 'This order is already paid or cancelled.') : t('No pudimos guardarlo. Vuelve a intentarlo.', 'We couldn’t save it. Try again.') }
     }
     await admin.record(actor, { action: 'pedido.cancelado', subject: cancelado.value.customerName, detail: etiquetaDeMotivo(motivo) ?? motivo })
   }
@@ -175,13 +180,13 @@ export async function perderVentaAction(_previo: VentaActionState, formData: For
     // Con pedido, la consulta es secundaria: si ya no se podía mover, la venta ya quedó perdida.
     if (isErr(movida) && orderId === '') {
       if (movida.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'perderVentaAction', movida.error.detail)
-      return { status: 'error', message: movida.error.kind === 'storage_failure' ? 'No pudimos guardarlo. Vuelve a intentarlo.' : movida.error.detail }
+      return { status: 'error', message: movida.error.kind === 'storage_failure' ? t('No pudimos guardarlo. Vuelve a intentarlo.', 'We couldn’t save it. Try again.') : traducir(movida.error.detail, t) }
     }
     if (!isErr(movida)) await admin.record(actor, { action: 'consulta.estado', subject: movida.value.name, detail: `Perdida · ${etiquetaDeMotivo(motivo)}` })
   }
 
   revalidarVentas()
-  return { status: 'success', message: 'Venta marcada como perdida, con su motivo.' }
+  return { status: 'success', message: t('Venta marcada como perdida, con su motivo.', 'Sale marked as lost, with its reason.') }
 }
 
 /** Reabrir una consulta perdida: quien dijo que no vuelve a escribir. Se retoma contactada. */

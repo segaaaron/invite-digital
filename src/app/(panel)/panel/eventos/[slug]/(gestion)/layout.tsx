@@ -10,7 +10,8 @@ import { gestionaElEvento, isAdmin, rolEnEquipo, sectionForRole } from '@/module
 import { requireSession, soloParaMirar } from '@/app/_acciones/sesion'
 import { ConSoloLectura } from '@/shared/design/ui/panel/solo-lectura'
 import { PanelAlert } from '@/shared/design/ui/panel/PanelKit'
-import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
+import { panelNav, rotuloDeRol } from '@/modules/shell/ui/nav'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { MenuCrearMovil } from '@/modules/admin/ui/MenuCrear'
@@ -44,6 +45,7 @@ export default async function EventoLayout({
   params: Promise<{ slug: string }>
 }) {
   const actor = await requireSession()
+  const [t, locale] = await Promise.all([tr(), idiomaDeLaPeticion()])
   const { slug } = await params
 
   // La carcasa envuelve al check-in, al panel del cliente y al del atelier, así que pide
@@ -96,19 +98,19 @@ export default async function EventoLayout({
 
   // El admin dentro de un evento sigue en su barra de siempre, con «Eventos» marcado (E35): la ficha es una pantalla más.
   const sections = isAdmin(actor)
-    ? panelNav(null, { pedidos: insignias.pedidos, consultas: insignias.consultas }, true, false, false, {})
+    ? panelNav(null, { pedidos: insignias.pedidos, consultas: insignias.consultas }, true, false, false, { t })
     : panelNav(event.value.slug, {
         invitados: personas,
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
-      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, misEventos, fueraDelPlan: isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0 })
+      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, misEventos, fueraDelPlan: isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0, t })
 
   return (
     <PanelFrame
       barra={
         isAdmin(actor) ? (
-          <BarraDelAdmin campana={campana} evento={event.value.title} hoy={diaLargo(new Date())} menu={<MenuMovil crear={<MenuCrearMovil />} />} />
+          <BarraDelAdmin campana={campana} evento={event.value.title} hoy={diaLargo(new Date(), locale)} menu={<MenuMovil crear={<MenuCrearMovil />} />} />
         ) : actor.role === 'puerta' ? (
           <BarraSuperior>{campana}</BarraSuperior>
         ) : (
@@ -116,40 +118,40 @@ export default async function EventoLayout({
             arriba={
               <Link className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-line-panel-strong bg-bg-raised px-4.5 text-[14.5px] font-medium text-ink no-underline transition-colors hover:border-gold hover:text-shell-deep" href={`/panel/eventos/${event.value.slug}/vista-previa`}>
                 <EyeIcon className="size-[18px]" />
-                Ver mi invitación
+                {t('Ver mi invitación', 'View my invitation')}
               </Link>
             }
             enElCelular={
-              <Link aria-label="Ver mi invitación" className="grid size-11 place-items-center rounded-xl text-ink" href={`/panel/eventos/${event.value.slug}/vista-previa`}>
+              <Link aria-label={t('Ver mi invitación', 'View my invitation')} className="grid size-11 place-items-center rounded-xl text-ink" href={`/panel/eventos/${event.value.slug}/vista-previa`}>
                 <EyeIcon className="size-[22px]" />
               </Link>
             }
-            izquierda={cuentaAtras(fiesta, event.value.eventDate, new Date())}
+            izquierda={cuentaAtras(fiesta, event.value.eventDate, new Date(), locale)}
           >
             {campana}
           </BarraSuperior>
         )
       }
-      brandSub={isAdmin(actor) ? 'Ficha del evento' : 'PANEL'}
+      brandSub={isAdmin(actor) ? t('Ficha del evento', 'Event record') : 'PANEL'}
       conBuscador={isAdmin(actor)}
       sections={sections}
       evento={isAdmin(actor) ? null : {
         title: event.value.title,
         planLabel: nombreDelPlan === null ? 'Plan —' : `Plan ${nombreDelPlan}`,
-        cuando: cuandoEs(fiesta, event.value.eventDate),
+        cuando: cuandoEs(fiesta, event.value.eventDate, locale),
         portada: portadaParaCompartir(event.value.themeKey),
         // A dónde vuelve cada uno: el admin a la cartera, el atelier a su bandeja. El cliente y
         // la puerta no tienen «fuera»: su panel es este evento.
         salirHref: isAdmin(actor) ? '/panel/admin/eventos' : actor.role === 'atelier' || misEventos ? '/panel' : null,
-        salirLabel: isAdmin(actor) ? 'Volver a la administración' : 'Volver a mis eventos',
+        salirLabel: isAdmin(actor) ? t('Volver a la administración', 'Back to administration') : t('Volver a mis eventos', 'Back to my events'),
       }}
-      user={{ email: actor.email, nombre, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
+      user={{ email: actor.email, nombre, rol: rotuloDeRol(actor.role, t), soporte: actor.soporte !== undefined }}
     >
-      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : 'anfitrión del evento (sin cliente)'} />}
+      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : t('anfitrión del evento (sin cliente)', 'event host (no client)')} />}
       {celebrado ? (
         <div className="mb-4">
           <PanelAlert tone="info">
-            Este evento ya se celebró. Todo queda guardado para que lo mires; ya no se puede cambiar nada y los enlaces de la invitación ya no abren. Si hace falta corregir algo, escríbele a tu atelier.
+            {t('Este evento ya se celebró. Todo queda guardado para que lo mires; ya no se puede cambiar nada y los enlaces de la invitación ya no abren. Si hace falta corregir algo, escríbele a tu atelier.', 'This event has already taken place. Everything stays saved for you to look at; nothing can be changed and the invitation links no longer open. If something needs fixing, message your atelier.')}
           </PanelAlert>
         </div>
       ) : null}

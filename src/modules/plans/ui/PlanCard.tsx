@@ -1,36 +1,41 @@
+'use client'
+
+import { useIdioma, useT } from '@/shared/i18n/idioma-navegador'
+import type { Locale } from '@/shared/i18n/locales'
+import { INTL, type T } from '@/shared/i18n/t'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import type { Allowance } from '../domain/allowance'
 import { filasComparativas, type TextosComparativa } from '../domain/comparativa'
 
-/** Los textos del panel, que es solo español. La web usa los de su diccionario. */
-export const TEXTOS_DEL_PANEL: TextosComparativa = {
-  si: 'Sí',
-  no: 'No',
-  sinLimite: 'Sin límite',
-  hasta: 'Hasta {n}',
-  dias: '{n} días',
+/** Los textos del panel, en el idioma de quien mira. La web usa los de su diccionario. */
+export const textosDelPanel = (t: T): TextosComparativa => ({
+  si: t('Sí', 'Yes'),
+  no: t('No', 'No'),
+  sinLimite: t('Sin límite', 'Unlimited'),
+  hasta: t('Hasta {n}', 'Up to {n}'),
+  dias: t('{n} días', '{n} days'),
   filas: {
-    grupos: 'Invitaciones',
-    fotos: 'Fotos del evento',
-    fotosInvitados: 'Fotos de los invitados',
-    contrasena: 'Invitación con contraseña',
-    csv: 'Importar la lista de un CSV',
-    mesas: 'Mesas y plano del salón',
-    regalos: 'Mesa de regalos y fondos',
-    formas: 'Lluvia de sobres y QR de transferencia',
-    libro: 'Libro de firmas',
-    estilo: 'Colores y letra a tu gusto',
-    puerta: 'Modo puerta con QR',
-    porteros: 'Recepción',
-    planners: 'Planner contratado',
-    tareas: 'Plan de tareas y presupuesto',
-    plannerCompleto: 'Proveedores, cronograma y cortejo',
-    plannerTotal: 'Día D y enlaces para proveedores',
-    enLinea: 'En línea tras el evento',
-    modelo: 'Cambiar de modelo',
+    grupos: t('Invitaciones', 'Invitations'),
+    fotos: t('Fotos del evento', 'Event photos'),
+    fotosInvitados: t('Fotos de los invitados', 'Guest photos'),
+    contrasena: t('Invitación con contraseña', 'Password-protected invitation'),
+    csv: t('Importar la lista de un CSV', 'Import the list from a CSV'),
+    mesas: t('Mesas y plano del salón', 'Tables and floor plan'),
+    regalos: t('Mesa de regalos y fondos', 'Gift registry and funds'),
+    formas: t('Lluvia de sobres y QR de transferencia', 'Envelope gifts and transfer QR'),
+    libro: t('Libro de firmas', 'Guestbook'),
+    estilo: t('Colores y letra a tu gusto', 'Your own colours and fonts'),
+    puerta: t('Modo puerta con QR', 'QR door mode'),
+    porteros: t('Recepción', 'Reception'),
+    planners: t('Planner contratado', 'Hired planner'),
+    tareas: t('Plan de tareas y presupuesto', 'Task plan and budget'),
+    plannerCompleto: t('Proveedores, cronograma y cortejo', 'Vendors, schedule and wedding party'),
+    plannerTotal: t('Día D y enlaces para proveedores', 'Big day and vendor links'),
+    enLinea: t('En línea tras el evento', 'Online after the event'),
+    modelo: t('Cambiar de modelo', 'Change design'),
   },
-  modelo: { ninguno: 'No', antes_de_repartir: 'Hasta repartir enlaces', siempre: 'Siempre' },
-}
+  modelo: { ninguno: t('No', 'No'), antes_de_repartir: t('Hasta repartir enlaces', 'Until links are sent'), siempre: t('Siempre', 'Always') },
+})
 
 /**
  * Una tarjeta por plan, con **cada límite** listado y su respuesta al lado, generado desde
@@ -41,10 +46,10 @@ export const TEXTOS_DEL_PANEL: TextosComparativa = {
  * El precio, en la moneda del catálogo. Se compone a partir de la cadena decimal y nunca
  * de un `parseFloat` sobre los centavos: `1234.5 * 100` no vuelve a dar 123450.
  */
-function formatPrice(cents: number, currency: string): string {
+function formatPrice(cents: number, currency: string, locale: Locale): string {
   const entero = Math.trunc(cents / 100)
   const decimal = String(Math.abs(cents % 100)).padStart(2, '0')
-  return new Intl.NumberFormat('es-BO', { style: 'currency', currency, minimumFractionDigits: 2 }).format(
+  return new Intl.NumberFormat(INTL[locale], { style: 'currency', currency, minimumFractionDigits: 2 }).format(
     Number(`${entero}.${decimal}`),
   )
 }
@@ -84,6 +89,8 @@ export function PlanCard({
   /** Adónde lleva «Cambiar a…». Sin él la tarjeta solo informa. */
   changeHref?: string | undefined
 }) {
+  const t = useT()
+  const locale = useIdioma()
   return (
     <article
       className={`flex flex-col gap-4 rounded-[18px] border bg-linear-to-b from-bg-top to-white p-6 shadow-card ${
@@ -93,7 +100,7 @@ export function PlanCard({
     >
       <header className="flex flex-col gap-1">
         {current ? (
-          <p className="font-mono text-[10.5px] tracking-[0.18em] text-gold-deep uppercase">Plan actual</p>
+          <p className="font-mono text-[10.5px] tracking-[0.18em] text-gold-deep uppercase">{t('Plan actual', 'Current plan')}</p>
         ) : null}
         <h3 className="font-display text-[22px] font-light italic text-ink">{name}</h3>
       </header>
@@ -101,16 +108,16 @@ export function PlanCard({
       {price === undefined ? null : (
         <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="font-display text-[34px] leading-none font-light text-ink [font-variant-numeric:lining-nums]">
-            {formatPrice(billing === 'annual' && price.annualCents !== null ? price.annualCents : price.cents, price.currency)}
+            {formatPrice(billing === 'annual' && price.annualCents !== null ? price.annualCents : price.cents, price.currency, locale)}
           </span>
           <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
-            {billing === 'annual' && price.annualCents !== null ? 'al año' : 'por evento'}
+            {billing === 'annual' && price.annualCents !== null ? t('al año', 'per year') : t('por evento', 'per event')}
           </span>
         </p>
       )}
 
       <ul className="flex flex-col">
-        {filasComparativas([plan], TEXTOS_DEL_PANEL).map((fila) => {
+        {filasComparativas([plan], textosDelPanel(t)).map((fila) => {
           const celda = fila.valores[0]!
           return (
             <li
@@ -129,11 +136,11 @@ export function PlanCard({
       <div className="mt-auto pt-2">
         {current ? (
           <p className="rounded-[var(--radius-pill)] border border-line-panel py-2.5 text-center font-mono text-[10px] tracking-[0.25em] text-ink-mute uppercase">
-            Plan actual
+            {t('Plan actual', 'Current plan')}
           </p>
         ) : changeHref === undefined ? null : (
           <PanelButton className="w-full" href={changeHref} variant="primary">
-            Cambiar a {name}
+            {t(`Cambiar a ${name}`, `Switch to ${name}`)}
           </PanelButton>
         )}
       </div>

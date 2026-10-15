@@ -6,10 +6,12 @@ import '../globals.css'
 import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormularios'
 import { PortadasQueEsperan } from '@/modules/events/ui/themes/kit/PortadasQueEsperan'
+import { IdiomaProvider } from '@/shared/i18n/idioma-navegador'
+import { idiomaDeLaPeticion } from '@/shared/i18n/idioma-servidor'
 
 export const viewport = VIEWPORT
 
-// El panel no negocia idioma: lo usa el atelier y está en español.
+// El panel habla el idioma de quien lo usa (14 oct): el que eligió en Mi cuenta o el del aparato (`idiomaDeLaPeticion`).
 //
 // Instalable: con el manifiesto el panel se añade a la pantalla de inicio y abre como app. En iPhone es
 // la única forma de recibir notificaciones push (iOS 16.4+); en Android y computadoras, además, se ve mejor.
@@ -20,10 +22,11 @@ export const metadata = {
   appleWebApp: { capable: true, title: 'Luxury Atelier', statusBarStyle: 'black-translucent' as const },
 }
 
-export default function PanelLayout({ children }: { children: ReactNode }) {
+export default async function PanelLayout({ children }: { children: ReactNode }) {
+  const locale = await idiomaDeLaPeticion()
   return (
-    <html lang="es" className={`${display.variable} ${panelDisplay.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
-      <body>
+    <html lang={locale} className={`${display.variable} ${panelDisplay.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
+      <body><IdiomaProvider locale={locale}>
         <CapturaDeFallos />
         <ValidacionDeFormularios />
         {/* El `Suspense` envuelve solo la barra (lee `useSearchParams`), nunca las páginas: alrededor
@@ -36,7 +39,7 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
             ambiguo el salto al contenido para quien navega con lector de pantalla. */}
         <div className="panel-sin-mono min-h-dvh bg-bg-top">{children}</div>
         <PortadasQueEsperan />
-      </body>
+      </IdiomaProvider></body>
     </html>
   )
 }

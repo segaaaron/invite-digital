@@ -7,6 +7,8 @@ import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { MAX_QR_BYTES } from '@/modules/registry/application/formas-use-cases'
 import { isErr } from '@/shared/result'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 export type FormasState =
   | { status: 'idle' }
@@ -21,11 +23,12 @@ const texto = (formData: FormData, campo: string): string => String(formData.get
  * sección del anfitrión: el cliente la escribe, como su invitación.
  */
 export async function guardarFormasDeRegalarAction(_previo: FormasState, formData: FormData): Promise<FormasState> {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = await requireEventAccess(actor, { eventId: texto(formData, 'eventId'), eventSlug: texto(formData, 'eventSlug'), section: 'cliente' })
   // Sin formas de regalar en el plan no se encienden; quien ya las tenía, las sigue editando.
   if (isErr(await plans.requireFeature(eventId, 'giftWays')) && !hayFormas(await registry.formas(eventId))) {
-    return { status: 'error', message: 'Tu plan no incluye la lluvia de sobres ni el QR de transferencia.' }
+    return { status: 'error', message: t('Tu plan no incluye la lluvia de sobres ni el QR de transferencia.', 'Your plan doesn’t include the envelope shower or the transfer QR.') }
   }
 
   // React vacía el formulario al terminar, también con error: vuelven los textos (nunca el fichero).
@@ -37,7 +40,7 @@ export async function guardarFormasDeRegalarAction(_previo: FormasState, formDat
   let qr: { bytes: Uint8Array } | 'quitar' | 'mantener' = formData.get('quitarQr') === '1' ? 'quitar' : 'mantener'
   if (fichero instanceof File && fichero.size > 0) {
     // El tope antes de leerlo a memoria.
-    if (fichero.size > MAX_QR_BYTES) return { status: 'error', message: 'La imagen del QR pesa más de 2 MB.', valores }
+    if (fichero.size > MAX_QR_BYTES) return { status: 'error', message: t('La imagen del QR pesa más de 2 MB.', 'The QR image is over 2 MB.'), valores }
     qr = { bytes: new Uint8Array(await fichero.arrayBuffer()) }
   }
 
@@ -58,11 +61,11 @@ export async function guardarFormasDeRegalarAction(_previo: FormasState, formDat
     if (guardado.error.kind === 'storage_failure') registrarFallo('registry/formas-actions', 'formas de regalar:', guardado.error.detail)
     return {
       status: 'error',
-      message: guardado.error.kind === 'storage_failure' ? 'No pudimos guardar. Vuelve a intentarlo en un momento.' : guardado.error.detail,
+      message: guardado.error.kind === 'storage_failure' ? t('No pudimos guardar. Vuelve a intentarlo en un momento.', 'We couldn’t save. Try again in a moment.') : traducir(guardado.error.detail, t),
       valores,
     }
   }
 
   revalidatePath(`/panel/eventos/${texto(formData, 'eventSlug')}/regalos`)
-  return { status: 'success', message: 'Guardado. Ya lo ven tus invitados en la invitación.' }
+  return { status: 'success', message: t('Guardado. Ya lo ven tus invitados en la invitación.', 'Saved. Your guests can now see it on the invitation.') }
 }

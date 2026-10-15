@@ -3,6 +3,7 @@
 import { useId, useRef, useState, type ReactNode } from 'react'
 import { CloseIcon, ArrowLeftIcon } from '../icons'
 import { botonClases, FIELD_CLASS, LABEL_CLASS } from './PanelKit'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * Una acción que se confirma antes de hacerse: el botón abre un `<dialog>` nativo (foco
@@ -21,7 +22,7 @@ export function ConfirmAction({
   title,
   description,
   confirmLabel,
-  cancelLabel = 'Cancelar',
+  cancelLabel,
   tone = 'default',
   action,
   children,
@@ -29,7 +30,7 @@ export function ConfirmAction({
   describedBy,
   aviso,
   requiere,
-  requiereEtiqueta = 'Para confirmar, escríbelo',
+  requiereEtiqueta,
   cuerpo,
   volver,
 }: {
@@ -56,6 +57,7 @@ export function ConfirmAction({
   /** En el celular, de dónde se viene, sobre el título de la barra («Ficha del evento», M62). */
   volver?: string
 }) {
+  const t = useT()
   const dialogo = useRef<HTMLDialogElement>(null)
   const id = useId()
   const [escrito, setEscrito] = useState('')
@@ -90,14 +92,14 @@ export function ConfirmAction({
             {volver === undefined ? null : <span className="text-[13px] text-ink-mute">{volver}</span>}
             <span className="truncate text-[16px] font-medium">{title}</span>
           </span>
-          <span className="sr-only">: cerrar</span>
+          <span className="sr-only">{t(': cerrar', ': close')}</span>
         </button>
         <div className="flex items-start justify-between gap-4">
           <h2 className="font-display text-[30px] leading-tight font-medium max-[767px]:text-[26px]" id={`${id}-titulo`}>
             {title}
           </h2>
           <button
-            aria-label="Cerrar"
+            aria-label={t('Cerrar', 'Close')}
             className={`${volver === undefined ? '' : 'max-[767px]:hidden '}grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink transition-colors hover:border-gold`}
             onClick={cerrar}
             type="button"
@@ -114,7 +116,7 @@ export function ConfirmAction({
           {children}
           {requiere === undefined ? null : (
             <label className="flex flex-col gap-2" htmlFor={`${id}-requiere`}>
-              <span className={LABEL_CLASS}>{requiereEtiqueta}</span>
+              <span className={LABEL_CLASS}>{requiereEtiqueta ?? t('Para confirmar, escríbelo', 'To confirm, type it')}</span>
               <input
                 autoComplete="off"
                 className={FIELD_CLASS}
@@ -128,7 +130,7 @@ export function ConfirmAction({
           )}
           <div className="flex flex-wrap justify-end gap-2.5 max-[767px]:flex-col-reverse max-[767px]:items-stretch">
             <button className={botonClases('default')} onClick={cerrar} type="button">
-              {cancelLabel}
+              {cancelLabel ?? t('Cancelar', 'Cancel')}
             </button>
             <button autoFocus={tone !== 'danger' && requiere === undefined} className={botonClases(tone === 'danger' ? 'peligro' : 'primary')} disabled={!listo} type="submit">
               {confirmLabel}

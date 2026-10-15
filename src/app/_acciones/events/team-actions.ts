@@ -6,6 +6,7 @@ import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import { campo } from '@/shared/forms/campo'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 export type TeamActionState =
   | { status: 'idle' }
@@ -21,16 +22,17 @@ export type TeamActionState =
 
 
 export async function addTeamMemberAction(_previo: TeamActionState, fd: FormData): Promise<TeamActionState> {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = campo(fd, 'eventId')
   const eventSlug = campo(fd, 'eventSlug')
   await requireEventAccess(actor, { eventId, eventSlug, section: 'equipo' })
 
   // Ya no se suman co-anfitriones: la familia entra con la cuenta del cliente.
-  if (campo(fd, 'kind') !== 'planner') return { status: 'error', message: 'Elige qué hará en el evento.' }
+  if (campo(fd, 'kind') !== 'planner') return { status: 'error', message: t('Elige qué hará en el evento.', 'Choose what they will do at the event.') }
   const kind = 'planner'
   const capacidad = await plans.allowanceFor(eventId)
-  if (isErr(capacidad)) return { status: 'error', message: 'No pudimos leer tu plan. Vuelve a intentarlo en un momento.' }
+  if (isErr(capacidad)) return { status: 'error', message: t('No pudimos leer tu plan. Vuelve a intentarlo en un momento.', 'We couldn’t read your plan. Try again in a moment.') }
 
   const alta = await events.team.add({
     eventId,
@@ -54,18 +56,19 @@ export async function addTeamMemberAction(_previo: TeamActionState, fd: FormData
   revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
   const quien = 'planner'
   if (alta.password === null) {
-    return { status: 'success', message: `${alta.email} ya tenía cuenta: entra como ${quien} con su contraseña de siempre.${avisado ? ' Le avisamos por correo.' : ''}` }
+    return { status: 'success', message: t(`${alta.email} ya tenía cuenta: entra como ${quien} con su contraseña de siempre.${avisado ? ' Le avisamos por correo.' : ''}`, `${alta.email} already had an account: they sign in as ${quien} with their usual password.${avisado ? ' We let them know by email.' : ''}`) }
   }
   return {
     status: 'success',
     message: avisado
-      ? `${alta.email} entra como ${quien}. Le mandamos su contraseña provisional por correo; la cambia al entrar.`
-      : `${alta.email} entra como ${quien} con esta contraseña provisional. No se vuelve a mostrar: pásasela y la cambia al entrar.`,
+      ? t(`${alta.email} entra como ${quien}. Le mandamos su contraseña provisional por correo; la cambia al entrar.`, `${alta.email} signs in as ${quien}. We emailed them a temporary password; they change it when signing in.`)
+      : t(`${alta.email} entra como ${quien} con esta contraseña provisional. No se vuelve a mostrar: pásasela y la cambia al entrar.`, `${alta.email} signs in as ${quien} with this temporary password. It won’t be shown again: give it to them and they change it when signing in.`),
     ...(avisado ? {} : { password: alta.password }),
   }
 }
 
 export async function removeTeamMemberAction(_previo: TeamActionState, fd: FormData): Promise<TeamActionState> {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = campo(fd, 'eventId')
   const eventSlug = campo(fd, 'eventSlug')
@@ -76,5 +79,5 @@ export async function removeTeamMemberAction(_previo: TeamActionState, fd: FormD
 
   await admin.record(actor, { action: 'equipo.baja', subject: eventSlug, detail: campo(fd, 'email') })
   revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
-  return { status: 'success', message: 'Quitado del equipo. Su cuenta sigue: puede estar en otro evento.' }
+  return { status: 'success', message: t('Quitado del equipo. Su cuenta sigue: puede estar en otro evento.', 'Removed from the team. Their account remains: they may be on another event.') }
 }

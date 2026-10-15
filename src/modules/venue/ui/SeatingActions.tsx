@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { PlusIcon } from '@/shared/design/ui/icons'
 import { autoAssignAction } from '@/app/_acciones/venue/actions'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * Las acciones de cabecera de la maqueta (E10): sentar a los demás solo, añadir mesa y guardar el plano.
@@ -27,6 +28,7 @@ export function SeatingActions({
   /** «Guardar el plano»: solo en la vista de mapa. */
   guardar?: React.ReactNode
 }) {
+  const t = useT()
   const [mensaje, setMensaje] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
@@ -43,18 +45,18 @@ export function SeatingActions({
               empezar(async () => {
                 const r = await autoAssignAction({ eventId, eventSlug })
                 if (!r.ok) {
-                  setError(r.message ?? 'No se pudo repartir.')
+                  setError(r.message ?? t('No se pudo repartir.', 'Could not seat them.'))
                   return
                 }
                 setMensaje(r.message ?? null)
               })
             }}
           >
-            Sentar a los demás solo
+            {t('Sentar a los demás solo', 'Seat the rest automatically')}
           </PanelButton>
         )}
         <PanelButton href={addHref} variant={guardar ? 'default' : 'primary'}>
-          <PlusIcon className="size-4" /> Mesa
+          <PlusIcon className="size-4" /> {t('Mesa', 'Table')}
         </PanelButton>
         {guardar}
       </div>

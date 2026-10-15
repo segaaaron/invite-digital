@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { useFormStatus } from 'react-dom'
 import { PanelButton } from './PanelKit'
 import { useSoloLectura } from './solo-lectura'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 export type SubmitButtonProps = {
   children: ReactNode
@@ -41,6 +42,7 @@ export type SubmitButtonProps = {
  *   quieto (`animate-latido` lo apaga `globals.css`).
  */
 export function SubmitButton({ children, pendingLabel, pending, variant = 'primary', disabled = false, ...rest }: SubmitButtonProps) {
+  const t = useT()
   const { pending: enviando } = useFormStatus()
   const esperando = pending ?? enviando
   const soloMirar = useSoloLectura()
@@ -49,7 +51,7 @@ export function SubmitButton({ children, pendingLabel, pending, variant = 'prima
     <PanelButton
       aria-busy={esperando || undefined}
       disabled={disabled || esperando || soloMirar}
-      title={soloMirar ? 'El evento ya se celebró: queda para mirar' : undefined}
+      title={soloMirar ? t('El evento ya se celebró: queda para mirar', 'The event has already taken place: it is view-only now') : undefined}
       type="submit"
       variant={variant}
       {...rest}

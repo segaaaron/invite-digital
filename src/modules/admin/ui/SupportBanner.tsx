@@ -1,5 +1,6 @@
 import { botonClases } from '@/shared/design/ui/panel/PanelKit'
 import { RegresarComoAdmin } from './RegresarComoAdmin'
+import { T } from '@/shared/i18n/idioma-navegador'
 
 /**
  * La franja del modo soporte: fija arriba en todo el panel mientras el admin actúa como el
@@ -12,13 +13,23 @@ export function SupportBanner({ clienteEmail }: { clienteEmail: string }) {
     // salida a mano; la explicación entera, desde 860 px. Ocupaba 160 px de cada pantalla (6 de octubre).
     <div className="-mx-4 -mt-2.5 mb-3 flex items-center justify-between gap-3 border-b border-gold/40 bg-shell-deep px-4 py-2 text-shell-ink min-[768px]:-mx-8 min-[768px]:-mt-7 min-[768px]:mb-7 min-[768px]:flex-wrap min-[768px]:px-8 min-[768px]:py-2.5">
       <p className="min-w-0 truncate text-[12.5px] min-[860px]:text-[13px] min-[860px]:whitespace-normal" role="status">
-        <span className="font-mono text-[10.5px] tracking-[0.25em] text-gold uppercase">Soporte</span> · <span className="hidden min-[860px]:inline">Estás </span>como{' '}
+        <span className="font-mono text-[10.5px] tracking-[0.25em] text-gold uppercase">
+          <T en="Support" es="Soporte" />
+        </span>{' '}
+        · <span className="hidden min-[860px]:inline"><T en="You are " es="Estás " /></span>
+        <T en="as" es="como" />{' '}
         <strong className="font-normal">{clienteEmail}</strong>
-        <span className="hidden min-[860px]:inline">. Lo que cambies queda registrado a tu nombre.</span>
+        <span className="hidden min-[860px]:inline">
+          <T en=". Whatever you change is logged under your name." es=". Lo que cambies queda registrado a tu nombre." />
+        </span>
       </p>
-      <RegresarComoAdmin etiqueta="Regresar como admin" className={`${botonClases('default')} shrink-0 max-[859px]:min-h-9 max-[859px]:px-3.5 max-[859px]:text-[12px]`}>
-        <span className="min-[860px]:hidden">Salir</span>
-        <span className="max-[859px]:hidden">Regresar como admin</span>
+      <RegresarComoAdmin className={`${botonClases('default')} shrink-0 max-[859px]:min-h-9 max-[859px]:px-3.5 max-[859px]:text-[12px]`}>
+        <span className="min-[860px]:hidden">
+          <T en="Exit" es="Salir" />
+        </span>
+        <span className="max-[859px]:hidden">
+          <T en="Back as admin" es="Regresar como admin" />
+        </span>
       </RegresarComoAdmin>
     </div>
   )

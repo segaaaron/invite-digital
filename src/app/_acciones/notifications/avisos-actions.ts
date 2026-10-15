@@ -5,6 +5,8 @@ import { avisos } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
 import { TIPOS_DE_AVISO } from '@/modules/notifications'
 import { describirDispositivo } from '@/modules/identity'
+import { traducir } from '@/shared/i18n/en-ingles'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 // Los avisos del propio actor de la sesión: su campana, sus aparatos y lo que silencia. Ninguna toca un
 // evento ni lo que es de otra persona (todas filtran por `actor.userId`).
@@ -16,7 +18,9 @@ export async function abrirCampanaAction(): Promise<AvisoDeLaCampana[]> {
   const actor = await requireSession()
   const lista = await avisos.listar(actor.userId)
   await avisos.marcarVistos(actor.userId)
-  return lista.map((a) => ({ ...a, createdAt: a.createdAt.toISOString() }))
+  // Se guardan en español; se dicen en el idioma del aparato que los mira.
+  const t = await tr()
+  return lista.map((a) => ({ ...a, title: traducir(a.title, t), body: traducir(a.body, t), createdAt: a.createdAt.toISOString() }))
 }
 
 export type SuscripcionDelNavegador = { endpoint?: string; keys?: { p256dh?: string; auth?: string } }

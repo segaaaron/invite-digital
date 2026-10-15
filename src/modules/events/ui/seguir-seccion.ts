@@ -6,7 +6,7 @@ export const EVENTO_SECCION = 'invitacion:seccion'
 export type AvisoDeSeccion = { readonly seccion: SectionKey; readonly textos: readonly string[] }
 
 /** Palabras que pinta la cuenta atrás en lugar de la fecha tal como se guarda. */
-const ROTULOS_DE_CUENTA_ATRAS = ['días', 'horas', 'faltan']
+const ROTULOS_DE_CUENTA_ATRAS = ['días', 'horas', 'faltan', 'days', 'hours']
 
 const esArchivo = (clave: string): boolean => /(ImageId|MediaId|imageId|imageIds)$/.test(clave)
 

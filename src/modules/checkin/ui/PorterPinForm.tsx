@@ -3,6 +3,7 @@
 import { useActionState, useId } from 'react'
 import { enterAsPorterAction, type PinState } from '@/app/_acciones/checkin/porter-actions'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: PinState = { status: 'idle' }
 
@@ -11,6 +12,7 @@ const INICIAL: PinState = { status: 'idle' }
  * tenga el enlace sin el PIN no debe saber de qué fiesta es, como la puerta de contraseña.
  */
 export function PorterPinForm({ token }: { token: string }) {
+  const t = useT()
   const [estado, entrar, entrando] = useActionState(sinCaerse(enterAsPorterAction), INICIAL)
   const id = useId()
 
@@ -18,7 +20,7 @@ export function PorterPinForm({ token }: { token: string }) {
     <form action={entrar} className="flex w-full max-w-[340px] flex-col gap-4">
       <input name="token" type="hidden" value={token} />
       <label className="font-mono text-[10px] tracking-[0.16em] text-shell-ink/70 uppercase" htmlFor={`${id}-pin`}>
-        PIN de 6 dígitos
+        {t('PIN de 6 dígitos', '6-digit PIN')}
       </label>
       <input
         aria-describedby={estado.status === 'error' ? `${id}-error` : undefined}
@@ -42,7 +44,7 @@ export function PorterPinForm({ token }: { token: string }) {
         className="w-full cursor-pointer rounded-[var(--radius-pill)] bg-gold px-4 py-3.5 font-mono text-[11px] tracking-[0.16em] text-shell-deep uppercase disabled:opacity-50"
         disabled={entrando}
         type="submit" aria-busy={(entrando) || undefined}>
-        {entrando ? 'Entrando…' : 'Entrar a la puerta'}
+        {entrando ? t('Entrando…', 'Entering…') : t('Entrar a la puerta', 'Enter the door')}
       </button>
     </form>
   )

@@ -23,7 +23,7 @@ const redirect = vi.fn((url: string) => {
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: (url: string) => redirect(url) }))
 vi.mock('next/headers', () => ({
-  headers: async () => new Headers({ 'x-real-ip': '203.0.113.7' }),
+  headers: async () => new Headers({ 'x-real-ip': '203.0.113.7', 'accept-language': 'es-BO' }),
   cookies: async () => ({ set: cookieSet, get: cookieGet }),
 }))
 vi.mock('@/shared/config/env', () => ({ env: { SITE_URL: 'https://luxuryatelier.net' } }))

@@ -8,6 +8,9 @@ import { fechaHora } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 import { invalidarLaWeb, texto } from '@/app/_acciones/admin/admin-comun'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import type { T } from '@/shared/i18n/t'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // «La web»: datos del negocio, pruebas sociales, legal y SEO. El formulario viaja como un
@@ -27,49 +30,51 @@ const baseDe = (formData: FormData): string | null => texto(formData, 'base') ||
  * Otro admin guardó entre medias: no se escribió nada. Se dice quién y cuándo, y **no se
  * revalida**, para que lo escrito siga en el formulario hasta que se decida recargar.
  */
-const conflicto = (e: { por: string; en: Date }): SiteActionState => ({
+const conflicto = (e: { por: string; en: Date }, t: T): SiteActionState => ({
   status: 'error',
-  message: `${e.por} guardó La web el ${fechaHora(e.en)}, mientras editabas. No se guardó nada tuyo: recarga para ver sus cambios y vuelve a aplicar los tuyos.`,
+  message: t(`${e.por} guardó La web el ${fechaHora(e.en)}, mientras editabas. No se guardó nada tuyo: recarga para ver sus cambios y vuelve a aplicar los tuyos.`, `${e.por} saved the website on ${fechaHora(e.en, `en`)} while you were editing. None of your changes were saved: reload to see theirs and apply yours again.`),
   conflicto: true,
 })
 
 export async function saveSiteSettingsAction(_previous: SiteActionState, formData: FormData): Promise<SiteActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   let datos: unknown
   try {
     datos = JSON.parse(texto(formData, 'datos'))
   } catch {
-    return { status: 'error', message: 'No pudimos leer el formulario. Recarga la página.' }
+    return { status: 'error', message: t('No pudimos leer el formulario. Recarga la página.', 'We couldn’t read the form. Reload the page.') }
   }
   // Se pasa por el lector tolerante antes de validar: lo que no tenga la forma esperada cae
   // a su valor por defecto en vez de reventar la validación.
   const guardado = await admin.saveSite(actor, parseSiteSettings(JSON.stringify(datos)), baseDe(formData))
   if (isErr(guardado)) {
-    if (guardado.error.kind === 'conflict') return conflicto(guardado.error)
-    if (guardado.error.kind === 'invalid_field') return { status: 'error', message: guardado.error.detail, campo: guardado.error.campo }
+    if (guardado.error.kind === 'conflict') return conflicto(guardado.error, t)
+    if (guardado.error.kind === 'invalid_field') return { status: 'error', message: traducir(guardado.error.detail, t), campo: guardado.error.campo }
     registrarFallo('admin/web-actions', 'saveSiteSettingsAction', guardado.error.detail)
-    return { status: 'error', message: 'No pudimos guardar. Vuelve a intentarlo en un momento.' }
+    return { status: 'error', message: t('No pudimos guardar. Vuelve a intentarlo en un momento.', 'We couldn’t save. Try again in a moment.') }
   }
 
   revalidatePath('/panel/admin/web')
   revalidatePath('/', 'layout')
   invalidarLaWeb('ajustes')
-  return { status: 'success', message: 'Guardado. La web ya enseña los cambios.' }
+  return { status: 'success', message: t('Guardado. La web ya enseña los cambios.', 'Saved. The website now shows the changes.') }
 }
 
 export async function restoreSiteVersionAction(_previous: SiteActionState, formData: FormData): Promise<SiteActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const restaurado = await admin.restoreSite(actor, texto(formData, 'versionId'), baseDe(formData))
   if (isErr(restaurado)) {
-    if (restaurado.error.kind === 'conflict') return conflicto(restaurado.error)
+    if (restaurado.error.kind === 'conflict') return conflicto(restaurado.error, t)
     if (restaurado.error.kind === 'storage_failure') registrarFallo('admin/web-actions', 'restoreSiteVersionAction', restaurado.error.detail)
-    return { status: 'error', message: restaurado.error.kind === 'storage_failure' ? 'No pudimos restaurar. Vuelve a intentarlo.' : restaurado.error.detail }
+    return { status: 'error', message: restaurado.error.kind === 'storage_failure' ? t('No pudimos restaurar. Vuelve a intentarlo.', 'We couldn’t restore. Try again.') : traducir(restaurado.error.detail, t) }
   }
 
   revalidatePath('/panel/admin/web')
   revalidatePath('/', 'layout')
   invalidarLaWeb('ajustes')
-  return { status: 'success', message: 'Versión restaurada. La web ya la enseña.' }
+  return { status: 'success', message: t('Versión restaurada. La web ya la enseña.', 'Version restored. The website now shows it.') }
 }

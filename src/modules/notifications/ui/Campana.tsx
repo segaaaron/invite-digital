@@ -7,6 +7,7 @@ import { ArrowLeftIcon, BellIcon, CalendarIcon, CloseIcon, CheckIcon, EyeIcon, G
 import { escucharEnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { hace } from '@/shared/format/fecha'
 import { ActivarAvisos } from './ActivarAvisos'
+import { useIdioma, useT } from '@/shared/i18n/idioma-navegador'
 
 const ICONO: Record<string, ReactNode> = {
   rsvp: <CheckIcon className="size-4" />,
@@ -25,6 +26,8 @@ const ICONO: Record<string, ReactNode> = {
  * aparato y el enlace a las preferencias.
  */
 export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica: string | null }) {
+  const t = useT()
+  const locale = useIdioma()
   const [pendientes, setPendientes] = useState(sinVer)
   const [lista, setLista] = useState<AvisoDeLaCampana[] | null>(null)
   const [cargando, empezar] = useTransition()
@@ -52,7 +55,7 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
   }
   const cerrar = () => dialogo.current?.close()
   const ahora = new Date()
-  const rotulo = pendientes === 0 ? 'Avisos' : `Avisos: ${pendientes} ${pendientes === 1 ? 'nuevo' : 'nuevos'}`
+  const rotulo = pendientes === 0 ? t('Avisos', 'Notifications') : t(`Avisos: ${pendientes} ${pendientes === 1 ? 'nuevo' : 'nuevos'}`, `Notifications: ${pendientes} new`)
 
   return (
     <>
@@ -91,14 +94,14 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
               <ArrowLeftIcon className="size-5" />
             </span>
             <span className="truncate text-[16px] font-medium">Avisos</span>
-            <span className="sr-only">: cerrar</span>
+            <span className="sr-only">{t(': cerrar', ': close')}</span>
           </button>
           <header className="flex items-center justify-between gap-4 border-b border-line-panel px-5 py-3.5 max-[767px]:border-b-0 max-[767px]:px-4 max-[767px]:pt-6">
             <h2 className="font-display text-[22px] leading-tight font-medium max-[767px]:text-[30px]" id={titulo}>
-              Avisos
+              {t('Avisos', 'Notifications')}
             </h2>
             <button
-              aria-label="Cerrar"
+              aria-label={t('Cerrar', 'Close')}
               className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-[10px] text-ink-mute transition-colors hover:text-ink max-[767px]:hidden"
               onClick={cerrar}
               type="button"
@@ -109,14 +112,14 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
 
           <div className="flex-1 overflow-y-auto" aria-busy={cargando}>
             {lista === null ? (
-              <p className="px-3 py-6 text-[13px] text-ink-mute">Cargando…</p>
+              <p className="px-3 py-6 text-[13px] text-ink-mute">{t('Cargando…', 'Loading…')}</p>
             ) : lista.length === 0 ? (
               <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
                 <span className="grid size-12 place-items-center rounded-full border border-gold/40 bg-white text-gold-deep">
                   <BellIcon className="size-5" />
                 </span>
-                <p className="font-display text-[20px] text-ink">Todo tranquilo</p>
-                <p className="text-[13px] text-ink-mute">Aquí verás quién confirma, quién te escribe y lo que vence.</p>
+                <p className="font-display text-[20px] text-ink">{t('Todo tranquilo', 'All quiet')}</p>
+                <p className="text-[13px] text-ink-mute">{t('Aquí verás quién confirma, quién te escribe y lo que vence.', 'Here you will see who RSVPs, who writes to you and what is due.')}</p>
               </div>
             ) : (
               <ul className="flex flex-col">
@@ -134,8 +137,8 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
                         <span className="block text-[14px] leading-snug font-medium">{a.title}</span>
                         {a.body === '' ? null : <span className="mt-0.5 block truncate text-[13px] text-ink-mute">{a.body}</span>}
                       </span>
-                      <span className="shrink-0 text-[12px] text-ink-mute">{hace(new Date(a.createdAt), ahora)}</span>
-                      {a.visto ? null : <span className="sr-only">Nuevo</span>}
+                      <span className="shrink-0 text-[12px] text-ink-mute">{hace(new Date(a.createdAt), ahora, locale)}</span>
+                      {a.visto ? null : <span className="sr-only">{t('Nuevo', 'New')}</span>}
                     </Link>
                   </li>
                 ))}
@@ -146,7 +149,7 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
           <footer className="flex flex-col items-center gap-2.5 px-5 py-3.5">
             <ActivarAvisos clavePublica={clavePublica} />
             <Link className="text-[14px] font-medium text-gold-deep underline underline-offset-4 hover:text-ink" href="/panel/cuenta#avisos" onClick={cerrar}>
-              Elegir qué avisos recibo
+              {t('Elegir qué avisos recibo', 'Choose which notifications I get')}
             </Link>
           </footer>
         </div>

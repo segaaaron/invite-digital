@@ -6,6 +6,7 @@ import { setEventPrivacyAction, type PrivacyState } from '@/app/_acciones/events
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * Privacidad del evento, como en la maqueta: pública con el enlace, o protegida con
@@ -26,6 +27,7 @@ export function PrivacyForm({
   /** Si el plan trae la contraseña. Sin ella la opción se ve apagada y dice por qué: se puede subir de plan. */
   contrasenaIncluida?: boolean
 }) {
+  const t = useT()
   const [state, action, pending] = useActionState<PrivacyState, FormData>(sinCaerse(setEventPrivacyAction), { status: 'idle' })
   const [modo, setModo] = useState<'public' | 'password'>(hasPassword ? 'password' : 'public')
   const campoId = useId()
@@ -35,11 +37,11 @@ export function PrivacyForm({
       <input name="eventId" type="hidden" value={eventId} />
       <input name="eventSlug" type="hidden" value={eventSlug} />
 
-      <p className={LABEL_CLASS}>Privacidad</p>
+      <p className={LABEL_CLASS}>{t('Privacidad', 'Privacy')}</p>
 
       <label className="flex items-center gap-2.5 text-[13px] text-ink max-[859px]:min-h-11">
         <input checked={modo === 'public'} className="accent-ink" name="privacy" onChange={() => setModo('public')} type="radio" value="public" />
-        Pública — cualquiera con el enlace
+        {t('Pública — cualquiera con el enlace', 'Public — anyone with the link')}
       </label>
 
       <label className="flex items-center gap-2.5 text-[13px] text-ink max-[859px]:min-h-11">
@@ -52,13 +54,13 @@ export function PrivacyForm({
           type="radio"
           value="password"
         />
-        Protegida con contraseña
-        {!contrasenaIncluida && !hasPassword ? <span className="text-[12px] text-ink-mute">· tu plan no la incluye</span> : null}
+        {t('Protegida con contraseña', 'Password protected')}
+        {!contrasenaIncluida && !hasPassword ? <span className="text-[12px] text-ink-mute">· {t('tu plan no la incluye', 'your plan doesn’t include it')}</span> : null}
       </label>
 
       {modo === 'password' ? (
         <label className="flex flex-col gap-2" htmlFor={campoId}>
-          <span className={LABEL_CLASS}>{hasPassword ? 'Nueva contraseña de acceso' : 'Contraseña de acceso'}</span>
+          <span className={LABEL_CLASS}>{hasPassword ? t('Nueva contraseña de acceso', 'New access password') : t('Contraseña de acceso', 'Access password')}</span>
           <CampoContrasena
             autoComplete="new-password"
             className={FIELD_CLASS}
@@ -67,7 +69,7 @@ export function PrivacyForm({
             required
           />
           <span className="text-[11px] text-ink-mute">
-            Cambiarla cierra la invitación a quien ya la había abierto: tendrá que escribir la nueva.
+            {t('Cambiarla cierra la invitación a quien ya la había abierto: tendrá que escribir la nueva.', 'Changing it closes the invitation for anyone who had opened it: they’ll have to type the new one.')}
           </span>
         </label>
       ) : null}
@@ -79,11 +81,11 @@ export function PrivacyForm({
       ) : null}
       {state.status === 'success' ? (
         <p className="text-[13px] text-sage" role="status">
-          Privacidad guardada.
+          {t('Privacidad guardada.', 'Privacy saved.')}
         </p>
       ) : null}
 
-      <SubmitButton className="w-fit" variant="primary" pending={pending} pendingLabel={'Guardando…'}>{'Guardar privacidad'}</SubmitButton>
+      <SubmitButton className="w-fit" variant="primary" pending={pending} pendingLabel={t('Guardando…', 'Saving…')}>{t('Guardar privacidad', 'Save privacy')}</SubmitButton>
     </form>
   )
 }

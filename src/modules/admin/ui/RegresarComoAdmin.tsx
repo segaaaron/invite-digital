@@ -2,17 +2,19 @@
 
 import { useTransition, type ReactNode } from 'react'
 import { leaveSupportAction } from '@/app/_acciones/admin/support-actions'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * Salir del modo soporte. Como entrar, navega el navegador con el destino que devuelve la acción: una
  * petición nueva, ya como admin (con `redirect` la página se pintaba con el actor de antes).
  */
 export function RegresarComoAdmin({ className, children, etiqueta }: { className: string; children: ReactNode; etiqueta?: string }) {
+  const t = useT()
   const [saliendo, empezar] = useTransition()
   return (
     <button
       aria-busy={saliendo}
-      aria-label={etiqueta}
+      aria-label={etiqueta ?? t('Regresar como admin', 'Back as admin')}
       className={className}
       disabled={saliendo}
       onClick={() =>
@@ -23,7 +25,7 @@ export function RegresarComoAdmin({ className, children, etiqueta }: { className
       }
       type="button"
     >
-      {saliendo ? 'Regresando…' : children}
+      {saliendo ? t('Regresando…', 'Going back…') : children}
     </button>
   )
 }

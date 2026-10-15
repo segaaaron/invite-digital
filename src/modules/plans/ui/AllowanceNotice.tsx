@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { T } from '@/shared/i18n/idioma-navegador'
 import type { Mejorar } from './FeatureLocked'
 import { canAddGroup, remainingGroups, usageRatio, WARNING_RATIO } from '../domain/allowance'
 
@@ -26,7 +27,7 @@ export function AllowanceNotice({
 
   const enlace =
     mejorar === null ? (
-      'Habla con quien organiza tu evento'
+      <T en="Talk to whoever organizes your event" es="Habla con quien organiza tu evento" />
     ) : (
       <Link className="underline underline-offset-4" href={mejorar.href}>
         {mejorar.label}
@@ -36,7 +37,8 @@ export function AllowanceNotice({
   if (!canAddGroup(maxGuestGroups, currentGroups)) {
     return (
       <p className="rounded-[14px] border border-gold-deep px-5 py-4 text-[13px] text-gold-deep" role="alert">
-        El plan no admite más invitaciones: son {maxGuestGroups} y ya están todos. {enlace} para seguir añadiendo.
+        <T en={`The plan allows no more invitations: all ${maxGuestGroups} are used.`} es={`El plan no admite más invitaciones: son ${maxGuestGroups} y ya están todos.`} /> {enlace}{' '}
+        <T en="to keep adding." es="para seguir añadiendo." />
       </p>
     )
   }
@@ -49,7 +51,8 @@ export function AllowanceNotice({
 
   return (
     <p className="rounded-[14px] border border-line px-5 py-4 text-[13px] text-ink-mute" role="status">
-      Quedan {quedan} invitaci{quedan === 1 ? 'ón' : 'ones'} de las {maxGuestGroups} del plan. {enlace} si necesitas más.
+      <T en={`${quedan} of the plan’s ${maxGuestGroups} invitations left.`} es={`Quedan ${quedan} invitaci${quedan === 1 ? 'ón' : 'ones'} de las ${maxGuestGroups} del plan.`} /> {enlace}{' '}
+      <T en="if you need more." es="si necesitas más." />
     </p>
   )
 }

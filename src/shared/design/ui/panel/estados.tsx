@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { PanelAlert, PanelButton } from './PanelKit'
+import { T } from '@/shared/i18n/idioma-navegador'
 
 export { SubmitButton, type SubmitButtonProps } from './SubmitButton'
 
@@ -38,8 +39,8 @@ export function EmptyState({
   icon,
   compact = false,
 }: {
-  title: string
-  description?: string | undefined
+  title: ReactNode
+  description?: ReactNode
   action?: ReactNode
   /** Un icono SVG de `icons.tsx`, dentro de su medallón. */
   icon?: ReactNode
@@ -76,11 +77,12 @@ export function EmptyState({
  */
 export function LoadMoreLink({ href, noun, remaining }: { href: string; noun: string; remaining?: number | undefined }) {
   if (remaining !== undefined && remaining <= 0) return null
-  const nombre = remaining === undefined ? `Ver más ${noun}` : `Ver ${remaining} ${noun} más`
   return (
     <p className="pt-1 text-center">
-      <PanelButton aria-label={nombre} href={href}>
-        {remaining === undefined ? 'Ver más' : `Ver más (${remaining})`}
+      {/* El nombre accesible dice qué y cuántos («Ver 5 pedidos más»); lo visible, corto. */}
+      <PanelButton href={href}>
+        <span aria-hidden>{remaining === undefined ? <T en="See more" es="Ver más" /> : <T en={`See more (${remaining})`} es={`Ver más (${remaining})`} />}</span>
+        <span className="sr-only">{remaining === undefined ? <T en={`See more ${noun}`} es={`Ver más ${noun}`} /> : <T en={`See ${remaining} more ${noun}`} es={`Ver ${remaining} ${noun} más`} />}</span>
       </PanelButton>
     </p>
   )
@@ -91,14 +93,14 @@ export function LoadMoreLink({ href, noun, remaining }: { href: string; noun: st
  * qué— no puede ocupar el sitio de lo que se usa cada día. `<details>` nativo: abre con
  * teclado y sin JavaScript.
  */
-export function Ayuda({ children, titulo = '¿Cómo funciona?' }: { children: ReactNode; titulo?: string }) {
+export function Ayuda({ children, titulo }: { children: ReactNode; titulo?: string }) {
   return (
     <details className="group text-[12px] leading-[1.7] text-ink-soft">
       <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-mono max-[859px]:min-h-11 text-[10px] tracking-[0.2em] text-ink-mute uppercase hover:text-ink [&::-webkit-details-marker]:hidden">
         <span aria-hidden className="grid size-4 place-items-center rounded-full border border-current text-[10.5px] leading-none">
           ?
         </span>
-        {titulo}
+        {titulo ?? <T en="How does it work?" es="¿Cómo funciona?" />}
       </summary>
       <div className="mt-2.5 flex max-w-[70ch] flex-col gap-2">{children}</div>
     </details>

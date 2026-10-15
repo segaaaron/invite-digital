@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { ArrowLeftIcon, CloseIcon } from '../icons'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * El envoltorio de los modales de la maqueta: título arriba y el formulario dentro.
@@ -34,6 +35,7 @@ export function PanelDialog({
   /** La línea pequeña sobre el título del panel lateral: de qué sección es («Regalos»). */
   kicker?: string
 }) {
+  const t = useT()
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const id = useId()
@@ -83,7 +85,7 @@ export function PanelDialog({
           {kicker ? <span className="text-[13px] text-ink-mute">{kicker}</span> : null}
           <span className="truncate text-[16px] font-medium">{title}</span>
         </span>
-        <span className="sr-only">: cerrar</span>
+        <span className="sr-only">{t(': cerrar', ': close')}</span>
       </button>
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1">
@@ -94,7 +96,7 @@ export function PanelDialog({
           {descripcion ? <p className="text-[15px] text-ink-mute">{descripcion}</p> : null}
         </div>
         <button
-          aria-label="Cerrar"
+          aria-label={t('Cerrar', 'Close')}
           className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink transition-colors hover:border-gold max-[767px]:hidden"
           onClick={cerrar}
           type="button"

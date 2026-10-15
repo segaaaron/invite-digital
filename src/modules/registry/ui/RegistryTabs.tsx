@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * El conmutador de la maqueta entre los fondos en efectivo y la lista de regalos.
@@ -24,6 +27,7 @@ export function RegistryTabs({
   /** Cuántos hay de cada uno, al lado de su nombre (maqueta E11). */
   cuentas?: { readonly regalos: number; readonly fondos: number }
 }) {
+  const t = useT()
   // Pestañas subrayadas en latón, la lista primero (maqueta E11).
   const pestana = (clave: 'fondos' | 'regalos', texto: string) => (
     <Link
@@ -44,9 +48,9 @@ export function RegistryTabs({
 
   return (
     <div className="flex flex-col gap-6">
-      <nav aria-label="Lista y fondos" className="flex gap-7 border-b border-line-panel">
-        {pestana('regalos', 'Lista de regalos')}
-        {pestana('fondos', 'Fondos en efectivo')}
+      <nav aria-label={t('Lista y fondos', 'List and funds')} className="flex gap-7 border-b border-line-panel">
+        {pestana('regalos', t('Lista de regalos', 'Gift list'))}
+        {pestana('fondos', t('Fondos en efectivo', 'Cash funds'))}
       </nav>
       {current === 'fondos' ? funds : gifts}
     </div>

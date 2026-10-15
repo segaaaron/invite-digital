@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import { RefreshIcon } from '../icons'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 type Tipo = 'rsvp' | 'ingreso' | 'visita'
 type Estado = 'conectando' | 'en-vivo' | 'sin-conexion'
@@ -66,6 +67,7 @@ export function escucharEnVivo(
 }
 
 export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipos: readonly Tipo[]; modo: 'auto' | 'aviso'; oculto?: boolean }) {
+  const t = useT()
   const router = useRouter()
   const [estado, setEstado] = useState<Estado>('conectando')
   const [novedades, setNovedades] = useState(0)
@@ -111,11 +113,11 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
             aria-hidden
             className={`size-1.5 rounded-full ${estado === 'en-vivo' ? 'bg-sage' : estado === 'conectando' ? 'bg-gold' : 'bg-ink-mute/50'}`}
           />
-          {estado === 'en-vivo' ? 'En vivo' : estado === 'conectando' ? 'Conectando…' : 'Sin actualización automática'}
+          {estado === 'en-vivo' ? t('En vivo', 'Live') : estado === 'conectando' ? t('Conectando…', 'Connecting…') : t('Sin actualización automática', 'No automatic updates')}
         </span>
         {novedades > 0 ? (
           <button className="cursor-pointer rounded-full bg-ink px-3 py-1 text-[12px] text-white transition-colors hover:bg-ink/90" onClick={actualizar} type="button">
-            {novedades === 1 ? '1 novedad' : `${novedades} novedades`} · Ver
+            {novedades === 1 ? t('1 novedad', '1 update') : t(`${novedades} novedades`, `${novedades} updates`)} · {t('Ver', 'View')}
           </button>
         ) : (
           <button
@@ -126,7 +128,7 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
             type="button"
           >
             <RefreshIcon className={`size-3.5 ${actualizando ? 'animate-spin motion-reduce:animate-none' : ''}`} />
-            Actualizar
+            {t('Actualizar', 'Refresh')}
           </button>
         )}
       </div>

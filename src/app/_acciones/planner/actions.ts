@@ -8,6 +8,8 @@ import { parseAmount } from '@/shared/money'
 import { isErr } from '@/shared/result'
 import type { PlannerResult } from '@/modules/planner/application/planner-use-cases'
 import { campo } from '@/shared/forms/campo'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 /**
  * `valores` vuelve con el error: React vacía el formulario al terminar la acción, también
@@ -27,16 +29,18 @@ export type PlannerActionState = { status: 'idle' } | { status: 'success' } | { 
  * escrita en su cuerpo para que `verify:tenancy` la vea.
  */
 async function eventoDe(actor: Awaited<ReturnType<typeof requireSession>>, fd: FormData) {
+  const t = await tr()
   const evento = await events.getByIdFor(actor, campo(fd, 'eventId'), { section: 'cliente' })
-  if (isErr(evento)) throw new Error(evento.error.detail)
+  if (isErr(evento)) throw new Error(traducir(evento.error.detail, t))
   return { eventId: evento.value.id, eventSlug: campo(fd, 'eventSlug'), fiesta: fiestaDeTema(evento.value.themeKey), eventDate: evento.value.eventDate }
 }
 
 const valoresDe = (fd: FormData): Record<string, string> =>
   Object.fromEntries([...fd.entries()].filter(([, v]) => typeof v === 'string') as [string, string][])
 
-function responder(resultado: PlannerResult, eventSlug: string, fd?: FormData): PlannerActionState {
-  if (!resultado.ok) return { status: 'error', message: resultado.mensaje, ...(fd ? { valores: valoresDe(fd) } : {}) }
+async function responder(resultado: PlannerResult, eventSlug: string, fd?: FormData): Promise<PlannerActionState> {
+  const t = await tr()
+  if (!resultado.ok) return { status: 'error', message: traducir(resultado.mensaje, t), ...(fd ? { valores: valoresDe(fd) } : {}) }
   revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
   return { status: 'success' }
 }
@@ -113,6 +117,7 @@ export async function removeTaskAction(_previo: PlannerActionState, fd: FormData
  * lleva su importe (`asig_<clave>`) y el total es la suma.
  */
 export async function saveBudgetPlanAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: campo(fd, 'eventId'), eventSlug: campo(fd, 'eventSlug'), section: 'planner' })
   const { eventId, eventSlug, fiesta } = await eventoDe(actor, fd)
@@ -122,26 +127,27 @@ export async function saveBudgetPlanAction(_previo: PlannerActionState, fd: Form
     for (const [clave, valor] of fd.entries()) {
       if (!clave.startsWith('asig_') || typeof valor !== 'string') continue
       const leido = centavos(valor, true)
-      if (!leido.ok) return { status: 'error', message: leido.message, valores: valoresDe(fd) }
+      if (!leido.ok) return { status: 'error', message: traducir(leido.message, t), valores: valoresDe(fd) }
       asignaciones[clave.slice(5)] = leido.cents ?? 0
     }
     return responder(await planner.saveBudgetPlan(eventId, fiesta, { asignaciones }), eventSlug, fd)
   }
 
   const total = centavos(campo(fd, 'total'), false)
-  if (!total.ok) return { status: 'error', message: total.message, valores: valoresDe(fd) }
+  if (!total.ok) return { status: 'error', message: traducir(total.message, t), valores: valoresDe(fd) }
   return responder(await planner.saveBudgetPlan(eventId, fiesta, { totalCents: total.cents ?? 0 }), eventSlug, fd)
 }
 
 export async function saveItemAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: campo(fd, 'eventId'), eventSlug: campo(fd, 'eventSlug'), section: 'planner' })
   const { eventId, eventSlug, fiesta } = await eventoDe(actor, fd)
 
   const previsto = centavos(campo(fd, 'estimated'), false)
-  if (!previsto.ok) return { status: 'error', message: previsto.message, valores: valoresDe(fd) }
+  if (!previsto.ok) return { status: 'error', message: traducir(previsto.message, t), valores: valoresDe(fd) }
   const contratado = centavos(campo(fd, 'contracted'), true)
-  if (!contratado.ok) return { status: 'error', message: contratado.message, valores: valoresDe(fd) }
+  if (!contratado.ok) return { status: 'error', message: traducir(contratado.message, t), valores: valoresDe(fd) }
 
   const itemId = campo(fd, 'itemId')
   const resultado = await planner.saveItem(eventId, fiesta, itemId === '' ? null : itemId, {
@@ -163,10 +169,11 @@ export async function removeItemAction(_previo: PlannerActionState, fd: FormData
 }
 
 export async function addPaymentAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: campo(fd, 'eventId'), eventSlug: campo(fd, 'eventSlug'), section: 'planner' })
   const importe = centavos(campo(fd, 'amount'), false)
-  if (!importe.ok) return { status: 'error', message: importe.message, valores: valoresDe(fd) }
+  if (!importe.ok) return { status: 'error', message: traducir(importe.message, t), valores: valoresDe(fd) }
   const resultado = await planner.addPayment(campo(fd, 'eventId'), campo(fd, 'itemId'), { amountCents: importe.cents ?? 0, dueDate: campo(fd, 'dueDate'), label: campo(fd, 'label') })
   return responder(resultado, campo(fd, 'eventSlug'), fd)
 }

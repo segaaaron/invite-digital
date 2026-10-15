@@ -9,6 +9,7 @@ import { EyeIcon, MusicIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { themeFonts } from '@/shared/design/fonts'
 import { getDictionary } from '@/shared/i18n/dictionaries'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 /**
  * La invitación de esta boda, al lado del editor, dentro de un teléfono.
@@ -22,7 +23,8 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
  * aquí el primer gesto es escribir en un campo del editor. La canción suena en «Pantalla
  * completa».
  */
-export function InvitacionEnVivo({ event, content, estilo }: { event: Event; content: InvitationContent; estilo: EstiloDelEvento }) {
+export async function InvitacionEnVivo({ event, content, estilo }: { event: Event; content: InvitationContent; estilo: EstiloDelEvento }) {
+  const t = await tr()
   const definicion = themeFor(event.themeKey)
   const { Component: Tema } = definicion
   const diccionario = getDictionary(event.locale)
@@ -36,7 +38,7 @@ export function InvitacionEnVivo({ event, content, estilo }: { event: Event; con
 
   return (
     // La invitación dentro de un teléfono (E08): marco oscuro, y debajo verla entera o con su canción.
-    <section aria-label="Vista previa de la invitación" className={`${variables} flex flex-col items-center gap-4`}>
+    <section aria-label={t('Vista previa de la invitación', 'Invitation preview')} className={`${variables} flex flex-col items-center gap-4`}>
       <div className="w-full max-w-[300px] rounded-[38px] bg-shell-deep p-2.5 shadow-[0_24px_60px_-30px_rgb(12_36_32/0.6)] max-[1023px]:max-w-[400px]">
       <div className="con-mono h-[min(620px,calc(100dvh-170px))] w-full overflow-hidden rounded-[30px] max-[1023px]:h-[min(780px,calc(100dvh-150px))]">
         <MarcoQueSigue>
@@ -55,10 +57,10 @@ export function InvitacionEnVivo({ event, content, estilo }: { event: Event; con
       </div>
       <div className="flex flex-wrap justify-center gap-2.5">
         <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`} size="sm">
-          <EyeIcon className="size-4" /> Pantalla completa
+          <EyeIcon className="size-4" /> {t('Pantalla completa', 'Full screen')}
         </PanelButton>
         <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`} size="sm">
-          <MusicIcon className="size-4" /> Con sonido
+          <MusicIcon className="size-4" /> {t('Con sonido', 'With sound')}
         </PanelButton>
       </div>
     </section>

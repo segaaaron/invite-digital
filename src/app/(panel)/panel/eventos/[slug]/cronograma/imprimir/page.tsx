@@ -3,8 +3,12 @@ import { events, planner, plans } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
 import { momentosParaVer } from '@/modules/planner/ui/cronograma-vista'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Cronograma para imprimir' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Cronograma para imprimir', 'Printable schedule') }
+}
 export const dynamic = 'force-dynamic'
 
 /**

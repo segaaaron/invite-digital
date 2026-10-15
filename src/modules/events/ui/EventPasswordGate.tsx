@@ -4,6 +4,7 @@ import { useActionState } from 'react'
 import { unlockEventAction, type UnlockState } from '@/app/_acciones/events/actions'
 import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * La puerta de un evento protegido con contraseña.
@@ -14,20 +15,21 @@ import { sinCaerse } from '@/shared/design/ui/sin-caerse'
  * incorrecta».
  */
 export function EventPasswordGate({ token }: { token: string }) {
+  const t = useT()
   const [state, action, pending] = useActionState<UnlockState, FormData>(sinCaerse(unlockEventAction), { status: 'idle' })
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6">
-      <p className="font-mono text-[10px] tracking-[0.35em] text-ink-mute uppercase">Invitación privada</p>
-      <h1 className="font-display text-[28px] font-light text-ink">Escribe la contraseña</h1>
+      <p className="font-mono text-[10px] tracking-[0.35em] text-ink-mute uppercase">{t('Invitación privada', 'Private invitation')}</p>
+      <h1 className="font-display text-[28px] font-light text-ink">{t('Escribe la contraseña', 'Enter the password')}</h1>
       <p className="max-w-[42ch] text-center text-[13px] leading-[1.7] text-ink-soft">
-        Quien te invitó te la dio junto al enlace.
+        {t('Quien te invitó te la dio junto al enlace.', 'Whoever invited you gave it to you with the link.')}
       </p>
 
       <form action={action} className="flex w-full max-w-[320px] flex-col gap-3">
         <input name="token" type="hidden" value={token} />
         <label className="flex flex-col gap-2">
-          <span className="sr-only">Contraseña</span>
+          <span className="sr-only">{t('Contraseña', 'Password')}</span>
           <CampoContrasena
             autoComplete="off"
             className="rounded-[14px] border border-line bg-bg-raised px-4 py-3 text-[15px] text-ink"
@@ -46,7 +48,7 @@ export function EventPasswordGate({ token }: { token: string }) {
           className="rounded-full bg-gold px-5 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase disabled:opacity-60"
           disabled={pending}
           type="submit" aria-busy={(pending) || undefined}>
-          {pending ? 'Comprobando…' : 'Entrar'}
+          {pending ? t('Comprobando…', 'Checking…') : t('Entrar', 'Enter')}
         </button>
       </form>
     </main>

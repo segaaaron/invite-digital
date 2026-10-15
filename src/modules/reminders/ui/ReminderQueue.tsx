@@ -7,14 +7,21 @@ import { Iniciales, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { markReminderSentAction } from '@/app/_acciones/reminders/actions'
 import type { DueReminder, ReminderKind } from '../domain/due'
 import { reminderMessage } from '../domain/reminder-message'
+import type { Locale } from '@/shared/i18n/locales'
+import type { T } from '@/shared/i18n/t'
+import { useIdioma, useT } from '@/shared/i18n/idioma-navegador'
 
 /** El motivo, dicho **una vez por grupo** (9 oct): repetido en cada fila, la lista era el mismo párrafo ocho veces. */
-const GRUPOS: readonly { kind: ReminderKind; titulo: string; explica: string }[] = [
-  { kind: 'sin_respuesta', titulo: 'Abrieron y no confirmaron', explica: 'Abrió la invitación y no ha confirmado. El plazo se acerca.' },
+const grupos = (t: T): readonly { kind: ReminderKind; titulo: string; explica: string }[] => [
+  {
+    kind: 'sin_respuesta',
+    titulo: t('Abrieron y no confirmaron', 'Opened but not confirmed'),
+    explica: t('Abrió la invitación y no ha confirmado. El plazo se acerca.', 'They opened the invitation and have not confirmed. The deadline is close.'),
+  },
   {
     kind: 'sin_abrir',
-    titulo: 'No han abierto',
-    explica: 'Nunca abrió el enlace. Puede que el mensaje no llegara: confirma el número antes de insistir.',
+    titulo: t('No han abierto', 'Not opened'),
+    explica: t('Nunca abrió el enlace. Puede que el mensaje no llegara: confirma el número antes de insistir.', 'They never opened the link. The message may not have arrived: check the number before insisting.'),
   },
 ]
 
@@ -25,9 +32,13 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', '
 const SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
 
 /** «el sábado 18 de octubre, en 5 días» (o «hoy», «mañana»), contado en Bolivia. */
-function cierre(deadline: Date): string {
+function cierre(deadline: Date, locale: Locale): string {
   const hoy = Date.parse(`${new Date(Date.now() - 4 * 3_600_000).toISOString().slice(0, 10)}T00:00:00Z`)
   const dias = Math.round((Date.UTC(deadline.getUTCFullYear(), deadline.getUTCMonth(), deadline.getUTCDate()) - hoy) / 86_400_000)
+  if (locale === 'en') {
+    const fecha = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(deadline)
+    return dias === 0 ? 'today' : dias === 1 ? `tomorrow, ${fecha}` : dias > 1 ? `on ${fecha}, in ${dias} days` : `on ${fecha} (already closed)`
+  }
   const fecha = `el ${SEMANA[deadline.getUTCDay()]} ${deadline.getUTCDate()} de ${MESES[deadline.getUTCMonth()]}`
   return dias === 0 ? 'hoy' : dias === 1 ? `mañana, ${fecha}` : dias > 1 ? `${fecha}, en ${dias} días` : `cerró ${fecha}`
 }
@@ -55,12 +66,14 @@ export function ReminderQueue({
   eventSlug: string
   rows: readonly DueReminder[]
 }) {
+  const t = useT()
+  const locale = useIdioma()
   const [anotando, setAnotando] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [todas, setTodas] = useState(false)
 
   if (rows.length === 0) {
-    return <p className="text-[13px] text-ink-mute">Nadie por recordar hoy. Vuelven a aparecer aquí solos cuando toque.</p>
+    return <p className="text-[13px] text-ink-mute">{t('Nadie por recordar hoy. Vuelven a aparecer aquí solos cuando toque.', 'Nobody to remind today. They show up here on their own when it is time.')}</p>
   }
 
   const clave = (fila: DueReminder) => `${fila.groupId}:${fila.kind}`
@@ -77,13 +90,18 @@ export function ReminderQueue({
       .finally(() => setAnotando(null))
   }
 
-  const ordenadas = GRUPOS.flatMap((g) => rows.filter((r) => r.kind === g.kind))
+  const ordenadas = grupos(t).flatMap((g) => rows.filter((r) => r.kind === g.kind))
   const vistas = todas ? ordenadas : ordenadas.slice(0, VISIBLES)
   const restantes = ordenadas.length - vistas.length
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-[14px] text-ink-mute">El plazo para confirmar cierra {cierre(deadline)}. El mensaje no lleva el enlace: el invitado ya lo tiene en el mismo chat.</p>
+      <p className="text-[14px] text-ink-mute">
+        {t(
+          `El plazo para confirmar cierra ${cierre(deadline, locale)}. El mensaje no lleva el enlace: el invitado ya lo tiene en el mismo chat.`,
+          `RSVPs close ${cierre(deadline, locale)}. The message does not include the link: the guest already has it in the same chat.`,
+        )}
+      </p>
 
       {error === null ? null : (
         <p className="text-[13px] text-danger" role="alert">
@@ -91,7 +109,7 @@ export function ReminderQueue({
         </p>
       )}
 
-      {GRUPOS.map((grupo) => {
+      {grupos(t).map((grupo) => {
         const delGrupo = vistas.filter((r) => r.kind === grupo.kind)
         const total = rows.filter((r) => r.kind === grupo.kind).length
         if (delGrupo.length === 0) return null
@@ -112,19 +130,22 @@ export function ReminderQueue({
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate text-[15px] font-medium text-ink">{fila.label}</span>
                       <span className="text-[13px] text-ink-mute">
-                        <span className="max-[559px]:hidden">esperando </span>
-                        {fila.waitingDays} {fila.waitingDays === 1 ? 'día' : 'días'} · {fila.seats} {fila.seats === 1 ? 'lugar' : 'lugares'}
+                        <span className="max-[559px]:hidden">{t('esperando ', 'waiting ')}</span>
+                        {t(
+                          `${fila.waitingDays} ${fila.waitingDays === 1 ? 'día' : 'días'} · ${fila.seats} ${fila.seats === 1 ? 'lugar' : 'lugares'}`,
+                          `${fila.waitingDays} ${fila.waitingDays === 1 ? 'day' : 'days'} · ${fila.seats} ${fila.seats === 1 ? 'seat' : 'seats'}`,
+                        )}
                         {/* En el celular, «sin teléfono» va en esta línea: la píldora a la derecha apretaba el nombre. */}
-                        {fila.phone === null ? <span className="text-pill-maybe-ink min-[560px]:hidden"> · sin teléfono</span> : null}
+                        {fila.phone === null ? <span className="text-pill-maybe-ink min-[560px]:hidden">{t(' · sin teléfono', ' · no phone')}</span> : null}
                       </span>
                     </span>
                     {fila.phone === null ? (
                       <span className="max-[559px]:hidden">
-                        <Pill tone="maybe">Sin teléfono</Pill>
+                        <Pill tone="maybe">{t('Sin teléfono', 'No phone')}</Pill>
                       </span>
                     ) : (
                       <a
-                        aria-label={`Recordar a ${fila.label} por WhatsApp`}
+                        aria-label={t(`Recordar a ${fila.label} por WhatsApp`, `Remind ${fila.label} on WhatsApp`)}
                         className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-[10px] bg-whatsapp px-4 text-[14px] font-medium text-white no-underline transition-colors hover:bg-whatsapp-hover max-[559px]:px-3"
                         href={whatsappLink({ phone: fila.phone, message: reminderMessage({ kind: fila.kind, locale: eventLocale, groupLabel: fila.label, deadline }) })}
                         onClick={() => anotar(fila)}
@@ -132,16 +153,16 @@ export function ReminderQueue({
                         target="_blank"
                       >
                         <WhatsAppIcon />
-                        <span className="max-[559px]:sr-only">Recordar</span>
+                        <span className="max-[559px]:sr-only">{t('Recordar', 'Remind')}</span>
                       </a>
                     )}
                     <button
                       aria-busy={ocupado || undefined}
-                      aria-label={`Ya le avisé a ${fila.label}`}
+                      aria-label={t(`Ya le avisé a ${fila.label}`, `I already told ${fila.label}`)}
                       className="grid size-11 shrink-0 place-items-center rounded-full text-ink-mute transition-colors hover:bg-bg-top hover:text-ink disabled:opacity-50"
                       disabled={ocupado}
                       onClick={() => anotar(fila)}
-                      title="Ya le avisé (por otro lado): no vuelve a salir en unos días."
+                      title={t('Ya le avisé (por otro lado): no vuelve a salir en unos días.', 'I already told them (another way): they will not show up again for a few days.')}
                       type="button"
                     >
                       <CheckIcon className="size-4" />
@@ -156,7 +177,7 @@ export function ReminderQueue({
 
       {restantes > 0 ? (
         <button className="self-start text-[13px] text-gold-deep underline decoration-gold/50 underline-offset-4 hover:decoration-gold-deep" onClick={() => setTodas(true)} type="button">
-          Ver las {restantes} restantes
+          {t(`Ver las ${restantes} restantes`, `See the remaining ${restantes}`)}
         </button>
       ) : null}
     </div>

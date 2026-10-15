@@ -6,6 +6,7 @@ import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { ReminderKind } from '@/modules/reminders/domain/due'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 export type ReminderActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
 
@@ -24,6 +25,7 @@ export async function markReminderSentAction(input: {
   guestGroupId: string
   kind: ReminderKind
 }): Promise<ReminderActionState> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
@@ -42,8 +44,8 @@ export async function markReminderSentAction(input: {
       status: 'error',
       message:
         result.error.kind === 'not_found'
-          ? 'Ese grupo ya no está en este evento. Vuelve a cargar la página.'
-          : 'No pudimos anotar el recordatorio. Sigue pendiente; inténtalo en un momento.',
+          ? t('Ese grupo ya no está en este evento. Vuelve a cargar la página.', 'That group is no longer in this event. Reload the page.')
+          : t('No pudimos anotar el recordatorio. Sigue pendiente; inténtalo en un momento.', 'We couldn’t log the reminder. It is still pending; try again in a moment.'),
     }
   }
 

@@ -1,3 +1,5 @@
+import { traducir } from '@/shared/i18n/en-ingles'
+import { traductor } from '@/shared/i18n/t'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { avisosDeLaAgenda } from '@/modules/planner'
 import { registrarFallo } from '@/shared/observability/fallos'
@@ -34,7 +36,7 @@ export const avisos = {
   /** Un aviso de prueba a los aparatos de la persona, para comprobar que llegan. */
   probar: async (userId: string) => {
     const aparatos = await drizzleAvisos.aparatosDe([userId])
-    const r = await Promise.all(aparatos.map((a) => emisor.enviar(a, { title: 'Los avisos funcionan', body: 'Así te llegarán las novedades de tus eventos.', url: '/panel', tag: 'prueba' })))
+    const r = await Promise.all(aparatos.map((a) => emisor.enviar(a, { title: traducir('Los avisos funcionan', traductor(a.locale === 'en' ? 'en' : 'es')), body: traducir('Así te llegarán las novedades de tus eventos.', traductor(a.locale === 'en' ? 'en' : 'es')), url: '/panel', tag: 'prueba' })))
     for (const [i, estado] of r.entries()) if (estado === 'caducada') await drizzleAvisos.olvidarAparato(aparatos[i]!.id)
     return { aparatos: aparatos.length, entregados: r.filter((x) => x === 'ok').length }
   },

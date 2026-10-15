@@ -9,6 +9,7 @@ import type { Attendance } from '../domain/person'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
 import { conCanal } from '../domain/invitation-url'
 import { CloseIcon, CopyIcon, QrIcon, ArrowLeftIcon } from '@/shared/design/ui/icons'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 export type EditablePerson = {
   readonly id: string
@@ -73,6 +74,7 @@ export function EditPersonDialog({
   eventSlug: string
   closeHref: string
 }) {
+  const t = useT()
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const [fullName, setFullName] = useState(person.fullName)
@@ -127,18 +129,18 @@ export function EditPersonDialog({
         vip,
       })
       if (r.status === 'error') {
-        setError(r.message ?? 'No se pudo guardar el cambio.')
+        setError(r.message ?? t('No se pudo guardar el cambio.', 'The change couldn’t be saved.'))
         return
       }
 
       if ((person.phone ?? '') !== phone) {
-        const t = await setGroupPhoneAction({
+        const tel = await setGroupPhoneAction({
           eventSlug,
           id: groupId,
           phone: phone.trim(),
         })
-        if (t.status === 'error') {
-          setError(t.message ?? 'Se guardó el invitado, pero no su teléfono.')
+        if (tel.status === 'error') {
+          setError(tel.message ?? t('Se guardó el invitado, pero no su teléfono.', 'The guest was saved, but not their phone.'))
           return
         }
       }
@@ -170,7 +172,7 @@ export function EditPersonDialog({
     setAviso(null)
     empezar(async () => {
       const r = await hacer()
-      if (r.status === 'error') setError(r.message ?? 'No se pudo guardar el cambio.')
+      if (r.status === 'error') setError(r.message ?? t('No se pudo guardar el cambio.', 'The change couldn’t be saved.'))
       else setAviso(hecho)
     })
   }
@@ -197,20 +199,20 @@ export function EditPersonDialog({
           <ArrowLeftIcon className="size-5" />
         </span>
         <span className="flex min-w-0 flex-col leading-tight">
-          <span className="text-[13px] text-ink-mute">Invitados</span>
+          <span className="text-[13px] text-ink-mute">{t('Invitados', 'Guests')}</span>
           <span className="truncate text-[16px] font-medium">{invitacion.label}</span>
         </span>
-        <span className="sr-only">: cerrar</span>
+        <span className="sr-only">{t(': cerrar', ': close')}</span>
       </button>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="truncate text-[14px] text-ink-mute max-[767px]:hidden">Invitación «{invitacion.label}»</p>
+          <p className="truncate text-[14px] text-ink-mute max-[767px]:hidden">{t(`Invitación «${invitacion.label}»`, `“${invitacion.label}” invitation`)}</p>
           <h2 className="font-display text-[30px] leading-tight font-medium" id={`${idNombre}-titulo`}>
-            Editar invitado
+            {t('Editar invitado', 'Edit guest')}
           </h2>
         </div>
         <button
-          aria-label="Cerrar"
+          aria-label={t('Cerrar', 'Close')}
           className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold max-[767px]:hidden"
           onClick={cerrar}
           type="button"
@@ -224,11 +226,11 @@ export function EditPersonDialog({
         <div className="mt-5 flex items-center gap-4 rounded-[14px] border border-line-panel bg-bg-raised px-4 py-3.5">
           <QrIcon className="size-8 shrink-0 text-ink" />
           <div className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[13px] text-ink-mute">Código del pase</span>
+            <span className="text-[13px] text-ink-mute">{t('Código del pase', 'Pass code')}</span>
             {invitacion.codigo ? <span className="font-display text-[26px] leading-tight font-medium tracking-[0.08em]">{invitacion.codigo}</span> : null}
             {(enlaceNuevo ?? invitacion.enlace) ? (
               <input
-                aria-label="Enlace de su invitación"
+                aria-label={t('Enlace de su invitación', 'Their invitation link')}
                 className="w-full min-w-0 truncate bg-transparent text-[12.5px] text-ink-mute outline-none"
                 onFocus={(e) => e.currentTarget.select()}
                 readOnly
@@ -246,14 +248,14 @@ export function EditPersonDialog({
               type="button"
             >
               <CopyIcon className="size-4" />
-              {copiado ? 'Copiado' : 'Copiar enlace'}
+              {copiado ? t('Copiado', 'Copied') : t('Copiar enlace', 'Copy link')}
             </button>
           ) : null}
         </div>
       )}
 
       <div className="mt-5 flex flex-col gap-4">
-        <Field htmlFor={idNombre} label="Nombre completo">
+        <Field htmlFor={idNombre} label={t('Nombre completo', 'Full name')}>
           <input
             autoFocus
             className={FIELD_CLASS}
@@ -266,7 +268,7 @@ export function EditPersonDialog({
         </Field>
 
         <div>
-          <Field htmlFor={idGrupo} label="Invitación">
+          <Field htmlFor={idGrupo} label={t('Invitación', 'Invitation')}>
             <select className={FIELD_CLASS} id={idGrupo} onChange={(e) => setGroupId(e.target.value)} value={groupId}>
               {groups.map((g) => (
                 <option key={g.id} value={g.id}>
@@ -286,20 +288,20 @@ export function EditPersonDialog({
               onChange={(e) => setAttending(e.target.value)}
               value={attending}
             >
-              <option value="">Pendiente</option>
-              <option value="yes">Asistirá</option>
-              <option value="no">No podrá</option>
-              <option value="maybe">Tal vez</option>
+              <option value="">{t('Pendiente', 'Pending')}</option>
+              <option value="yes">{t('Asistirá', 'Attending')}</option>
+              <option value="no">{t('No podrá', 'Can’t come')}</option>
+              <option value="maybe">{t('Tal vez', 'Maybe')}</option>
             </select>
           </Field>
 
-          <Field htmlFor={idDieta} label="Restricciones">
+          <Field htmlFor={idDieta} label={t('Restricciones', 'Dietary restrictions')}>
             <input
               className={FIELD_CLASS}
               id={idDieta}
               maxLength={200}
               onChange={(e) => setDietaryNote(e.target.value)}
-              placeholder="Vegano, sin gluten…"
+              placeholder={t('Vegano, sin gluten…', 'Vegan, gluten-free…')}
               type="text"
               value={dietaryNote}
             />
@@ -307,7 +309,7 @@ export function EditPersonDialog({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field htmlFor={idTel} label="WhatsApp / Teléfono">
+          <Field htmlFor={idTel} label={t('WhatsApp / Teléfono', 'WhatsApp / Phone')}>
             <CampoTelefono id={idTel} onChange={setPhone} value={phone} />
           </Field>
 
@@ -332,25 +334,25 @@ export function EditPersonDialog({
             onChange={(e) => setVip(e.target.checked)}
             type="checkbox"
           />
-          Invitado VIP
+          {t('Invitado VIP', 'VIP guest')}
         </label>
       </div>
 
       <section aria-labelledby={`${idAcomp}-titulo`} className="mt-6 flex flex-col gap-3 border-t border-line-panel pt-5">
         <h3 className="text-[15px] font-medium" id={`${idAcomp}-titulo`}>
-          Su invitación
+          {t('Su invitación', 'Their invitation')}
         </h3>
 
         <div className="flex min-w-0 gap-2">
           <label className="sr-only" htmlFor={idAcomp}>
-            Nombre del acompañante nuevo
+            {t('Nombre del acompañante nuevo', 'New companion’s name')}
           </label>
           <input
             className={`${FIELD_CLASS} min-w-0 flex-1`}
             id={idAcomp}
             maxLength={160}
             onChange={(e) => setAcompanante(e.target.value)}
-            placeholder="Nombre del acompañante"
+            placeholder={t('Nombre del acompañante', 'Companion’s name')}
             type="text"
             value={acompanante}
           />
@@ -361,10 +363,10 @@ export function EditPersonDialog({
                 const r = await addPersonAction({ eventSlug, guestGroupId: invitacion.id, fullName: acompanante.trim() })
                 if (r.status === 'success') setAcompanante('')
                 return r
-              }, 'Acompañante añadido.')
+              }, t('Acompañante añadido.', 'Companion added.'))
             }
           >
-            Añadir acompañante
+            {t('Añadir acompañante', 'Add companion')}
           </PanelButton>
         </div>
 
@@ -372,15 +374,15 @@ export function EditPersonDialog({
           {invitacion.respondida ? (
             <PanelButton
               disabled={pendiente}
-              onClick={() => enInvitacion(() => reopenRsvpAction({ eventSlug, id: invitacion.id }), 'Puede volver a confirmar desde su enlace.')}
+              onClick={() => enInvitacion(() => reopenRsvpAction({ eventSlug, id: invitacion.id }), t('Puede volver a confirmar desde su enlace.', 'They can confirm again from their link.'))}
             >
-              Reabrir confirmación
+              {t('Reabrir confirmación', 'Reopen RSVP')}
             </PanelButton>
           ) : (
             <span />
           )}
           {invitacion.revocada ? (
-            <span className="text-[12px] text-ink-mute">Enlace revocado: ya no abre.</span>
+            <span className="text-[12px] text-ink-mute">{t('Enlace revocado: ya no abre.', 'Link revoked: it no longer opens.')}</span>
           ) : (
             <RevokeInvitationForm eventSlug={eventSlug} groupId={invitacion.id} />
           )}
@@ -401,10 +403,10 @@ export function EditPersonDialog({
 
       <div className="mt-6 flex justify-end gap-2.5">
         <PanelButton disabled={pendiente} onClick={cerrar}>
-          Cancelar
+          {t('Cancelar', 'Cancel')}
         </PanelButton>
         <PanelButton variant="primary" disabled={pendiente} onClick={guardar} aria-busy={(pendiente) || undefined}>
-          {pendiente ? 'Guardando…' : 'Guardar'}
+          {pendiente ? t('Guardando…', 'Saving…') : t('Guardar', 'Save')}
         </PanelButton>
       </div>
     </dialog>

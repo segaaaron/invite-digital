@@ -6,8 +6,10 @@ import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 export default async function PanelHomePage() {
+  const t = await tr()
   const actor = await requireSession()
   // La bandeja enlaza al resumen de cada boda, que el admin no abre: su lista es la cartera.
   if (isAdmin(actor)) redirect('/panel/admin/eventos')
@@ -36,8 +38,8 @@ export default async function PanelHomePage() {
             </PanelButton>
           ) : undefined
         }
-        meta={actor.role === 'atelier' ? undefined : 'Elige cuál quieres organizar ahora.'}
-        title={actor.role === 'atelier' ? 'Eventos' : 'Mis eventos'}
+        meta={actor.role === 'atelier' ? undefined : t('Elige cuál quieres organizar ahora.', 'Choose which one you want to organize now.')}
+        title={actor.role === 'atelier' ? t('Eventos', 'Events') : t('Mis eventos', 'My events')}
       />
 
       {isErr(listed) ? (

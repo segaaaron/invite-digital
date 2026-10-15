@@ -6,6 +6,7 @@ import { importGuestsAction, type ImportState } from '@/app/_acciones/guests/act
 import { DeliverySheet } from './DeliverySheet'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * Importación masiva: se pega la lista. Copiada de Excel o Google Sheets llega separada por
@@ -24,6 +25,7 @@ export function ImportPanel({
   eventSlug: string
   eventTitle: string
 }) {
+  const t = useT()
   const [state, action, pending] = useActionState<ImportState, FormData>(sinCaerse(importGuestsAction), { status: 'idle' })
 
   return (
@@ -33,20 +35,20 @@ export function ImportPanel({
         <input name="eventSlug" type="hidden" value={eventSlug} />
 
         <label className="flex flex-col gap-2">
-          <span className={LABEL_CLASS}>Copia las columnas de tu Excel y pégalas aquí</span>
+          <span className={LABEL_CLASS}>{t('Copia las columnas de tu Excel y pégalas aquí', 'Copy the columns from your spreadsheet and paste them here')}</span>
           <textarea
             className={`${FIELD_CLASS} min-h-[120px] font-codigo text-[12px]`}
             name="csv"
             placeholder={'Familia Rojas Peña;4;+59170011122\nAna Lucía Vega;2;'}
-            title="Una fila por invitación: nombre, número de cupos y teléfono opcional"
+            title={t('Una fila por invitación: nombre, número de cupos y teléfono opcional', 'One row per invitation: name, number of seats and optional phone')}
             required
           />
           <span className="text-[11.5px] text-ink-mute">
-            Tres columnas: nombre de la invitación, cupos y WhatsApp (opcional). Sirve copiar desde Excel o Google Sheets, o escribir separando con punto y coma.
+            {t('Tres columnas: nombre de la invitación, cupos y WhatsApp (opcional). Sirve copiar desde Excel o Google Sheets, o escribir separando con punto y coma.', 'Three columns: invitation name, seats and WhatsApp (optional). You can copy from Excel or Google Sheets, or type them separated by semicolons.')}
           </span>
         </label>
 
-        <SubmitButton className="w-fit" variant="primary" pending={pending} pendingLabel={'Importando…'}>{'Importar invitados'}</SubmitButton>
+        <SubmitButton className="w-fit" variant="primary" pending={pending} pendingLabel={t('Importando…', 'Importing…')}>{t('Importar invitados', 'Import guests')}</SubmitButton>
       </form>
 
       {state.status === 'error' ? (
@@ -58,7 +60,7 @@ export function ImportPanel({
       {state.status === 'success' ? (
         <div className="flex flex-col gap-3" role="status">
           <p className="text-[13px] text-ink">
-            {state.created} creadas · {state.rejected} rechazadas. Los enlaces solo se muestran aquí: cópialos ahora.
+            {t(`${state.created} creadas · ${state.rejected} rechazadas. Los enlaces solo se muestran aquí: cópialos ahora.`, `${state.created} created · ${state.rejected} rejected. The links are only shown here: copy them now.`)}
           </p>
           {/* `relative` a propósito: sin él, un absoluto de dentro toma como bloque
               contenedor el `main` y no se recorta, y estira el documento en el teléfono. */}
@@ -69,7 +71,7 @@ export function ImportPanel({
                 <span className="flex items-baseline justify-between gap-3">
                   <span className="text-[15px] font-medium text-ink">{fila.label || '—'}</span>
                   <span className="shrink-0 text-[12.5px] text-ink-mute">
-                    Línea {fila.line} · {fila.seats} {fila.seats === 1 ? 'cupo' : 'cupos'}
+                    {t(`Línea ${fila.line} · ${fila.seats} ${fila.seats === 1 ? 'cupo' : 'cupos'}`, `Line ${fila.line} · ${fila.seats} ${fila.seats === 1 ? 'seat' : 'seats'}`)}
                   </span>
                 </span>
                 {fila.url === null ? (
@@ -89,7 +91,7 @@ export function ImportPanel({
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr>
-                  {['Línea', 'Invitación', 'Cupos', 'Resultado'].map((titulo) => (
+                  {[t('Línea', 'Line'), t('Invitación', 'Invitation'), t('Cupos', 'Seats'), t('Resultado', 'Result')].map((titulo) => (
                     <th
                       key={titulo}
                       className="border-b border-line-panel py-3 pr-3 font-mono text-[10.5px] font-medium tracking-[0.16em] text-ink-mute uppercase"
@@ -114,7 +116,7 @@ export function ImportPanel({
                         <span className="text-danger">{fila.problem}</span>
                       ) : (
                         <input
-                          aria-label={`Enlace de ${fila.label}`}
+                          aria-label={t(`Enlace de ${fila.label}`, `${fila.label}’s link`)}
                           className="w-full min-w-[240px] rounded-[10px] border border-line-panel-strong bg-white px-2 py-1 font-codigo text-[11px] text-ink"
                           readOnly
                           value={fila.url}

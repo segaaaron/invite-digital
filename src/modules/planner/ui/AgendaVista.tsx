@@ -4,6 +4,10 @@ import { CalendarIcon } from '@/shared/design/ui/icons'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import type { ClaseDeAgenda, EntradaDeAgenda } from '../domain/agenda'
 import { NOMBRE_DE_CLASE } from '../domain/agenda'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
+import type { T } from '@/shared/i18n/t'
+import type { Locale } from '@/shared/i18n/locales'
 
 /** Cada clase con su color de la paleta, y siempre con su nombre al lado: el color acompaña, no dice. */
 export const TONO: Record<ClaseDeAgenda, string> = {
@@ -35,54 +39,66 @@ export const estaAtrasada = (e: EntradaDeAgenda, hoy: string) => !e.hecha && e.d
 
 /** Lo que se puede ocultar. El evento y el cierre de confirmaciones se ven siempre: son el esqueleto del plan. */
 export const CLASES_FILTRABLES: readonly ClaseDeAgenda[] = ['tarea', 'pago', 'cita', 'ensayo', 'momento']
-const EN_PLURAL: Record<ClaseDeAgenda, string> = {
-  evento: 'El evento',
-  confirmacion: 'Confirmaciones',
-  tarea: 'Tareas',
-  pago: 'Pagos',
-  momento: 'Cronograma',
-  ensayo: 'Ensayos',
-  cita: 'Citas',
+const enPlural = (t: T): Record<ClaseDeAgenda, string> => ({
+  evento: t('El evento', 'The event'),
+  confirmacion: t('Confirmaciones', 'RSVPs'),
+  tarea: t('Tareas', 'Tasks'),
+  pago: t('Pagos', 'Payments'),
+  momento: t('Cronograma', 'Schedule'),
+  ensayo: t('Ensayos', 'Rehearsals'),
+  cita: t('Citas', 'Appointments'),
+})
+
+const DIAS: Record<Locale, readonly string[]> = { es: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }
+const MESES: Record<Locale, readonly string[]> = {
+  es: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+}
+const SEMANA: Record<Locale, readonly string[]> = {
+  es: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
 }
 
-const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
-const SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
-
-export const nombreDelMes = (mes: string) => {
+export const nombreDelMes = (mes: string, locale: Locale = 'es') => {
   const [a, m] = mes.split('-')
-  return `${MESES[Number(m) - 1]} ${a}`
+  return `${MESES[locale][Number(m) - 1]} ${a}`
 }
 
 /** «mar 14 oct» para la lista. */
-export function diaCorto(dia: string): string {
+export function diaCorto(dia: string, locale: Locale = 'es'): string {
   const fecha = new Date(`${dia}T12:00:00Z`)
-  return `${SEMANA[fecha.getUTCDay()]!.slice(0, 3)} ${fecha.getUTCDate()} ${MESES[fecha.getUTCMonth()]!.slice(0, 3)}`
+  const [semana, mes] = [SEMANA[locale][fecha.getUTCDay()]!.slice(0, 3), MESES[locale][fecha.getUTCMonth()]!.slice(0, 3)]
+  return locale === 'es' ? `${semana} ${fecha.getUTCDate()} ${mes}` : `${semana} ${mes} ${fecha.getUTCDate()}`
 }
 
 /** «jueves 9 de octubre», para el título del día. */
-export function diaLargo(dia: string): string {
+export function diaLargo(dia: string, locale: Locale = 'es'): string {
   const fecha = new Date(`${dia}T12:00:00Z`)
-  return `${SEMANA[fecha.getUTCDay()]} ${fecha.getUTCDate()} de ${MESES[fecha.getUTCMonth()]}`
+  return locale === 'es'
+    ? `${SEMANA.es[fecha.getUTCDay()]} ${fecha.getUTCDate()} de ${MESES.es[fecha.getUTCMonth()]}`
+    : `${SEMANA.en[fecha.getUTCDay()]}, ${MESES.en[fecha.getUTCMonth()]} ${fecha.getUTCDate()}`
 }
 
 const masUnDia = (dia: string) => new Date(Date.parse(`${dia}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10)
 /** «Hoy», «Mañana» o el día, para encabezar un grupo de la lista. */
-const rotuloDelDia = (dia: string, hoy: string) => (dia === hoy ? `Hoy · ${diaCorto(dia)}` : dia === masUnDia(hoy) ? `Mañana · ${diaCorto(dia)}` : diaCorto(dia))
+const rotuloDelDia = (dia: string, hoy: string, t: T, locale: Locale) =>
+  dia === hoy ? `${t('Hoy', 'Today')} · ${diaCorto(dia, locale)}` : dia === masUnDia(hoy) ? `${t('Mañana', 'Tomorrow')} · ${diaCorto(dia, locale)}` : diaCorto(dia, locale)
 
 /**
  * La leyenda **es** el filtro (9 oct): cada clase con su punto de color; tocarla la oculta o la vuelve a
  * mostrar. Vive en la URL (`?ocultar=`), como el resto del estado del panel.
  */
-export function FiltrosDeAgenda({ ocultas, enlace }: { ocultas: readonly ClaseDeAgenda[]; enlace: (ocultas: readonly ClaseDeAgenda[]) => string }) {
+export async function FiltrosDeAgenda({ ocultas, enlace }: { ocultas: readonly ClaseDeAgenda[]; enlace: (ocultas: readonly ClaseDeAgenda[]) => string }) {
+  const t = await tr()
+  const EN_PLURAL = enPlural(t)
   return (
-    <nav aria-label="Qué se ve en la agenda" className="flex flex-wrap items-center gap-1.5">
+    <nav aria-label={t('Qué se ve en la agenda', 'What the calendar shows')} className="flex flex-wrap items-center gap-1.5">
       {CLASES_FILTRABLES.map((clase) => {
         const oculta = ocultas.includes(clase)
         const siguiente = oculta ? ocultas.filter((c) => c !== clase) : [...ocultas, clase]
         return (
           <Link
-            aria-label={`${oculta ? 'Mostrar' : 'Ocultar'} ${EN_PLURAL[clase].toLowerCase()}`}
+            aria-label={`${oculta ? t('Mostrar', 'Show') : t('Ocultar', 'Hide')} ${EN_PLURAL[clase].toLowerCase()}`}
             className={`inline-flex items-center gap-2 rounded-[var(--radius-pill)] border px-3 py-1.5 text-[12px] transition-colors max-[859px]:min-h-11 ${
               oculta ? 'border-dashed border-line-panel-strong text-ink-mute line-through' : 'border-line-panel bg-white text-ink-soft hover:border-ink'
             }`}
@@ -104,7 +120,7 @@ export function FiltrosDeAgenda({ ocultas, enlace }: { ocultas: readonly ClaseDe
  * celular, puntos de color. Hoy lleva su círculo de tinta; el día del evento, el dorado; lo que ya pasó se
  * atenúa y lo atrasado va en vino.
  */
-export function MesDeAgenda({
+export async function MesDeAgenda({
   semanas,
   entradas,
   hoy,
@@ -117,12 +133,13 @@ export function MesDeAgenda({
   diaDelEvento: string
   enlaceDelDia: (dia: string) => string
 }) {
+  const [t, locale] = await Promise.all([tr(), idiomaDeLaPeticion()])
   const porDia = new Map<string, EntradaDeAgenda[]>()
   for (const e of entradas) porDia.set(e.dia, [...(porDia.get(e.dia) ?? []), e])
   return (
     <div className="overflow-hidden rounded-[14px] border border-line-panel">
       <div className="grid grid-cols-7 border-b border-line-panel bg-bg-top/60">
-        {DIAS.map((d) => (
+        {DIAS[locale].map((d) => (
           <span className="px-2 py-2 text-center text-[12px] font-medium tracking-[0.1em] text-ink-mute uppercase" key={d}>
             {d}
           </span>
@@ -137,7 +154,7 @@ export function MesDeAgenda({
             const esHoy = dia === hoy
             const esElEvento = dia === diaDelEvento
             const pasado = dia < hoy
-            const etiqueta = [diaCorto(dia), esHoy ? 'hoy' : null, esElEvento ? 'el día del evento' : null, delDia.length === 0 ? null : `${delDia.length} en la agenda`, atrasadas === 0 ? null : `${atrasadas} atrasada${atrasadas === 1 ? '' : 's'}`]
+            const etiqueta = [diaCorto(dia, locale), esHoy ? t('hoy', 'today') : null, esElEvento ? t('el día del evento', 'the day of the event') : null, delDia.length === 0 ? null : t(`${delDia.length} en la agenda`, `${delDia.length} on the calendar`), atrasadas === 0 ? null : t(`${atrasadas} atrasada${atrasadas === 1 ? '' : 's'}`, `${atrasadas} overdue`)]
               .filter(Boolean)
               .join(', ')
             return (
@@ -171,10 +188,10 @@ export function MesDeAgenda({
                       key={`${e.clase}-${e.id}`}
                     >
                       {e.hora === null ? '' : `${e.hora} `}
-                      {e.titulo}
+                      {traducir(e.titulo, t)}
                     </span>
                   ))}
-                  {delDia.length > 3 ? <span className="px-1 text-[10.5px] font-medium text-ink-soft group-hover:text-ink">+{delDia.length - 3} más</span> : null}
+                  {delDia.length > 3 ? <span className="px-1 text-[10.5px] font-medium text-ink-soft group-hover:text-ink">+{delDia.length - 3} {t('más', 'more')}</span> : null}
                 </span>
               </Link>
             )
@@ -183,17 +200,17 @@ export function MesDeAgenda({
       ))}
       {/* En el celular el mes son puntos de color: sin leyenda no dicen nada (13 oct). Solo las clases que hay. */}
       {entradas.length === 0 ? null : (
-        <ul aria-label="Qué es cada color" className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1.5 border-t border-line-panel bg-bg-top/40 px-3 py-2.5 text-[12.5px] text-ink-soft min-[700px]:hidden">
+        <ul aria-label={t('Qué es cada color', 'What each color means')} className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1.5 border-t border-line-panel bg-bg-top/40 px-3 py-2.5 text-[12.5px] text-ink-soft min-[700px]:hidden">
           {[...new Set(entradas.map((e) => e.clase))].map((clase) => (
             <li className="flex items-center gap-1.5" key={clase}>
               <span aria-hidden className={`size-2 rounded-full ${punto(clase)}`} />
-              {NOMBRE_DE_CLASE[clase]}
+              {traducir(NOMBRE_DE_CLASE[clase], t)}
             </li>
           ))}
           {entradas.some((e) => estaAtrasada(e, hoy)) ? (
             <li className="flex items-center gap-1.5">
               <span aria-hidden className="size-2 rounded-full bg-pill-no-ink" />
-              Atrasado
+              {t('Atrasado', 'Overdue')}
             </li>
           ) : null}
         </ul>
@@ -203,18 +220,19 @@ export function MesDeAgenda({
 }
 
 /** Una fila: hora, qué y su clase (o «Atrasado»), y a la derecha lo que se puede hacer sin salir de la agenda. */
-function Fila({ e, hoy, enlace, accion, vencio = false }: { e: EntradaDeAgenda; hoy: string; enlace: string; accion?: ReactNode; vencio?: boolean }) {
+async function Fila({ e, hoy, enlace, accion, vencio = false }: { e: EntradaDeAgenda; hoy: string; enlace: string; accion?: ReactNode; vencio?: boolean }) {
+  const [t, locale] = await Promise.all([tr(), idiomaDeLaPeticion()])
   const atrasada = estaAtrasada(e, hoy)
   const tono = atrasada ? ATRASADA : TONO[e.clase]
-  const nombre = atrasada ? 'Atrasado' : NOMBRE_DE_CLASE[e.clase]
+  const nombre = atrasada ? t('Atrasado', 'Overdue') : traducir(NOMBRE_DE_CLASE[e.clase], t)
   return (
     <li className="flex items-center gap-2 rounded-[12px] border border-line-panel bg-white transition-colors hover:border-line-panel-strong">
       <Link className="flex min-h-11 min-w-0 flex-1 items-start gap-3 px-3 py-2.5" href={enlace}>
         <span className="w-11 shrink-0 pt-0.5 text-[12px] text-ink-soft tabular-nums max-[559px]:w-9">{e.hora ?? '—'}</span>
         <span className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className={`text-[13.5px] leading-snug text-ink ${e.hecha ? 'line-through opacity-60' : ''}`}>{e.titulo}</span>
+          <span className={`text-[13.5px] leading-snug text-ink ${e.hecha ? 'line-through opacity-60' : ''}`}>{traducir(e.titulo, t)}</span>
           {vencio || e.detalle ? (
-            <span className="truncate text-[12px] text-ink-mute">{[vencio ? `venció el ${diaCorto(e.dia)}` : null, e.detalle].filter(Boolean).join(' · ')}</span>
+            <span className="truncate text-[12px] text-ink-mute">{[vencio ? t(`venció el ${diaCorto(e.dia, locale)}`, `was due ${diaCorto(e.dia, locale)}`) : null, e.detalle === null || e.detalle === undefined ? null : traducir(e.detalle, t)].filter(Boolean).join(' · ')}</span>
           ) : null}
           {/* Celular: el tipo bajo el título, para que el botón quepa a la derecha. */}
           <span className={`w-fit rounded-full px-2 py-0.5 text-[10.5px] min-[560px]:hidden ${tono}`}>{nombre}</span>
@@ -227,7 +245,7 @@ function Fila({ e, hoy, enlace, accion, vencio = false }: { e: EntradaDeAgenda; 
 }
 
 /** Una lista de entradas, agrupada por día («Hoy», «Mañana»…). Cada una lleva a donde se edita. */
-export function ListaDeAgenda({
+export async function ListaDeAgenda({
   entradas,
   enlace,
   vacio,
@@ -242,6 +260,7 @@ export function ListaDeAgenda({
   accion?: (e: EntradaDeAgenda) => ReactNode
   agrupar?: boolean
 }) {
+  const [t, locale] = await Promise.all([tr(), idiomaDeLaPeticion()])
   if (entradas.length === 0) return <EmptyState action={vacio.accion} compact description={vacio.texto} icon={<CalendarIcon />} title={vacio.titulo} />
   const filas = (lista: readonly EntradaDeAgenda[]) => (
     <ul className="flex flex-col gap-1.5">
@@ -256,7 +275,7 @@ export function ListaDeAgenda({
     <ol className="flex flex-col gap-4">
       {dias.map((dia) => (
         <li className="flex flex-col gap-1.5" key={dia}>
-          <p className={`text-[11px] font-medium tracking-[0.1em] uppercase ${dia === hoy ? 'text-ink' : 'text-ink-mute'}`}>{rotuloDelDia(dia, hoy)}</p>
+          <p className={`text-[11px] font-medium tracking-[0.1em] uppercase ${dia === hoy ? 'text-ink' : 'text-ink-mute'}`}>{rotuloDelDia(dia, hoy, t, locale)}</p>
           {filas(entradas.filter((e) => e.dia === dia))}
         </li>
       ))}

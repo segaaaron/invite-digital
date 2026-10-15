@@ -3,6 +3,8 @@
 import { hora as horaBolivia } from '@/shared/format/fecha'
 import { MAX_EXTRA_ARRIVALS } from '../domain/arrival'
 import type { ScanGroupView, ScanOutcome } from '../application/check-in-by-scan'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 /**
  * Lo que la puerta lee en voz alta.
@@ -12,13 +14,13 @@ import type { ScanGroupView, ScanOutcome } from '../application/check-in-by-scan
  * escribió el atelier. Sin personas cargadas cae a la etiqueta, que es el estado de todos
  * los eventos anteriores a `guest_people`.
  */
-function titular(group: ScanGroupView): string {
+function titular(group: ScanGroupView, t: T): string {
   if (group.leadName === null) return group.label
   // Con personas, la lista de abajo dice quién es quién: el titular es solo quien encabeza.
   if (group.people.length > 0) return group.leadName
   const acompanantes = Math.max(0, group.seats - 1)
   if (acompanantes === 0) return group.leadName
-  return `${group.leadName} y ${acompanantes} acompañante${acompanantes === 1 ? '' : 's'}`
+  return t(`${group.leadName} y ${acompanantes} acompañante${acompanantes === 1 ? '' : 's'}`, `${group.leadName} and ${acompanantes} companion${acompanantes === 1 ? '' : 's'}`)
 }
 
 type Props = {
@@ -44,6 +46,7 @@ const hora = horaBolivia
  * entrada escribe `transform` y le comería el centrado.
  */
 export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) {
+  const t = useT()
   // Con personas cargadas, la puerta cuenta nombres, no un número: la lista sustituye al contador.
   const conPersonas = outcome.kind !== 'unknown' && outcome.group.people.length > 0
   const todosDentro =
@@ -56,29 +59,29 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
     >
       {outcome.kind === 'unknown' ? (
         <>
-          <p className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] opacity-85">✕ Pase no válido</p>
-          <p className="mt-2 font-display text-[30px] italic leading-tight">Este código no es de tu evento</p>
-          <p className="mt-1.5 text-[13px] opacity-80">Puede ser el pase de otra fiesta, o un QR cualquiera.</p>
+          <p className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] opacity-85">{t('✕ Pase no válido', '✕ Invalid pass')}</p>
+          <p className="mt-2 font-display text-[30px] italic leading-tight">{t('Este código no es de tu evento', 'This code isn’t from your event')}</p>
+          <p className="mt-1.5 text-[13px] opacity-80">{t('Puede ser el pase de otra fiesta, o un QR cualquiera.', 'It may be another party’s pass, or just any QR.')}</p>
         </>
       ) : (
         <>
           <p className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] opacity-85">
             {outcome.kind === 'welcome'
-              ? '✓ Bienvenidos'
+              ? t('✓ Bienvenidos', '✓ Welcome')
               : conPersonas && todosDentro
-                ? '! Ya entraron todos'
-                : '! Ya había ingresado'}
+                ? t('! Ya entraron todos', '! Everyone is already in')
+                : t('! Ya había ingresado', '! Already checked in')}
           </p>
-          <p className="mt-2 font-display text-[30px] italic leading-tight">{titular(outcome.group)}</p>
+          <p className="mt-2 font-display text-[30px] italic leading-tight">{titular(outcome.group, t)}</p>
           {conPersonas ? (
             // Quién entró y quién falta, con su hora. Cuando llega el que faltaba con el mismo
             // QR, la puerta ve aquí que su pareja ya está dentro.
-            <ul aria-label="Personas de la invitación" className="mt-3 flex flex-col gap-1.5">
+            <ul aria-label={t('Personas de la invitación', 'People on the invitation')} className="mt-3 flex flex-col gap-1.5">
               {outcome.group.people.map((persona) => {
                 const entro = outcome.personas[persona.id]
                 return (
                   <li className={`rounded-xl bg-black/15 px-3.5 py-2 text-[14px] ${entro === undefined ? 'opacity-75' : ''}`} key={persona.id}>
-                    {`${persona.fullName} · ${entro === undefined ? 'Por llegar' : `Entró ${hora(entro)}`}`}
+                    {`${persona.fullName} · ${entro === undefined ? t('Por llegar', 'Expected') : t(`Entró ${hora(entro)}`, `In at ${hora(entro)}`)}`}
                   </li>
                 )
               })}
@@ -86,17 +89,17 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
           ) : null}
           <p className="mt-1.5 text-[13px] opacity-80" hidden={conPersonas}>
             {outcome.group.leadName === null ? '' : `${outcome.group.label} · `}
-            {outcome.group.seats} cupo{outcome.group.seats === 1 ? '' : 's'}
-            {outcome.kind === 'already' ? ` · ${outcome.arrivedCount} dentro desde las ${hora(outcome.arrivedAt)}` : ''}
+            {t(`${outcome.group.seats} cupo${outcome.group.seats === 1 ? '' : 's'}`, `${outcome.group.seats} seat${outcome.group.seats === 1 ? '' : 's'}`)}
+            {outcome.kind === 'already' ? t(` · ${outcome.arrivedCount} dentro desde las ${hora(outcome.arrivedAt)}`, ` · ${outcome.arrivedCount} inside since ${hora(outcome.arrivedAt)}`) : ''}
           </p>
 
           {/* El dato que el invitado pregunta nada más entrar. Va grande y solo: el
               personal lo lee de reojo y lo dice en voz alta. */}
           <p
-            aria-label="Mesa asignada"
+            aria-label={t('Mesa asignada', 'Assigned table')}
             className="mt-3 rounded-2xl bg-black/20 px-4 py-2.5 text-center font-display text-[24px] italic leading-tight"
           >
-            {outcome.group.tableLabel ?? 'Mesa por asignar'}
+            {outcome.group.tableLabel ?? t('Mesa por asignar', 'Table to be assigned')}
           </p>
 
           {/* El contador vive en los **dos** estados, y esa es la diferencia que pidió
@@ -108,12 +111,12 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
               la cantidad más reciente, así que un incremento se perdería al reconciliar. */}
           <div className="mt-4 flex items-center gap-3 text-[13px]" hidden={conPersonas}>
             <span className="opacity-80">
-              {outcome.kind === 'welcome' ? '¿Cuántos entraron?' : '¿Cuántos hay dentro ahora?'}
+              {outcome.kind === 'welcome' ? t('¿Cuántos entraron?', 'How many came in?') : t('¿Cuántos hay dentro ahora?', 'How many are inside now?')}
             </span>
             <div className="ml-auto flex items-center gap-2.5 rounded-full border border-white/15 bg-black/20 p-1">
               <button
                 type="button"
-                aria-label="Una persona menos"
+                aria-label={t('Una persona menos', 'One person less')}
                 disabled={outcome.arrivedCount <= 1}
                 onClick={() => onAdjust(outcome.scanId, outcome.arrivedCount - 1)}
                 className="size-[34px] rounded-full bg-white/15 text-[17px] disabled:opacity-30"
@@ -121,14 +124,14 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
                 −
               </button>
               <span
-                aria-label="Personas que entraron"
+                aria-label={t('Personas que entraron', 'People who came in')}
                 className="min-w-6 text-center font-mono text-[18px] font-semibold"
               >
                 {outcome.arrivedCount}
               </span>
               <button
                 type="button"
-                aria-label="Una persona más"
+                aria-label={t('Una persona más', 'One person more')}
                 disabled={outcome.arrivedCount >= outcome.group.seats + MAX_EXTRA_ARRIVALS}
                 onClick={() => onAdjust(outcome.scanId, outcome.arrivedCount + 1)}
                 className="size-[34px] rounded-full bg-white/15 text-[17px] disabled:opacity-30"
@@ -141,7 +144,7 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
           {/* Pasar de los cupos es el acompañante que aparece sin estar en la lista.
               Pasa en todas las bodas, y negarlo deja al catering contando mal. */}
           {!conPersonas && outcome.arrivedCount > outcome.group.seats ? (
-            <p className="mt-2 text-[12px] opacity-85">{outcome.arrivedCount - outcome.group.seats} sin invitación</p>
+            <p className="mt-2 text-[12px] opacity-85">{t(`${outcome.arrivedCount - outcome.group.seats} sin invitación`, `${outcome.arrivedCount - outcome.group.seats} without an invitation`)}</p>
           ) : null}
         </>
       )}
@@ -153,7 +156,7 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
             onClick={() => onUndo(outcome.scanId)}
             className="flex-1 rounded-full border border-white/30 bg-black/20 px-4 py-3.5 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)]"
           >
-            Deshacer
+            {t('Deshacer', 'Undo')}
           </button>
         ) : null}
         <button
@@ -161,7 +164,7 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
           onClick={onDismiss}
           className="flex-1 rounded-full bg-white px-4 py-3.5 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
         >
-          {outcome.kind === 'welcome' ? 'Siguiente invitado' : 'Cerrar'}
+          {outcome.kind === 'welcome' ? t('Siguiente invitado', 'Next guest') : t('Cerrar', 'Close')}
         </button>
       </div>
     </div>

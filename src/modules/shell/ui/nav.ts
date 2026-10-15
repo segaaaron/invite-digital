@@ -1,3 +1,4 @@
+import { traductor, type T } from '@/shared/i18n/t'
 import type { NavIcon } from './nav-icons'
 
 export type NavItem = {
@@ -88,9 +89,12 @@ export type NavExtra = {
    * ni corte de honor—, y la pantalla responde 404: enseñar el enlace sería llevar ahí.
    */
   readonly cortejo?: boolean
+  /** El idioma de la barra (el del aparato); sin él, español. */
+  readonly t?: T
 }
 
 function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPuerta: boolean, esCliente: boolean, extra: NavExtra): Borrador[] {
+  const t = extra.t ?? traductor('es')
   const equipo = extra.equipo ?? 'anfitrion'
   const mesa = extra.mesaPlanner ? '/panel/planner' : null
   const base = slug === null ? null : `/panel/eventos/${slug}`
@@ -102,39 +106,39 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   // vive en la tarjeta de quien entró, abajo de la barra.
   const administracion: Borrador[] = esAdmin
     ? [
-        { label: 'Principal', items: [{ href: '/panel/admin', label: 'Hoy', icon: 'hoy' }] },
+        { label: t('Principal', 'Main'), items: [{ href: '/panel/admin', label: t('Hoy', 'Today'), icon: 'hoy' }] },
         {
-          label: 'Vender',
+          label: t('Vender', 'Sell'),
           items: [
             // La consulta y su pedido son la misma venta, de la primera pregunta al evento creado.
             {
               href: '/panel/admin/ventas',
-              label: 'Ventas',
+              label: t('Ventas', 'Sales'),
               icon: 'pedidos',
               count: (counts.consultas ?? 0) + (counts.pedidos ?? 0) || null,
-              countLabel: 'por atender',
+              countLabel: t('por atender', 'to handle'),
               activo: ['/panel/admin/ventas', '/panel/admin/consultas', '/panel/pedidos'],
             },
             // La persona entera: sus consultas, pedidos, eventos, acceso y notas.
-            { href: '/panel/admin/clientes', label: 'Clientes', icon: 'usuarios', activo: ['/panel/admin/clientes'] },
-            { href: '/panel/admin/ingresos', label: 'Ingresos', icon: 'ingresos', activo: ['/panel/admin/ingresos'] },
+            { href: '/panel/admin/clientes', label: t('Clientes', 'Clients'), icon: 'usuarios', activo: ['/panel/admin/clientes'] },
+            { href: '/panel/admin/ingresos', label: t('Ingresos', 'Revenue'), icon: 'ingresos', activo: ['/panel/admin/ingresos'] },
           ],
         },
         {
-          label: 'Organizar',
+          label: t('Organizar', 'Organize'),
           items: [
             // La cartera y su calendario: qué evento está en riesgo y qué fin de semana queda libre.
-            { href: '/panel/admin/eventos', label: 'Eventos', icon: 'todosLosEventos', activo: ['/panel/admin/eventos', '/panel/eventos'] },
+            { href: '/panel/admin/eventos', label: t('Eventos', 'Events'), icon: 'todosLosEventos', activo: ['/panel/admin/eventos', '/panel/eventos'] },
             // Lo que vende la web: modelos, planes y extras.
-            { href: '/panel/admin/modelos', label: 'Catálogo', icon: 'catalogo', activo: ['/panel/admin/modelos', '/panel/admin/planes', '/panel/admin/extras'] },
+            { href: '/panel/admin/modelos', label: t('Catálogo', 'Catalog'), icon: 'catalogo', activo: ['/panel/admin/modelos', '/panel/admin/planes', '/panel/admin/extras'] },
           ],
         },
         {
-          label: 'Configurar',
+          label: t('Configurar', 'Configure'),
           items: [
             {
               href: '/panel/admin/fallos',
-              label: 'Ajustes',
+              label: t('Ajustes', 'Settings'),
               icon: 'configuracion',
               activo: ['/panel/admin/ajustes', '/panel/admin/fallos', '/panel/admin/usuarios', '/panel/admin/pagos', '/panel/admin/asistente', '/panel/admin/web', '/panel/admin/mensajes', '/panel/admin/auditoria'],
             },
@@ -149,9 +153,9 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   if (esPuerta) {
     return [
       {
-        label: 'Puerta',
+        label: t('Puerta', 'Door'),
         items: [
-          { href: en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
+          { href: en('/checkin'), label: t('Ingreso al evento', 'Event check-in'), icon: 'checkin', count: counts.llegadas ?? null, countLabel: t('dentro', 'inside') },
         ],
       },
     ]
@@ -167,47 +171,47 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
     // barra superior, a un toque desde cualquier pantalla.
     return [
       {
-        label: 'Mi evento',
+        label: t('Mi evento', 'My event'),
         items: [
-          { href: base, label: 'Resumen', icon: 'resumen' },
-          { href: en('/configuracion'), label: 'Mi invitación', icon: 'editar' },
-          { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'personas' },
-          { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
-          { href: en('/regalos'), label: 'Regalos', icon: 'regalos' },
-          { href: en('/mensajes'), label: 'Libro de firmas', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin agradecer' },
+          { href: base, label: t('Resumen', 'Overview'), icon: 'resumen' },
+          { href: en('/configuracion'), label: t('Mi invitación', 'My invitation'), icon: 'editar' },
+          { href: en('/invitados'), label: t('Invitados', 'Guests'), icon: 'invitados', count: counts.invitados ?? null, countLabel: t('personas', 'people') },
+          { href: en('/mesas'), label: t('Mesas', 'Tables'), icon: 'mesas' },
+          { href: en('/regalos'), label: t('Regalos', 'Gifts'), icon: 'regalos' },
+          { href: en('/mensajes'), label: t('Libro de firmas', 'Guestbook'), icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: t('sin agradecer', 'not thanked') },
         ],
       },
       {
-        label: 'Organizar',
+        label: t('Organizar', 'Organize'),
         items: [
-          { href: en('/planner/tareas'), label: 'Tareas', icon: 'tareas' },
-          { href: en('/planner/presupuesto'), label: 'Presupuesto', icon: 'presupuesto' },
+          { href: en('/planner/tareas'), label: t('Tareas', 'Tasks'), icon: 'tareas' },
+          { href: en('/planner/presupuesto'), label: t('Presupuesto', 'Budget'), icon: 'presupuesto' },
           // Proveedores y cronograma los llevan el anfitrión y su planner; el cortejo, todos.
-          { href: equipo === 'coanfitrion' ? null : en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
-          { href: equipo === 'coanfitrion' ? null : en('/planner/cronograma'), label: 'Cronograma', icon: 'cronograma' },
-          { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
-          { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
+          { href: equipo === 'coanfitrion' ? null : en('/planner/proveedores'), label: t('Proveedores', 'Vendors'), icon: 'proveedores' },
+          { href: equipo === 'coanfitrion' ? null : en('/planner/cronograma'), label: t('Cronograma', 'Schedule'), icon: 'cronograma' },
+          { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: t('Cortejo', 'Wedding party'), icon: 'cortejo' },
+          { href: en('/planner/documentos'), label: t('Documentos', 'Documents'), icon: 'documentos' },
           // La agenda del atelier no está en la maqueta; se queda al final de Organizar para no perderla.
-          { href: equipo === 'coanfitrion' ? null : en('/planner/agenda'), label: 'Agenda', icon: 'agenda' },
+          { href: equipo === 'coanfitrion' ? null : en('/planner/agenda'), label: t('Agenda', 'Calendar'), icon: 'agenda' },
         ],
       },
       {
-        label: 'El gran día',
+        label: t('El gran día', 'The big day'),
         items: [
-          { href: equipo === 'coanfitrion' ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
-          { href: equipo === 'coanfitrion' ? null : en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
+          { href: equipo === 'coanfitrion' ? null : en('/dia-d'), label: t('Día D', 'D-Day'), icon: 'diaD' },
+          { href: equipo === 'coanfitrion' ? null : en('/checkin'), label: t('Ingreso al evento', 'Event check-in'), icon: 'checkin', count: counts.llegadas ?? null, countLabel: t('dentro', 'inside') },
         ],
       },
       {
-        label: 'Ajustes',
+        label: t('Ajustes', 'Settings'),
         items: [
           // El anfitrión suma a su planner y a la recepción; el co-anfitrión no suma a nadie.
-          { href: equipo === 'coanfitrion' ? null : en('/equipo'), label: 'Equipo y recepción', icon: 'equipo' },
+          { href: equipo === 'coanfitrion' ? null : en('/equipo'), label: t('Equipo y recepción', 'Team and reception'), icon: 'equipo' },
           // Comprar es del anfitrión.
-          { href: equipo === 'anfitrion' ? en('/extras') : null, label: 'Extras', icon: 'extras' },
-          { href: en('/ajustes'), label: 'Configuración', icon: 'configuracion' },
-          { href: extra.misEventos ? '/panel' : null, label: 'Mis eventos', icon: 'eventos' },
-          { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
+          { href: equipo === 'anfitrion' ? en('/extras') : null, label: t('Extras', 'Extras'), icon: 'extras' },
+          { href: en('/ajustes'), label: t('Configuración', 'Settings'), icon: 'configuracion' },
+          { href: extra.misEventos ? '/panel' : null, label: t('Mis eventos', 'My events'), icon: 'eventos' },
+          { href: mesa, label: t('Mesa del planner', 'Planner desk'), icon: 'eventos' },
         ],
       },
     ]
@@ -220,12 +224,12 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   if (esAdmin && base !== null) {
     return [
       {
-        label: 'Este evento',
+        label: t('Este evento', 'This event'),
         items: [
           // El plan, el responsable y el acceso del cliente se cambian en la ficha: «Plan» es la
           // página donde un atelier *solicita* un cambio, y el admin no solicita, aplica.
-          { href: en('/configuracion'), label: 'Ficha del evento', icon: 'configuracion' },
-          { href: en('/vista-previa'), label: 'Ver invitación', icon: 'vistaPrevia' },
+          { href: en('/configuracion'), label: t('Ficha del evento', 'Event record'), icon: 'configuracion' },
+          { href: en('/vista-previa'), label: t('Ver invitación', 'View invitation'), icon: 'vistaPrevia' },
         ],
       },
     ]
@@ -233,63 +237,59 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
 
   return [
     {
-      label: 'Invitación',
+      label: t('Invitación', 'Invitation'),
       items: [
-        { href: en('/configuracion'), label: 'Editar invitación', icon: 'editar' },
-        { href: en('/vista-previa'), label: 'Ver invitación', icon: 'vistaPrevia' },
-        { href: en('/qr'), label: 'Códigos QR', icon: 'qr' },
+        { href: en('/configuracion'), label: t('Editar invitación', 'Edit invitation'), icon: 'editar' },
+        { href: en('/vista-previa'), label: t('Ver invitación', 'View invitation'), icon: 'vistaPrevia' },
+        { href: en('/qr'), label: t('Códigos QR', 'QR codes'), icon: 'qr' },
       ],
     },
     {
-      label: 'Evento activo',
+      label: t('Evento activo', 'Active event'),
       items: [
-        { href: base, label: 'Resumen', icon: 'resumen' },
-        { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'grupos' },
-        { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
-        { href: en('/regalos'), label: 'Regalos', icon: 'regalos' },
-        { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
-        { href: en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
-        { href: en('/equipo'), label: 'Equipo', icon: 'usuarios' },
+        { href: base, label: t('Resumen', 'Overview'), icon: 'resumen' },
+        { href: en('/invitados'), label: t('Invitados', 'Guests'), icon: 'invitados', count: counts.invitados ?? null, countLabel: t('grupos', 'groups') },
+        { href: en('/mesas'), label: t('Mesas', 'Tables'), icon: 'mesas' },
+        { href: en('/regalos'), label: t('Regalos', 'Gifts'), icon: 'regalos' },
+        { href: en('/mensajes'), label: t('Mensajes', 'Messages'), icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: t('sin leer', 'unread') },
+        { href: en('/checkin'), label: t('Ingreso al evento', 'Event check-in'), icon: 'checkin', count: counts.llegadas ?? null, countLabel: t('dentro', 'inside') },
+        { href: en('/equipo'), label: t('Equipo', 'Team'), icon: 'usuarios' },
       ],
     },
     {
-      label: 'Planner',
+      label: t('Planner', 'Planner'),
       items: [
-        { href: en('/planner/tareas'), label: 'Plan de tareas', icon: 'tareas' },
-        { href: en('/planner/agenda'), label: 'Agenda', icon: 'agenda' },
-        { href: en('/planner/presupuesto'), label: 'Presupuesto', icon: 'presupuesto' },
-        { href: en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
-        { href: en('/planner/cronograma'), label: 'Cronograma', icon: 'cronograma' },
-        { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
-        { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
-        { href: en('/dia-d'), label: 'Día D', icon: 'diaD' },
+        { href: en('/planner/tareas'), label: t('Plan de tareas', 'Task plan'), icon: 'tareas' },
+        { href: en('/planner/agenda'), label: t('Agenda', 'Calendar'), icon: 'agenda' },
+        { href: en('/planner/presupuesto'), label: t('Presupuesto', 'Budget'), icon: 'presupuesto' },
+        { href: en('/planner/proveedores'), label: t('Proveedores', 'Vendors'), icon: 'proveedores' },
+        { href: en('/planner/cronograma'), label: t('Cronograma', 'Schedule'), icon: 'cronograma' },
+        { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: t('Cortejo', 'Wedding party'), icon: 'cortejo' },
+        { href: en('/planner/documentos'), label: t('Documentos', 'Documents'), icon: 'documentos' },
+        { href: en('/dia-d'), label: t('Día D', 'D-Day'), icon: 'diaD' },
       ],
     },
     ...administracion,
     {
-      label: 'Cuenta',
+      label: t('Cuenta', 'Account'),
       items: [
         // «Configuración» ya es «Editar invitación», arriba: la misma pantalla dos veces.
-        { href: en('/plan'), label: 'Plan', icon: 'plan' },
-        { href: en('/extras'), label: 'Extras', icon: 'presupuesto' },
-        { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
+        { href: en('/plan'), label: t('Plan', 'Plan'), icon: 'plan' },
+        { href: en('/extras'), label: t('Extras', 'Extras'), icon: 'presupuesto' },
+        { href: mesa, label: t('Mesa del planner', 'Planner desk'), icon: 'eventos' },
         // «Mi cuenta» no va aquí: vive en el menú de la tarjeta del usuario, para todos.
         // El admin ya tiene «Todos los eventos» en su sección, con todos los ateliers.
-        { href: esAdmin ? null : '/panel', label: 'Todos los eventos', icon: 'eventos' },
+        { href: esAdmin ? null : '/panel', label: t('Todos los eventos', 'All events'), icon: 'eventos' },
         // La ayuda es para quien recibe su cuenta del admin; el admin es quien la escribe.
-        { href: esAdmin ? null : '/panel/ayuda', label: 'Ayuda', icon: 'ayuda' },
+        { href: esAdmin ? null : '/panel/ayuda', label: t('Ayuda', 'Help'), icon: 'ayuda' },
       ],
     },
   ]
 }
 
 /** Cómo se llama cada rol en la tarjeta de quien ha entrado. */
-export const ROTULO_DE_ROL: Record<'admin' | 'atelier' | 'cliente' | 'puerta', string> = {
-  admin: 'Administrador',
-  atelier: 'Atelier',
-  cliente: 'Cliente',
-  puerta: 'Personal de puerta',
-}
+export const rotuloDeRol = (rol: 'admin' | 'atelier' | 'cliente' | 'puerta', t: T): string =>
+  ({ admin: t('Administrador', 'Administrator'), atelier: 'Atelier', cliente: t('Cliente', 'Client'), puerta: t('Personal de puerta', 'Door staff') })[rol]
 
 /** La forma de la barra inferior del celular: qué destinos van a la vista y la acción central. */
 export type ConfigDeBarra = {
@@ -307,7 +307,7 @@ export type ConfigDeBarra = {
  * El admin dentro de un evento ve su ficha: Eventos (volver a la cartera) · Ficha · Invitación. La
  * puerta no lleva barra: su panel es una sola pantalla.
  */
-export function barraDelEvento(slug: string, sections: readonly NavSection[], quien: 'admin' | 'puerta' | 'equipo'): ConfigDeBarra | false {
+export function barraDelEvento(slug: string, sections: readonly NavSection[], quien: 'admin' | 'puerta' | 'equipo', t: T = traductor('es')): ConfigDeBarra | false {
   if (quien === 'puerta') return false
   const base = `/panel/eventos/${slug}`
   const todas = sections.flatMap((s) => s.items)
@@ -317,16 +317,16 @@ export function barraDelEvento(slug: string, sections: readonly NavSection[], qu
   if (quien === 'admin') {
     return {
       vista: [
-        { href: '/panel/admin/eventos', label: 'Eventos', icon: 'todosLosEventos' },
-        corto(de(`${base}/configuracion`), 'Ficha'),
-        corto(de(`${base}/vista-previa`), 'Invitación'),
+        { href: '/panel/admin/eventos', label: t('Eventos', 'Events'), icon: 'todosLosEventos' },
+        corto(de(`${base}/configuracion`), t('Ficha', 'Record')),
+        corto(de(`${base}/vista-previa`), t('Invitación', 'Invitation')),
       ].filter((item): item is NavItem => item !== null),
     }
   }
 
   const invitados = de(`${base}/invitados`)
-  const vista = [corto(de(base), 'Inicio'), invitados ?? null, corto(de(`${base}/checkin`), 'Ingreso') ?? de(`${base}/mesas`) ?? null].filter(
+  const vista = [corto(de(base), t('Inicio', 'Home')), invitados ?? null, corto(de(`${base}/checkin`), t('Ingreso', 'Check-in')) ?? de(`${base}/mesas`) ?? null].filter(
     (item): item is NavItem => item !== null,
   )
-  return invitados === undefined ? { vista } : { vista, centro: { href: `${base}/invitados?panel=envio`, label: 'Enviar', icon: 'enviar' } }
+  return invitados === undefined ? { vista } : { vista, centro: { href: `${base}/invitados?panel=envio`, label: t('Enviar', 'Send'), icon: 'enviar' } }
 }

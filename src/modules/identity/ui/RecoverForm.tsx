@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { confirmPasswordResetAction, requestPasswordResetAction, type ResetState } from '@/app/_acciones/identity/actions'
 import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: ResetState = { status: 'idle', message: '' }
 
@@ -28,6 +29,7 @@ const BOTON =
  * atelier.
  */
 export function RecoverForm() {
+  const t = useT()
   const [correo, setCorreo] = useState('')
   const [pedido, pedirCodigo, pidiendo] = useActionState<ResetState, FormData>(sinCaerse(requestPasswordResetAction), INICIAL)
   const [cambio, confirmar, confirmando] = useActionState<ResetState, FormData>(sinCaerse(confirmPasswordResetAction), INICIAL)
@@ -40,7 +42,7 @@ export function RecoverForm() {
       <div className="flex flex-col gap-4" role="status">
         <p className="text-[15px] text-ink">{cambio.message}</p>
         <Link className={`${BOTON} w-fit text-center`} href="/panel/entrar">
-          Entrar
+          {t('Entrar', 'Sign in')}
         </Link>
       </div>
     )
@@ -51,7 +53,7 @@ export function RecoverForm() {
       <form action={pedirCodigo} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
-            Tu correo
+            {t('Tu correo', 'Your email')}
           </label>
           <input
             autoComplete="username"
@@ -59,7 +61,7 @@ export function RecoverForm() {
             id={`${id}-correo`}
             name="email"
             onChange={(e) => setCorreo(e.target.value)}
-            placeholder="tucorreo@dominio.bo"
+            placeholder={t('tucorreo@dominio.bo', 'you@example.com')}
             required
             type="email"
             value={correo}
@@ -67,7 +69,7 @@ export function RecoverForm() {
         </div>
 
         <button className={BOTON} disabled={pidiendo} type="submit" aria-busy={(pidiendo) || undefined}>
-          {pidiendo ? 'Enviando…' : yaSePidio ? 'Enviar otro código' : 'Enviarme un código'}
+          {pidiendo ? t('Enviando…', 'Sending…') : yaSePidio ? t('Enviar otro código', 'Send another code') : t('Enviarme un código', 'Send me a code')}
         </button>
 
         {pedido.status !== 'idle' ? (
@@ -89,7 +91,7 @@ export function RecoverForm() {
 
           <div className="flex flex-col gap-2">
             <label className={LABEL_CLASS} htmlFor={`${id}-codigo`}>
-              Código del correo
+              {t('Código del correo', 'Code from the email')}
             </label>
             <input
               autoComplete="one-time-code"
@@ -105,7 +107,7 @@ export function RecoverForm() {
 
           <div className="flex flex-col gap-2">
             <label className={LABEL_CLASS} htmlFor={`${id}-nueva`}>
-              Contraseña nueva
+              {t('Contraseña nueva', 'New password')}
             </label>
             <CampoContrasena
               autoComplete="new-password"
@@ -118,11 +120,11 @@ export function RecoverForm() {
           </div>
 
           <p className="text-[11px] leading-[1.7] text-ink-mute">
-            Al menos 12 caracteres. El código caduca en diez minutos y sirve una sola vez.
+            {t('Al menos 12 caracteres. El código caduca en diez minutos y sirve una sola vez.', 'At least 12 characters. The code expires in ten minutes and works only once.')}
           </p>
 
           <button className={BOTON} disabled={confirmando} type="submit" aria-busy={(confirmando) || undefined}>
-            {confirmando ? 'Cambiando…' : 'Cambiar la contraseña'}
+            {confirmando ? t('Cambiando…', 'Changing…') : t('Cambiar la contraseña', 'Change the password')}
           </button>
 
           {cambio.status === 'error' ? (

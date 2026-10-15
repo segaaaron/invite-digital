@@ -36,18 +36,11 @@ describe('negociación de idioma en la raíz', () => {
     expect(response.headers.get('location')).toBe('https://ejemplo.bo/en')
   })
 
-  it('la cookie manda sobre la cabecera del navegador', () => {
+  it('sigue al aparato aunque quede una cookie vieja, y no deja ninguna', () => {
     const response = proxy(pedir('/', { acceptLanguage: 'en-US,en;q=0.9', cookie: 'es' }))
 
-    expect(response.headers.get('location')).toBe('https://ejemplo.bo/es')
-  })
-
-  it('recuerda la elección en una cookie de un año', () => {
-    const response = proxy(pedir('/', { acceptLanguage: 'es' }))
-    const cookie = response.cookies.get(LOCALE_COOKIE)
-
-    expect(cookie?.value).toBe('es')
-    expect(cookie?.maxAge).toBe(60 * 60 * 24 * 365)
+    expect(response.headers.get('location')).toBe('https://ejemplo.bo/en')
+    expect(response.cookies.get(LOCALE_COOKIE)).toBeUndefined()
   })
 })
 
@@ -145,6 +138,12 @@ describe('cada idioma con sus direcciones (14 oct)', () => {
     }
   })
 
+  it('la imagen al compartir se sirve en la dirección que Next escribe, sin mudarla', () => {
+    const r = proxy(pedir('/en/bodas/opengraph-image-1c05fg?abc'))
+    expect(r.headers.get('location')).toBeNull()
+    expect(r.headers.get('x-middleware-rewrite')).toBeNull()
+  })
+
   it('la música de los modelos y el español no se tocan', () => {
     expect(proxy(pedir('/modelos/musica/boda-bot')).headers.get('location')).toBeNull()
     expect(proxy(pedir('/es/bodas')).headers.get('location')).toBeNull()
@@ -152,6 +151,6 @@ describe('cada idioma con sus direcciones (14 oct)', () => {
   })
 
   it('la raíz avisa a las cachés de que depende del idioma', () => {
-    expect(proxy(pedir('/', { acceptLanguage: 'es' })).headers.get('Vary')).toBe('Accept-Language, Cookie')
+    expect(proxy(pedir('/', { acceptLanguage: 'es' })).headers.get('Vary')).toBe('Accept-Language')
   })
 })

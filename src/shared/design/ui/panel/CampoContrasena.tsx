@@ -3,6 +3,7 @@
 import { useState, type InputHTMLAttributes } from 'react'
 import { EyeIcon, EyeOffIcon } from '../icons'
 import { FIELD_CLASS } from './PanelKit'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * Todo campo de contraseña del sitio: **oculta por defecto** —se escribe delante de otros, a
@@ -19,12 +20,13 @@ export function CampoContrasena({
   envoltura = '',
   ...rest
 }: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { className?: string; envoltura?: string }) {
+  const t = useT()
   const [visible, setVisible] = useState(false)
   return (
     <div className={`relative ${envoltura}`.trim()}>
       <input {...rest} className={`${className} pr-12`} type={visible ? 'text' : 'password'} />
       <button
-        aria-label={visible ? 'Ocultar' : 'Mostrar'}
+        aria-label={visible ? t('Ocultar', 'Hide') : t('Mostrar', 'Show')}
         aria-pressed={visible}
         className="absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer rounded-[10px] p-2 text-ink-mute transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         onClick={() => setVisible((antes) => !antes)}

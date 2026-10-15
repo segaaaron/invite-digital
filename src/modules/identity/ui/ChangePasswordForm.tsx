@@ -6,6 +6,7 @@ import { changePasswordAction, type ChangePasswordState } from '@/app/_acciones/
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: ChangePasswordState = { status: 'idle', message: '' }
 
@@ -15,6 +16,7 @@ const INICIAL: ChangePasswordState = { status: 'idle', message: '' }
  * Al guardar entra directo al panel.
  */
 export function ChangePasswordForm() {
+  const t = useT()
   const [estado, accion, pendiente] = useActionState<ChangePasswordState, FormData>(sinCaerse(changePasswordAction), INICIAL)
   const id = useId()
 
@@ -22,7 +24,7 @@ export function ChangePasswordForm() {
     <form action={accion} className="flex max-w-[420px] flex-col gap-4">
       <div className="flex flex-col gap-2">
         <label className={LABEL_CLASS} htmlFor={`${id}-nueva`}>
-          Tu contraseña nueva
+          {t('Tu contraseña nueva', 'Your new password')}
         </label>
         <CampoContrasena
           autoComplete="new-password"
@@ -35,12 +37,12 @@ export function ChangePasswordForm() {
           required
         />
         <p className="text-[12px] leading-[1.5] text-ink-mute" id={`${id}-requisito`}>
-          Al menos 12 caracteres. Toca el ojo para ver lo que escribes.
+          {t('Al menos 12 caracteres. Toca el ojo para ver lo que escribes.', 'At least 12 characters. Tap the eye to see what you type.')}
         </p>
       </div>
 
-      <SubmitButton className="w-full" variant="primary" pending={pendiente} pendingLabel={'Guardando…'}>
-        Guardar y entrar
+      <SubmitButton className="w-full" variant="primary" pending={pendiente} pendingLabel={t('Guardando…', 'Saving…')}>
+        {t('Guardar y entrar', 'Save and sign in')}
       </SubmitButton>
 
       {estado.status === 'error' ? (

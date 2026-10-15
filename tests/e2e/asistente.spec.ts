@@ -645,8 +645,12 @@ test('«Oye Siri, Luxury»: la llave de Mi cuenta solo vale en la ruta de Siri, 
   const llave = await page.getByLabel('Tu llave de Siri').inputValue()
   expect(llave).toMatch(/^[A-Za-z0-9_-]{20,}$/)
 
-  // Sin cookie, como el Atajo de Apple.
-  const siri = await playwright.request.newContext({ baseURL: test.info().project.use.baseURL ?? 'http://localhost:3100', storageState: { cookies: [], origins: [] } })
+  // Sin cookie, como el Atajo de Apple, y con el idioma del iPhone (sin idioma, Luxury contesta en inglés).
+  const siri = await playwright.request.newContext({
+    baseURL: test.info().project.use.baseURL ?? 'http://localhost:3100',
+    extraHTTPHeaders: { 'accept-language': 'es-BO,es;q=0.9' },
+    storageState: { cookies: [], origins: [] },
+  })
   const pregunta = (clave: string) => siri.post('/panel/luxury/siri', { headers: { authorization: `Bearer ${clave}` }, data: { texto: '¿Quién falta por responder?' } })
   const bien = await pregunta(llave)
   expect(bien.headers()['content-type']).toContain('text/plain')

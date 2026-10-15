@@ -19,7 +19,8 @@ test('redirige a español según la cabecera del navegador', async ({ browser })
 })
 
 test('cae a inglés con un idioma no soportado', async ({ browser }) => {
-  const context = await browser.newContext({ extraHTTPHeaders: { 'Accept-Language': 'de-DE,de;q=0.9' } })
+  // El idioma del aparato, también el de `locale`: el proyecto pone es-BO por defecto a todo contexto.
+  const context = await browser.newContext({ locale: 'de-DE', extraHTTPHeaders: { 'Accept-Language': 'de-DE,de;q=0.9' } })
   const page = await context.newPage()
   await page.goto('/')
   await expect(page).toHaveURL(/\/en$/)

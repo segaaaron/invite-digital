@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { traducir } from '@/shared/i18n/en-ingles'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 import { contactarVentaAction, reabrirVentaAction, recordarPagoAction } from '@/app/_acciones/admin/ventas-actions'
 import { OrderDecision } from '@/modules/orders'
 import { etiquetaDeMotivo } from '@/modules/leads'
@@ -19,7 +21,7 @@ export type ComprobanteDeVenta = { readonly id: string; readonly originalName: s
  *
  * Los enlaces ya vienen armados del servidor (`enlaces`), con el mensaje de la plantilla dentro.
  */
-export function FichaDeVenta({
+export async function FichaDeVenta({
   venta: v,
   comprobantes,
   enlaces,
@@ -40,6 +42,8 @@ export function FichaDeVenta({
   diseno: string | null
   ahora: Date
 }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   const p = v.pedido
   const c = v.consulta
   const moneda = (cents: number) => formatAmount(cents, 'BOB')
@@ -65,10 +69,13 @@ export function FichaDeVenta({
             </span>
             <div className="min-w-0">
               <p className="font-semibold">
-                Subió su comprobante {comprobantes[0] === undefined ? '' : hace(comprobantes[comprobantes.length - 1]!.uploadedAt, ahora)}
+                {t('Subió su comprobante', 'Uploaded their receipt')} {comprobantes[0] === undefined ? '' : hace(comprobantes[comprobantes.length - 1]!.uploadedAt, ahora, locale)}
               </p>
               <p className="mt-1 text-[14.5px] text-ink-soft">
-                Revisa que el monto{p.amountCents === null ? '' : ` (${moneda(p.depositCents ?? p.amountCents)})`} y el nombre coincidan con el pedido.
+                {t(
+                  `Revisa que el monto${p.amountCents === null ? '' : ` (${moneda(p.depositCents ?? p.amountCents)})`} y el nombre coincidan con el pedido.`,
+                  `Check that the amount${p.amountCents === null ? '' : ` (${moneda(p.depositCents ?? p.amountCents)})`} and the name match the order.`,
+                )}
               </p>
             </div>
           </div>
@@ -92,7 +99,7 @@ export function FichaDeVenta({
               rel="noopener noreferrer"
               target="_blank"
             >
-              <WhatsAppIcon className="size-[18px]" /> Escribir por WhatsApp
+              <WhatsAppIcon className="size-[18px]" /> {t('Escribir por WhatsApp', 'Write on WhatsApp')}
             </a>
           )}
         </div>
@@ -101,21 +108,21 @@ export function FichaDeVenta({
       {/* Lo que escribió y lo que pasó, plegado: la decisión va primero. */}
       <details className="group rounded-[12px] border border-line-panel">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 text-[14.5px] font-medium [&::-webkit-details-marker]:hidden">
-          Recorrido y datos
+          {t('Recorrido y datos', 'History and details')}
           <span aria-hidden className="text-ink-mute transition-transform group-open:rotate-180">⌄</span>
         </summary>
         <div className="flex flex-col gap-5 border-t border-line-panel px-4 py-4">
           <Recorrido venta={v} comprobantes={comprobantes} moneda={moneda} />
           <dl className="grid gap-4 min-[480px]:grid-cols-2">
-            <Dato etiqueta="Qué celebra">{c?.categoria ?? (v.fiesta === null ? '—' : { boda: 'Boda', xv: 'XV años', cumple: 'Cumpleaños' }[v.fiesta])}</Dato>
-            <Dato etiqueta="Fecha del evento">{v.fechaEvento === null ? '—' : diaDelEvento(v.fechaEvento)}</Dato>
-            <Dato etiqueta="Teléfono">{v.telefono ?? '—'}</Dato>
-            <Dato etiqueta="Correo">{v.correo ?? '—'}</Dato>
+            <Dato etiqueta={t('Qué celebra', 'Celebrating')}>{c?.categoria ? traducir(c.categoria, t) : v.fiesta === null ? '—' : { boda: t('Boda', 'Wedding'), xv: t('XV años', 'Quinceañera'), cumple: t('Cumpleaños', 'Birthday') }[v.fiesta]}</Dato>
+            <Dato etiqueta={t('Fecha del evento', 'Event date')}>{v.fechaEvento === null ? '—' : diaDelEvento(v.fechaEvento, locale)}</Dato>
+            <Dato etiqueta={t('Teléfono', 'Phone')}>{v.telefono ?? '—'}</Dato>
+            <Dato etiqueta={t('Correo', 'Email')}>{v.correo ?? '—'}</Dato>
             {p === null ? null : <Dato etiqueta={p.esExtra ? 'Extra' : 'Plan'}>{p.producto}</Dato>}
-            {p === null || p.esExtra ? null : <Dato etiqueta="Diseño">{diseno ?? 'Lo elige después'}</Dato>}
-            {c === null ? null : <Dato etiqueta="Llegó por">{origenDe(c.utm)}</Dato>}
-            {p === null ? null : <Dato etiqueta="Referencia">{p.publicRef}</Dato>}
-            {p?.depositCents === null || p === null ? null : <Dato etiqueta="Anticipo">{moneda(p.depositCents)}</Dato>}
+            {p === null || p.esExtra ? null : <Dato etiqueta={t('Diseño', 'Design')}>{diseno ?? t('Lo elige después', 'They choose later')}</Dato>}
+            {c === null ? null : <Dato etiqueta={t('Llegó por', 'Came via')}>{traducir(origenDe(c.utm), t)}</Dato>}
+            {p === null ? null : <Dato etiqueta={t('Referencia', 'Reference')}>{p.publicRef}</Dato>}
+            {p?.depositCents === null || p === null ? null : <Dato etiqueta={t('Anticipo', 'Deposit')}>{moneda(p.depositCents)}</Dato>}
           </dl>
           {c?.message ? <p className="rounded-[10px] bg-bg px-4 py-3 text-[14px] leading-relaxed text-ink">«{c.message}»</p> : null}
           {c?.note ? <p className="text-[13px] text-ink-mute">Nota: {c.note}</p> : null}
@@ -133,30 +140,30 @@ export function FichaDeVenta({
           <MenuDeAcciones>
             {enlaces.correo === null ? null : (
               <a className={opcionDeMenu()} href={enlaces.correo}>
-                <MailIcon className="size-4" /> Enviar un correo
+                <MailIcon className="size-4" /> {t('Enviar un correo', 'Send an email')}
               </a>
             )}
             {enlaces.pedido === null ? null : (
               <>
-                <Copiar texto={enlaces.pedido}>Copiar el enlace de pago</Copiar>
+                <Copiar texto={enlaces.pedido}>{t('Copiar el enlace de pago', 'Copy the payment link')}</Copiar>
                 <a className={opcionDeMenu()} href={enlaces.pedido} rel="noopener noreferrer" target="_blank">
-                  Ver la página del pedido
+                  {t('Ver la página del pedido', 'See the order page')}
                 </a>
               </>
             )}
             {v.etapa === 'nueva' || v.etapa === 'contactada' ? (
               <a className={opcionDeMenu()} href={enlaces.cotizar}>
-                Enviar una cotización
+                {t('Enviar una cotización', 'Send a quote')}
               </a>
             ) : null}
             {/* Cerró por fuera (efectivo, en persona): su evento se crea y la consulta queda ganada. */}
             {p === null && enlaces.crearEvento !== null ? (
               <a className={opcionDeMenu()} href={enlaces.crearEvento}>
-                <CheckIcon className="size-4" /> Ya cerró: crear su evento
+                <CheckIcon className="size-4" /> {t('Ya cerró: crear su evento', 'Already closed: create their event')}
               </a>
             ) : null}
             <a className={opcionDeMenu()} href={enlaces.cliente}>
-              Ver la ficha del cliente
+              {t('Ver la ficha del cliente', 'See the client’s record')}
             </a>
           </MenuDeAcciones>
           <span className="flex-1" />
@@ -168,7 +175,7 @@ export function FichaDeVenta({
 }
 
 /** El botón del siguiente paso, según la etapa. */
-function Principal({
+async function Principal({
   venta: v,
   paso,
   enlaces,
@@ -183,12 +190,13 @@ function Principal({
   saldo: number | null
   moneda: (cents: number) => string
 }) {
+  const t = await tr()
   const p = v.pedido
   const c = v.consulta
   switch (v.etapa) {
     case 'nueva': {
       const destino = enlaces.contactar ?? enlaces.correo
-      if (destino === null || c === null) return <Nota>Sin teléfono ni correo: no hay cómo contestarle.</Nota>
+      if (destino === null || c === null) return <Nota>{t('Sin teléfono ni correo: no hay cómo contestarle.', 'No phone or email: there is no way to reply.')}</Nota>
       return (
         <AbrirYAnotar accion={contactarVentaAction} campos={{ consultaId: c.id }} externo={enlaces.contactar !== null} href={destino}>
           {enlaces.contactar !== null ? <WhatsAppIcon className="size-4" /> : <MailIcon className="size-4" />} {paso}
@@ -207,10 +215,10 @@ function Principal({
           <WhatsAppIcon className="size-4" /> {paso}
         </AbrirYAnotar>
       ) : (
-        <Nota>El contacto es un correo: copia el enlace de pago desde «⋯».</Nota>
+        <Nota>{t('El contacto es un correo: copia el enlace de pago desde «⋯».', 'The contact is an email: copy the payment link from “⋯”.')}</Nota>
       )
     case 'por_revisar':
-      return <Nota>Revisa el comprobante de abajo y decide.</Nota>
+      return <Nota>{t('Revisa el comprobante de abajo y decide.', 'Review the receipt below and decide.')}</Nota>
     case 'por_crear_evento':
       return enlaces.crearEvento === null ? null : (
         <PanelButton href={enlaces.crearEvento} variant="primary">
@@ -221,7 +229,7 @@ function Principal({
       return p === null || saldo === null ? null : <RegistrarSaldo nombre={v.nombre} orderId={p.id} publicRef={p.publicRef} saldo={moneda(saldo)} />
     case 'cerrada':
       return slugDelEvento === null ? (
-        <Nota>Venta cerrada.</Nota>
+        <Nota>{t('Venta cerrada.', 'Sale closed.')}</Nota>
       ) : (
         <PanelButton href={`/panel/eventos/${slugDelEvento}/configuracion`} variant="primary">
           {paso}
@@ -237,7 +245,7 @@ function Principal({
         </form>
       )
     case 'cancelada':
-      return <Nota>Pedido cancelado{p?.producto ? ` · ${p.producto}` : ''}.</Nota>
+      return <Nota>{t(`Pedido cancelado${p?.producto ? ` · ${p.producto}` : ''}.`, `Order cancelled${p?.producto ? ` · ${p.producto}` : ''}.`)}</Nota>
   }
 }
 
@@ -246,20 +254,22 @@ function Nota({ children }: { children: ReactNode }) {
 }
 
 /** Los hitos de la venta, en orden, con su fecha. Lo que no pasó no sale. */
-function Recorrido({ venta: v, comprobantes, moneda }: { venta: Venta; comprobantes: readonly ComprobanteDeVenta[]; moneda: (cents: number) => string }) {
+async function Recorrido({ venta: v, comprobantes, moneda }: { venta: Venta; comprobantes: readonly ComprobanteDeVenta[]; moneda: (cents: number) => string }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   const c = v.consulta
   const p = v.pedido
   const hitos: { cuando: Date; texto: string; tono?: 'ok' | 'no' }[] = []
-  if (c !== null) hitos.push({ cuando: c.createdAt, texto: 'Escribió desde la web' })
-  if (c?.firstContactAt) hitos.push({ cuando: c.firstContactAt, texto: 'Le contestaste' })
-  if (p !== null) hitos.push({ cuando: p.createdAt, texto: p.origin === 'cotizacion' ? `Le enviaste la cotización · ${p.amountCents === null ? '' : moneda(p.amountCents)}` : `Pidió el plan ${p.producto}` })
-  if (p?.remindedAt) hitos.push({ cuando: p.remindedAt, texto: 'Le recordaste el pago' })
-  for (const k of comprobantes) hitos.push({ cuando: k.uploadedAt, texto: 'Subió un comprobante' })
-  if (p?.status === 'approved' && p.decidedAt) hitos.push({ cuando: p.decidedAt, texto: 'Aprobaste el pago', tono: 'ok' })
-  if (p?.balancePaidAt) hitos.push({ cuando: p.balancePaidAt, texto: 'Registraste el saldo', tono: 'ok' })
-  if (p?.status === 'cancelled' && p.decidedAt) hitos.push({ cuando: p.decidedAt, texto: 'Cancelaste el pedido', tono: 'no' })
-  if (c?.status === 'won' && c.statusChangedAt && p === null) hitos.push({ cuando: c.statusChangedAt, texto: 'Cerró la venta: evento creado', tono: 'ok' })
-  if (c?.status === 'lost' && c.statusChangedAt) hitos.push({ cuando: c.statusChangedAt, texto: `Perdida · ${etiquetaDeMotivo(c.lostReason) ?? 'sin motivo'}`, tono: 'no' })
+  if (c !== null) hitos.push({ cuando: c.createdAt, texto: t('Escribió desde la web', 'Wrote from the website') })
+  if (c?.firstContactAt) hitos.push({ cuando: c.firstContactAt, texto: t('Le contestaste', 'You replied') })
+  if (p !== null) hitos.push({ cuando: p.createdAt, texto: p.origin === 'cotizacion' ? t(`Le enviaste la cotización · ${p.amountCents === null ? '' : moneda(p.amountCents)}`, `You sent the quote · ${p.amountCents === null ? '' : moneda(p.amountCents)}`) : t(`Pidió el plan ${p.producto}`, `Ordered the ${p.producto} plan`) })
+  if (p?.remindedAt) hitos.push({ cuando: p.remindedAt, texto: t('Le recordaste el pago', 'You reminded them to pay') })
+  for (const k of comprobantes) hitos.push({ cuando: k.uploadedAt, texto: t('Subió un comprobante', 'Uploaded a receipt') })
+  if (p?.status === 'approved' && p.decidedAt) hitos.push({ cuando: p.decidedAt, texto: t('Aprobaste el pago', 'You approved the payment'), tono: 'ok' })
+  if (p?.balancePaidAt) hitos.push({ cuando: p.balancePaidAt, texto: t('Registraste el saldo', 'You recorded the balance'), tono: 'ok' })
+  if (p?.status === 'cancelled' && p.decidedAt) hitos.push({ cuando: p.decidedAt, texto: t('Cancelaste el pedido', 'You cancelled the order'), tono: 'no' })
+  if (c?.status === 'won' && c.statusChangedAt && p === null) hitos.push({ cuando: c.statusChangedAt, texto: t('Cerró la venta: evento creado', 'Sale closed: event created'), tono: 'ok' })
+  if (c?.status === 'lost' && c.statusChangedAt) hitos.push({ cuando: c.statusChangedAt, texto: `${t('Perdida', 'Lost')} · ${traducir(etiquetaDeMotivo(c.lostReason) ?? 'sin motivo', t)}`, tono: 'no' })
   hitos.sort((a, b) => a.cuando.getTime() - b.cuando.getTime())
 
   return (
@@ -271,13 +281,13 @@ function Recorrido({ venta: v, comprobantes, moneda }: { venta: Venta; comproban
             className={`absolute top-1.5 -left-5 size-[11px] rounded-full border-2 border-bg-raised ${h.tono === 'ok' ? 'bg-sage' : h.tono === 'no' ? 'bg-danger' : i === hitos.length - 1 ? 'bg-gold' : 'bg-ink-mute/60'}`}
           />
           <p className="text-[13.5px] text-ink">{h.texto}</p>
-          <p className="font-mono text-[10.5px] tracking-[0.08em] text-ink-mute">{fechaHora(h.cuando)}</p>
+          <p className="font-mono text-[10.5px] tracking-[0.08em] text-ink-mute">{fechaHora(h.cuando, locale)}</p>
         </li>
       ))}
       {v.etapa === 'por_crear_evento' ? (
         <li className="relative">
           <span aria-hidden className="absolute top-1.5 -left-5 size-[11px] rounded-full border-2 border-dashed border-gold bg-bg-raised" />
-          <p className="text-[13.5px] text-ink-soft">Falta crear su evento</p>
+          <p className="text-[13.5px] text-ink-soft">{t('Falta crear su evento', 'Their event is still to be created')}</p>
         </li>
       ) : null}
       {eventoDeVenta(v) !== null ? (
@@ -285,15 +295,17 @@ function Recorrido({ venta: v, comprobantes, moneda }: { venta: Venta; comproban
           <span aria-hidden className="absolute top-1.5 -left-5 flex size-[11px] items-center justify-center rounded-full bg-sage">
             <CheckIcon className="size-2 text-white" />
           </span>
-          <p className="text-[13.5px] text-ink">Evento creado</p>
+          <p className="text-[13.5px] text-ink">{t('Evento creado', 'Event created')}</p>
         </li>
       ) : null}
     </ol>
   )
 }
 
-function ListaDeComprobantes({ comprobantes }: { comprobantes: readonly ComprobanteDeVenta[] }) {
-  if (comprobantes.length === 0) return <p className="text-[12.5px] text-ink-mute">Sin comprobante adjunto.</p>
+async function ListaDeComprobantes({ comprobantes }: { comprobantes: readonly ComprobanteDeVenta[] }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
+  if (comprobantes.length === 0) return <p className="text-[12.5px] text-ink-mute">{t('Sin comprobante adjunto.', 'No receipt attached.')}</p>
   return (
     <ul className="flex flex-wrap gap-2">
       {comprobantes.map((k) => (
@@ -303,7 +315,7 @@ function ListaDeComprobantes({ comprobantes }: { comprobantes: readonly Comproba
             href={`/panel/pedidos/comprobante/${k.id}`}
           >
             {k.originalName}
-            <span className="font-mono text-[10.5px] text-ink-mute">{fechaHora(k.uploadedAt)}</span>
+            <span className="font-mono text-[10.5px] text-ink-mute">{fechaHora(k.uploadedAt, locale)}</span>
           </a>
         </li>
       ))}
@@ -311,7 +323,7 @@ function ListaDeComprobantes({ comprobantes }: { comprobantes: readonly Comproba
   )
 }
 
-function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
+async function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
       <dt className="text-[11px] font-medium tracking-[0.1em] text-ink-mute uppercase">{etiqueta}</dt>

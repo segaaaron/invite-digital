@@ -2,15 +2,19 @@ import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
 import { VistaPreviaDelPanel } from '@/modules/events/ui/VistaPreviaDelPanel'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
-import { themeFor } from '@/modules/events/ui/themes/registry'
+import { muestraDe, themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/app/_acciones/sesion'
 import { themeFonts } from '@/shared/design/fonts'
 import { EstiloDeLaInvitacion } from '@/modules/events/ui/EstiloDeLaInvitacion'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import '@/modules/events/ui/themes/kit/keyframes.css'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Vista previa' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Vista previa', 'Preview') }
+}
 
 // Lo que se enseña es el contenido de este evento, que cambia con cada bloque guardado.
 export const dynamic = 'force-dynamic'
@@ -49,7 +53,7 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
   // El mismo contenido y la misma caída que la página del invitado: sin fila sembrada, la
   // muestra del diseño. Si aquí se viera otra cosa, esta pantalla no serviría para nada.
   // Como en el editor: lo escrito, y el ejemplo del modelo en lo que todavía está en blanco.
-  const contenido = await events.contenidoParaVistaPrevia(event.value.id, definicion.defaultContent, event.value.eventDate)
+  const contenido = await events.contenidoParaVistaPrevia(event.value.id, muestraDe(definicion, event.value.locale), event.value.eventDate)
 
   const diccionario = getDictionary(event.value.locale)
   const variables = definicion.fonts.map((clave) => themeFonts[clave].variable).join(' ')

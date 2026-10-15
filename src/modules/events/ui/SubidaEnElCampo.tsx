@@ -7,6 +7,8 @@ import { botonClases } from '@/shared/design/ui/panel/PanelKit'
 import { type ContentActionState, uploadMediaAction } from '@/app/_acciones/events/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { reducirFoto } from '@/shared/design/ui/reducir-foto'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 /**
  * Lo pone la tarjeta de cada sección (`BloqueDeContenido`): pide guardarla. Una foto recién subida se guarda
@@ -18,14 +20,14 @@ export const GuardarLaSeccion = createContext<(() => void) | null>(null)
 /** Lo más que se sube (el mismo tope que el servidor). Una canción más grande no sale ni del teléfono. */
 const MAXIMO_DE_SUBIDA = 30 * 1024 * 1024
 
-const ERRORES: Record<string, string> = {
-  no_file: 'Elige un archivo antes de subirlo.',
-  too_large: 'Pesa demasiado: fotografías hasta 8 MB, canciones hasta 30 MB.',
-  unsupported_type: 'Ese archivo no vale. Fotografías en PNG, JPG, WEBP o AVIF; canciones en MP3, M4A o WAV.',
-  storage_failure: 'No se pudo guardar el archivo. Vuelve a intentarlo.',
-  network: 'No se pudo subir: se cortó la conexión o el servidor no respondió. Vuelve a intentarlo; si sigue, queda anotado para revisarlo.',
-  photo_limit: 'Ya subiste todas las fotos que incluye tu plan. Quita una para subir otra.',
-}
+const errores = (t: T): Record<string, string> => ({
+  no_file: t('Elige un archivo antes de subirlo.', 'Choose a file before uploading it.'),
+  too_large: t('Pesa demasiado: fotografías hasta 8 MB, canciones hasta 30 MB.', 'It’s too heavy: photos up to 8 MB, songs up to 30 MB.'),
+  unsupported_type: t('Ese archivo no vale. Fotografías en PNG, JPG, WEBP o AVIF; canciones en MP3, M4A o WAV.', 'That file won’t work. Photos in PNG, JPG, WEBP or AVIF; songs in MP3, M4A or WAV.'),
+  storage_failure: t('No se pudo guardar el archivo. Vuelve a intentarlo.', 'The file couldn’t be saved. Try again.'),
+  network: t('No se pudo subir: se cortó la conexión o el servidor no respondió. Vuelve a intentarlo; si sigue, queda anotado para revisarlo.', 'It couldn’t be uploaded: the connection dropped or the server didn’t respond. Try again; if it continues, it’s logged for review.'),
+  photo_limit: t('Ya subiste todas las fotos que incluye tu plan. Quita una para subir otra.', 'You’ve uploaded all the photos your plan includes. Remove one to upload another.'),
+})
 
 /**
  * Subir una fotografía o una canción **desde el campo que la pide**, y quedar elegida.
@@ -48,6 +50,7 @@ export function SubidaEnElCampo({
   tipo: 'imagen' | 'audio'
   onSubido: (mediaId: string) => void
 }) {
+  const t = useT()
   const [estado, setEstado] = useState<ContentActionState>({ status: 'idle' })
   const [subiendo, setSubiendo] = useState(false)
   const dialogo = useRef<HTMLDialogElement>(null)
@@ -92,12 +95,12 @@ export function SubidaEnElCampo({
   }
 
   const esImagen = tipo === 'imagen'
-  const error = estado.status === 'error' ? (ERRORES[estado.message] ?? ERRORES.storage_failure) : null
+  const error = estado.status === 'error' ? (errores(t)[estado.message] ?? errores(t).storage_failure) : null
 
   return (
     <>
       <button className={`${botonClases('default')} shrink-0`} onClick={() => dialogo.current?.showModal()} type="button">
-        {esImagen ? 'Subir una fotografía' : 'Subir la canción'}
+        {esImagen ? t('Subir una fotografía', 'Upload a photo') : t('Subir la canción', 'Upload the song')}
       </button>
 
       {!enElNavegador
@@ -107,11 +110,11 @@ export function SubidaEnElCampo({
               className="m-auto w-[min(440px,92vw)] rounded-[18px] border border-line-panel bg-bg-raised p-6 text-left text-ink shadow-float backdrop:bg-ink/45"
               ref={dialogo}
             >
-              <h2 className="font-display text-[21px] leading-tight">{esImagen ? 'Subir una fotografía' : 'Subir la canción'}</h2>
+              <h2 className="font-display text-[21px] leading-tight">{esImagen ? t('Subir una fotografía', 'Upload a photo') : t('Subir la canción', 'Upload the song')}</h2>
               <p className="mt-2 text-[13px] leading-[1.6] text-ink-soft">
                 {esImagen
-                  ? 'Se reduce y se le quitan los metadatos al subirla, para que la invitación cargue rápido. Queda elegida en este campo.'
-                  : 'Sube la canción entera: la convertimos en un MP3 ligero que suena en cualquier teléfono y se repite en bucle. Queda elegida aquí.'}
+                  ? t('Se reduce y se le quitan los metadatos al subirla, para que la invitación cargue rápido. Queda elegida en este campo.', 'It’s resized and its metadata removed when uploaded, so the invitation loads fast. It’s selected in this field.')
+                  : t('Sube la canción entera: la convertimos en un MP3 ligero que suena en cualquier teléfono y se repite en bucle. Queda elegida aquí.', 'Upload the whole song: we convert it into a light MP3 that plays on any phone and loops. It’s selected here.')}
               </p>
 
               <form
@@ -125,8 +128,8 @@ export function SubidaEnElCampo({
                 <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
                 <FilePicker
                   accept={esImagen ? 'image/png,image/jpeg,image/webp,image/avif' : 'audio/*,.mp3,.m4a,.wav,.aac,.ogg'}
-                  hint={esImagen ? 'PNG, JPG, WEBP o AVIF · la reducimos sola' : 'MP3, M4A o WAV · hasta 30 MB · la ajustamos sola'}
-                  label={esImagen ? 'Elegir fotografía' : 'Elegir canción'}
+                  hint={esImagen ? t('PNG, JPG, WEBP o AVIF · la reducimos sola', 'PNG, JPG, WEBP or AVIF · we resize it for you') : t('MP3, M4A o WAV · hasta 30 MB · la ajustamos sola', 'MP3, M4A or WAV · up to 30 MB · we adjust it for you')}
+                  label={esImagen ? t('Elegir fotografía', 'Choose photo') : t('Elegir canción', 'Choose song')}
                   name="file"
                 />
                 {error === null ? null : (
@@ -140,10 +143,10 @@ export function SubidaEnElCampo({
                     onClick={() => dialogo.current?.close()}
                     type="button"
                   >
-                    Cancelar
+                    {t('Cancelar', 'Cancel')}
                   </button>
-                  <SubmitButton pending={subiendo} pendingLabel="Subiendo…" variant="primary">
-                    Subir
+                  <SubmitButton pending={subiendo} pendingLabel={t('Subiendo…', 'Uploading…')} variant="primary">
+                    {t('Subir', 'Upload')}
                   </SubmitButton>
                 </div>
               </form>

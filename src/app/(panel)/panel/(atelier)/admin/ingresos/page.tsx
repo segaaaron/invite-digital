@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 import { admin, cargarVentas } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { analizarVentas } from '@/modules/admin/domain/analisis'
@@ -13,12 +14,18 @@ import { fechaHora } from '@/shared/format/fecha'
 import { plural } from '@/shared/format/plural'
 import { isErr } from '@/shared/result'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
+import { traducir } from '@/shared/i18n/en-ingles'
+import type { Locale } from '@/shared/i18n/locales'
+import { INTL } from '@/shared/i18n/t'
 
-export const metadata = { title: 'Ingresos · Administración' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Ingresos · Administración', 'Revenue · Administration') }
+}
 export const dynamic = 'force-dynamic'
 
-const MES = new Intl.DateTimeFormat('es-BO', { month: 'short', year: '2-digit', timeZone: 'UTC' })
-const MES_LARGO = new Intl.DateTimeFormat('es-BO', { month: 'long', timeZone: 'UTC' })
+const formatoMes = (locale: Locale) => new Intl.DateTimeFormat(INTL[locale], { month: 'short', year: '2-digit', timeZone: 'UTC' })
+const formatoMesLargo = (locale: Locale) => new Intl.DateTimeFormat(INTL[locale], { month: 'long', timeZone: 'UTC' })
 
 /** Las vistas de la maqueta (E15): cómo mirar el dinero. */
 const VISTAS = [
@@ -27,7 +34,7 @@ const VISTAS = [
   { key: 'fiesta', label: 'Por fiesta' },
   { key: 'temporadas', label: 'Temporadas' },
 ] as const
-const MES_CORTO = new Intl.DateTimeFormat('es-BO', { month: 'short', timeZone: 'UTC' })
+const formatoMesCorto = (locale: Locale) => new Intl.DateTimeFormat(INTL[locale], { month: 'short', timeZone: 'UTC' })
 
 /** Todo se vende en BOB hoy. Si un día hay dos monedas, sumarlas sería mentir: se separan. */
 const bs = (cents: number) => formatAmount(cents, 'BOB')
@@ -39,6 +46,8 @@ const bs = (cents: number) => formatAmount(cents, 'BOB')
  * pierde y de dónde llega quien compra. Y el CSV para la contadora.
  */
 export default async function AdminIngresosPage({ searchParams }: { searchParams: Promise<{ vista?: string }> }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   await requireAdmin()
   const { vista: pedida } = await searchParams
   const vista = VISTAS.find((v) => v.key === pedida)?.key ?? 'cobro'
@@ -49,10 +58,10 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
   if (isErr(ingresos) || isErr(ventas)) {
     return (
       <>
-        <PanelHeader kicker="Ventas" title="Ingresos" />
+        <PanelHeader kicker={t('Ventas', 'Sales')} title={t('Ingresos', 'Revenue')} />
         <PanelCard>
           <p className="text-[13px] text-danger" role="alert">
-            No pudimos leer los ingresos. La base no responde; vuelve a intentarlo en un momento.
+            {t('No pudimos leer los ingresos. La base no responde; vuelve a intentarlo en un momento.', 'We could not read the revenue. The database is not responding; try again in a moment.')}
           </p>
         </PanelCard>
       </>
@@ -76,20 +85,20 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
         actions={
           // Un `<a>` normal y no `next/link`: es una descarga de un route handler, no una página.
           <a className={botonClases()} download href="/panel/admin/ingresos/csv">
-            Descargar CSV
+            {t('Descargar CSV', 'Download CSV')}
           </a>
         }
-        meta="Lo cobrado: pedidos aprobados tras ver el comprobante."
-        title="Ingresos"
+        meta={t('Lo cobrado: pedidos aprobados tras ver el comprobante.', 'What was collected: orders approved after seeing the receipt.')}
+        title={t('Ingresos', 'Revenue')}
       />
 
       {i.sinImporte > 0 ? (
         <div className="mb-4.5">
-          <PanelAlert tone="error">{plural(i.sinImporte, 'pedido aprobado sin importe (sin plan) no suma aquí.', 'pedidos aprobados sin importe (sin plan) no suman aquí.')}</PanelAlert>
+          <PanelAlert tone="error">{plural(i.sinImporte, t('pedido aprobado sin importe (sin plan) no suma aquí.', 'approved order without an amount (no plan) does not add up here.'), t('pedidos aprobados sin importe (sin plan) no suman aquí.', 'approved orders without an amount (no plan) do not add up here.'))}</PanelAlert>
         </div>
       ) : null}
 
-      <nav aria-label="Cómo mirarlo" className="mb-7 flex flex-wrap gap-2.5 max-[767px]:-mx-4 max-[767px]:mb-5 max-[767px]:flex-nowrap max-[767px]:overflow-x-auto max-[767px]:px-4 max-[767px]:[scrollbar-width:none] max-[767px]:*:shrink-0">
+      <nav aria-label={t('Cómo mirarlo', 'How to look at it')} className="mb-7 flex flex-wrap gap-2.5 max-[767px]:-mx-4 max-[767px]:mb-5 max-[767px]:flex-nowrap max-[767px]:overflow-x-auto max-[767px]:px-4 max-[767px]:[scrollbar-width:none] max-[767px]:*:shrink-0">
         {VISTAS.map((v) => (
           <Link
             aria-current={vista === v.key ? 'page' : undefined}
@@ -97,7 +106,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
             href={v.key === 'cobro' ? '/panel/admin/ingresos' : `/panel/admin/ingresos?vista=${v.key}`}
             key={v.key}
           >
-            {v.label}
+            {traducir(v.label, t)}
           </Link>
         ))}
       </nav>
@@ -105,10 +114,10 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
       {/* Las cifras en su tira con filetes (maqueta E15). */}
       <dl className="mb-9 flex flex-wrap gap-y-4 max-[767px]:grid max-[767px]:grid-cols-2 max-[767px]:gap-x-4 max-[767px]:gap-y-5">
         {[
-          { k: MES_LARGO.format(new Date(`${hoy}T00:00:00Z`)), v: bs(i.esteMes), d: cambio === null ? 'Aprobado en el mes en curso' : `${Math.abs(cambio)} % ${cambio >= 0 ? 'más' : 'menos'} que ${MES_LARGO.format(new Date(`${anterior!.mes}-01T00:00:00Z`))}`, ok: cambio !== null && cambio >= 0 },
-          { k: 'En el año', v: bs(i.esteAnio), d: 'Desde el 1 de enero', ok: false },
-          { k: 'Ticket medio', v: i.ticketMedio === null ? '—' : bs(i.ticketMedio), d: plural(i.aprobados, 'pedido aprobado', 'pedidos aprobados'), ok: false },
-          { k: 'Por cobrar', v: bs(a.porCobrar.total), d: a.porCobrar.saldos > 0 ? `${bs(a.porCobrar.saldos)} en saldos` : 'Pagos esperando o por revisar', ok: false },
+          { k: formatoMesLargo(locale).format(new Date(`${hoy}T00:00:00Z`)), v: bs(i.esteMes), d: cambio === null ? t('Aprobado en el mes en curso', 'Approved this month') : t(`${Math.abs(cambio)} % ${cambio >= 0 ? 'más' : 'menos'} que ${formatoMesLargo(locale).format(new Date(`${anterior!.mes}-01T00:00:00Z`))}`, `${Math.abs(cambio)} % ${cambio >= 0 ? 'more' : 'less'} than ${formatoMesLargo(locale).format(new Date(`${anterior!.mes}-01T00:00:00Z`))}`), ok: cambio !== null && cambio >= 0 },
+          { k: t('En el año', 'This year'), v: bs(i.esteAnio), d: t('Desde el 1 de enero', 'Since January 1'), ok: false },
+          { k: t('Ticket medio', 'Average ticket'), v: i.ticketMedio === null ? '—' : bs(i.ticketMedio), d: plural(i.aprobados, t('pedido aprobado', 'approved order'), t('pedidos aprobados', 'approved orders')), ok: false },
+          { k: t('Por cobrar', 'To collect'), v: bs(a.porCobrar.total), d: a.porCobrar.saldos > 0 ? t(`${bs(a.porCobrar.saldos)} en saldos`, `${bs(a.porCobrar.saldos)} in balances`) : t('Pagos esperando o por revisar', 'Payments pending or to review'), ok: false },
         ].map((c, n) => (
           // En el celular, el mes va en su tarjeta destacada y las demás de dos en dos (maqueta M28).
           <div className={`flex-[1_1_180px] ${n === 0 ? 'max-[767px]:col-span-2 max-[767px]:rounded-[16px] max-[767px]:border max-[767px]:border-grab-borde max-[767px]:bg-bg-raised max-[767px]:p-5 max-[767px]:shadow-[inset_0_0_0_7px_var(--color-bg-raised),inset_0_0_0_8px_var(--color-grab-filete)]' : 'border-l border-line-panel pl-6 max-[767px]:border-l-0 max-[767px]:pl-0'}`} key={c.k}>
@@ -123,17 +132,17 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
         <div className="flex flex-col gap-8">
           <section aria-labelledby="cobrado-por-mes" className="rounded-[16px] border border-line-panel bg-bg-raised p-6 max-[767px]:border-0 max-[767px]:bg-transparent max-[767px]:p-0">
             <h2 className="mb-6 font-display text-[24px] font-medium max-[767px]:sr-only" id="cobrado-por-mes">
-              Cobrado por mes, en Bs
+              {t('Cobrado por mes, en Bs', 'Collected per month, in Bs')}
             </h2>
             {seis.every((m) => m.total === 0) ? (
-              <EmptyState compact description="Cuando apruebes el primer pedido, aquí verás lo cobrado mes a mes." title="Todavía no hay cobros" />
+              <EmptyState compact description={t('Cuando apruebes el primer pedido, aquí verás lo cobrado mes a mes.', 'When you approve the first order, you will see here what was collected month by month.')} title={t('Todavía no hay cobros', 'No payments yet')} />
             ) : (
-              <ol aria-label={`Cobrado por mes: ${seis.map((m) => `${MES_CORTO.format(new Date(`${m.mes}-01T00:00:00Z`))} ${bs(m.total)}`).join(', ')}`} className="flex h-[200px] items-end gap-[4%] px-2">
+              <ol aria-label={`${t('Cobrado por mes', 'Collected per month')}: ${seis.map((m) => `${formatoMesCorto(locale).format(new Date(`${m.mes}-01T00:00:00Z`))} ${bs(m.total)}`).join(', ')}`} className="flex h-[200px] items-end gap-[4%] px-2">
                 {seis.map((m, n) => (
                   <li className="flex h-full flex-1 flex-col items-center justify-end gap-1.5" key={m.mes}>
                     <span className="text-[12.5px] text-ink-mute [font-variant-numeric:tabular-nums]">{m.total === 0 ? '—' : bs(m.total).replace(/^Bs\s*/, '').replace(/,00$/, '')}</span>
                     <span className={`w-full max-w-[56px] rounded-t-[3px] ${n === seis.length - 1 ? 'bg-shell-deep' : 'bg-barra-suave'}`} style={{ height: `${Math.max(2, (m.total / techoSeis) * 100)}%` }} />
-                    <span className="text-[12.5px] text-ink-mute">{MES_CORTO.format(new Date(`${m.mes}-01T00:00:00Z`)).replace('.', '')}</span>
+                    <span className="text-[12.5px] text-ink-mute">{formatoMesCorto(locale).format(new Date(`${m.mes}-01T00:00:00Z`)).replace('.', '')}</span>
                   </li>
                 ))}
               </ol>
@@ -142,14 +151,14 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
 
           <section aria-labelledby="de-consulta-a-evento">
             <h2 className="mb-3.5 font-display text-[24px] font-medium" id="de-consulta-a-evento">
-              De consulta a evento, este año
+              {t('De consulta a evento, este año', 'From inquiry to event, this year')}
             </h2>
             <ol className="grid grid-cols-2 overflow-hidden rounded-[12px] min-[700px]:grid-cols-4">
               {i.embudo.pasos.map((paso, n) => (
                 <li className={`px-5 py-4 ${['bg-pill-maybe text-shell-deep', 'bg-barra-suave text-shell-deep', 'bg-sage text-shell-ink', 'bg-shell-deep text-shell-ink'][n] ?? ''}`} key={paso.clave}>
                   <span className="block font-display text-[30px] leading-tight font-medium">{paso.total}</span>
                   <span className="text-[13.5px]">
-                    {paso.titulo}
+                    {traducir(paso.titulo, t)}
                     {paso.desdeElAnterior === null ? '' : `, ${paso.desdeElAnterior} %`}
                   </span>
                 </li>
@@ -157,9 +166,9 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
             </ol>
           </section>
 
-      <PanelCard title="Últimos cobros">
+      <PanelCard title={t('Últimos cobros', 'Latest payments')}>
         {i.ultimos.length === 0 ? (
-          <EmptyState compact description="Cada pedido que apruebes aparece aquí con su importe." title="Todavía no se ha aprobado ningún pedido" />
+          <EmptyState compact description={t('Cada pedido que apruebes aparece aquí con su importe.', 'Each order you approve appears here with its amount.')} title={t('Todavía no se ha aprobado ningún pedido', 'No order has been approved yet')} />
         ) : (
           <ul className="flex flex-col">
             {i.ultimos.map((p) => (
@@ -169,9 +178,9 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
                   <span className="order-3 font-codigo text-[11px] tracking-[0.15em] text-ink-mute min-[700px]:order-none">{p.ref}</span>
                   <span className="order-1 min-w-0 truncate text-[14px] text-ink min-[700px]:order-none">
                     {p.customerName}
-                    <span className="ml-2 text-[12px] text-ink-mute">{p.planName ?? 'Sin plan'}</span>
+                    <span className="ml-2 text-[12px] text-ink-mute">{p.planName ?? t('Sin plan', 'No plan')}</span>
                   </span>
-                  <span className="order-4 text-right text-[12px] text-ink-mute min-[700px]:order-none min-[700px]:text-left">{p.decidedAt ? fechaHora(p.decidedAt) : ''}</span>
+                  <span className="order-4 text-right text-[12px] text-ink-mute min-[700px]:order-none min-[700px]:text-left">{p.decidedAt ? fechaHora(p.decidedAt, locale) : ''}</span>
                   <span className="order-2 text-right font-display text-[20px] text-ink [font-variant-numeric:lining-nums] min-[700px]:order-none">{bs(p.amountCents ?? 0)}</span>
                 </Link>
               </li>
@@ -180,16 +189,16 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
         )}
       </PanelCard>
           <a className={`${botonClases()} w-full min-[768px]:hidden`} download href="/panel/admin/ingresos/csv">
-            Descargar CSV
+            {t('Descargar CSV', 'Download CSV')}
           </a>
         </div>
       ) : vista === 'evento' ? (
-        <PanelCard title="Por mes del evento">
-          <p className="-mt-2 mb-3 text-[12px] text-ink-mute">Lo vendido para los eventos de los próximos seis meses; en oro, lo que aún espera su pago.</p>
+        <PanelCard title={t('Por mes del evento', 'By event month')}>
+          <p className="-mt-2 mb-3 text-[12px] text-ink-mute">{t('Lo vendido para los eventos de los próximos seis meses; en oro, lo que aún espera su pago.', 'What was sold for events in the next six months; in gold, what still awaits payment.')}</p>
           <div className="flex flex-col">
             {a.porMesDelEvento.map((m) => (
               <div className="flex items-center gap-3 py-1.5" key={m.mes}>
-                <span className="w-16 shrink-0 text-[12.5px] text-ink-soft">{MES.format(new Date(`${m.mes}-01T00:00:00Z`))}</span>
+                <span className="w-16 shrink-0 text-[12.5px] text-ink-soft">{formatoMes(locale).format(new Date(`${m.mes}-01T00:00:00Z`))}</span>
                 <span className="relative h-2 flex-1 overflow-hidden rounded-full bg-bg-sunken">
                   <span className="absolute inset-y-0 left-0 rounded-full bg-sage" style={{ width: `${(m.cobrado / techoEvento) * 100}%` }} />
                   <span className="absolute inset-y-0 rounded-full bg-gold/60" style={{ left: `${(m.cobrado / techoEvento) * 100}%`, width: `${(m.abierto / techoEvento) * 100}%` }} />
@@ -201,20 +210,20 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
         </PanelCard>
       ) : vista === 'fiesta' ? (
         <div className="grid gap-4.5 min-[900px]:grid-cols-2">
-          <PanelCard title="Por fiesta">
+          <PanelCard title={t('Por fiesta', 'By party')}>
           {a.porFiesta.length === 0 ? (
-            <EmptyState compact title="Todavía no hay ventas cobradas" />
+            <EmptyState compact title={t('Todavía no hay ventas cobradas', 'No collected sales yet')} />
           ) : (
             <div className="flex flex-col">
               {a.porFiesta.map((f) => (
-                <BarRow key={String(f.fiesta)} label={`${nombreDeFiesta(f.fiesta)} · ${f.ventas}`} ratio={f.total / techoFiesta} tone="gold" value={bs(f.total)} wide />
+                <BarRow key={String(f.fiesta)} label={`${nombreDeFiesta(f.fiesta, t)} · ${f.ventas}`} ratio={f.total / techoFiesta} tone="gold" value={bs(f.total)} wide />
               ))}
             </div>
           )}
         </PanelCard>
-          <PanelCard title="Por plan">
+          <PanelCard title={t('Por plan', 'By plan')}>
           {i.porPlan.length === 0 ? (
-            <EmptyState compact title="Todavía no hay pedidos aprobados" />
+            <EmptyState compact title={t('Todavía no hay pedidos aprobados', 'No approved orders yet')} />
           ) : (
             <div className="flex flex-col">
               {i.porPlan.map((fila) => (
@@ -226,45 +235,47 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
         </div>
       ) : (
         <div className="grid gap-4.5 min-[900px]:grid-cols-2">
-          <PanelCard title="Temporadas">
+          <PanelCard title={t('Temporadas', 'Seasons')}>
           {a.temporadas.length === 0 ? (
-            <EmptyState compact description="Con tres ventas cobradas de una fiesta, aquí verás en qué meses del año se compra más." title="Aún pocas ventas para verlo" />
+            <EmptyState compact description={t('Con tres ventas cobradas de una fiesta, aquí verás en qué meses del año se compra más.', 'With three collected sales of a party type, you will see here which months sell the most.')} title={t('Aún pocas ventas para verlo', 'Too few sales to see it yet')} />
           ) : (
             <ul className="flex flex-col gap-3">
-              {a.temporadas.map((t) => (
-                <li className="flex items-start gap-3" key={t.fiesta}>
-                  <EtiquetaDeFiesta fiesta={t.fiesta} />
+              {a.temporadas.map((tp) => (
+                <li className="flex items-start gap-3" key={tp.fiesta}>
+                  <EtiquetaDeFiesta fiesta={tp.fiesta} />
                   <p className="text-[13.5px] leading-relaxed text-ink">
-                    Se compran sobre todo en <b className="font-medium">{t.meses.join(' y ')}</b>
-                    <span className="text-ink-mute"> · {plural(t.ventas, 'venta', 'ventas')}</span>
-                    {t.meses[0] === undefined ? null : (
-                      <span className="block text-[12px] text-ink-mute">Prepara promociones y mensajes un mes antes de {t.meses[0]}.</span>
+                    {t('Se compran sobre todo en', 'Mostly bought in')} <b className="font-medium">{tp.meses.map((m) => traducir(m, t)).join(t(' y ', ' and '))}</b>
+                    <span className="text-ink-mute"> · {plural(tp.ventas, t('venta', 'sale'), t('ventas', 'sales'))}</span>
+                    {tp.meses[0] === undefined ? null : (
+                      <span className="block text-[12px] text-ink-mute">
+                        {t(`Prepara promociones y mensajes un mes antes de ${tp.meses[0]}.`, `Prepare promotions and messages a month before ${traducir(tp.meses[0], t)}.`)}
+                      </span>
                     )}
                   </p>
                 </li>
               ))}
             </ul>
           )}
-          <p className="mt-3 text-[11.5px] text-ink-mute">Hoy es {MES_LARGO.format(new Date(`${hoy}T00:00:00Z`))}.</p>
+          <p className="mt-3 text-[11.5px] text-ink-mute">{t(`Hoy es ${formatoMesLargo(locale).format(new Date(`${hoy}T00:00:00Z`))}.`, `It is now ${formatoMesLargo(locale).format(new Date(`${hoy}T00:00:00Z`))}.`)}</p>
         </PanelCard>
-          <PanelCard title="De dónde llegan y por qué se pierden">
+          <PanelCard title={t('De dónde llegan y por qué se pierden', 'Where they come from and why they are lost')}>
           {a.origenes.length === 0 && a.motivosDePerdida.length === 0 ? (
-            <EmptyState compact title="Todavía no hay consultas" />
+            <EmptyState compact title={t('Todavía no hay consultas', 'No inquiries yet')} />
           ) : (
             <div className="flex flex-col gap-5">
               {a.origenes.length === 0 ? null : (
                 <div className="flex flex-col">
                   {a.origenes.map((o) => (
-                    <BarRow key={o.origen} label={o.origen} ratio={o.consultas / techoOrigen} value={`${o.ganadas}/${o.consultas}`} />
+                    <BarRow key={o.origen} label={traducir(o.origen, t)} ratio={o.consultas / techoOrigen} value={`${o.ganadas}/${o.consultas}`} />
                   ))}
-                  <p className="mt-1 text-[11.5px] text-ink-mute">Compradas sobre consultas, por origen.</p>
+                  <p className="mt-1 text-[11.5px] text-ink-mute">{t('Compradas sobre consultas, por origen.', 'Bought out of inquiries, by source.')}</p>
                 </div>
               )}
               {a.motivosDePerdida.length === 0 ? null : (
                 <ul className="flex flex-col gap-1.5 border-t border-line-panel pt-4">
                   {a.motivosDePerdida.map((m) => (
                     <li className="flex justify-between text-[13px]" key={m.motivo}>
-                      <span className="text-ink-soft">{m.motivo}</span>
+                      <span className="text-ink-soft">{traducir(m.motivo, t)}</span>
                       <span className="font-mono text-ink">{m.veces}</span>
                     </li>
                   ))}

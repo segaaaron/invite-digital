@@ -9,13 +9,10 @@ import { IconButton } from '@/shared/design/ui/panel/PanelKit'
 import { seatRing } from '../domain/seat-ring'
 import { matchesSearch, useSeatingSearch } from './SeatingSearchContext'
 import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
+import { nombreForma } from './TableDialog'
 
-const NOMBRE_FORMA: Record<TableShape, string> = {
-  round: 'Redonda',
-  rect: 'Rectangular',
-  sweetheart: 'De los novios',
-  imperial: 'Imperial',
-}
 
 type Props = {
   eventId: string
@@ -24,7 +21,7 @@ type Props = {
   /** Los grupos sin mesa del evento; la tarjeta filtra los que caben en esta. */
   unseated: readonly SeatedGroupRow[]
   /** Cómo se llama la mesa principal en esta fiesta: «De los novios» o «De la quinceañera». */
-  mesaPrincipal?: string
+  mesaPrincipal?: string | undefined
 }
 
 /**
@@ -32,13 +29,14 @@ type Props = {
  * dorado a medias y línea tenue vacía. El rojo de «completa» decía «problema» donde lo
  * que hay es una mesa terminada.
  */
-const estado = (table: SeatedTable): { clase: string; texto: string } => {
-  if (table.free === 0) return { clase: 'border-sage text-sage', texto: 'Completa' }
-  if (table.taken === 0) return { clase: 'border-line-panel text-ink-mute', texto: 'Vacía' }
-  return { clase: 'border-gold text-gold-deep', texto: 'A medias' }
+const estado = (table: SeatedTable, t: T): { clase: string; texto: string } => {
+  if (table.free === 0) return { clase: 'border-sage text-sage', texto: t('Completa', 'Full') }
+  if (table.taken === 0) return { clase: 'border-line-panel text-ink-mute', texto: t('Vacía', 'Empty') }
+  return { clase: 'border-gold text-gold-deep', texto: t('A medias', 'Partly full') }
 }
 
-export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal = 'De los novios' }: Props) {
+export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal }: Props) {
+  const t = useT()
   const [elegido, setElegido] = useState('')
   const [editando, setEditando] = useState(false)
   const [label, setLabel] = useState(table.label)
@@ -56,7 +54,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
 
   // Un grupo no se parte entre dos mesas: solo se ofrecen los que caben enteros.
   const caben = unseated.filter((g) => g.seats <= table.free)
-  const { clase, texto } = estado(table)
+  const { clase, texto } = estado(table, t)
 
   const correr = (accion: () => Promise<{ ok: boolean; message?: string; kind?: string }>, alAcabar?: () => void) => {
     setError(null)
@@ -66,7 +64,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
       if (r.ok) {
         setAviso(r.message ?? null)
         alAcabar?.()
-      } else setError(r.message ?? 'No se pudo completar la operación.')
+      } else setError(r.message ?? t('No se pudo completar la operación.', 'Could not complete the operation.'))
     })
   }
 
@@ -78,7 +76,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
   const guardar = () => {
     const sitios = Number(capacity)
     if (!Number.isInteger(sitios) || capacity.trim() === '') {
-      setError('Los sitios de la mesa son un número entero.')
+      setError(t('Los sitios de la mesa son un número entero.', 'Table seats must be a whole number.'))
       return
     }
 
@@ -116,7 +114,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
             {table.taken} / {table.capacity}
           </span>
           <span className="font-mono text-[10.5px] tracking-[var(--tracking-luxe)] uppercase">{texto}</span>
-          <IconButton disabled={pendiente} label={`Editar ${table.label}`} onClick={() => setEditando(true)}>
+          <IconButton disabled={pendiente} label={t(`Editar ${table.label}`, `Edit ${table.label}`)} onClick={() => setEditando(true)}>
             ✎
           </IconButton>
           {porBorrar ? (
@@ -127,18 +125,18 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
                 onClick={() => correr(() => removeTableAction({ id: table.id, eventId, eventSlug }))}
                 type="button"
               >
-                Borrar
+                {t('Borrar', 'Delete')}
               </button>
               <button
                 className="cursor-pointer font-mono text-[12px] tracking-[0.2em] text-ink-mute uppercase max-[767px]:min-h-11 max-[767px]:px-3"
                 onClick={() => setPorBorrar(false)}
                 type="button"
               >
-                No
+                {t('No', 'No')}
               </button>
             </>
           ) : (
-            <IconButton disabled={pendiente} label={`Eliminar ${table.label}`} onClick={() => setPorBorrar(true)}>
+            <IconButton disabled={pendiente} label={t(`Eliminar ${table.label}`, `Remove ${table.label}`)} onClick={() => setPorBorrar(true)}>
               ✕
             </IconButton>
           )}
@@ -189,7 +187,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
       </div>
 
       {table.groups.length === 0 ? (
-        <p className="text-[12px] text-ink-mute italic">Sin invitados asignados</p>
+        <p className="text-[12px] text-ink-mute italic">{t('Sin invitados asignados', 'No guests assigned')}</p>
       ) : (
         // Chips con su aspa, como la maqueta: una lista de filas con botones «Quitar»
         // ocupaba el triple y competía con la mesa dibujada.
@@ -201,14 +199,14 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
             >
               <span>{group.label}</span>
               {group.dietary === true ? (
-                <span aria-label="con restricción alimentaria" title="Con restricción alimentaria">
+                <span aria-label={t('con restricción alimentaria', 'with dietary restriction')} title={t('Con restricción alimentaria', 'With dietary restriction')}>
                   🍽
                 </span>
               ) : null}
               <span className="font-mono text-[12px] text-ink-mute">{group.seats}</span>
               <button
                 type="button"
-                aria-label={`Quitar de la mesa a ${group.label}`}
+                aria-label={t(`Quitar de la mesa a ${group.label}`, `Remove ${group.label} from the table`)}
                 disabled={pendiente}
                 onClick={() => correr(() => unassignGroupAction({ eventId, eventSlug, groupId: group.id }))}
                 className="flex size-5 cursor-pointer items-center justify-center rounded-full text-ink-mute max-[767px]:size-10 transition-colors hover:bg-bg-sunken hover:text-ink disabled:opacity-40"
@@ -221,15 +219,15 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
       )}
 
       {table.free === 0 ? (
-        <p className="text-[12px] text-ink-mute">Sin sitios libres.</p>
+        <p className="text-[12px] text-ink-mute">{t('Sin sitios libres.', 'No free seats.')}</p>
       ) : caben.length === 0 ? (
         <p className="text-[12px] text-ink-mute">
-          {unseated.length === 0 ? 'Nadie pendiente de sentar.' : `Ninguna invitación pendiente cabe en los ${table.free} sitios que quedan.`}
+          {unseated.length === 0 ? t('Nadie pendiente de sentar.', 'Nobody left to seat.') : t(`Ninguna invitación pendiente cabe en los ${table.free} sitios que quedan.`, `No pending invitation fits in the ${table.free} seats left.`)}
         </p>
       ) : (
         <div className="flex items-center gap-2">
           <label className="sr-only" htmlFor={`sentar-${table.id}`}>
-            Invitación a sentar en {table.label}
+            {t(`Invitación a sentar en ${table.label}`, `Invitation to seat at ${table.label}`)}
           </label>
           {/* Elegir **es** sentar, como en la maqueta: el botón aparte era un paso de más
               en la pantalla donde se reparte el salón entero grupo a grupo. */}
@@ -243,7 +241,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
             }}
             className="min-w-0 flex-1 rounded-pill border border-line-panel-strong bg-white px-3 py-2 text-[13px] text-ink"
           >
-            <option value="">+ asignar invitado…</option>
+            <option value="">{t('+ asignar invitado…', '+ assign guest…')}</option>
             {caben.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.label} · {g.seats}
@@ -256,7 +254,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
       {editando ? (
         <div className="flex flex-col gap-3 border-t border-line pt-4">
           <label className="flex flex-col gap-1 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-            Nombre de la mesa
+            {t('Nombre de la mesa', 'Table name')}
             <input
               className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
               maxLength={60}
@@ -268,7 +266,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
 
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-              Sitios
+              {t('Sitios', 'Seats')}
               <input
                 className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
                 min={1}
@@ -279,7 +277,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
             </label>
 
             <label className="flex flex-col gap-1 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-              Forma
+              {t('Forma', 'Shape')}
               <select
                 className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
                 onChange={(e) => setShape(e.target.value as TableShape)}
@@ -287,7 +285,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
               >
                 {TABLE_SHAPES.map((s) => (
                   <option key={s} value={s}>
-                    {s === 'sweetheart' ? mesaPrincipal : NOMBRE_FORMA[s]}
+                    {s === 'sweetheart' ? (mesaPrincipal ?? nombreForma(t)[s]) : nombreForma(t)[s]}
                   </option>
                 ))}
               </select>
@@ -295,12 +293,12 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
           </div>
 
           <label className="flex flex-col gap-1 font-mono text-[12px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
-            Notas
+            {t('Notas', 'Notes')}
             <input
               className="rounded-pill border border-line-panel-strong bg-white px-3 py-2 text-[13px] text-ink"
               maxLength={200}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ej. cerca del baño, acceso silla de ruedas…"
+              placeholder={t('Ej. cerca del baño, acceso silla de ruedas…', 'E.g. near the restroom, wheelchair access…')}
               type="text"
               value={notes}
             />
@@ -313,7 +311,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
               onClick={guardar}
               type="button"
             >
-              Guardar cambios
+              {t('Guardar cambios', 'Save changes')}
             </button>
             <button
               className="font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
@@ -321,7 +319,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
               onClick={() => setEditando(false)}
               type="button"
             >
-              Cancelar
+              {t('Cancelar', 'Cancel')}
             </button>
           </div>
         </div>

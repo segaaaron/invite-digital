@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { ArrowLeftIcon } from '@/shared/design/ui/icons'
+import { traducir } from '@/shared/i18n/en-ingles'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /** `corta`: lo que dice en un teléfono, donde la fila no cabe entera. */
 type Pestana = { readonly href: string; readonly label: string; readonly corta?: string }
@@ -65,6 +67,7 @@ export const dondeEnElAdmin = (ruta: string): { seccion: string; pestana: string
  * («Modelos 20»). Solo las secciones con más de una pantalla visible: Catálogo y Ajustes.
  */
 export function PestanasDeAdmin({ cuentas = {} }: { cuentas?: Readonly<Record<string, number | null | undefined>> }) {
+  const t = useT()
   const ruta = usePathname()
   const seccion = SECCIONES_DEL_ADMIN.find((s) => s.pestanas.length > 2 && s.pestanas.some((p) => p.href === ruta))
   const fila = useRef<HTMLElement>(null)
@@ -75,7 +78,7 @@ export function PestanasDeAdmin({ cuentas = {} }: { cuentas?: Readonly<Record<st
   if (seccion === undefined) return null
   return (
     <nav
-      aria-label="Pestañas"
+      aria-label={t('Pestañas', 'Tabs')}
       // En el celular, Ajustes no lleva pestañas: cada ajuste es su pantalla, con «← Ajustes» arriba (M69–M74).
       className={`${seccion.nombre === 'Ajustes' ? 'max-[767px]:hidden ' : ''}mb-8 overflow-x-auto border-b border-line-panel [scrollbar-width:none] max-[859px]:mb-5 max-[859px]:[mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)]`}
       ref={fila}
@@ -94,11 +97,11 @@ export function PestanasDeAdmin({ cuentas = {} }: { cuentas?: Readonly<Record<st
                 href={p.href}
               >
                 {p.corta === undefined ? (
-                  p.label
+                  traducir(p.label, t)
                 ) : (
                   <>
-                    <span className="min-[560px]:hidden">{p.corta}</span>
-                    <span className="max-[559px]:hidden">{p.label}</span>
+                    <span className="min-[560px]:hidden">{traducir(p.corta, t)}</span>
+                    <span className="max-[559px]:hidden">{traducir(p.label, t)}</span>
                   </>
                 )}
                 {cuenta ? <span className="text-[12.5px] font-normal text-ink-mute">{cuenta}</span> : null}
@@ -116,17 +119,18 @@ export function PestanasDeAdmin({ cuentas = {} }: { cuentas?: Readonly<Record<st
  * —«Catálogo / Modelos»—, con la pantalla actual más oscura.
  */
 export function RutaDelAdmin({ hoy }: { hoy: string }) {
+  const t = useT()
   const ruta = usePathname()
   if (ruta === '/panel/admin') return <span>{hoy}</span>
   const donde = dondeEnElAdmin(ruta)
   if (donde === null) return null
   return (
-    <nav aria-label="Ruta" className="flex items-center gap-2 text-[14px]">
-      <span className={donde.pestana === null ? 'font-medium text-ink' : ''}>{donde.seccion}</span>
+    <nav aria-label={t('Ruta', 'Path')} className="flex items-center gap-2 text-[14px]">
+      <span className={donde.pestana === null ? 'font-medium text-ink' : ''}>{traducir(donde.seccion, t)}</span>
       {donde.pestana === null ? null : (
         <>
           <span aria-hidden>/</span>
-          <span className="font-medium text-ink">{donde.pestana}</span>
+          <span className="font-medium text-ink">{traducir(donde.pestana, t)}</span>
         </>
       )}
     </nav>
@@ -138,6 +142,7 @@ export function RutaDelAdmin({ hoy }: { hoy: string }) {
  * la lista de ajustes. En cualquier otra pantalla deja el menú (`menu`).
  */
 export function IslaDelAdmin({ menu }: { menu: ReactNode }) {
+  const t = useT()
   const ruta = usePathname()
   const ajuste = SECCIONES_DEL_ADMIN.find((s) => s.nombre === 'Ajustes')?.pestanas.find((p) => p.href === ruta)
   if (ajuste === undefined) return <>{menu}</>
@@ -149,10 +154,10 @@ export function IslaDelAdmin({ menu }: { menu: ReactNode }) {
           <ArrowLeftIcon className="size-5" />
         </span>
         <span className="flex min-w-0 flex-col leading-tight">
-          <span className="text-[13px] text-ink-mute">Ajustes</span>
-          <span className="truncate text-[16px] font-medium">{ajuste.label}</span>
+          <span className="text-[13px] text-ink-mute">{t('Ajustes', 'Settings')}</span>
+          <span className="truncate text-[16px] font-medium">{traducir(ajuste.label, t)}</span>
         </span>
-        <span className="sr-only">: volver a los ajustes</span>
+        <span className="sr-only">{t(': volver a los ajustes', ': back to settings')}</span>
       </Link>
     </>
   )

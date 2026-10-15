@@ -7,6 +7,7 @@ import { isErr } from '@/shared/result'
 import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { QR_MIMES, refrescar, texto } from '@/app/_acciones/admin/admin-comun'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 // ============================================================================
 // DATOS DE COBRO DEL PLAN B
@@ -20,6 +21,7 @@ export async function savePaymentSettingsAction(
   _previous: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const result = await admin.savePayment(actor, {
@@ -31,12 +33,12 @@ export async function savePaymentSettingsAction(
 
   if (isErr(result)) {
     registrarFallo('admin/cobro-actions', 'datos de cobro rechazados', result.error.kind, result.error.detail)
-    return { status: 'error', message: 'No pudimos guardar los datos. Inténtalo en un momento.' }
+    return { status: 'error', message: t('No pudimos guardar los datos. Inténtalo en un momento.', 'We couldn’t save the details. Try again in a moment.') }
   }
 
   refrescar()
   revalidatePath('/es/pedido', 'layout')
-  return { status: 'success', message: 'Datos de cobro guardados.' }
+  return { status: 'success', message: t('Datos de cobro guardados.', 'Payment details saved.') }
 }
 
 const MAX_QR_BYTES = 2 * 1024 * 1024
@@ -45,32 +47,33 @@ export async function uploadPaymentQrAction(
   _previous: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const archivo = formData.get('qr')
   if (!(archivo instanceof File) || archivo.size === 0) {
-    return { status: 'error', message: 'Elige la imagen del QR.' }
+    return { status: 'error', message: t('Elige la imagen del QR.', 'Choose the QR image.') }
   }
   // El tope se comprueba antes de leer el fichero a memoria, como en los comprobantes.
   if (archivo.size > MAX_QR_BYTES) {
-    return { status: 'error', message: 'La imagen pasa de 2 MB. Exporta el QR más pequeño.' }
+    return { status: 'error', message: t('La imagen pasa de 2 MB. Exporta el QR más pequeño.', 'The image is over 2 MB. Export a smaller QR.') }
   }
 
   const bytes = new Uint8Array(await archivo.arrayBuffer())
   const mime = sniffImage(bytes)
   if (mime === null) {
-    return { status: 'error', message: 'Solo aceptamos una imagen PNG, JPG o WEBP.' }
+    return { status: 'error', message: t('Solo aceptamos una imagen PNG, JPG o WEBP.', 'We only accept a PNG, JPG or WEBP image.') }
   }
 
   const result = await admin.savePaymentQr(actor, { bytes, mime })
   if (isErr(result)) {
     registrarFallo('admin/cobro-actions', 'QR de cobro rechazado', result.error.kind, result.error.detail)
-    return { status: 'error', message: 'No pudimos guardar la imagen. Inténtalo en un momento.' }
+    return { status: 'error', message: t('No pudimos guardar la imagen. Inténtalo en un momento.', 'We couldn’t save the image. Try again in a moment.') }
   }
 
   refrescar()
   revalidatePath('/es/pedido', 'layout')
-  return { status: 'success', message: 'QR de cobro actualizado.' }
+  return { status: 'success', message: t('QR de cobro actualizado.', 'Payment QR updated.') }
 }
 
 /**

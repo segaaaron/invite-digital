@@ -2,6 +2,8 @@
 
 import { DownloadIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import { traductor, type T } from '@/shared/i18n/t'
 
 export type CsvRow = {
   readonly label: string
@@ -21,9 +23,9 @@ export type CsvPerson = {
   readonly tableLabel: string | null
 }
 
-const estado = (fila: CsvRow): string => {
-  if (fila.revokedAt !== null) return 'Revocada'
-  return fila.confirmed === null ? 'Pendiente' : 'Confirmada'
+const estado = (fila: CsvRow, t: T): string => {
+  if (fila.revokedAt !== null) return t('Revocada', 'Revoked')
+  return fila.confirmed === null ? t('Pendiente', 'Pending') : t('Confirmada', 'Confirmed')
 }
 
 /**
@@ -45,32 +47,33 @@ function neutralizarFormula(valor: string): string {
   return /^[=+\-@\t\r]/.test(valor) ? `'${valor}` : valor
 }
 
-export function filasToCsv(rows: readonly CsvRow[]): string {
-  const cabecera = ['Invitación', 'Cupos', 'Confirmados', 'Estado'].map(celda).join(';')
+export function filasToCsv(rows: readonly CsvRow[], t: T = traductor('es')): string {
+  const cabecera = [t('Invitación', 'Invitation'), t('Cupos', 'Seats'), t('Confirmados', 'Confirmed'), t('Estado', 'Status')].map(celda).join(';')
   const cuerpo = rows.map((fila) =>
-    [celda(fila.label), celda(String(fila.seats)), celda(fila.confirmed === null ? '' : String(fila.confirmed)), celda(estado(fila))].join(';'),
+    [celda(fila.label), celda(String(fila.seats)), celda(fila.confirmed === null ? '' : String(fila.confirmed)), celda(estado(fila, t))].join(';'),
   )
   // BOM al principio: sin él Excel en Windows abre los acentos rotos.
   return `﻿${[cabecera, ...cuerpo].join('\n')}\n`
 }
 
-const ESTADO_PERSONA: Record<string, string> = { yes: 'Confirmado', no: 'No viene', maybe: 'Tal vez' }
+const estadoPersona = (t: T): Record<string, string> => ({ yes: t('Confirmado', 'Confirmed'), no: t('No viene', 'Not coming'), maybe: t('Tal vez', 'Maybe') })
 
 /**
  * El CSV por persona, que es lo que pide el catering y el protocolo. Cuando el evento no
  * tiene personas cargadas se exporta el de grupos, que es lo único que hay.
  */
-export function personasToCsv(people: readonly CsvPerson[]): string {
-  const cabecera = ['Nombre', 'Invitación', 'RSVP', 'Acompañante', 'Restricciones', 'Mesa', 'VIP'].map(celda).join(';')
+export function personasToCsv(people: readonly CsvPerson[], t: T = traductor('es')): string {
+  const ESTADO_PERSONA = estadoPersona(t)
+  const cabecera = [t('Nombre', 'Name'), t('Invitación', 'Invitation'), 'RSVP', t('Acompañante', 'Companion'), t('Restricciones', 'Dietary'), t('Mesa', 'Table'), 'VIP'].map(celda).join(';')
   const cuerpo = people.map((p) =>
     [
       celda(p.fullName),
       celda(p.groupLabel),
-      celda(p.attending === null ? 'Pendiente' : (ESTADO_PERSONA[p.attending] ?? '')),
-      celda(p.isCompanion ? 'Sí' : 'No'),
+      celda(p.attending === null ? t('Pendiente', 'Pending') : (ESTADO_PERSONA[p.attending] ?? '')),
+      celda(p.isCompanion ? t('Sí', 'Yes') : 'No'),
       celda(p.dietaryNote ?? ''),
-      celda(p.tableLabel ?? 'Sin mesa'),
-      celda(p.vip ? 'Sí' : 'No'),
+      celda(p.tableLabel ?? t('Sin mesa', 'No table')),
+      celda(p.vip ? t('Sí', 'Yes') : 'No'),
     ].join(';'),
   )
   return `\ufeff${[cabecera, ...cuerpo].join('\n')}\n`
@@ -85,20 +88,21 @@ export function ExportCsvButton({
   people?: readonly CsvPerson[]
   eventSlug: string
 }) {
+  const t = useT()
   return (
     <PanelButton
       onClick={() => {
-        const contenido = people && people.length > 0 ? personasToCsv(people) : filasToCsv(rows)
+        const contenido = people && people.length > 0 ? personasToCsv(people, t) : filasToCsv(rows, t)
         const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8' })
         const url = URL.createObjectURL(blob)
         const enlace = document.createElement('a')
         enlace.href = url
-        enlace.download = `invitados-${eventSlug}.csv`
+        enlace.download = `${t('invitados', 'guests')}-${eventSlug}.csv`
         enlace.click()
         URL.revokeObjectURL(url)
       }}
     >
-      <DownloadIcon className="size-3.5" /> Exportar CSV
+      <DownloadIcon className="size-3.5" /> {t('Exportar CSV', 'Export CSV')}
     </PanelButton>
   )
 }

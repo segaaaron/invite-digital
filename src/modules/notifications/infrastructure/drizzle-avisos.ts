@@ -47,7 +47,7 @@ export const createDrizzleAvisos = (database: DbExecutor) => {
     async aparatosDe(userIds): Promise<AparatoPush[]> {
       if (userIds.length === 0) return []
       const filas = await database
-        .select({ id: pushSubscriptions.id, userId: pushSubscriptions.userId, endpoint: pushSubscriptions.endpoint, p256dh: pushSubscriptions.p256dh, auth: pushSubscriptions.auth, silenciados: users.avisosSilenciados })
+        .select({ id: pushSubscriptions.id, userId: pushSubscriptions.userId, endpoint: pushSubscriptions.endpoint, p256dh: pushSubscriptions.p256dh, auth: pushSubscriptions.auth, silenciados: users.avisosSilenciados, locale: users.locale })
         .from(pushSubscriptions)
         .innerJoin(users, eq(users.id, pushSubscriptions.userId))
         .where(inArray(pushSubscriptions.userId, [...userIds]))

@@ -28,8 +28,14 @@ import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { AccionDeLaIsla } from '@/shared/design/ui/panel/AccionDeLaIsla'
 import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
 import { portadaParaCompartir } from '@/modules/events/ui/themes/portada-para-compartir'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
+import { T } from '@/shared/i18n/idioma-navegador'
+import { INTL } from '@/shared/i18n/t'
 
-export const metadata = { title: 'Invitados' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Invitados', 'Guests') }
+}
 
 // Los invitados responden mientras el atelier mira la lista: esta página no se cachea.
 export const dynamic = 'force-dynamic'
@@ -50,6 +56,8 @@ export default async function InvitadosPage({
   params: Promise<{ slug: string }>
   searchParams: Promise<{ panel?: string; persona?: string; grupo?: string }>
 }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   const actor = await requireSession()
   const { slug } = await params
   const { panel, persona, grupo } = await searchParams
@@ -163,23 +171,23 @@ export default async function InvitadosPage({
         actions={
           <>
             <PanelButton className="max-[767px]:hidden" href={abierto === 'importar' ? base : `${base}?panel=importar`}>
-              Importar lista
+              {t('Importar lista', 'Import list')}
             </PanelButton>
             {filas.length === 0 ? null : (
               <PanelButton className="max-[767px]:hidden" href={abierto === 'envio' ? base : `${base}?panel=envio`}>
-                <SendIcon className="size-4" /> Enviar invitaciones
+                <SendIcon className="size-4" /> {t('Enviar invitaciones', 'Send invitations')}
               </PanelButton>
             )}
             <PanelButton className="max-[767px]:hidden" href={`${base}?panel=alta`} variant="primary">
-              <PlusIcon className="size-4" /> Añadir invitado
+              <PlusIcon className="size-4" /> {t('Añadir invitado', 'Add guest')}
             </PanelButton>
           </>
         }
         accionesSoloEnEscritorio
         meta={
           filasPersona.length === 0
-            ? 'Cada invitación tiene su enlace y su pase.'
-            : `${filasPersona.length} ${filasPersona.length === 1 ? 'persona' : 'personas'} en ${filas.length} ${filas.length === 1 ? 'invitación' : 'invitaciones'}. Cada invitación tiene su enlace y su pase.`
+            ? t('Cada invitación tiene su enlace y su pase.', 'Each invitation has its own link and pass.')
+            : t(`${filasPersona.length} ${filasPersona.length === 1 ? 'persona' : 'personas'} en ${filas.length} ${filas.length === 1 ? 'invitación' : 'invitaciones'}. Cada invitación tiene su enlace y su pase.`, `${filasPersona.length} ${filasPersona.length === 1 ? 'person' : 'people'} in ${filas.length} ${filas.length === 1 ? 'invitation' : 'invitations'}. Each invitation has its own link and pass.`)
         }
         menu={
           <>
@@ -200,16 +208,16 @@ export default async function InvitadosPage({
               />
             )}
             <PanelButton className="min-[768px]:hidden" href={abierto === 'importar' ? base : `${base}?panel=importar`}>
-              <UploadIcon className="size-3.5" /> Importar lista
+              <UploadIcon className="size-3.5" /> {t('Importar lista', 'Import list')}
             </PanelButton>
           </>
         }
-        title="Invitados"
+        title={t('Invitados', 'Guests')}
       />
       <AccionDeLaIsla>
-        <Link aria-label="Añadir invitado" className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=alta`}>
+        <Link aria-label={t('Añadir invitado', 'Add guest')} className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=alta`}>
           <PlusIcon className="size-4.5" />
-          Añadir
+          {t('Añadir', 'Add')}
         </Link>
       </AccionDeLaIsla>
       <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
@@ -222,7 +230,7 @@ export default async function InvitadosPage({
           eventId={event.value.id}
           eventSlug={event.value.slug}
           notice={
-            <AllowanceNotice currentGroups={filas.length} maxGuestGroups={limite} mejorar={await mejorarPara(actor, event.value.slug, 'Sumar invitaciones')} />
+            <AllowanceNotice currentGroups={filas.length} maxGuestGroups={limite} mejorar={await mejorarPara(actor, event.value.slug, t('Sumar invitaciones', 'Add invitations'))} />
           }
         />
       ) : null}
@@ -284,7 +292,7 @@ export default async function InvitadosPage({
       {panel === 'pase' && enFoco !== null && grupoDeLaPersona !== undefined && grupoDeLaPersona !== null ? (
         <PassDialog
           closeHref={base}
-          eventMeta={new Date(`${event.value.eventDate}T00:00:00Z`).toLocaleDateString('es-BO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}
+          eventMeta={new Date(`${event.value.eventDate}T00:00:00Z`).toLocaleDateString(INTL[locale], { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}
           eventSlug={event.value.slug}
           eventTitle={event.value.title}
           group={{ id: grupoDeLaPersona.id, label: grupoDeLaPersona.label, revoked: grupoDeLaPersona.revokedAt !== null }}
@@ -328,13 +336,13 @@ export default async function InvitadosPage({
         {panel === 'recordar' ? (
           <PanelDialog
             closeHref={base}
-            descripcion="Uno por uno, por WhatsApp. Te vamos marcando a quién ya le escribiste."
-            title={isErr(cola) || cola.value.length === 0 ? 'Recordatorios' : `Recordar a ${cola.value.length} ${cola.value.length === 1 ? 'invitación' : 'invitaciones'}`}
+            descripcion={t('Uno por uno, por WhatsApp. Te vamos marcando a quién ya le escribiste.', 'One by one, via WhatsApp. We mark who you’ve already written to.')}
+            title={isErr(cola) || cola.value.length === 0 ? t('Recordatorios', 'Reminders') : t(`Recordar a ${cola.value.length} ${cola.value.length === 1 ? 'invitación' : 'invitaciones'}`, `Remind ${cola.value.length} ${cola.value.length === 1 ? 'invitation' : 'invitations'}`)}
             width={560}
           >
             {isErr(cola) ? (
               <p className="text-[14px] text-danger" role="alert">
-                No pudimos calcular la cola de recordatorios. La base no responde; vuelve a intentarlo en un momento.
+                {t('No pudimos calcular la cola de recordatorios. La base no responde; vuelve a intentarlo en un momento.', 'We couldn’t work out the reminder queue. The database isn’t responding; try again in a moment.')}
               </p>
             ) : (
               <ReminderQueue
@@ -346,19 +354,18 @@ export default async function InvitadosPage({
               />
             )}
             <div className="mt-5 flex justify-end">
-              <PanelButton href={base}>Terminar por hoy</PanelButton>
+              <PanelButton href={base}>{t('Terminar por hoy', 'Done for today')}</PanelButton>
             </div>
           </PanelDialog>
         ) : null}
 
         {abierto === 'importar' ? (
-          <PanelDialog closeHref={base} descripcion="Revisa antes de cargar: cada fila dice si entró o por qué no." title="Importar tu lista" width={640}>
+          <PanelDialog closeHref={base} descripcion={t('Revisa antes de cargar: cada fila dice si entró o por qué no.', 'Check before adding: each row says whether it went in or why not.')} title={t('Importar tu lista', 'Import your list')} width={640}>
             {/* Importar es de algunos planes. Se ofrece igual y dice por qué no: es algo que se
                 consigue subiendo de plan, y la acción lo corta también en el servidor. */}
             {isErr(capacidad) || !capacidad.value.csvImport ? (
               <p className="text-[13px] leading-[1.7] text-ink-soft">
-                Tu plan no incluye importar la lista de invitados. Puedes cargarlos uno a uno, o subir a un plan que
-                lo incluya.
+                {t('Tu plan no incluye importar la lista de invitados. Puedes cargarlos uno a uno, o subir a un plan que lo incluya.', 'Your plan doesn’t include importing the guest list. You can add them one by one, or move up to a plan that includes it.')}
               </p>
             ) : (
               <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} eventTitle={event.value.title} />
@@ -370,19 +377,19 @@ export default async function InvitadosPage({
         {filasPersona.length === 0 ? null : (
           <>
             <dl className="flex flex-wrap max-[767px]:hidden">
-              <Cifra etiqueta="Invitados" valor={filasPersona.length} primera />
-              <Cifra etiqueta="Asistirán" valor={si} />
-              <Cifra detalle={no > 0 ? `${no} no ${no === 1 ? 'viene' : 'vienen'}` : undefined} etiqueta="Por responder" valor={porResponder} />
-              <Cifra etiqueta="Enviadas" valor={enviadas} de={vivas.length} />
+              <Cifra etiqueta={t('Invitados', 'Guests')} valor={filasPersona.length} primera />
+              <Cifra etiqueta={t('Asistirán', 'Attending')} valor={si} />
+              <Cifra detalle={no > 0 ? t(`${no} no ${no === 1 ? 'viene' : 'vienen'}`, `${no} not coming`) : undefined} etiqueta={t('Por responder', 'Awaiting reply')} valor={porResponder} />
+              <Cifra etiqueta={t('Enviadas', 'Sent')} valor={enviadas} de={vivas.length} />
             </dl>
             {/* Celular (v2.1, 14 oct): un solo bloque «8 de 19 respondieron» con la barra repartida y, dentro, lo que falta
                 enviar con su botón. Antes, tres cifras sueltas, un botón negro a lo ancho y dos filas de filtros dejaban la
                 lista fuera de la primera pantalla. */}
-            <section aria-label="Cómo va" className="flex flex-col gap-3 rounded-[16px] border border-line-panel bg-bg-raised p-4 min-[768px]:hidden">
+            <section aria-label={t('Cómo va', 'Progress')} className="flex flex-col gap-3 rounded-[16px] border border-line-panel bg-bg-raised p-4 min-[768px]:hidden">
               <p className="flex items-baseline justify-between gap-3">
                 <span>
                   <span className="font-display text-[34px] leading-none font-medium [font-variant-numeric:lining-nums]">{si + no}</span>{' '}
-                  <span className="text-[14.5px] text-ink-mute">de {filasPersona.length} respondieron</span>
+                  <span className="text-[14.5px] text-ink-mute">{t(`de ${filasPersona.length} respondieron`, `of ${filasPersona.length} replied`)}</span>
                 </span>
                 <span className="text-[13.5px] text-ink-mute tabular-nums">{Math.round(((si + no) / filasPersona.length) * 100)} %</span>
               </p>
@@ -393,32 +400,32 @@ export default async function InvitadosPage({
               <p className="flex flex-wrap gap-x-4 gap-y-1 text-[13.5px] text-ink-soft">
                 <span className="flex items-center gap-1.5">
                   <span aria-hidden className="size-2.5 rounded-[3px] bg-ok" />
-                  {si} asisten
+                  {t(`${si} asisten`, `${si} attending`)}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span aria-hidden className="size-2.5 rounded-[3px] bg-danger" />
-                  {no} no vienen
+                  {t(`${no} no vienen`, `${no} not coming`)}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span aria-hidden className="size-2.5 rounded-[3px] bg-bg-sunken ring-1 ring-line-panel-strong ring-inset" />
-                  {porResponder} esperan
+                  {t(`${porResponder} esperan`, `${porResponder} waiting`)}
                 </span>
               </p>
               {vivas.length - enviadas > 0 ? (
                 <div className="flex items-center gap-3 rounded-[12px] bg-pill-pending p-3">
                   <p className="min-w-0 flex-1 text-[14px] leading-snug text-pill-pending-ink">
-                    <b className="font-medium">{vivas.length - enviadas === 1 ? '1 invitación sin enviar.' : `${vivas.length - enviadas} invitaciones sin enviar.`}</b>
+                    <b className="font-medium">{vivas.length - enviadas === 1 ? t('1 invitación sin enviar.', '1 invitation not sent.') : t(`${vivas.length - enviadas} invitaciones sin enviar.`, `${vivas.length - enviadas} invitations not sent.`)}</b>
                     <br />
-                    Por WhatsApp o con su enlace.
+                    {t('Por WhatsApp o con su enlace.', 'Via WhatsApp or with their link.')}
                   </p>
                   <PanelButton className="shrink-0" href={`${base}?panel=envio`} variant="primary">
-                    <SendIcon className="size-4" /> Enviar
+                    <SendIcon className="size-4" /> {t('Enviar', 'Send')}
                   </PanelButton>
                 </div>
               ) : vivas.length > 0 ? (
                 // Con todas enviadas, el envío sigue a mano: reenviar o ver «Enviadas» (13 oct: en el celular no había forma).
                 <PanelButton className="w-full" href={`${base}?panel=envio`}>
-                  <SendIcon className="size-4.5" /> Enviar o reenviar
+                  <SendIcon className="size-4.5" /> {t('Enviar o reenviar', 'Send or resend')}
                 </PanelButton>
               ) : null}
             </section>
@@ -427,28 +434,28 @@ export default async function InvitadosPage({
 
         {/* Se cargan invitados, no grupos: el grupo es el enlace que va por debajo y aquí
             no se enseña (pedido por el usuario el 16 de septiembre). */}
-        <section aria-label="Lista de invitados">
+        <section aria-label={t('Lista de invitados', 'Guest list')}>
           {isErr(personas) ? (
             // Pintar «todavía no hay personas» cuando la lectura falló no es un error
             // invisible: es un error que **miente**. El atelier daría por vacía una
             // lista que existe.
             <p className="text-[13px] text-danger" role="alert">
-              No pudimos leer las personas. La base no responde; vuelve a intentarlo en un momento.
+              {t('No pudimos leer las personas. La base no responde; vuelve a intentarlo en un momento.', 'We couldn’t read the people. The database isn’t responding; try again in a moment.')}
             </p>
           ) : filasPersona.length === 0 ? (
             <div className="flex flex-col gap-3">
               <EmptyState
                 action={
                   <>
-                    <PanelButton href={`${base}?panel=importar`}>Importar lista</PanelButton>
+                    <PanelButton href={`${base}?panel=importar`}>{t('Importar lista', 'Import list')}</PanelButton>
                     <PanelButton href={`${base}?panel=alta`} variant="primary">
-                      <PlusIcon className="size-4" /> Añadir el primero
+                      <PlusIcon className="size-4" /> {t('Añadir el primero', 'Add the first one')}
                     </PanelButton>
                   </>
                 }
-                description="Añade al primero con su nombre y sus acompañantes, o sube tu lista de Excel de una vez."
+                description={t('Añade al primero con su nombre y sus acompañantes, o sube tu lista de Excel de una vez.', 'Add the first one with their name and companions, or upload your spreadsheet all at once.')}
                 icon={<UsersIcon />}
-                title="Todavía no hay invitados"
+                title={t('Todavía no hay invitados', 'No guests yet')}
               />
             </div>
           ) : (
@@ -461,7 +468,7 @@ export default async function InvitadosPage({
             **La tarjeta solo existe cuando hay algo que hacer.** Una tarjeta permanente
             que casi siempre dice «nadie por recordar hoy» es un hueco fijo que separa la
             cabecera de la lista, y se deja de mirar justo el día que sí trae a alguien. */}
-        <PanelCard title="Enlace general">
+        <PanelCard title={t('Enlace general', 'General link')}>
           <EnlaceGeneral eventId={event.value.id} eventSlug={event.value.slug} url={enlaceGeneral === null ? null : `${env.SITE_URL.replace(/\/+$/, '')}/abierta/${enlaceGeneral}`} />
         </PanelCard>
       </div>
@@ -476,7 +483,7 @@ function Cifra({ etiqueta, valor, de, detalle, primera = false }: { etiqueta: st
       <dt className="text-[13.5px] text-ink-mute">{etiqueta}</dt>
       <dd className="m-0 font-display text-[32px] leading-[1.15] font-medium">
         {valor}
-        {de === undefined ? null : <span className="font-sans text-[16px] font-normal text-ink-mute"> de {de}</span>}
+        {de === undefined ? null : <span className="font-sans text-[16px] font-normal text-ink-mute"> <T en={`of ${de}`} es={`de ${de}`} /></span>}
       </dd>
       {detalle === undefined ? null : <dd className="m-0 text-[13px] text-pill-pending-ink">{detalle}</dd>}
     </div>

@@ -10,6 +10,8 @@ import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import type { EstadoDeLlegada } from '../domain/lista-de-llegadas'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 export type PersonaDeRecepcion = { readonly id: string; readonly nombre: string; readonly puerta: string | null; readonly registradas: number }
 
@@ -32,11 +34,11 @@ export type MesaDelSalon = { readonly id: string; readonly label: string; readon
 
 type Filtro = 'por_llegar' | 'dentro' | 'no_viene' | 'todos'
 
-const FILTROS: ReadonlyArray<{ clave: Filtro; texto: string }> = [
-  { clave: 'por_llegar', texto: 'Por llegar' },
-  { clave: 'dentro', texto: 'Dentro' },
-  { clave: 'no_viene', texto: 'No vienen' },
-  { clave: 'todos', texto: 'Todos' },
+const filtros = (t: T): ReadonlyArray<{ clave: Filtro; texto: string }> => [
+  { clave: 'por_llegar', texto: t('Por llegar', 'Expected') },
+  { clave: 'dentro', texto: t('Dentro', 'Inside') },
+  { clave: 'no_viene', texto: t('No vienen', 'Not coming') },
+  { clave: 'todos', texto: t('Todos', 'All') },
 ]
 
 const normal = (t: string) =>
@@ -45,7 +47,7 @@ const normal = (t: string) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
 
-const horaDe = (cuando: Date) => new Intl.DateTimeFormat('es-BO', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/La_Paz' }).format(cuando)
+const horaDe = (cuando: Date) => new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/La_Paz' }).format(cuando)
 
 const COLUMNAS = 'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 min-[860px]:grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_64px_130px_120px]'
 
@@ -75,6 +77,7 @@ export function ControlDeIngreso({
   /** Quiénes reciben en la puerta y dónde se suman. `null` para la propia recepción. */
   recepcion: { readonly gestionarHref: string; readonly personas: readonly PersonaDeRecepcion[] } | null
 }) {
+  const t = useT()
   const router = useRouter()
   const [filtro, setFiltro] = useState<Filtro>('por_llegar')
   const [busqueda, setBusqueda] = useState('')
@@ -161,7 +164,7 @@ export function ControlDeIngreso({
         setNota(yaEstaba ? `${quienes.length === 1 ? primero.nombre : (primero.invitacion ?? primero.nombre)} ya estaba dentro desde las ${hora}.` : null)
         router.refresh()
       })
-      .catch(() => setAviso(`No se pudo registrar a ${quienes.length === 1 ? primero.nombre : primero.invitacion}. Vuelve a intentarlo.`))
+      .catch(() => setAviso(t(`No se pudo registrar a ${quienes.length === 1 ? primero.nombre : primero.invitacion}. Vuelve a intentarlo.`, `${quienes.length === 1 ? primero.nombre : primero.invitacion} couldn’t be checked in. Try again.`)))
       .finally(() => setEnCurso(null))
   }
 
@@ -172,14 +175,14 @@ export function ControlDeIngreso({
     void undoCheckInAction({ eventId, eventSlug, groupId: f.invitacionId, personId: f.personaId })
       .then((r) => {
         if (r.status === 'error') {
-          setAviso(`No se pudo deshacer el ingreso de ${f.nombre}.`)
+          setAviso(t(`No se pudo deshacer el ingreso de ${f.nombre}.`, `${f.nombre}’s check-in couldn’t be undone.`))
           return
         }
         setSalieron((previo) => new Set(previo).add(f.clave))
         setEntraron((previo) => Object.fromEntries(Object.entries(previo).filter(([c]) => c !== f.clave)))
         router.refresh()
       })
-      .catch(() => setAviso(`No se pudo deshacer el ingreso de ${f.nombre}.`))
+      .catch(() => setAviso(t(`No se pudo deshacer el ingreso de ${f.nombre}.`, `${f.nombre}’s check-in couldn’t be undone.`)))
       .finally(() => setEnCurso(null))
   }
 
@@ -189,7 +192,7 @@ export function ControlDeIngreso({
     const suyas = vistas.filter((f) => f.codigo === corto)
     if (corto === '' || suyas.length === 0) {
       setPorCodigo(null)
-      setAviso('Ese código no es de este evento. Revísalo con el invitado.')
+      setAviso(t('Ese código no es de este evento. Revísalo con el invitado.', 'That code isn’t from this event. Check it with the guest.'))
       return
     }
     const invitacionId = suyas[0]!.invitacionId
@@ -208,7 +211,7 @@ export function ControlDeIngreso({
       } catch {
         // Sin poder enumerar, se trata como sin cámara.
       }
-      setAviso('Este equipo no tiene cámara. Escribe el código del pase, o abre esta página en el celular de la puerta.')
+      setAviso(t('Este equipo no tiene cámara. Escribe el código del pase, o abre esta página en el celular de la puerta.', 'This device has no camera. Type the pass code, or open this page on the door phone.'))
     })()
   }
 
@@ -244,12 +247,12 @@ export function ControlDeIngreso({
     // `minmax(0,1fr)` también en el celular: sin columnas declaradas la rejilla crecía con el campo del código.
     <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_300px]">
       <aside className="flex flex-col gap-5 max-[1099px]:contents min-[1100px]:sticky min-[1100px]:top-6 min-[1100px]:order-2">
-        <section aria-label="Cómo va el ingreso" className="flex flex-col gap-5 rounded-[16px] border border-line-panel bg-tarjeta p-6 max-[1099px]:order-1 max-[1099px]:border-none max-[1099px]:bg-transparent max-[1099px]:p-0">
+        <section aria-label={t('Cómo va el ingreso', 'Check-in progress')} className="flex flex-col gap-5 rounded-[16px] border border-line-panel bg-tarjeta p-6 max-[1099px]:order-1 max-[1099px]:border-none max-[1099px]:bg-transparent max-[1099px]:p-0">
           {/* En el celular y la tablet, una línea con su barra y los dos botones (M16). */}
           <div className="flex flex-col gap-3 min-[1100px]:hidden">
             <p className="flex items-baseline gap-2">
               <span className="font-display text-[44px] leading-none font-medium [font-variant-numeric:lining-nums]">{dentro}</span>
-              <span className="text-[15px] text-ink-mute">{`de ${esperados} ${esperados === 1 ? 'persona' : 'personas'} dentro`}</span>
+              <span className="text-[15px] text-ink-mute">{t(`de ${esperados} ${esperados === 1 ? 'persona' : 'personas'} dentro`, `of ${esperados} ${esperados === 1 ? 'person' : 'people'} inside`)}</span>
             </p>
             <div aria-hidden className="h-1.5 overflow-hidden rounded-full bg-line-panel">
               <div className="h-full rounded-full bg-shell-deep" style={{ width: `${Math.round(avance * 100)}%` }} />
@@ -264,17 +267,17 @@ export function ControlDeIngreso({
               <span className="grid size-[128px] place-items-center rounded-full bg-tarjeta text-center">
                 <span className="flex flex-col">
                   <span className="font-display text-[40px] leading-none font-medium [font-variant-numeric:lining-nums]">{dentro}</span>
-                  <span className="mt-1 text-[13px] text-ink-mute">{`de ${esperados} dentro`}</span>
+                  <span className="mt-1 text-[13px] text-ink-mute">{t(`de ${esperados} dentro`, `of ${esperados} inside`)}</span>
                 </span>
               </span>
             </div>
-            <span className="sr-only">{`${dentro}de ${esperados} personas dentro`}</span>
+            <span className="sr-only">{t(`${dentro} de ${esperados} personas dentro`, `${dentro} of ${esperados} people inside`)}</span>
             <dl className="grid w-full grid-cols-3 text-center">
               {(
                 [
-                  ['Dentro', cuantos('dentro')],
-                  ['Por llegar', cuantos('por_llegar')],
-                  ['No vienen', cuantos('no_viene')],
+                  [t('Dentro', 'Inside'), cuantos('dentro')],
+                  [t('Por llegar', 'Expected'), cuantos('por_llegar')],
+                  [t('No vienen', 'Not coming'), cuantos('no_viene')],
                 ] as const
               ).map(([k, v]) => (
                 <div className="flex flex-col-reverse gap-0.5" key={k}>
@@ -291,7 +294,7 @@ export function ControlDeIngreso({
               type="button"
             >
               <ScanIcon className="size-5" />
-              Escanear QR
+              {t('Escanear QR', 'Scan QR')}
             </button>
             <button
               aria-haspopup="dialog"
@@ -299,20 +302,20 @@ export function ControlDeIngreso({
               onClick={abrirCodigo}
               type="button"
             >
-              Código del pase
+              {t('Código del pase', 'Pass code')}
             </button>
           </div>
           {/* El último recurso, discreto (pedido del usuario): quien llega sin estar en la lista (E68). */}
           <button className="min-h-11 w-full cursor-pointer text-center text-[14px] font-medium text-gold-deep hover:underline" onClick={() => dialogoSinPase.current?.showModal()} type="button">
-            Llegó alguien sin pase
+            {t('Llegó alguien sin pase', 'Someone arrived without a pass')}
           </button>
           <SinPase dialogo={dialogoSinPase} eventId={eventId} eventSlug={eventSlug} invitaciones={invitaciones} mesas={mesas} />
         </section>
 
-        <section aria-label="Últimas llegadas" className="hidden flex-col gap-2 rounded-[16px] border border-line-panel bg-tarjeta p-5 min-[1100px]:flex">
-          <h2 className="border-b border-line-panel pb-2.5 text-[15px] font-medium">Últimas llegadas</h2>
+        <section aria-label={t('Últimas llegadas', 'Latest arrivals')} className="hidden flex-col gap-2 rounded-[16px] border border-line-panel bg-tarjeta p-5 min-[1100px]:flex">
+          <h2 className="border-b border-line-panel pb-2.5 text-[15px] font-medium">{t('Últimas llegadas', 'Latest arrivals')}</h2>
           {recientes.length === 0 ? (
-            <p className="text-[13.5px] text-ink-mute">Todavía no entró nadie.</p>
+            <p className="text-[13.5px] text-ink-mute">{t('Todavía no entró nadie.', 'No one has checked in yet.')}</p>
           ) : (
             <ul className="flex flex-col">
               {recientes.map((f) => (
@@ -326,11 +329,11 @@ export function ControlDeIngreso({
         </section>
 
         {recepcion === null ? null : (
-          <section aria-label="Recepción" className="flex flex-col gap-2 rounded-[16px] border border-line-panel bg-tarjeta p-5 max-[1099px]:order-4">
-            <h2 className="border-b border-line-panel pb-2.5 text-[15px] font-medium">Recepción</h2>
+          <section aria-label={t('Recepción', 'Reception')} className="flex flex-col gap-2 rounded-[16px] border border-line-panel bg-tarjeta p-5 max-[1099px]:order-4">
+            <h2 className="border-b border-line-panel pb-2.5 text-[15px] font-medium">{t('Recepción', 'Reception')}</h2>
             {recepcion.personas.length === 0 ? (
               <p className="text-[13.5px] leading-[1.6] text-ink-mute">
-                Solo tú registras ingresos. Suma a quien reciba en la puerta: le llega un enlace y un PIN para escanear desde su celular, sin crear cuenta.
+                {t('Solo tú registras ingresos. Suma a quien reciba en la puerta: le llega un enlace y un PIN para escanear desde su celular, sin crear cuenta.', 'Only you record check-ins. Add whoever greets at the door: they get a link and a PIN to scan from their phone, without creating an account.')}
               </p>
             ) : (
               <ul className="flex flex-col">
@@ -339,21 +342,21 @@ export function ControlDeIngreso({
                     <Iniciales chico nombre={p.nombre} />
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate text-[14.5px] font-medium">{p.nombre}</span>
-                      <span className="truncate text-[13px] text-ink-mute">{[p.puerta, `${p.registradas} ${p.registradas === 1 ? 'ingreso' : 'ingresos'}`].filter(Boolean).join(', ')}</span>
+                      <span className="truncate text-[13px] text-ink-mute">{[p.puerta, t(`${p.registradas} ${p.registradas === 1 ? 'ingreso' : 'ingresos'}`, `${p.registradas} ${p.registradas === 1 ? 'check-in' : 'check-ins'}`)].filter(Boolean).join(', ')}</span>
                     </span>
                   </li>
                 ))}
               </ul>
             )}
             <Link className="pt-1 text-[14px] font-medium text-gold-deep no-underline hover:underline" href={recepcion.gestionarHref}>
-              {recepcion.personas.length === 0 ? 'Sumar personal de recepción' : 'Sumar o quitar personal'}
+              {recepcion.personas.length === 0 ? t('Sumar personal de recepción', 'Add reception staff') : t('Sumar o quitar personal', 'Add or remove staff')}
             </Link>
           </section>
         )}
       </aside>
 
       <div className="flex min-w-0 flex-col gap-4 max-[1099px]:contents min-[1100px]:order-1">
-        <section aria-label="Registrar un ingreso" className="flex flex-col gap-3 max-[1099px]:order-2">
+        <section aria-label={t('Registrar un ingreso', 'Record a check-in')} className="flex flex-col gap-3 max-[1099px]:order-2">
           <form
             className="flex"
             onSubmit={(e) => {
@@ -361,7 +364,7 @@ export function ControlDeIngreso({
               enBusqueda(busqueda)
             }}
           >
-            <SearchField className="w-full" label="Buscar invitado" onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre o código del pase" value={busqueda} />
+            <SearchField className="w-full" label={t('Buscar invitado', 'Search guest')} onChange={(e) => setBusqueda(e.target.value)} placeholder={t('Buscar por nombre o código del pase', 'Search by name or pass code')} value={busqueda} />
           </form>
 
           {/* «Entrar con el código» (E67): cuando el QR no se puede escanear. */}
@@ -379,11 +382,11 @@ export function ControlDeIngreso({
             <div className="flex items-start justify-between gap-4">
               <div className="flex flex-col gap-1">
                 <h2 className="font-display text-[30px] leading-tight font-medium max-[767px]:text-[26px]" id="codigo-titulo">
-                  Entrar con el código
+                  {t('Entrar con el código', 'Check in with the code')}
                 </h2>
-                <p className="text-[15px] text-ink-mute">Cuando el QR no se puede escanear.</p>
+                <p className="text-[15px] text-ink-mute">{t('Cuando el QR no se puede escanear.', 'When the QR can’t be scanned.')}</p>
               </div>
-              <button aria-label="Cerrar" className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink transition-colors hover:border-gold" onClick={() => dialogoCodigo.current?.close()} type="button">
+              <button aria-label={t('Cerrar', 'Close')} className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink transition-colors hover:border-gold" onClick={() => dialogoCodigo.current?.close()} type="button">
                 <CloseIcon className="size-4" />
               </button>
             </div>
@@ -395,7 +398,7 @@ export function ControlDeIngreso({
               }}
             >
               <label className="text-[14px] font-medium" htmlFor="codigo-del-pase">
-                Código del pase
+                {t('Código del pase', 'Pass code')}
               </label>
               <input
                 autoCapitalize="characters"
@@ -410,7 +413,7 @@ export function ControlDeIngreso({
                 }}
                 value={codigo}
               />
-              <span className="text-[13px] text-ink-mute">Está debajo del QR, 5 letras y números</span>
+              <span className="text-[13px] text-ink-mute">{t('Está debajo del QR, 5 letras y números', 'It’s below the QR, 5 letters and numbers')}</span>
             </form>
             {aviso === null || porCodigo !== null ? null : (
               <p className="mt-3 rounded-[12px] bg-pill-no px-4 py-3 text-[14px] text-pill-no-ink" role="alert">
@@ -421,14 +424,14 @@ export function ControlDeIngreso({
               <div className="mt-4 flex flex-col gap-3 rounded-[14px] border border-gold/60 bg-bg-raised p-4.5" role="status">
                 <p className="m-0 flex items-baseline justify-between gap-3">
                   <span className="text-[16px] font-medium">{encontrada[0]!.invitacion ?? encontrada[0]!.nombre}</span>
-                  <span className="text-[14px] text-ink-mute">{encontrada[0]!.mesa ?? 'Sin mesa'}</span>
+                  <span className="text-[14px] text-ink-mute">{encontrada[0]!.mesa ?? t('Sin mesa', 'No table')}</span>
                 </p>
                 <ul className="flex flex-col">
                   {encontrada.map((f) =>
                     f.estado === 'dentro' ? (
                       <li className="flex min-h-11 items-center justify-between text-[15px]" key={f.clave}>
                         <span className="text-ink-mute">{f.nombre}</span>
-                        <span className="text-[13px] text-ok-deep">{f.hora === null ? 'Ya entró' : `Entró ${f.hora}`}</span>
+                        <span className="text-[13px] text-ok-deep">{f.hora === null ? t('Ya entró', 'Already in') : t(`Entró ${f.hora}`, `In at ${f.hora}`)}</span>
                       </li>
                     ) : (
                       <li key={f.clave}>
@@ -457,14 +460,14 @@ export function ControlDeIngreso({
                   )}
                 </ul>
                 {encontrada.every((f) => f.estado === 'dentro') ? (
-                  <p className="m-0 text-[14px] text-ink-mute">Ya entraron todos los de esta invitación.</p>
+                  <p className="m-0 text-[14px] text-ink-mute">{t('Ya entraron todos los de esta invitación.', 'Everyone on this invitation is already in.')}</p>
                 ) : (
                   <div className="flex justify-end gap-2">
                     <button className={botonClases('default')} onClick={() => dialogoCodigo.current?.close()} type="button">
-                      Cancelar
+                      {t('Cancelar', 'Cancel')}
                     </button>
                     <button
-                      aria-label="Registrar ingreso"
+                      aria-label={t('Registrar ingreso', 'Check in')}
                       className={botonClases('primary')}
                       disabled={enCurso !== null || porCodigo.marcadas.size === 0}
                       onClick={(e) => {
@@ -473,7 +476,7 @@ export function ControlDeIngreso({
                       }}
                       type="button"
                     >
-                      {enCurso === 'codigo' ? 'Registrando…' : porCodigo.marcadas.size > 1 ? `Registrar a los ${porCodigo.marcadas.size}` : 'Registrar ingreso'}
+                      {enCurso === 'codigo' ? t('Registrando…', 'Checking in…') : porCodigo.marcadas.size > 1 ? t(`Registrar a los ${porCodigo.marcadas.size}`, `Check in all ${porCodigo.marcadas.size}`) : t('Registrar ingreso', 'Check in')}
                     </button>
                   </div>
                 )}
@@ -495,9 +498,9 @@ export function ControlDeIngreso({
           )}
         </section>
 
-        <section aria-label="Invitados" className="flex flex-col gap-3 max-[1099px]:order-3">
+        <section aria-label={t('Invitados', 'Guests')} className="flex flex-col gap-3 max-[1099px]:order-3">
           <div className="flex gap-6 border-b border-line-panel max-[767px]:gap-2 max-[767px]:border-none" role="tablist">
-            {FILTROS.map((f) => {
+            {filtros(t).map((f) => {
               const activa = buscado === '' && filtro === f.clave
               return (
                 <button
@@ -524,18 +527,18 @@ export function ControlDeIngreso({
           {porInvitacion.length === 0 ? (
             <EmptyState
               compact
-              {...(filas.length === 0 ? { icon: <UsersIcon />, description: 'Cuando cargues invitados, aquí se registra su llegada.' } : filtro === 'por_llegar' && buscado === '' ? { icon: <CheckIcon /> } : {})}
-              title={filas.length === 0 ? 'Aún no hay invitados' : buscado !== '' ? 'Nadie con ese nombre' : filtro === 'por_llegar' ? 'Llegaron todos los que se esperaban' : 'Nadie en esta lista'}
+              {...(filas.length === 0 ? { icon: <UsersIcon />, description: t('Cuando cargues invitados, aquí se registra su llegada.', 'Once you add guests, their arrival is recorded here.') } : filtro === 'por_llegar' && buscado === '' ? { icon: <CheckIcon /> } : {})}
+              title={filas.length === 0 ? t('Aún no hay invitados', 'No guests yet') : buscado !== '' ? t('Nadie con ese nombre', 'No one with that name') : filtro === 'por_llegar' ? t('Llegaron todos los que se esperaban', 'Everyone expected has arrived') : t('Nadie en esta lista', 'No one on this list')}
             />
           ) : (
-            <div aria-label="Ingresos" role="table">
+            <div aria-label={t('Ingresos', 'Check-ins')} role="table">
               <div className={`${COLUMNAS} border-b border-line-panel px-3 pb-2.5 text-[13px] font-medium text-ink-mute max-[859px]:hidden`} role="row">
-                <span role="columnheader">Invitado</span>
-                <span role="columnheader">Invitación</span>
-                <span role="columnheader">Mesa</span>
-                <span role="columnheader">Estado</span>
+                <span role="columnheader">{t('Invitado', 'Guest')}</span>
+                <span role="columnheader">{t('Invitación', 'Invitation')}</span>
+                <span role="columnheader">{t('Mesa', 'Table')}</span>
+                <span role="columnheader">{t('Estado', 'Status')}</span>
                 <span className="text-right" role="columnheader">
-                  <span className="sr-only">Acción</span>
+                  <span className="sr-only">{t('Acción', 'Action')}</span>
                 </span>
               </div>
               {porInvitacion.map((bloque) => {
@@ -575,13 +578,13 @@ export function ControlDeIngreso({
                         <span className="flex justify-end" role="cell">
                           {pendientes.length > 1 ? (
                             <button
-                              aria-label={`Registrar a los ${pendientes.length} de ${nombreDeBloque}`}
+                              aria-label={t(`Registrar a los ${pendientes.length} de ${nombreDeBloque}`, `Check in all ${pendientes.length} of ${nombreDeBloque}`)}
                               className="min-h-11 cursor-pointer rounded-[10px] bg-shell-deep px-4 text-[14px] font-medium whitespace-nowrap text-shell-ink disabled:opacity-50 min-[860px]:min-h-10"
                               disabled={enCurso !== null}
                               onClick={() => registrar(pendientes, Date.now(), `todos:${bloque.id}`)}
                               type="button"
                             >
-                              {enCurso === `todos:${bloque.id}` ? 'Registrando…' : `Registrar a los ${pendientes.length}`}
+                              {enCurso === `todos:${bloque.id}` ? t('Registrando…', 'Checking in…') : t(`Registrar a los ${pendientes.length}`, `Check in all ${pendientes.length}`)}
                             </button>
                           ) : null}
                         </span>
@@ -601,46 +604,46 @@ export function ControlDeIngreso({
                               </span>
                             </span>
                             <span className="min-w-0 truncate text-[14.5px] text-ink-mute max-[859px]:hidden" role="cell">
-                              {familia ? '' : (f.invitacion ?? 'Invitación propia')}
+                              {familia ? '' : (f.invitacion ?? t('Invitación propia', 'Own invitation'))}
                             </span>
                             <span className="text-[14.5px] max-[859px]:hidden" role="cell">
                               {f.mesa ? f.mesa.replace(/^mesa\s*0*/i, '') : '—'}
                             </span>
                             <span className="max-[859px]:hidden" role="cell">
-                              {f.estado === 'dentro' ? pastilla(f.hora === null ? 'Dentro' : `Dentro, ${f.hora}`, 'ok') : f.estado === 'no_viene' ? pastilla('No viene', 'neutro') : pastilla('Por llegar', 'laton')}
+                              {f.estado === 'dentro' ? pastilla(f.hora === null ? t('Dentro', 'Inside') : t(`Dentro, ${f.hora}`, `Inside, ${f.hora}`), 'ok') : f.estado === 'no_viene' ? pastilla(t('No viene', 'Not coming'), 'neutro') : pastilla(t('Por llegar', 'Expected'), 'laton')}
                             </span>
                             <span className="flex justify-end" role="cell">
                               {confirmar === f.clave ? (
                                 <span className="flex items-center gap-1.5" role="alert">
                                   <button className="min-h-10 cursor-pointer rounded-[10px] bg-danger px-3 text-[13px] text-white" onClick={() => deshacer(f)} type="button">
-                                    Deshacer
+                                    {t('Deshacer', 'Undo')}
                                   </button>
                                   <button className="min-h-10 cursor-pointer px-2 text-[13px] text-ink-mute" onClick={() => setConfirmar(null)} type="button">
-                                    No
+                                    {t('No', 'No')}
                                   </button>
                                 </span>
                               ) : f.estado === 'dentro' ? (
                                 <>
-                                  <span className="text-[14px] text-ok-deep min-[860px]:hidden">{f.hora === null ? 'Dentro' : `Dentro ${f.hora}`}</span>
+                                  <span className="text-[14px] text-ok-deep min-[860px]:hidden">{f.hora === null ? t('Dentro', 'Inside') : t(`Dentro ${f.hora}`, `Inside ${f.hora}`)}</span>
                                   <button
-                                    aria-label={`Deshacer el ingreso de ${f.nombre}`}
+                                    aria-label={t(`Deshacer el ingreso de ${f.nombre}`, `Undo ${f.nombre}’s check-in`)}
                                     className="cursor-pointer text-[14px] font-medium text-gold-deep hover:underline disabled:opacity-50 max-[859px]:ml-3 max-[859px]:min-h-11"
                                     disabled={enCurso !== null}
                                     onClick={() => setConfirmar(f.clave)}
                                     type="button"
                                   >
-                                    {enCurso === f.clave ? 'Deshaciendo…' : 'Deshacer'}
+                                    {enCurso === f.clave ? t('Deshaciendo…', 'Undoing…') : t('Deshacer', 'Undo')}
                                   </button>
                                 </>
                               ) : f.estado === 'no_viene' ? null : (
                                 <button
-                                  aria-label={`Registrar a ${f.nombre}`}
+                                  aria-label={t(`Registrar a ${f.nombre}`, `Check in ${f.nombre}`)}
                                   className="min-h-11 cursor-pointer rounded-[10px] border border-line-panel-strong bg-bg-raised px-4 text-[14px] font-medium text-ink hover:border-gold disabled:opacity-50 min-[860px]:min-h-10"
                                   disabled={enCurso !== null}
                                   onClick={() => registrar([f], Date.now(), f.clave)}
                                   type="button"
                                 >
-                                  {enCurso === f.clave ? 'Registrando…' : 'Registrar'}
+                                  {enCurso === f.clave ? t('Registrando…', 'Checking in…') : t('Registrar', 'Check in')}
                                 </button>
                               )}
                             </span>
@@ -674,6 +677,7 @@ function SinPase({
   eventSlug: string
   invitaciones: readonly { id: string; nombre: string; mesa: string | null }[]
 }) {
+  const t = useT()
   const [estado, registrar, registrando] = useActionState<SinPaseState, FormData>(sinCaerse(registrarSinPaseAction), { status: 'idle' })
   const [con, setCon] = useState(invitaciones[0]?.id ?? '')
   const mesaDeSuInvitacion = mesas.find((m) => m.invitaciones.includes(con))?.id ?? ''
@@ -701,25 +705,25 @@ function SinPase({
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
             <h2 className="font-display text-[30px] leading-tight font-medium max-[767px]:text-[26px]" id="sin-pase-titulo">
-              Llegó alguien sin pase
+              {t('Llegó alguien sin pase', 'Someone arrived without a pass')}
             </h2>
-            <p className="text-[15px] text-ink-mute">Lo registramos como acompañante extra. El catering lo cuenta.</p>
+            <p className="text-[15px] text-ink-mute">{t('Lo registramos como acompañante extra. El catering lo cuenta.', 'We record them as an extra companion. Catering counts them.')}</p>
           </div>
-          <button aria-label="Cerrar" className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold" onClick={cerrar} type="button">
+          <button aria-label={t('Cerrar', 'Close')} className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold" onClick={cerrar} type="button">
             <CloseIcon className="size-4" />
           </button>
         </div>
-        <p className="mt-5 rounded-[12px] bg-pill-pending px-4 py-3.5 text-[14.5px] text-pill-pending-ink">Primero búscalo por nombre: quizá está en otra invitación.</p>
+        <p className="mt-5 rounded-[12px] bg-pill-pending px-4 py-3.5 text-[14.5px] text-pill-pending-ink">{t('Primero búscalo por nombre: quizá está en otra invitación.', 'Search for them by name first: they may be on another invitation.')}</p>
         <form action={registrar} className="mt-5 flex flex-col gap-4">
           <input name="eventId" type="hidden" value={eventId} />
           <input name="eventSlug" type="hidden" value={eventSlug} />
           <label className="flex flex-col gap-2" htmlFor="sin-pase-nombre">
-            <span className={LABEL_CLASS}>Nombre</span>
+            <span className={LABEL_CLASS}>{t('Nombre', 'Name')}</span>
             <input autoComplete="off" className={FIELD_CLASS} id="sin-pase-nombre" maxLength={160} name="nombre" required />
           </label>
           <div className="grid gap-4 min-[480px]:grid-cols-2">
             <label className="flex flex-col gap-2" htmlFor="sin-pase-con">
-              <span className={LABEL_CLASS}>Viene con</span>
+              <span className={LABEL_CLASS}>{t('Viene con', 'Comes with')}</span>
               <select
                 className={FIELD_CLASS}
                 id="sin-pase-con"
@@ -740,13 +744,13 @@ function SinPase({
             </label>
             {mesas.length === 0 ? null : (
               <label className="flex flex-col gap-2" htmlFor="sin-pase-mesa">
-                <span className={LABEL_CLASS}>Mesa</span>
+                <span className={LABEL_CLASS}>{t('Mesa', 'Table')}</span>
                 {/* Su mesa (entra con su invitación) u otra (se le abre una invitación propia en esa mesa). */}
                 <select className={FIELD_CLASS} id="sin-pase-mesa" name="tableId" onChange={(e) => setMesaElegida(e.target.value)} value={mesa}>
-                  {mesaDeSuInvitacion === '' ? <option value="">Sin mesa</option> : null}
+                  {mesaDeSuInvitacion === '' ? <option value="">{t('Sin mesa', 'No table')}</option> : null}
                   {mesas.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.label} ({m.libres === 1 ? '1 libre' : `${m.libres} libres`})
+                      {m.label} ({m.libres === 1 ? t('1 libre', '1 free') : t(`${m.libres} libres`, `${m.libres} free`)})
                     </option>
                   ))}
                 </select>
@@ -761,10 +765,10 @@ function SinPase({
           ) : null}
           <div className="flex flex-wrap justify-end gap-2.5 max-[767px]:flex-col-reverse max-[767px]:items-stretch">
             <button className={botonClases('default')} onClick={cerrar} type="button">
-              Cancelar
+              {t('Cancelar', 'Cancel')}
             </button>
-            <SubmitButton pending={registrando} pendingLabel="Registrando…" variant="primary">
-              Registrar la llegada
+            <SubmitButton pending={registrando} pendingLabel={t('Registrando…', 'Checking in…')} variant="primary">
+              {t('Registrar la llegada', 'Record the arrival')}
             </SubmitButton>
           </div>
         </form>

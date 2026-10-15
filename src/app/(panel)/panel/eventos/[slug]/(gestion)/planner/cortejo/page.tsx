@@ -12,11 +12,17 @@ import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
 import { PlusIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducirTodo } from '@/shared/i18n/en-ingles'
 
-export const metadata = { title: 'Cortejo' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Cortejo', 'Wedding party') }
+}
 export const dynamic = 'force-dynamic'
 
 export default async function CortejoPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ panel?: string; miembro?: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const { panel, miembro } = await searchParams
@@ -27,7 +33,7 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El cortejo y los ensayos vienen con Gala e Imperial." title="Cortejo" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El cortejo y los ensayos vienen con Gala e Imperial." title={t('Cortejo', 'Wedding party')} />
   }
 
   const fiesta = fiestaDeTema(event.value.themeKey)
@@ -38,14 +44,14 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
   const partidas = (await planner.listBudget(event.value.id)).map((p) => ({ id: p.id, concept: p.concept }))
   const miembros = (await planner.dia.listCourt(event.value.id)).map((m) => ({
     ...m,
-    whatsappHref: m.whatsapp ? buildWhatsAppLink(m.whatsapp, `Hola ${m.name}, te escribo por ${event.value.title}.`) : null,
+    whatsappHref: m.whatsapp ? buildWhatsAppLink(m.whatsapp, t(`Hola ${m.name}, te escribo por ${event.value.title}.`, `Hi ${m.name}, I’m writing about ${event.value.title}.`)) : null,
     partida: m.budgetItemId === null ? null : (partidas.find((p) => p.id === m.budgetItemId)?.concept ?? null),
   }))
   // El próximo primero; los que ya pasaron, al final.
   const ahora = new Date().getTime()
   const ensayos = (await planner.dia.listRehearsals(event.value.id))
     .toSorted((x, y) => (x.date.getTime() < ahora ? 1 : 0) - (y.date.getTime() < ahora ? 1 : 0) || x.date.getTime() - y.date.getTime())
-    .map((x) => ({ ...x, cuando: mayuscula(DIA_Y_HORA.format(x.date).replace(',', '').replace(/ (\d+:\d+)$/, ', $1')) }))
+    .map((x) => ({ ...x, cuando: mayuscula(diaYHora(t('es-BO', 'en-US')).format(x.date).replace(',', '').replace(/ (\d+:\d+)$/, ', $1')) }))
   const evento = { eventId: event.value.id, eventSlug: event.value.slug }
 
   const base = `/panel/eventos/${event.value.slug}/planner/cortejo`
@@ -54,7 +60,7 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
   const avisar =
     proximo === undefined
       ? null
-      : `https://wa.me/?text=${encodeURIComponent(`Ensayo de ${event.value.title}: ${proximo.cuando}${proximo.place ? `, en ${proximo.place}` : ''}. ¡Los esperamos!`)}`
+      : `https://wa.me/?text=${encodeURIComponent(t(`Ensayo de ${event.value.title}: ${proximo.cuando}${proximo.place ? `, en ${proximo.place}` : ''}. ¡Los esperamos!`, `${event.value.title} rehearsal: ${proximo.cuando}${proximo.place ? `, at ${proximo.place}` : ''}. See you there!`))}`
 
   return (
     <>
@@ -62,23 +68,23 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
         actions={
           <span className="flex gap-2.5">
             <PanelButton href={`${base}?panel=ensayo`}>
-              <PlusIcon className="size-4" /> Ensayo
+              <PlusIcon className="size-4" /> {t('Ensayo', 'Rehearsal')}
             </PanelButton>
             <PanelButton href={`${base}?panel=miembro`} variant="primary">
-              <PlusIcon className="size-4" /> Añadir persona
+              <PlusIcon className="size-4" /> {t('Añadir persona', 'Add person')}
             </PanelButton>
           </span>
         }
-        meta={fiesta === 'xv' ? 'Chambelanes, damas y corte, con sus ensayos.' : 'Padrinos, damas y pajes, con sus ensayos.'}
-        title={fiesta === 'xv' ? 'Chambelanes y corte' : 'Cortejo'}
+        meta={fiesta === 'xv' ? t('Chambelanes, damas y corte, con sus ensayos.', 'Chambelanes, damas and court, with their rehearsals.') : t('Padrinos, damas y pajes, con sus ensayos.', 'Sponsors, bridesmaids and page boys, with their rehearsals.')}
+        title={fiesta === 'xv' ? t('Chambelanes y corte', 'Chambelanes and court') : t('Cortejo', 'Wedding party')}
       />
       {panel === 'miembro' ? (
-        <PanelDialog closeHref={base} title="Añadir al cortejo" width={620}>
-          <NewCourtMemberForm ejemplo={VOCABULARIO[fiesta].ejemplos.apadrina} evento={evento} partidas={partidas} tipos={tipos} />
+        <PanelDialog closeHref={base} title={t('Añadir al cortejo', 'Add to the wedding party')} width={620}>
+          <NewCourtMemberForm ejemplo={traducirTodo(VOCABULARIO[fiesta].ejemplos.apadrina, t)} evento={evento} partidas={partidas} tipos={tipos} />
         </PanelDialog>
       ) : null}
       {panel === 'ensayo' ? (
-        <PanelDialog closeHref={base} title={fiesta === 'xv' ? 'Ensayo del vals' : 'Ensayo'} width={620}>
+        <PanelDialog closeHref={base} title={fiesta === 'xv' ? t('Ensayo del vals', 'Waltz rehearsal') : t('Ensayo', 'Rehearsal')} width={620}>
           <NuevoEnsayoForm evento={evento} miembros={miembros} />
         </PanelDialog>
       ) : null}
@@ -99,5 +105,5 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
   )
 }
 
-const DIA_Y_HORA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/La_Paz' })
-const mayuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+const diaYHora = (locale: string) => new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/La_Paz' })
+const mayuscula = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1)

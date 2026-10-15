@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { NONCE_HEADER, PATHNAME_HEADER } from '@/shared/config/headers'
-import { LOCALE_COOKIE, isLocale } from '@/shared/i18n/locales'
+import { isLocale } from '@/shared/i18n/locales'
 import { negotiateLocale } from '@/shared/i18n/negotiate'
 import { rutaInterna, rutaPublica } from '@/shared/i18n/rutas'
 import { buildContentSecurityPolicy, createNonce } from '@/shared/security/csp'
@@ -52,7 +52,10 @@ export function proxy(request: NextRequest) {
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
     PUBLIC_FILE.test(pathname) ||
-    DESCARGA_PRIVADA.test(pathname)
+    DESCARGA_PRIVADA.test(pathname) ||
+    // Next pone la imagen al compartir con su carpeta interna (`/en/bodas/opengraph-image-…`): se sirve ahí, sin
+    // mudarla, para que WhatsApp y Facebook no tengan que seguir un 308.
+    pathname.includes('/opengraph-image')
   ) {
     return NextResponse.next()
   }
@@ -76,17 +79,14 @@ export function proxy(request: NextRequest) {
   // real para idiomas no soportados, en vez de un redirect a ciegas.
   if (pathname !== '/') return withCsp(request)
 
-  const locale = negotiateLocale({
-    cookie: request.cookies.get(LOCALE_COOKIE)?.value ?? null,
-    acceptLanguage: request.headers.get('accept-language'),
-  })
+  // Siempre el idioma del aparato (14 oct, sin selector ni recuerdo): si no es español ni inglés, inglés.
+  const locale = negotiateLocale({ acceptLanguage: request.headers.get('accept-language') })
 
   const url = request.nextUrl.clone()
   url.pathname = `/${locale}`
   const response = NextResponse.redirect(url, 307)
   // La raíz es el x-default: responde según el idioma, y las cachés lo tienen que saber.
-  response.headers.set('Vary', 'Accept-Language, Cookie')
-  response.cookies.set(LOCALE_COOKIE, locale, { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+  response.headers.set('Vary', 'Accept-Language')
   return response
 }
 

@@ -5,14 +5,17 @@ import { useActionState, useId, useState } from 'react'
 import { EyeIcon, EyeOffIcon } from '@/shared/design/ui/icons'
 import { signInAction, type SignInActionState } from '@/app/_acciones/identity/actions'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import type { T } from '@/shared/i18n/t'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INITIAL: SignInActionState = { status: 'idle', message: '' }
 
-const MESSAGES = {
-  invalid_credentials: 'Correo o contraseña incorrectos.',
-  too_many_attempts: 'Demasiados intentos. Espera un minuto.',
-  storage_failure: 'No pudimos comprobar tus datos. Inténtalo en un momento.',
-} as const
+const mensajes = (t: T) =>
+  ({
+    invalid_credentials: t('Correo o contraseña incorrectos.', 'Wrong email or password.'),
+    too_many_attempts: t('Demasiados intentos. Espera un minuto.', 'Too many attempts. Wait a minute.'),
+    storage_failure: t('No pudimos comprobar tus datos. Inténtalo en un momento.', 'We could not check your details. Try again in a moment.'),
+  }) as const
 
 /**
  * El campo lleva el foco en un anillo dorado, no en el contorno del navegador: el azul
@@ -25,19 +28,20 @@ const FIELD_CLASS =
 const LABEL_CLASS = 'text-[14px] font-medium text-ink'
 
 export function SignInForm() {
+  const t = useT()
   const [state, formAction, isPending] = useActionState(sinCaerse(signInAction, { status: 'error', message: 'storage_failure' }), INITIAL)
   const emailId = useId()
   const passwordId = useId()
   const errorId = useId()
   // Arranca oculta: enseñarla por defecto la dejaría a la vista de quien pasa por detrás.
   const [verContrasena, setVerContrasena] = useState(false)
-  const error = state.status === 'error' && state.message !== '' ? MESSAGES[state.message] : null
+  const error = state.status === 'error' && state.message !== '' ? mensajes(t)[state.message] : null
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-5">
       <div className="flex flex-col gap-2">
         <label className={LABEL_CLASS} htmlFor={emailId}>
-          Correo
+          {t('Correo', 'Email')}
         </label>
         <input
           autoComplete="username"
@@ -49,7 +53,7 @@ export function SignInForm() {
           className={FIELD_CLASS}
           id={emailId}
           name="email"
-          placeholder="nombre@correo.com"
+          placeholder={t('nombre@correo.com', 'name@email.com')}
           required
           type="email"
         />
@@ -57,7 +61,7 @@ export function SignInForm() {
 
       <div className="flex flex-col gap-2">
         <label className={LABEL_CLASS} htmlFor={passwordId}>
-          Contraseña
+          {t('Contraseña', 'Password')}
         </label>
         {/*
           El ojo va **dentro** del campo, no al lado: fuera empuja el ancho del input y en
@@ -84,7 +88,7 @@ export function SignInForm() {
             // campo **y** con este botón, y Playwright en modo estricto se niega a elegir:
             // el inicio de sesión del setup murió ahí y con él 224 pruebas que ni
             // arrancaron. Es la misma lección que los iconos de la fila de invitados.
-            aria-label={verContrasena ? 'Ocultar' : 'Mostrar'}
+            aria-label={verContrasena ? t('Ocultar', 'Hide') : t('Mostrar', 'Show')}
             aria-pressed={verContrasena}
             className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-[10px] p-2 text-ink-mute transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             onClick={() => setVerContrasena((antes) => !antes)}
@@ -108,11 +112,11 @@ export function SignInForm() {
       <div className="flex items-center justify-between gap-3 text-[14px]">
         <label className="flex min-h-11 cursor-pointer items-center gap-2.5">
           <input className="size-[18px] accent-[var(--color-shell-deep)]" defaultChecked name="recordarme" type="checkbox" />
-          Recordarme<span className="max-[559px]:sr-only"> en este aparato</span>
+          {t('Recordarme', 'Remember me')}<span className="max-[559px]:sr-only">{t(' en este aparato', ' on this device')}</span>
         </label>
         <Link className="text-gold-deep underline underline-offset-4 hover:text-ink" href="/panel/recuperar">
-          <span aria-hidden className="min-[560px]:hidden">¿La olvidaste?</span>
-          <span className="max-[559px]:sr-only">¿Olvidaste tu contraseña?</span>
+          <span aria-hidden className="min-[560px]:hidden">{t('¿La olvidaste?', 'Forgot it?')}</span>
+          <span className="max-[559px]:sr-only">{t('¿Olvidaste tu contraseña?', 'Forgot your password?')}</span>
         </Link>
       </div>
 
@@ -120,17 +124,17 @@ export function SignInForm() {
         className="mt-1 min-h-13 cursor-pointer rounded-[10px] bg-shell-deep px-7 text-[16px] font-medium text-shell-ink transition-colors hover:bg-sage disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isPending}
         type="submit" aria-busy={(isPending) || undefined}>
-        {isPending ? 'Entrando…' : 'Entrar'}
+        {isPending ? t('Entrando…', 'Signing in…') : t('Entrar', 'Sign in')}
       </button>
 
       {/* Sigue sin haber «crear cuenta», y eso no es un descuido: las altas las hace el
           admin. Lo que sí hay ya es recuperación — antes no, porque no había proveedor de
           correo, y este texto decía justamente eso. */}
       <p className="text-center text-[14px] text-ink-mute">
-        ¿Aún no tienes acceso?{' '}
+        {t('¿Aún no tienes acceso?', 'No access yet?')}{' '}
         {/* Una ruta que redirige a wa.me: se abre fuera, no se navega dentro de la app. */}
         <a className="text-gold-deep underline underline-offset-4 hover:text-ink" href="/contacto/whatsapp" rel="noopener noreferrer" target="_blank">
-          Escríbenos por WhatsApp
+          {t('Escríbenos por WhatsApp', 'Message us on WhatsApp')}
         </a>
       </p>
     </form>

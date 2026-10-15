@@ -2,6 +2,7 @@ import { orders } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,8 +20,9 @@ const bs = (cents: number | null) => (cents === null ? '' : (cents / 100).toFixe
  */
 export async function GET() {
   await requireAdmin()
+  const t = await tr()
   const leidos = await orders.page({ status: 'approved', tope: 5000, prioridad: ['approved'] })
-  if (isErr(leidos)) return new Response('No pudimos leer los pedidos.', { status: 503 })
+  if (isErr(leidos)) return new Response(t('No pudimos leer los pedidos.', 'We could not read the orders.'), { status: 503 })
 
   const filas = leidos.value.pedidos
     .map(({ order: o }) => o)
@@ -31,7 +33,7 @@ export async function GET() {
         o.publicRef,
         o.customerName,
         o.contact,
-        o.addonSlug === null ? (o.planName ?? 'Plan retirado') : `Extra ${o.addonName ?? o.addonSlug}`,
+        o.addonSlug === null ? (o.planName ?? t('Plan retirado', 'Withdrawn plan')) : `Extra ${o.addonName ?? o.addonSlug}`,
         bs(o.amountCents),
         o.currency ?? 'BOB',
         bs(o.depositCents),
@@ -43,12 +45,16 @@ export async function GET() {
         .map(celda)
         .join(','),
     )
-  const cabecera = ['fecha_aprobado', 'referencia', 'cliente', 'contacto', 'producto', 'importe', 'moneda', 'anticipo', 'saldo_cobrado_el', 'descuento', 'codigo_referido', 'evento'].join(',')
+  const cabecera = (
+    t('es', 'en') === 'es'
+      ? ['fecha_aprobado', 'referencia', 'cliente', 'contacto', 'producto', 'importe', 'moneda', 'anticipo', 'saldo_cobrado_el', 'descuento', 'codigo_referido', 'evento']
+      : ['approved_on', 'reference', 'client', 'contact', 'product', 'amount', 'currency', 'deposit', 'balance_paid_on', 'discount', 'referral_code', 'event']
+  ).join(',')
   // BOM al principio: sin él, Excel abre las tildes rotas.
   return new Response(`﻿${[cabecera, ...filas].join('\r\n')}\r\n`, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="ingresos-${fechaEnBolivia(new Date())}.csv"`,
+      'Content-Disposition': `attachment; filename="${t('ingresos', 'revenue')}-${fechaEnBolivia(new Date())}.csv"`,
       'Cache-Control': 'no-store',
     },
   })

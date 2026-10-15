@@ -4,6 +4,7 @@ import { LuxuryConSiri } from '@/modules/asistente/ui/LuxuryConSiri'
 import { primerEventoConLuxury } from '../../_carcasa/asistente'
 import { env } from '@/shared/config/env'
 import { TIPOS_DE_AVISO_EXPLICADOS } from '@/modules/notifications'
+import { traducir } from '@/shared/i18n/en-ingles'
 import { ActivarAvisos } from '@/modules/notifications/ui/ActivarAvisos'
 import { PreferenciasDeAvisos } from '@/modules/notifications/ui/PreferenciasDeAvisos'
 import { SesionesAbiertas } from '@/modules/identity/ui/SeguridadDeCuenta'
@@ -13,10 +14,14 @@ import { isErr } from '@/shared/result'
 import { requireSession, SESSION_COOKIE } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { MisDatos } from '@/modules/identity/ui/MisDatos'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
+import type { T } from '@/shared/i18n/t'
 
-const ROL = { admin: 'Administrador', atelier: 'Atelier', cliente: 'Cliente', puerta: 'Personal de puerta' } as const
+const ROL = (t: T) => ({ admin: t('administrador', 'administrator'), atelier: 'atelier', cliente: t('cliente', 'client'), puerta: t('personal de puerta', 'door staff') }) as const
 
-export const metadata = { title: 'Mi cuenta' }
+export async function generateMetadata() {
+  return { title: (await tr())('Mi cuenta', 'My account') }
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -33,13 +38,15 @@ export default async function CuentaPage() {
   // esto — el layout de `(atelier)` se evalúa antes y no la pedía, así que redirigía a
   // esta misma dirección en bucle.
   const actor = await requireSession()
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   const actual = await identity.authenticateSession((await cookies()).get(SESSION_COOKIE)?.value ?? null)
   const estaId = isErr(actual) ? null : actual.value.sessionId
   const sesiones = (await identity.sessionsOf(actor.userId)).map((s) => ({
     id: s.id,
-    dispositivo: s.device ?? 'sin identificar (se abrió antes de guardarlo)',
+    dispositivo: s.device ?? t('sin identificar (se abrió antes de guardarlo)', 'unidentified (opened before we stored it)'),
     tipo: tipoDeDispositivo(s.device),
-    ultimoUso: fechaHora(s.lastSeenAt ?? s.createdAt),
+    ultimoUso: fechaHora(s.lastSeenAt ?? s.createdAt, locale),
     esta: s.id === estaId,
   }))
 
@@ -51,49 +58,50 @@ export default async function CuentaPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PanelHeader meta="Tus datos, tus avisos y dónde tienes la sesión abierta." title="Mi cuenta" />
+      <PanelHeader meta={t('Tus datos, tus avisos y dónde tienes la sesión abierta.', 'Your details, your notifications and where you are signed in.')} title={t('Mi cuenta', 'My account')} />
 
       <div className="grid items-start gap-5 min-[900px]:grid-cols-2">
         <section aria-labelledby="tus-datos" className={TARJETA}>
           <h2 className="font-display text-[24px] font-medium" id="tus-datos">
-            Tus datos
+            {t('Tus datos', 'Your details')}
           </h2>
           <MisDatos
-            ayudaCorreo={actor.role === 'admin' ? 'Para cambiarlo, crea la cuenta nueva en Ajustes › Equipo y borra esta.' : 'Para cambiarlo, escríbele al atelier.'}
+            ayudaCorreo={actor.role === 'admin' ? t('Para cambiarlo, crea la cuenta nueva en Ajustes › Equipo y borra esta.', 'To change it, create the new account in Settings › Team and delete this one.') : t('Para cambiarlo, escríbele al atelier.', 'To change it, message the atelier.')}
             correo={actor.email}
             nombre={datos.nombre}
             telefono={datos.telefono}
           />
-          <p className="text-[13px] text-ink-mute">Entras como {ROL[actor.role].toLowerCase()}.</p>
+          <p className="text-[13px] text-ink-mute">{t('Entras como', 'Signed in as')} {ROL(t)[actor.role]}.</p>
         </section>
 
         <section aria-labelledby="donde" className={TARJETA}>
           <h2 className="font-display text-[24px] font-medium" id="donde">
-            Dónde está abierta
+            {t('Dónde está abierta', 'Where you are signed in')}
           </h2>
           <SesionesAbiertas sesiones={sesiones} />
         </section>
       </div>
 
+
       {actor.role === 'puerta' ? null : (
         <section aria-labelledby="avisos-t" className={`${TARJETA} scroll-mt-24`} id="avisos">
           <h2 className="font-display text-[24px] font-medium" id="avisos-t">
-            Avisos
+            {t('Avisos', 'Notifications')}
           </h2>
           <p className="max-w-[68ch] text-[14px] text-ink-mute">
-            Te avisamos en la campana y, si los activas, en tu celular o computadora aunque no tengas el panel abierto. En iPhone, con el panel instalado en la pantalla de inicio.
+            {t('Te avisamos en la campana y, si los activas, en tu celular o computadora aunque no tengas el panel abierto. En iPhone, con el panel instalado en la pantalla de inicio.', 'We notify you in the bell and, if you turn them on, on your phone or computer even when the panel is closed. On iPhone, with the panel added to the home screen.')}
           </p>
           <ActivarAvisos clavePublica={avisos.clavePublica} />
-          <PreferenciasDeAvisos silenciados={await avisos.silenciados(actor.userId)} tipos={TIPOS_DE_AVISO_EXPLICADOS.filter((t) => t.soloAdmin === (actor.role === 'admin'))} />
+          <PreferenciasDeAvisos silenciados={await avisos.silenciados(actor.userId)} tipos={TIPOS_DE_AVISO_EXPLICADOS.filter((x) => x.soloAdmin === (actor.role === 'admin')).map((x) => ({ ...x, titulo: traducir(x.titulo, t), ayuda: traducir(x.ayuda, t) }))} />
         </section>
       )}
 
       {conLuxury ? (
         <section aria-labelledby="siri-t" className={`${TARJETA} scroll-mt-24`} id="siri">
           <h2 className="font-display text-[24px] font-medium" id="siri-t">
-            Luxury con Siri
+            {t('Luxury con Siri', 'Luxury with Siri')}
           </h2>
-          <p className="max-w-[68ch] text-[14px] text-ink-mute">Háblale a Luxury sin abrir el panel: «Oye Siri, Luxury», y te responde en voz alta. En iPhone, con la app Atajos.</p>
+          <p className="max-w-[68ch] text-[14px] text-ink-mute">{t('Háblale a Luxury sin abrir el panel: «Oye Siri, Luxury», y te responde en voz alta. En iPhone, con la app Atajos.', 'Talk to Luxury without opening the panel: “Hey Siri, Luxury”, and it answers out loud. On iPhone, with the Shortcuts app.')}</p>
           <LuxuryConSiri atajo={(await asistente.config()).atajoDeSiri} url={`${env.SITE_URL.replace(/\/$/, '')}/panel/luxury/siri`} />
         </section>
       ) : null}

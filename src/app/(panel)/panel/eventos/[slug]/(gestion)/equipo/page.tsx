@@ -6,8 +6,12 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { fecha, hora } from '@/shared/format/fecha'
 import { formatoWhatsapp } from '@/shared/whatsapp'
 import { isErr, isOk } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Equipo' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Equipo', 'Team') }
+}
 export const dynamic = 'force-dynamic'
 
 /**
@@ -16,6 +20,7 @@ export const dynamic = 'force-dynamic'
  * y el dueño (sección `equipo`). El co-anfitrión no suma a nadie: 404.
  */
 export default async function EquipoPage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
 
@@ -39,7 +44,7 @@ export default async function EquipoPage({ params }: { params: Promise<{ slug: s
 
   return (
     <>
-      <PanelHeader meta="Quién te ayuda con la fiesta. La familia entra con tu misma cuenta." title="Equipo y recepción" />
+      <PanelHeader meta={t('Quién te ayuda con la fiesta. La familia entra con tu misma cuenta.', 'Who helps you with the party. Family signs in with your same account.')} title={t('Equipo y recepción', 'Team and reception')} />
       <EquipoCard
           eventId={event.value.id}
           eventSlug={event.value.slug}

@@ -9,6 +9,8 @@ import { isErr } from '@/shared/result'
 import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { invalidarLaWeb, refrescar, texto } from '@/app/_acciones/admin/admin-comun'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Catálogo: planes y publicación de modelos. La web pública es `force-dynamic`, así que
@@ -20,18 +22,19 @@ import { registrarFallo } from '@/shared/observability/fallos'
  * el dominio no puede importar otro módulo y el dinero se convierte en un solo sitio.
  */
 export async function savePlanAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
 
   const slug = texto(formData, 'slug')
   const valores = Object.fromEntries([...formData.entries()].filter((par): par is [string, string] => typeof par[1] === 'string'))
   const precio = parseAmount(texto(formData, 'price'))
-  if (isErr(precio)) return { status: 'error', message: precio.error.detail, valores }
+  if (isErr(precio)) return { status: 'error', message: traducir(precio.error.detail, t), valores }
   const reservaTexto = texto(formData, 'depositFixed').trim()
   const reserva = reservaTexto === '' ? null : parseAmount(reservaTexto)
-  if (reserva !== null && isErr(reserva)) return { status: 'error', message: `Reserva fija: ${reserva.error.detail}`, valores }
+  if (reserva !== null && isErr(reserva)) return { status: 'error', message: t(`Reserva fija: ${reserva.error.detail}`, `Fixed deposit: ${traducir(reserva.error.detail, t)}`), valores }
   const usdTexto = texto(formData, 'priceUsd').trim()
   const usd = usdTexto === '' ? null : parseAmount(usdTexto)
-  if (usd !== null && isErr(usd)) return { status: 'error', message: `Precio en dólares: ${usd.error.detail}`, valores }
+  if (usd !== null && isErr(usd)) return { status: 'error', message: t(`Precio en dólares: ${usd.error.detail}`, `Price in dollars: ${traducir(usd.error.detail, t)}`), valores }
 
   const marcado = (clave: string) => formData.get(clave) === 'on'
   const textoDe = (locale: 'es' | 'en') => ({
@@ -73,15 +76,15 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
   if (isErr(guardado)) {
     if (guardado.error.kind === 'storage_failure') {
       registrarFallo('admin/planes-actions', 'savePlanAction', guardado.error.detail)
-      return { status: 'error', message: 'No pudimos guardar el plan. Vuelve a intentarlo en un momento.', valores }
+      return { status: 'error', message: t('No pudimos guardar el plan. Vuelve a intentarlo en un momento.', 'We couldn’t save the plan. Try again in a moment.'), valores }
     }
-    return { status: 'error', message: guardado.error.detail, valores }
+    return { status: 'error', message: traducir(guardado.error.detail, t), valores }
   }
 
   revalidatePath('/panel/admin/planes')
   refrescar()
   invalidarLaWeb('catalogo')
-  return { status: 'success', message: 'Plan guardado. La web ya enseña los cambios.' }
+  return { status: 'success', message: t('Plan guardado. La web ya enseña los cambios.', 'Plan saved. The website now shows the changes.') }
 }
 
 /**
@@ -90,19 +93,20 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
  * congeló su importe y el evento copió el efecto.
  */
 export async function saveExtraAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
   const slug = texto(formData, 'slug')
   const valores = Object.fromEntries([...formData.entries()].filter((par): par is [string, string] => typeof par[1] === 'string'))
   const precio = parseAmount(texto(formData, 'price'))
-  if (isErr(precio)) return { status: 'error', message: precio.error.detail, valores }
+  if (isErr(precio)) return { status: 'error', message: traducir(precio.error.detail, t), valores }
 
   const leido = leerExtra({ name: texto(formData, 'name'), priceCents: precio.value, effect: texto(formData, 'effect'), amount: texto(formData, 'amount'), isActive: formData.get('isActive') === 'on' })
   if (!leido.ok) return { status: 'error', message: leido.mensaje, valores }
-  if (!(await plans.updateExtra(slug, leido.valor))) return { status: 'error', message: 'Ese extra ya no existe.', valores }
+  if (!(await plans.updateExtra(slug, leido.valor))) return { status: 'error', message: t('Ese extra ya no existe.', 'That extra no longer exists.'), valores }
 
   await admin.record(actor, { action: 'extra.editado', subject: slug, detail: `${leido.valor.name} · ${leido.valor.priceCents / 100} · ${leido.valor.isActive ? 'a la venta' : 'apagado'}` })
   revalidatePath('/panel/admin/extras')
   refrescar()
   invalidarLaWeb('extras')
-  return { status: 'success', message: 'Extra guardado.' }
+  return { status: 'success', message: t('Extra guardado.', 'Extra saved.') }
 }

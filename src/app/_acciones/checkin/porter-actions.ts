@@ -14,6 +14,9 @@ import type { DoorActionState, ScanInput } from '@/app/_acciones/checkin/actions
 import type { ScanOutcome } from '@/modules/checkin/application/check-in-by-scan'
 import type { PorterAccessError, PorterSession } from '@/modules/checkin/application/porter-use-cases'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
+import type { T } from '@/shared/i18n/t'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Del panel: sumar y quitar porteros. Las pide el anfitrión, su dueño o el admin, con la
@@ -32,6 +35,7 @@ const texto = (formData: FormData, clave: string): string => {
 }
 
 export async function addPorterAction(_previous: PorterActionState, formData: FormData): Promise<PorterActionState> {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = texto(formData, 'eventId')
   const eventSlug = texto(formData, 'eventSlug')
@@ -39,10 +43,10 @@ export async function addPorterAction(_previous: PorterActionState, formData: Fo
 
   // Los porteros solo existen con puerta: sin el modo puerta en el plan no hay a qué entrar.
   const puerta = await plans.requireFeature(eventId, 'checkin')
-  if (isErr(puerta)) return { status: 'error', message: 'Tu plan no incluye pases con QR ni personal de recepción.' }
+  if (isErr(puerta)) return { status: 'error', message: t('Tu plan no incluye pases con QR ni personal de recepción.', 'Your plan doesn’t include QR passes or reception staff.') }
 
   const capacidad = await plans.allowanceFor(eventId)
-  if (isErr(capacidad)) return { status: 'error', message: 'No pudimos leer tu plan. Vuelve a intentarlo en un momento.' }
+  if (isErr(capacidad)) return { status: 'error', message: t('No pudimos leer tu plan. Vuelve a intentarlo en un momento.', 'We couldn’t read your plan. Try again in a moment.') }
 
   const alta = await porters.add({
     eventId,
@@ -52,10 +56,10 @@ export async function addPorterAction(_previous: PorterActionState, formData: Fo
     phone: texto(formData, 'phone'),
     gate: texto(formData, 'gate'),
   })
-  if (isErr(alta)) return { status: 'error', message: alta.error.detail }
+  if (isErr(alta)) return { status: 'error', message: traducir(alta.error.detail, t) }
 
   const evento = await events.getByIdUnscoped(eventId)
-  const titulo = isErr(evento) ? 'el evento' : evento.value.title
+  const titulo = isErr(evento) ? t('el evento', 'the event') : evento.value.title
   const enlace = `${env.SITE_URL.replace(/\/+$/, '')}/p/${alta.value.token}`
   const nombre = texto(formData, 'name').trim()
   const telefono = texto(formData, 'phone').trim()
@@ -71,19 +75,20 @@ export async function addPorterAction(_previous: PorterActionState, formData: Fo
         ? null
         : enlaceWhatsapp(
             telefono,
-            `Hola ${nombre}, este es tu acceso a la puerta de ${titulo}: ${enlace} · PIN ${alta.value.pin}. Funciona el día del evento.`,
+            t(`Hola ${nombre}, este es tu acceso a la puerta de ${titulo}: ${enlace} · PIN ${alta.value.pin}. Funciona el día del evento.`, `Hi ${nombre}, this is your door access for ${titulo}: ${enlace} · PIN ${alta.value.pin}. It works on the day of the event.`),
           ),
   }
 }
 
 export async function removePorterAction(_previous: PorterActionState, formData: FormData): Promise<PorterActionState> {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = texto(formData, 'eventId')
   const eventSlug = texto(formData, 'eventSlug')
   await requireEventAccess(actor, { eventId, eventSlug, section: 'porteros' })
 
   const quitado = await porters.revoke(eventId, texto(formData, 'porterId'))
-  if (!quitado) return { status: 'error', message: 'Esa persona ya no estaba en recepción.' }
+  if (!quitado) return { status: 'error', message: t('Esa persona ya no estaba en recepción.', 'That person was no longer at reception.') }
 
   revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
   return { status: 'removed' }
@@ -99,23 +104,24 @@ const PORTER_COOKIE = 'door_porter'
 /** Cinco PIN por minuto y por IP, además de los cinco intentos por portero que cuenta la base. */
 const limitePin = createRateLimiter({ windowMs: 60_000, max: 5 })
 
-const MENSAJE: Record<PorterAccessError, string> = {
-  invalido: 'Ese PIN no es correcto.',
-  bloqueado: 'Demasiados intentos. Vuelve a intentarlo en 15 minutos.',
-  fuera_de_horario: 'Este acceso todavía no está abierto o ya cerró: funciona el día del evento.',
-  quitado: 'Este acceso ya no está disponible.',
-}
+const mensajeDe = (t: T): Record<PorterAccessError, string> => ({
+  invalido: t('Ese PIN no es correcto.', 'That PIN is not correct.'),
+  bloqueado: t('Demasiados intentos. Vuelve a intentarlo en 15 minutos.', 'Too many attempts. Try again in 15 minutes.'),
+  fuera_de_horario: t('Este acceso todavía no está abierto o ya cerró: funciona el día del evento.', 'This access is not open yet or has already closed: it works on the day of the event.'),
+  quitado: t('Este acceso ya no está disponible.', 'This access is no longer available.'),
+})
 
 export type PinState = { status: 'idle' } | { status: 'error'; message: string }
 
 export async function enterAsPorterAction(_previous: PinState, formData: FormData): Promise<PinState> {
+  const t = await tr()
   const token = texto(formData, 'token')
   const cabeceras = await headers()
   const ip = clientIpFrom({ realIp: cabeceras.get('x-real-ip'), forwardedFor: cabeceras.get('x-forwarded-for') })
-  if (limitePin.isLimited(`pin:${ip}`, Date.now())) return { status: 'error', message: 'Demasiados intentos. Espera un minuto.' }
+  if (limitePin.isLimited(`pin:${ip}`, Date.now())) return { status: 'error', message: t('Demasiados intentos. Espera un minuto.', 'Too many attempts. Wait a minute.') }
 
   const entrada = await porters.enter({ token, pin: texto(formData, 'pin') })
-  if (isErr(entrada)) return { status: 'error', message: MENSAJE[entrada.error] }
+  if (isErr(entrada)) return { status: 'error', message: mensajeDe(t)[entrada.error] }
 
   const jar = await cookies()
   // La ventana la corta el servidor en cada petición; la cookie solo evita pedir el PIN otra vez.

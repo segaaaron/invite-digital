@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { orders } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +28,7 @@ export const dynamic = 'force-dynamic'
  * partirían en dos.
  */
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const t = await tr()
   await requireAdmin()
 
   const { id } = await context.params
@@ -35,7 +37,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (isErr(leido)) {
     // 404 también cuando el fichero falta del almacén: distinguirlo no le sirve a nadie
     // que tenga sesión y sí describiría el estado interno a quien no debería.
-    if (leido.error.kind === 'not_found') return new NextResponse('No encontrado', { status: 404 })
+    if (leido.error.kind === 'not_found') return new NextResponse(t('No encontrado', 'Not found'), { status: 404 })
     throw new Error(leido.error.detail)
   }
 

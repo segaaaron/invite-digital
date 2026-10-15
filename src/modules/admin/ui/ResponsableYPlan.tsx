@@ -6,6 +6,7 @@ import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { reassignEventAction, setEventPlanAction } from '@/app/_acciones/admin/bodas-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -29,6 +30,7 @@ export function ResponsableYPlan({
   owners: readonly { id: string; email: string }[]
   plans: readonly { slug: string; nombre: string }[]
 }) {
+  const t = useT()
   const [reasignado, reasignar, reasignando] = useActionState<AdminActionState, FormData>(sinCaerse(reassignEventAction), INICIAL)
   const [plan, cambiarPlan, cambiandoPlan] = useActionState<AdminActionState, FormData>(sinCaerse(setEventPlanAction), INICIAL)
   const id = useId()
@@ -39,7 +41,7 @@ export function ResponsableYPlan({
         <input name="eventId" type="hidden" value={eventId} />
         <input name="eventSlug" type="hidden" value={eventSlug} />
         <label className={LABEL_CLASS} htmlFor={`${id}-plan`}>
-          Plan del evento
+          {t('Plan del evento', 'Event plan')}
         </label>
         <div className="flex flex-wrap gap-2">
           <select className={`${FIELD_CLASS} max-w-[260px]`} defaultValue={planSlug ?? ''} id={`${id}-plan`} name="planSlug">
@@ -49,18 +51,18 @@ export function ResponsableYPlan({
               </option>
             ))}
           </select>
-          <SubmitButton pending={cambiandoPlan} pendingLabel="Cambiando…" variant="default">
-            Cambiar plan
+          <SubmitButton pending={cambiandoPlan} pendingLabel={t('Cambiando…', 'Changing…')} variant="default">
+            {t('Cambiar plan', 'Change plan')}
           </SubmitButton>
         </div>
-        <p className="text-[12px] text-ink-mute">Se aplica en el momento: límites y funciones del evento cambian ya.</p>
+        <p className="text-[12px] text-ink-mute">{t('Se aplica en el momento: límites y funciones del evento cambian ya.', 'Applies right away: the event’s limits and features change now.')}</p>
         <ActionFeedback state={plan} />
       </form>
 
       <form action={reasignar} className="flex flex-col gap-2 border-t border-line-panel pt-5">
         <input name="eventId" type="hidden" value={eventId} />
         <label className={LABEL_CLASS} htmlFor={`${id}-dueno`}>
-          Atelier responsable
+          {t('Atelier responsable', 'Responsible atelier')}
         </label>
         <div className="flex flex-wrap gap-2">
           <select className={`${FIELD_CLASS} max-w-[320px]`} defaultValue={ownerId ?? ''} id={`${id}-dueno`} name="userId">
@@ -70,11 +72,11 @@ export function ResponsableYPlan({
               </option>
             ))}
           </select>
-          <SubmitButton pending={reasignando} pendingLabel="Reasignando…" variant="default">
-            Reasignar
+          <SubmitButton pending={reasignando} pendingLabel={t('Reasignando…', 'Reassigning…')} variant="default">
+            {t('Reasignar', 'Reassign')}
           </SubmitButton>
         </div>
-        <p className="text-[12px] text-ink-mute">Quien lleva el evento y lo ve en su bandeja. El cliente no cambia.</p>
+        <p className="text-[12px] text-ink-mute">{t('Quien lleva el evento y lo ve en su bandeja. El cliente no cambia.', 'Who runs the event and sees it in their inbox. The client does not change.')}</p>
         <ActionFeedback state={reasignado} />
       </form>
     </div>

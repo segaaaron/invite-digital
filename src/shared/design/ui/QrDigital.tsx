@@ -3,6 +3,7 @@
 import QRCode from 'qrcode'
 import { useState } from 'react'
 import { QrCodeSvg } from './QrCodeSvg'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /** El QR como imagen PNG, para guardarlo o mandarlo por el chat que se quiera. */
 async function imagenDelQr(url: string): Promise<string> {
@@ -34,21 +35,22 @@ export async function compartirQr(url: string, nombre: string): Promise<void> {
 }
 
 export function QrDigital({ url, nombre, className = 'w-28' }: { url: string; nombre: string; className?: string }) {
+  const t = useT()
   const [aviso, setAviso] = useState<string | null>(null)
   const descargar = () => descargarQr(url, nombre)
-  const compartir = () => compartirQr(url, nombre).catch(() => setAviso('No se pudo compartir. Descárgalo y envíalo como imagen.'))
+  const compartir = () => compartirQr(url, nombre).catch(() => setAviso(t('No se pudo compartir. Descárgalo y envíalo como imagen.', 'It couldn’t be shared. Download it and send it as an image.')))
 
   return (
     <div className="flex items-center gap-4">
-      <QrCodeSvg className={`${className} shrink-0 border border-line-panel p-1`} label={`Código QR de ${nombre}`} url={url} />
+      <QrCodeSvg className={`${className} shrink-0 border border-line-panel p-1`} label={t(`Código QR de ${nombre}`, `QR code for ${nombre}`)} url={url} />
       <div className="flex flex-col items-start gap-2">
-        <p className="m-0 text-[12px] leading-[1.5] text-ink-soft">Abre la misma invitación. Mándalo como imagen o úsalo en tu diseño.</p>
+        <p className="m-0 text-[12px] leading-[1.5] text-ink-soft">{t('Abre la misma invitación. Mándalo como imagen o úsalo en tu diseño.', 'Opens the same invitation. Send it as an image or use it in your design.')}</p>
         <div className="flex flex-wrap gap-2">
           <button className={BOTON} onClick={() => void descargar()} type="button">
-            Descargar QR
+            {t('Descargar QR', 'Download QR')}
           </button>
           <button className={BOTON} onClick={() => void compartir()} type="button">
-            Compartir QR
+            {t('Compartir QR', 'Share QR')}
           </button>
         </div>
         {aviso === null ? null : (

@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * El conmutador de la maqueta entre el plano del salón y las tarjetas de mesa.
@@ -10,6 +13,7 @@ import type { ReactNode } from 'react'
  * perdería un `useState` justo después de crear una mesa.
  */
 export function SeatViewToggle({ base, current }: { base: string; current: 'mapa' | 'tarjetas' }) {
+  const t = useT()
   const chip = (clave: 'mapa' | 'tarjetas', texto: ReactNode) => (
     <Link
       aria-current={current === clave ? 'page' : undefined}
@@ -25,8 +29,8 @@ export function SeatViewToggle({ base, current }: { base: string; current: 'mapa
   return (
     <div className="flex flex-wrap gap-2">
       {/* En el celular, «mapa» abre la lista de mesas (el plano se arma en la computadora): lo dice así. */}
-      {chip('mapa', <><span className="max-[767px]:hidden">Vista de mapa</span><span className="min-[768px]:hidden">Lista de mesas</span></>)}
-      {chip('tarjetas', 'Vista de tarjetas')}
+      {chip('mapa', <><span className="max-[767px]:hidden">{t('Vista de mapa', 'Map view')}</span><span className="min-[768px]:hidden">{t('Lista de mesas', 'Table list')}</span></>)}
+      {chip('tarjetas', t('Vista de tarjetas', 'Card view'))}
     </div>
   )
 }

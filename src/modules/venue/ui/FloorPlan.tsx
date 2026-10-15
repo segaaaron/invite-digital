@@ -12,6 +12,8 @@ import type { SeatedGroupRow } from '../application/ports'
 import { assignGroupAction, removeTableAction } from '@/app/_acciones/venue/actions'
 import { Iniciales, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { TableCard } from './TableCard'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 type Exit = { href: string; label: string }
 
@@ -33,7 +35,7 @@ type Props = {
   /** Las invitaciones sin mesa: la columna «Sin mesa», que se arrastran a una mesa. */
   unseated?: readonly SeatedGroupRow[]
   /** Cómo se llama la mesa principal en esta fiesta. */
-  mesaPrincipal?: string
+  mesaPrincipal?: string | undefined
 }
 
 type Punto = { x: number; y: number }
@@ -72,16 +74,16 @@ const firma = (mapa: Mapa): string =>
     .map((k) => `${k}:${mapa[k]?.x},${mapa[k]?.y}`)
     .join('|')
 
-const ZONA_TEXTO: Record<VenueZone['kind'], string> = {
-  dance: 'Pista de baile',
-  bar: 'Barra',
-  stage: 'Mesa de honor',
-  music: 'Banda / DJ',
-  entrance: 'Entrada',
-  kitchen: 'Cocina / servicio',
-  photo: 'Photobooth',
-  custom: 'Elemento',
-}
+const zonaTexto = (t: T): Record<VenueZone['kind'], string> => ({
+  dance: t('Pista de baile', 'Dance floor'),
+  bar: t('Barra', 'Bar'),
+  stage: t('Mesa de honor', 'Head table'),
+  music: t('Banda / DJ', 'Band / DJ'),
+  entrance: t('Entrada', 'Entrance'),
+  kitchen: t('Cocina / servicio', 'Kitchen / service'),
+  photo: t('Photobooth', 'Photo booth'),
+  custom: t('Elemento', 'Element'),
+})
 
 /**
  * El color del borde dice cómo va la mesa, como en la maqueta: llena en verde —está
@@ -121,6 +123,7 @@ const PLANO_GUARDAR = 'venue:plano-guardar'
 
 /** «Guardar el plano» (E10), en la cabecera: activo solo con cambios sin guardar. */
 export function GuardarPlano() {
+  const t = useT()
   const [estado, setEstado] = useState({ pendientes: 0, guardando: false })
   useEffect(() => {
     const oir = (e: Event) => setEstado((e as CustomEvent<{ pendientes: number; guardando: boolean }>).detail)
@@ -129,7 +132,7 @@ export function GuardarPlano() {
   }, [])
   return (
     <PanelButton disabled={estado.pendientes === 0 || estado.guardando} onClick={() => window.dispatchEvent(new Event(PLANO_GUARDAR))} variant="primary">
-      Guardar el plano
+      {t('Guardar el plano', 'Save floor plan')}
     </PanelButton>
   )
 }
@@ -152,7 +155,8 @@ const TOQUE = 4
  * Se mueve con el ratón y con las flechas del teclado. Un plano solo arrastrable deja
  * fuera a quien no usa ratón.
  */
-export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHrefPrefix, unseated = [], mesaPrincipal = 'De los novios' }: Props) {
+export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHrefPrefix, unseated = [], mesaPrincipal }: Props) {
+  const t = useT()
   const router = useRouter()
   const { termino } = useSeatingSearch()
   const reduceMotion = usePrefiereMenosMovimiento()
@@ -183,8 +187,8 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
   const [zoom, setZoom] = useState(1)
   const pellizco = useRef<{ distancia: number; zoom: number } | null>(null)
   const acotar = (z: number) => Math.min(3, Math.max(1, Math.round(z * 100) / 100))
-  const distancia = (t: React.TouchList) => {
-    const [a, b] = [t[0], t[1]]
+  const distancia = (tl: React.TouchList) => {
+    const [a, b] = [tl[0], tl[1]]
     return a === undefined || b === undefined ? 0 : Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
   }
 
@@ -337,14 +341,14 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
   const sentar = (tableId: string, groupId: string) => {
     setError(null)
     void assignGroupAction({ eventId, eventSlug, groupId, tableId }).then((r) => {
-      if (!r.ok) setError(r.message ?? 'No se pudo sentar a esa invitación.')
+      if (!r.ok) setError(r.message ?? t('No se pudo sentar a esa invitación.', 'Could not seat that invitation.'))
     })
   }
 
   const quitarMesa = (id: string) => {
     setError(null)
     void removeTableAction({ id, eventId, eventSlug }).then((r) => {
-      if (!r.ok) setError(r.message ?? 'No se pudo quitar la mesa.')
+      if (!r.ok) setError(r.message ?? t('No se pudo quitar la mesa.', 'Could not remove the table.'))
       else setElegida(null)
     })
   }
@@ -353,15 +357,15 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
     setError(null)
     void removeZoneAction({ id, eventId, eventSlug }).then((r) => {
       // Borrar en silencio dejaría la zona en pantalla y al atelier pulsando otra vez.
-      if (!r.ok) setError(r.message ?? 'No se pudo eliminar el elemento.')
+      if (!r.ok) setError(r.message ?? t('No se pudo eliminar el elemento.', 'Could not remove the element.'))
     })
   }
 
   const loteDeCambios = (): ElementMove[] => {
     const moves: ElementMove[] = []
-    for (const t of tables) {
-      const k = clave('table', t.id)
-      if (pendientes.includes(k)) moves.push({ kind: 'table', id: t.id, x: actuales[k]!.x, y: actuales[k]!.y })
+    for (const m of tables) {
+      const k = clave('table', m.id)
+      if (pendientes.includes(k)) moves.push({ kind: 'table', id: m.id, x: actuales[k]!.x, y: actuales[k]!.y })
     }
     for (const z of zones) {
       const k = clave('zone', z.id)
@@ -387,7 +391,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
       if (!r.ok) {
         // Los cambios locales se quedan: perder la colocación por un fallo del servidor
         // obligaría a rehacer el salón entero.
-        setError(r.message ?? 'No se pudo guardar el plano.')
+        setError(r.message ?? t('No se pudo guardar el plano.', 'Could not save the floor plan.'))
         return false
       }
       setGuardadas(actuales)
@@ -423,25 +427,25 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
     transition: reduceMotion || arrastrando ? 'none' : 'left 140ms ease-out, top 140ms ease-out',
   })
 
-  const mesa = tables.find((t) => t.id === elegida) ?? null
-  const quienes = (t: SeatedTable) => {
-    const nombres = t.groups.map((g) => `${g.label} (${g.seats})`)
-    return nombres.length <= 1 ? (nombres[0] ?? '') : `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}`
+  const mesa = tables.find((m) => m.id === elegida) ?? null
+  const quienes = (m: SeatedTable) => {
+    const nombres = m.groups.map((g) => `${g.label} (${g.seats})`)
+    return nombres.length <= 1 ? (nombres[0] ?? '') : `${nombres.slice(0, -1).join(', ')} ${t('y', 'and')} ${nombres[nombres.length - 1]}`
   }
 
   return (
     <section
-      aria-label={completo ? 'Plano del salón a pantalla completa' : undefined}
+      aria-label={completo ? t('Plano del salón a pantalla completa', 'Full-screen floor plan') : undefined}
       className={completo ? 'fixed inset-0 z-[70] flex flex-col gap-3 bg-bg px-3 pt-[max(env(safe-area-inset-top),12px)] pb-[max(env(safe-area-inset-bottom),12px)]' : 'flex flex-col gap-4'}
     >
       <div className={`grid items-start gap-6 ${unseated.length === 0 || completo ? '' : 'min-[1100px]:grid-cols-[230px_minmax(0,1fr)]'}`}>
         {unseated.length === 0 || completo ? null : (
           // La columna «Sin mesa» de la maqueta (E10): cada invitación se arrastra entera a una mesa.
-          <section aria-label="Invitados sin mesa" className="flex flex-col gap-3">
+          <section aria-label={t('Invitados sin mesa', 'Unseated guests')} className="flex flex-col gap-3">
             <h2 className="font-display text-[24px] leading-tight font-medium">
-              Sin mesa <span className="text-[18px] text-ink-mute">{unseated.reduce((n, g) => n + g.seats, 0)}</span>
+              {t('Sin mesa', 'Unseated')} <span className="text-[18px] text-ink-mute">{unseated.reduce((n, g) => n + g.seats, 0)}</span>
             </h2>
-            <p className="text-[13.5px] text-ink-mute">Arrástralos a una mesa. Una familia nunca se parte.</p>
+            <p className="text-[13.5px] text-ink-mute">{t('Arrástralos a una mesa. Una familia nunca se parte.', 'Drag them to a table. A family is never split.')}</p>
             <ul className="flex flex-col gap-2.5 max-[1099px]:flex-row max-[1099px]:flex-wrap">
               {unseated.map((g) => (
                 <li
@@ -457,7 +461,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                   <span className="flex min-w-0 flex-col">
                     <span className="truncate text-[14.5px] font-medium">{g.label}</span>
                     <span className="text-[13px] text-ink-mute">
-                      {g.seats} {g.seats === 1 ? 'persona' : 'personas'}
+                      {g.seats} {g.seats === 1 ? t('persona', 'person') : t('personas', 'people')}
                     </span>
                   </span>
                 </li>
@@ -476,15 +480,15 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
               }}
               type="button"
             >
-              {completo ? 'Cerrar pantalla completa' : 'Pantalla completa'}
+              {completo ? t('Cerrar pantalla completa', 'Exit full screen') : t('Pantalla completa', 'Full screen')}
             </button>
             {completo ? (
-              <span className="inline-flex items-center gap-1" role="group" aria-label="Zoom del plano">
-                <button aria-label="Alejar" className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-bg-raised text-[18px] disabled:opacity-40" disabled={zoom <= 1} onClick={() => setZoom((z) => acotar(z - 0.5))} type="button">
+              <span className="inline-flex items-center gap-1" role="group" aria-label={t('Zoom del plano', 'Floor plan zoom')}>
+                <button aria-label={t('Alejar', 'Zoom out')} className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-bg-raised text-[18px] disabled:opacity-40" disabled={zoom <= 1} onClick={() => setZoom((z) => acotar(z - 0.5))} type="button">
                   −
                 </button>
                 <span className="w-12 text-center text-[12px] text-ink-soft">{`${Math.round(zoom * 100)} %`}</span>
-                <button aria-label="Acercar" className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-bg-raised text-[18px] disabled:opacity-40" disabled={zoom >= 3} onClick={() => setZoom((z) => acotar(z + 0.5))} type="button">
+                <button aria-label={t('Acercar', 'Zoom in')} className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-bg-raised text-[18px] disabled:opacity-40" disabled={zoom >= 3} onClick={() => setZoom((z) => acotar(z + 0.5))} type="button">
                   +
                 </button>
               </span>
@@ -521,7 +525,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
           >
             <div
               ref={plano}
-              aria-label="Plano del salón"
+              aria-label={t('Plano del salón', 'Floor plan')}
               style={completo ? { width: `${zoom * 100}%`, height: `calc((100dvh - 120px) * ${zoom})` } : undefined}
               className="plano-del-salon relative h-[520px] w-full overflow-hidden rounded-[16px] border border-line-panel bg-tarjeta bg-[radial-gradient(circle,var(--color-line-panel-strong)_1px,transparent_1.4px)] bg-[length:22px_22px] max-[767px]:h-[440px]"
             >
@@ -530,7 +534,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                 return (
                   <span className="group/zona" key={key}>
                     <button
-                      aria-label={`${ZONA_TEXTO[zone.kind]}: ${zone.label}. Muévela con las flechas.`}
+                      aria-label={`${zonaTexto(t)[zone.kind]}: ${zone.label}. ${t('Muévela con las flechas.', 'Move it with the arrow keys.')}`}
                       className="absolute grid touch-none place-items-center rounded-[10px] border border-dashed border-gold/70 p-1 text-[12.5px] text-gold-deep"
                       onKeyDown={alTeclear(key)}
                       onPointerDown={alPulsar(key)}
@@ -562,19 +566,19 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                     >
                       {zoneEditHrefPrefix === undefined ? null : (
                         <a
-                          aria-label={`Editar ${zone.label}`}
+                          aria-label={t(`Editar ${zone.label}`, `Edit ${zone.label}`)}
                           className="flex size-6 items-center justify-center rounded-full border border-line-panel bg-bg-raised text-[11px] max-[859px]:size-8 max-[859px]:text-[13px]"
                           href={`${zoneEditHrefPrefix}${zone.id}`}
-                          title={`Editar ${zone.label}`}
+                          title={t(`Editar ${zone.label}`, `Edit ${zone.label}`)}
                         >
                           ✎
                         </a>
                       )}
                       <button
-                        aria-label={`Eliminar ${zone.label}`}
+                        aria-label={t(`Eliminar ${zone.label}`, `Remove ${zone.label}`)}
                         className="flex size-6 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-bg-raised text-[11px] max-[859px]:size-8 max-[859px]:text-[13px]"
                         onClick={() => borrarZona(zone.id)}
-                        title={`Eliminar ${zone.label}`}
+                        title={t(`Eliminar ${zone.label}`, `Remove ${zone.label}`)}
                         type="button"
                       >
                         <span aria-hidden>✕</span>
@@ -592,9 +596,10 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                 const marcada = elegida === table.id || encima === table.id || resaltada
                 return (
                   <button
-                    aria-label={`${table.label}: ${table.taken} de ${table.capacity} sitios${
-                      table.groups.length === 0 ? ' y nadie sentado' : `. Se sientan ${table.groups.map((g) => g.label).join(', ')}`
-                    }. Muévela con las flechas.`}
+                    aria-label={t(
+                      `${table.label}: ${table.taken} de ${table.capacity} sitios${table.groups.length === 0 ? ' y nadie sentado' : `. Se sientan ${table.groups.map((g) => g.label).join(', ')}`}. Muévela con las flechas.`,
+                      `${table.label}: ${table.taken} of ${table.capacity} seats${table.groups.length === 0 ? ' and nobody seated' : `. Seated: ${table.groups.map((g) => g.label).join(', ')}`}. Move it with the arrow keys.`,
+                    )}
                     aria-pressed={elegida === table.id}
                     className={`absolute grid -translate-x-1/2 -translate-y-1/2 touch-none place-items-center border bg-tarjeta text-ink transition-shadow ${borde} ${
                       redonda ? 'size-[76px] rounded-full' : 'h-[58px] w-[118px] rounded-[10px]'
@@ -641,35 +646,36 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
 
           {/* La mesa elegida (E10): quién se sienta, cuántas sillas quedan, cambiarla o quitarla. */}
           {mesa === null || completo ? (
-            completo || tables.length === 0 ? null : <p className="px-1 text-[13.5px] text-ink-mute">Toca una mesa para ver quién se sienta y cambiarla.</p>
+            completo || tables.length === 0 ? null : <p className="px-1 text-[13.5px] text-ink-mute">{t('Toca una mesa para ver quién se sienta y cambiarla.', 'Tap a table to see who sits there and change it.')}</p>
           ) : (
-            <section aria-label={`Mesa elegida: ${mesa.label}`} className="flex flex-col gap-4 rounded-[16px] border border-line-panel bg-tarjeta px-5 py-4">
+            <section aria-label={t(`Mesa elegida: ${mesa.label}`, `Selected table: ${mesa.label}`)} className="flex flex-col gap-4 rounded-[16px] border border-line-panel bg-tarjeta px-5 py-4">
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <p className="text-[15.5px] font-medium">
                     {mesa.label}
-                    {mesa.notes ? `, ${mesa.notes}` : mesa.shape === 'sweetheart' ? `, ${mesaPrincipal.toLowerCase()}` : ''}
+                    {mesa.notes ? `, ${mesa.notes}` : mesa.shape === 'sweetheart' ? `, ${(mesaPrincipal ?? t('De los novios', 'Sweetheart')).toLowerCase()}` : ''}
                   </p>
                   <p className="text-[13.5px] text-ink-mute">
-                    {mesa.groups.length === 0 ? 'Nadie sentado todavía.' : `${quienes(mesa)}.`} {mesa.free === 0 ? 'Está completa.' : `Quedan ${mesa.free} ${mesa.free === 1 ? 'silla' : 'sillas'}.`}
+                    {mesa.groups.length === 0 ? t('Nadie sentado todavía.', 'Nobody seated yet.') : `${quienes(mesa)}.`}{' '}
+                    {mesa.free === 0 ? t('Está completa.', 'It is full.') : t(`Quedan ${mesa.free} ${mesa.free === 1 ? 'silla' : 'sillas'}.`, `${mesa.free} ${mesa.free === 1 ? 'seat' : 'seats'} left.`)}
                   </p>
                 </div>
                 <PanelButton onClick={() => setViendo((v) => !v)} size="sm">
-                  {viendo ? 'Cerrar' : 'Cambiar nombre o sillas'}
+                  {viendo ? t('Cerrar', 'Close') : t('Cambiar nombre o sillas', 'Change name or seats')}
                 </PanelButton>
                 {porQuitar ? (
                   <span className="flex items-center gap-2 text-[13.5px]">
-                    ¿Quitarla? {mesa.groups.length === 0 ? '' : 'Sus invitados quedan sin mesa.'}
+                    {t('¿Quitarla?', 'Remove it?')} {mesa.groups.length === 0 ? '' : t('Sus invitados quedan sin mesa.', 'Its guests will be left without a table.')}
                     <PanelButton onClick={() => quitarMesa(mesa.id)} size="sm" variant="danger">
-                      Sí, quitar
+                      {t('Sí, quitar', 'Yes, remove')}
                     </PanelButton>
                     <PanelButton onClick={() => setPorQuitar(false)} size="sm">
-                      No
+                      {t('No', 'No')}
                     </PanelButton>
                   </span>
                 ) : (
                   <button className="cursor-pointer text-[14px] font-medium text-danger-deep hover:underline" onClick={() => setPorQuitar(true)} type="button">
-                    Quitar mesa
+                    {t('Quitar mesa', 'Remove table')}
                   </button>
                 )}
               </div>
@@ -686,12 +692,14 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
       )}
 
       <div className="flex flex-wrap items-center gap-3">
-        <p aria-label="Estado del plano" className="flex-1 text-[14px] text-ink-mute" role="status">
-          {hayPendientes ? `Tienes ${pendientes.length} cambio${pendientes.length === 1 ? '' : 's'} sin guardar. Si sales, te preguntamos antes.` : 'Plano guardado'}
+        <p aria-label={t('Estado del plano', 'Floor plan status')} className="flex-1 text-[14px] text-ink-mute" role="status">
+          {hayPendientes
+            ? t(`Tienes ${pendientes.length} cambio${pendientes.length === 1 ? '' : 's'} sin guardar. Si sales, te preguntamos antes.`, `You have ${pendientes.length} unsaved change${pendientes.length === 1 ? '' : 's'}. We will ask before you leave.`)
+            : t('Plano guardado', 'Floor plan saved')}
         </p>
         {hayPendientes ? (
           <PanelButton disabled={guardando} onClick={descartar} size="sm">
-            Descartar
+            {t('Descartar', 'Discard')}
           </PanelButton>
         ) : null}
       </div>
@@ -700,16 +708,18 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Cambios sin guardar"
+          aria-label={t('Cambios sin guardar', 'Unsaved changes')}
           className="fixed inset-0 z-40 flex items-center justify-center bg-ink/40 p-6"
         >
           {/* Modal propio, no `window.confirm`: el diálogo nativo no se puede estilar,
               bloquea el hilo y queda fuera del idioma visual del panel. */}
           <div className="flex w-[min(420px,92vw)] flex-col gap-4 rounded-card bg-bg-raised p-6 shadow-float">
-            <h2 className="font-display text-[22px] font-light text-ink">Tienes el plano a medias</h2>
+            <h2 className="font-display text-[22px] font-light text-ink">{t('Tienes el plano a medias', 'Your floor plan is half done')}</h2>
             <p className="text-[13px] text-ink-soft">
-              {pendientes.length} cambio{pendientes.length === 1 ? '' : 's'} sin guardar. Si sales ahora, se
-              {pendientes.length === 1 ? ' pierde' : ' pierden'}.
+              {t(
+                `${pendientes.length} cambio${pendientes.length === 1 ? '' : 's'} sin guardar. Si sales ahora, se ${pendientes.length === 1 ? 'pierde' : 'pierden'}.`,
+                `${pendientes.length} unsaved change${pendientes.length === 1 ? '' : 's'}. If you leave now, ${pendientes.length === 1 ? 'it is' : 'they are'} lost.`,
+              )}
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -725,7 +735,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                 }}
                 className="rounded-pill border border-ok px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
               >
-                Guardar
+                {t('Guardar', 'Save')}
               </button>
               <button
                 type="button"
@@ -737,14 +747,14 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                 }}
                 className="rounded-pill border border-line px-4 py-2 max-[859px]:min-h-11 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
               >
-                Descartar y salir
+                {t('Descartar y salir', 'Discard and leave')}
               </button>
               <button
                 type="button"
                 onClick={() => setSalida(null)}
                 className="ml-auto rounded-pill bg-ink px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-bg-top"
               >
-                Cancelar
+                {t('Cancelar', 'Cancel')}
               </button>
             </div>
           </div>

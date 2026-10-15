@@ -6,6 +6,8 @@ import { PanelButton, FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import type { EstiloDelEvento } from '../domain/estilo'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 const INICIAL: EstiloState = { status: 'idle', message: '' }
 
@@ -39,16 +41,17 @@ export function EstiloDelEventoCard({
   disponible: boolean
   mejorar: { label: string; href: string } | null
 }) {
+  const t = useT()
   const [guardado, guardar] = useActionState(sinCaerse(guardarEstiloAction), INICIAL)
 
   if (!disponible) {
     return (
       <div className="flex flex-col items-start gap-3">
         <p className="text-[13px] leading-relaxed text-ink-soft">
-          En Gala e Imperial eliges el color de los titulares y detalles de tu diseño y su letra caligráfica, viéndolo en tu invitación.
+          {t('En Gala e Imperial eliges el color de los titulares y detalles de tu diseño y su letra caligráfica, viéndolo en tu invitación.', 'In Gala and Imperial you choose the color of your design’s headings and details and its calligraphy, seeing it on your invitation.')}
         </p>
         {mejorar === null ? (
-          <p className="text-[12px] text-ink-mute">Escríbenos si quieres pasar a Gala.</p>
+          <p className="text-[12px] text-ink-mute">{t('Escríbenos si quieres pasar a Gala.', 'Message us if you want to move to Gala.')}</p>
         ) : (
           <PanelButton href={mejorar.href}>{mejorar.label}</PanelButton>
         )}
@@ -63,25 +66,25 @@ export function EstiloDelEventoCard({
 
       {acentoDelDiseno === null ? null : (
         <fieldset className="flex flex-col gap-2.5">
-          <legend className={`${LABEL_CLASS} mb-2.5`}>Color de acento</legend>
-          <p className="-mt-1 text-[12px] text-ink-mute">Titulares, filetes y botones. Las ilustraciones y fotos no cambian.</p>
+          <legend className={`${LABEL_CLASS} mb-2.5`}>{t('Color de acento', 'Accent color')}</legend>
+          <p className="-mt-1 text-[12px] text-ink-mute">{t('Titulares, filetes y botones. Las ilustraciones y fotos no cambian.', 'Headings, rules and buttons. Illustrations and photos don’t change.')}</p>
           <div className="flex flex-wrap gap-2.5">
-            <Muestra checked={estilo.acento === null} hex={acentoDelDiseno} nombre="El del diseño" valor="" />
+            <Muestra checked={estilo.acento === null} hex={acentoDelDiseno} nombre={t('El del diseño', 'The design’s')} valor="" />
             {acentos.map((c) => (
-              <Muestra checked={estilo.acento === c.hex} hex={c.hex} key={c.hex} nombre={c.nombre} valor={c.hex} />
+              <Muestra checked={estilo.acento === c.hex} hex={c.hex} key={c.hex} nombre={traducir(c.nombre, t)} valor={c.hex} />
             ))}
           </div>
         </fieldset>
       )}
 
       {caligrafias.length === 0 ? null : (
-        <Letras actual={estilo.caligrafia} etiqueta="Letra caligráfica" name="caligrafia" opciones={caligrafias} />
+        <Letras actual={estilo.caligrafia} etiqueta={t('Letra caligráfica', 'Calligraphy')} name="caligrafia" opciones={caligrafias} />
       )}
-      {titulares.length === 0 ? null : <Letras actual={estilo.titulares} etiqueta="Letra de los titulares" name="titulares" opciones={titulares} />}
+      {titulares.length === 0 ? null : <Letras actual={estilo.titulares} etiqueta={t('Letra de los titulares', 'Heading lettering')} name="titulares" opciones={titulares} />}
 
       <ActionFeedback state={guardado} />
       <div>
-        <SubmitButton>Guardar colores y letra</SubmitButton>
+        <SubmitButton>{t('Guardar colores y letra', 'Save colors and lettering')}</SubmitButton>
       </div>
     </form>
   )
@@ -115,11 +118,12 @@ function Letras({
   actual: string | null
   opciones: readonly (Opcion & { readonly clase: string; readonly familia: string })[]
 }) {
+  const t = useT()
   return (
     <fieldset className="flex flex-col gap-2.5">
       <legend className={`${LABEL_CLASS} mb-2.5`}>{etiqueta}</legend>
       <div className="grid grid-cols-2 gap-2 min-[560px]:grid-cols-4">
-        <Letra checked={actual === null} familia={null} name={name} nombre="Original" valor="" />
+        <Letra checked={actual === null} familia={null} name={name} nombre={t('Original', 'Original')} valor="" />
         {opciones.map((o) => (
           <Letra checked={actual === o.clave} clase={o.clase} familia={o.familia} key={o.clave} name={name} nombre={o.nombre} valor={o.clave} />
         ))}

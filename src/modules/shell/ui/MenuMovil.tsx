@@ -11,11 +11,12 @@ import { NAV_ICONS } from './nav-icons'
 import { descripcionDe, useNavegacion } from './navegacion'
 import { ABRIR_BUSCADOR, ABRIR_MENU } from '@/shared/design/ui/panel/avisos-del-panel'
 import { SelloLA } from './PanelSidebar'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 export { ABRIR_MENU } from '@/shared/design/ui/panel/avisos-del-panel'
 
 /** Pantallas fuera de la barra: la isla dice dónde estás igual. */
-const FUERA_DE_LA_BARRA: Readonly<Record<string, string>> = { '/panel/cuenta': 'Mi cuenta', '/panel/ayuda': 'Ayuda' }
+const FUERA_DE_LA_BARRA: Readonly<Record<string, readonly [string, string]>> = { '/panel/cuenta': ['Mi cuenta', 'My account'], '/panel/ayuda': ['Ayuda', 'Help'] }
 
 const Trazo = ({ d }: { d: string }) => (
   <svg aria-hidden className="size-5.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -33,6 +34,7 @@ const Trazo = ({ d }: { d: string }) => (
  * con su propia flecha de volver (el admin dentro de un evento o de un ajuste) esconde el `data-contexto`.
  */
 export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
+  const t = useT()
   const nav = useNavegacion()
   const ruta = usePathname()
   const hoja = useRef<HTMLDialogElement>(null)
@@ -48,7 +50,7 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
   }, [ruta])
   if (nav === null) return null
   const { sections, user, evento } = nav
-  const actual = sections.flatMap((s) => s.items).find((item) => esEntradaActiva(item, ruta))?.label ?? FUERA_DE_LA_BARRA[ruta]
+  const actual = sections.flatMap((s) => s.items).find((item) => esEntradaActiva(item, ruta))?.label ?? (FUERA_DE_LA_BARRA[ruta] === undefined ? undefined : t(...FUERA_DE_LA_BARRA[ruta]))
   const cerrar = () => hoja.current?.close()
   const miniatura = (alto: number) =>
     evento?.portada ? (
@@ -81,18 +83,18 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
         type="button"
       >
         <Trazo d="M4 7h16M4 12h16M4 17h16" />
-        Menú
+        {t('Menú', 'Menu')}
       </button>
       <span className="flex min-w-0 flex-1 items-center gap-2.5 min-[768px]:hidden" data-contexto="">
         {evento === null ? null : miniatura(40)}
         <span className="min-w-0">
-          <span className="block truncate text-[15.5px] leading-tight font-semibold text-ink">{evento === null ? (actual ?? 'Panel') : evento.title}</span>
+          <span className="block truncate text-[15.5px] leading-tight font-semibold text-ink">{evento === null ? (actual ?? t('Panel', 'Panel')) : evento.title}</span>
           {evento === null ? null : <span className="block truncate text-[12.5px] text-ink-mute">{evento.cuando ?? evento.planLabel}</span>}
         </span>
       </span>
 
       <dialog
-        aria-label={evento === null ? 'Menú' : 'Menú del evento'}
+        aria-label={evento === null ? t('Menú', 'Menu') : t('Menú del evento', 'Event menu')}
         className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-bg p-0 text-ink backdrop:bg-ink/40 motion-safe:animate-slide-up"
         ref={hoja}
       >
@@ -100,26 +102,26 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
           {/* Arriba, en el mismo sitio que «Menú», «Cerrar» (v2.1): se abre y se cierra con el mismo dedo. */}
           <div className="sticky top-0 z-10 -mx-4 mb-2 flex min-h-14 items-center gap-2.5 border-b border-line-panel bg-bg-raised/95 px-3 backdrop-blur-md">
             <button
-              aria-label="Cerrar el menú"
+              aria-label={t('Cerrar el menú', 'Close the menu')}
               className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-line-panel-strong bg-bg-raised px-3 text-[15px] font-medium text-ink"
               onClick={cerrar}
               type="button"
             >
               <Trazo d="M6 6l12 12M18 6 6 18" />
-              Cerrar
+              {t('Cerrar', 'Close')}
             </button>
-            <span className="min-w-0 flex-1 truncate pl-1 font-display text-[22px] font-medium">Menú</span>
+            <span className="min-w-0 flex-1 truncate pl-1 font-display text-[22px] font-medium">{t('Menú', 'Menu')}</span>
           </div>
 
           {user.soporte ? (
             <div className="mb-2 flex items-center gap-3 rounded-2xl bg-pill-pending px-4 py-3 text-pill-pending-ink">
-              <p className="min-w-0 flex-1 text-[14px] leading-snug">Estás dentro como el cliente. Lo que cambies queda a tu nombre.</p>
+              <p className="min-w-0 flex-1 text-[14px] leading-snug">{t('Estás dentro como el cliente. Lo que cambies queda a tu nombre.', 'You are signed in as the client. Whatever you change is recorded under your name.')}</p>
               <button
                 className="shrink-0 cursor-pointer rounded-[10px] bg-shell-deep px-4 py-2.5 text-[14px] font-medium text-shell-ink"
                 onClick={() => void leaveSupportAction().then((hecho) => hecho.status === 'ok' && window.location.assign(hecho.href))}
                 type="button"
               >
-                Regresar como admin
+                {t('Regresar como admin', 'Return as admin')}
               </button>
             </div>
           ) : null}
@@ -133,7 +135,7 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
               </span>
               {evento.salirHref ? (
                 <Link className="shrink-0 px-2 text-[14px] text-ink-mute no-underline hover:text-ink" href={evento.salirHref} onClick={cerrar}>
-                  Cambiar
+                  {t('Cambiar', 'Change')}
                 </Link>
               ) : null}
             </div>
@@ -149,7 +151,7 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
               type="button"
             >
               {NAV_ICONS.buscar}
-              Buscar un evento, cliente o acción
+              {t('Buscar un evento, cliente o acción', 'Search for an event, client or action')}
             </button>
           ) : null}
 
@@ -158,7 +160,7 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
               <p className="px-2 pb-1 text-[13px] font-medium text-gold-deep">{seccion.label}</p>
               {seccion.items.map((item) => {
                 const activa = esEntradaActiva(item, ruta)
-                const linea = descripcionDe(item)
+                const linea = descripcionDe(item, t)
                 return (
                   <Link
                     aria-current={activa ? 'page' : undefined}
@@ -199,8 +201,8 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
                 </svg>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[16px] font-medium">Mi cuenta</span>
-                <span className="block text-[13.5px] leading-snug text-ink-mute">Tus datos y dónde tienes la sesión</span>
+                <span className="block text-[16px] font-medium">{t('Mi cuenta', 'My account')}</span>
+                <span className="block text-[13.5px] leading-snug text-ink-mute">{t('Tus datos y dónde tienes la sesión', 'Your details and where you are signed in')}</span>
               </span>
             </Link>
           )}
@@ -210,15 +212,15 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
           </p>
           <ConfirmAction
             action={signOutAction}
-            confirmLabel="Cerrar sesión"
-            description="Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña."
-            title="Cerrar sesión"
+            confirmLabel={t('Cerrar sesión', 'Sign out')}
+            description={t('Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña.', 'You will leave the panel on this device. To come back you will have to sign in with your email and password.')}
+            title={t('Cerrar sesión', 'Sign out')}
             trigger={
               <>
                 <svg aria-hidden className="size-[19px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
                   <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
                 </svg>
-                Cerrar sesión
+                {t('Cerrar sesión', 'Sign out')}
               </>
             }
             triggerClassName="mt-3 flex min-h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] border border-line-panel-strong bg-bg-raised text-[16px] font-medium text-ink"

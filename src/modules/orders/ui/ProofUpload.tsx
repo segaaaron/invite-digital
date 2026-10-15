@@ -7,6 +7,7 @@ import { uploadProofAction, type UploadProofState } from '@/app/_acciones/orders
 import { ACCEPTED_MIMES, MAX_PROOF_BYTES } from '../domain/proof'
 import type { OrderFormDictionary } from '@/shared/i18n/dictionary'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: UploadProofState = { status: 'idle' }
 
@@ -27,6 +28,7 @@ export function ProofUpload({
   /** Dentro del panel (el diálogo «Pedir el extra», E71): botones del panel y «Lo hago después». */
   panel?: { readonly despuesHref: string }
 }) {
+  const t = useT()
   const megas = String(Math.round(MAX_PROOF_BYTES / 1024 / 1024))
   const [estado, accion, pendiente] = useActionState<UploadProofState, FormData>(sinCaerse(uploadProofAction), INICIAL)
 
@@ -81,10 +83,10 @@ export function ProofUpload({
       ) : (
         <div className="flex flex-wrap justify-end gap-2.5 max-[767px]:flex-col-reverse max-[767px]:items-stretch">
           <a className={botonClases('default')} href={panel.despuesHref}>
-            Lo hago después
+            {t('Lo hago después', 'I’ll do it later')}
           </a>
           <button aria-busy={pendiente || undefined} className={botonClases('primary')} disabled={pendiente} type="submit">
-            {pendiente ? 'Enviando…' : 'Enviar comprobante'}
+            {pendiente ? t('Enviando…', 'Sending…') : t('Enviar comprobante', 'Send receipt')}
           </button>
         </div>
       )}

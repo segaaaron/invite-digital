@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { type AvisoDeSeccion, EVENTO_SECCION, buscarEnInvitacion, piezaQueContiene } from './seguir-seccion'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * El teléfono de la vista previa, que va solo a la sección que se está editando.
@@ -13,6 +14,7 @@ import { type AvisoDeSeccion, EVENTO_SECCION, buscarEnInvitacion, piezaQueContie
  * vuelve arriba.
  */
 export function MarcoQueSigue({ children }: { children: ReactNode }) {
+  const t = useT()
   const marco = useRef<HTMLDivElement>(null)
   // Cuando la sección aún no sale en la invitación —está vacía—, se dice en vez de no hacer nada.
   const [aviso, setAviso] = useState<string | null>(null)
@@ -42,7 +44,7 @@ export function MarcoQueSigue({ children }: { children: ReactNode }) {
           const hallado = buscarEnInvitacion(nodo, textos)
           const destino = hallado === null ? null : piezaQueContiene(hallado, nodo)
           if (destino === null) {
-            setAviso('Esta sección todavía no sale en tu invitación: escríbela y guarda.')
+            setAviso(t('Esta sección todavía no sale en tu invitación: escríbela y guarda.', 'This section doesn’t show on your invitation yet: write it and save.'))
             espera = setTimeout(() => setAviso(null), 3500)
             return
           }
@@ -61,7 +63,7 @@ export function MarcoQueSigue({ children }: { children: ReactNode }) {
       window.removeEventListener(EVENTO_SECCION, ir)
       clearTimeout(espera)
     }
-  }, [])
+  }, [t])
 
   return (
     <div className="relative h-full">

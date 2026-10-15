@@ -11,6 +11,8 @@ import { isErr } from '@/shared/result'
 import type { CheckinErrorKind } from '@/modules/checkin/domain/errors'
 import type { ScanOutcome } from '@/modules/checkin/application/check-in-by-scan'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 /**
  * El modo puerta solo lo traen algunos planes. Lanza en vez de devolver un resultado
@@ -184,6 +186,7 @@ export type SinPaseState = { status: 'idle' } | { status: 'error'; message: stri
  * puerta lo ve dentro, con nombre, sin inventarle una invitación propia.
  */
 export async function registrarSinPaseAction(_previo: SinPaseState, formData: FormData): Promise<SinPaseState> {
+  const t = await tr()
   const eventId = String(formData.get('eventId') ?? '')
   const eventSlug = String(formData.get('eventSlug') ?? '')
   const actor = await requireSession()
@@ -192,8 +195,8 @@ export async function registrarSinPaseAction(_previo: SinPaseState, formData: Fo
 
   const nombre = String(formData.get('nombre') ?? '').trim()
   const groupId = String(formData.get('groupId') ?? '')
-  if (nombre === '') return { status: 'error', message: 'Escribe su nombre: así lo ve el catering y la puerta.' }
-  if (groupId === '') return { status: 'error', message: 'Elige con quién viene.' }
+  if (nombre === '') return { status: 'error', message: t('Escribe su nombre: así lo ve el catering y la puerta.', 'Write their name: that is how catering and the door see it.') }
+  if (groupId === '') return { status: 'error', message: t('Elige con quién viene.', 'Choose who they are coming with.') }
 
   // La mesa: la de su invitación (entra como su acompañante) u otra (E68). Como la mesa es de la invitación, para
   // sentarlo en otra se le abre una invitación propia, con su nombre, sentada en esa mesa.
@@ -204,7 +207,7 @@ export async function registrarSinPaseAction(_previo: SinPaseState, formData: Fo
   if (mesa !== '' && mesa !== mesaDeSuInvitacion) {
     const capacidad = await plans.allowanceFor(eventId)
     const grupos = await guests.list(eventId)
-    if (isErr(capacidad) || isErr(grupos)) return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
+    if (isErr(capacidad) || isErr(grupos)) return { status: 'error', message: t('No pudimos comprobar el plan del evento. Inténtalo en un momento.', 'We couldn’t check the event plan. Try again in a moment.') }
     const alta = await guests.addGuest({
       eventId,
       fullName: nombre,
@@ -219,7 +222,7 @@ export async function registrarSinPaseAction(_previo: SinPaseState, formData: Fo
     })
     if (isErr(alta)) {
       registrarFallo('checkin/actions', 'alta sin pase en otra mesa rechazada', alta.error.kind, alta.error.detail)
-      return { status: 'error', message: alta.error.detail }
+      return { status: 'error', message: traducir(alta.error.detail, t) }
     }
     invitacion = alta.value.groupId
     const sentado = await venue.assign({ eventId, groupId: invitacion, tableId: mesa })
@@ -228,7 +231,7 @@ export async function registrarSinPaseAction(_previo: SinPaseState, formData: Fo
     const persona = await guests.addPerson({ eventId, guestGroupId: groupId, fullName: nombre, isCompanion: true, attending: 'yes' })
     if (isErr(persona)) {
       registrarFallo('checkin/actions', 'alta sin pase rechazada', persona.error.kind, persona.error.detail)
-      return { status: 'error', message: persona.error.detail }
+      return { status: 'error', message: traducir(persona.error.detail, t) }
     }
     personIds = [persona.value.id]
   }
@@ -240,11 +243,11 @@ export async function registrarSinPaseAction(_previo: SinPaseState, formData: Fo
   })
   if (isErr(entrada)) {
     registrarFallo('checkin/actions', 'ingreso sin pase rechazado', entrada.error.kind, entrada.error.detail)
-    return { status: 'error', message: `${nombre} quedó en la lista, pero no se pudo marcar su ingreso. Regístralo desde la lista.` }
+    return { status: 'error', message: t(`${nombre} quedó en la lista, pero no se pudo marcar su ingreso. Regístralo desde la lista.`, `${nombre} was added to the list, but their check-in couldn’t be marked. Record it from the list.`) }
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/checkin`)
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
   revalidatePath(`/panel/eventos/${eventSlug}/mesas`)
-  return { status: 'success', message: `${nombre} entró${invitacion === groupId ? ' como acompañante' : ''}.` }
+  return { status: 'success', message: t(`${nombre} entró${invitacion === groupId ? ' como acompañante' : ''}.`, `${nombre} checked in${invitacion === groupId ? ' as a companion' : ''}.`) }
 }

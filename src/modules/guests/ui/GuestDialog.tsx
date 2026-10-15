@@ -8,6 +8,7 @@ import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
 import { addGuestAction, type GuestActionState } from '@/app/_acciones/guests/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 export type GroupChoice = {
   readonly id: string
@@ -45,6 +46,7 @@ export function GuestDialog({
   /** El aviso de capacidad del plan, que se pinta dentro del diálogo. */
   notice?: ReactNode
 }) {
+  const t = useT()
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const [estado, accion, pendiente] = useActionState<GuestActionState, FormData>(sinCaerse(addGuestAction), INICIAL)
@@ -132,20 +134,20 @@ export function GuestDialog({
             <ArrowLeftIcon className="size-5" />
           </span>
           <span className="flex min-w-0 flex-col leading-tight">
-            <span className="text-[13px] text-ink-mute">Invitados</span>
-            <span className="truncate text-[16px] font-medium">Añadir invitado</span>
+            <span className="text-[13px] text-ink-mute">{t('Invitados', 'Guests')}</span>
+            <span className="truncate text-[16px] font-medium">{t('Añadir invitado', 'Add guest')}</span>
           </span>
-          <span className="sr-only">: cerrar</span>
+          <span className="sr-only">{t(': cerrar', ': close')}</span>
         </button>
         <header className="flex items-start justify-between gap-4 px-7 pt-7 pb-2 max-[639px]:px-4 max-[639px]:pt-5">
           <div>
-            <p className="text-[14px] text-ink-mute max-[639px]:hidden">Invitados</p>
+            <p className="text-[14px] text-ink-mute max-[639px]:hidden">{t('Invitados', 'Guests')}</p>
             <h2 className="font-display text-[30px] leading-tight font-medium" id={`${idNombre}-titulo`}>
-              Añadir invitado
+              {t('Añadir invitado', 'Add guest')}
             </h2>
           </div>
           <button
-            aria-label="Cerrar"
+            aria-label={t('Cerrar', 'Close')}
             className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold max-[639px]:hidden"
             onClick={cerrar}
             type="button"
@@ -155,12 +157,12 @@ export function GuestDialog({
         </header>
 
         <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-7 py-4 max-[639px]:px-5">
-          <Field hint="Como quieres que aparezca en su invitación" htmlFor={idNombre} label="Nombre">
-            <input aria-label="Nombre completo" autoFocus className={FIELD_CLASS} id={idNombre} maxLength={160} name="fullName" required type="text" />
+          <Field hint={t('Como quieres que aparezca en su invitación', 'How you want it to appear on their invitation')} htmlFor={idNombre} label={t('Nombre', 'Name')}>
+            <input aria-label={t('Nombre completo', 'Full name')} autoFocus className={FIELD_CLASS} id={idNombre} maxLength={160} name="fullName" required type="text" />
           </Field>
 
           <fieldset className="flex flex-col gap-2.5">
-            <legend className="mb-2.5 text-[14px] font-medium">¿Viene solo?</legend>
+            <legend className="mb-2.5 text-[14px] font-medium">{t('¿Viene solo?', 'Coming alone?')}</legend>
             <label className={tarjeta}>
               <input
                 checked={tipo === 'personal'}
@@ -174,8 +176,8 @@ export function GuestDialog({
                 value="personal"
               />
               <span className="flex flex-col">
-                <span className="text-[15px] font-medium">Personal</span>
-                <span className="text-[13.5px] text-ink-mute">Una persona</span>
+                <span className="text-[15px] font-medium">{t('Personal', 'Individual')}</span>
+                <span className="text-[13.5px] text-ink-mute">{t('Una persona', 'One person')}</span>
               </span>
             </label>
             <label className={tarjeta}>
@@ -192,20 +194,20 @@ export function GuestDialog({
                 value="acompanado"
               />
               <span className="flex flex-col">
-                <span className="text-[15px] font-medium">Con acompañantes</span>
-                <span className="text-[13.5px] text-ink-mute">Escribe el nombre de cada uno</span>
+                <span className="text-[15px] font-medium">{t('Con acompañantes', 'With companions')}</span>
+                <span className="text-[13.5px] text-ink-mute">{t('Escribe el nombre de cada uno', 'Write each one’s name')}</span>
               </span>
             </label>
           </fieldset>
 
           {tipo === 'personal' ? null : (
             <div className="flex flex-col gap-2">
-              <span className={LABEL_CLASS}>Acompañantes</span>
+              <span className={LABEL_CLASS}>{t('Acompañantes', 'Companions')}</span>
               {/* De cada acompañante **solo el nombre**. Lo demás —su comida, su confirmación— se edita luego desde su fila. */}
               {acompanantes.map((valor, indice) => (
                 <span className="flex min-w-0 gap-2" key={indice}>
                   <label className="sr-only" htmlFor={`${idAcomp}-${indice}`}>
-                    Nombre del acompañante {indice + 1}
+                    {t(`Nombre del acompañante ${indice + 1}`, `Companion ${indice + 1}’s name`)}
                   </label>
                   <input
                     className={`${FIELD_CLASS} min-w-0 flex-1`}
@@ -213,12 +215,12 @@ export function GuestDialog({
                     maxLength={160}
                     name="companionName"
                     onChange={(e) => setAcompanantes((previos) => previos.map((p, i) => (i === indice ? e.target.value : p)))}
-                    placeholder="Nombre del acompañante"
+                    placeholder={t('Nombre del acompañante', 'Companion’s name')}
                     type="text"
                     value={valor}
                   />
                   <button
-                    aria-label={`Quitar acompañante ${indice + 1}`}
+                    aria-label={t(`Quitar acompañante ${indice + 1}`, `Remove companion ${indice + 1}`)}
                     className="grid size-12 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold"
                     onClick={() => setAcompanantes((previos) => previos.filter((_, i) => i !== indice))}
                     type="button"
@@ -232,34 +234,34 @@ export function GuestDialog({
                 onClick={() => setAcompanantes((previos) => [...previos, ''])}
                 type="button"
               >
-                <PlusIcon className="size-4" /> Otro acompañante
+                <PlusIcon className="size-4" /> {t('Otro acompañante', 'Another companion')}
               </button>
             </div>
           )}
 
           {notice === undefined ? null : <div>{notice}</div>}
 
-          <Field hint="Opcional. Sin él, envías el enlace por otra vía" htmlFor={idTel} label="Teléfono para WhatsApp">
+          <Field hint={t('Opcional. Sin él, envías el enlace por otra vía', 'Optional. Without it, you send the link another way')} htmlFor={idTel} label={t('Teléfono para WhatsApp', 'WhatsApp phone')}>
             <CampoTelefono id={idTel} name="phone" onChange={setTelefono} value={telefono} />
           </Field>
 
           {/* Sin RSVP al crear: la asistencia la decide el invitado desde su invitación. */}
           <details className="group">
             <summary className="inline-flex min-h-10 cursor-pointer list-none items-center text-[14px] text-ink-mute hover:text-ink [&::-webkit-details-marker]:hidden">
-              Restricciones, correo y VIP
+              {t('Restricciones, correo y VIP', 'Dietary restrictions, email and VIP')}
             </summary>
             <div className="mt-3 flex flex-col gap-4">
-              <Field htmlFor={idDieta} label="Restricciones">
-                <input className={FIELD_CLASS} id={idDieta} maxLength={200} name="dietaryNote" placeholder="Vegano, sin gluten…" type="text" />
+              <Field htmlFor={idDieta} label={t('Restricciones', 'Dietary restrictions')}>
+                <input className={FIELD_CLASS} id={idDieta} maxLength={200} name="dietaryNote" placeholder={t('Vegano, sin gluten…', 'Vegan, gluten-free…')} type="text" />
               </Field>
               <Field htmlFor={idCorreo} label="Email">
-                <input className={FIELD_CLASS} id={idCorreo} maxLength={160} name="email" placeholder="correo@ejemplo.com" type="email" />
+                <input className={FIELD_CLASS} id={idCorreo} maxLength={160} name="email" placeholder={t('correo@ejemplo.com', 'email@example.com')} type="email" />
               </Field>
               <label className="flex items-center gap-2.5 text-[14px]" htmlFor={idVip}>
                 <input className="size-4" id={idVip} name="vip" type="checkbox" />
                 <span className="flex flex-col">
-                  Invitado VIP
-                  <span className="text-[13px] text-ink-mute">Se marca en la lista, se filtra aparte y su silla sale en dorado en el plano del salón.</span>
+                  {t('Invitado VIP', 'VIP guest')}
+                  <span className="text-[13px] text-ink-mute">{t('Se marca en la lista, se filtra aparte y su silla sale en dorado en el plano del salón.', 'They are marked on the list, filtered separately and their seat shows in gold on the floor plan.')}</span>
                 </span>
               </label>
             </div>
@@ -272,7 +274,7 @@ export function GuestDialog({
           ) : null}
           {estado.status === 'success' && vuelta > 0 ? (
             <p className="text-[14px] text-ok-deep" role="status">
-              Guardado. Escribe el siguiente.
+              {t('Guardado. Escribe el siguiente.', 'Saved. Write the next one.')}
             </p>
           ) : null}
         </div>
@@ -286,7 +288,7 @@ export function GuestDialog({
             pending={pendiente}
             variant="default"
           >
-            Guardar y añadir otro
+            {t('Guardar y añadir otro', 'Save and add another')}
           </SubmitButton>
           <SubmitButton
             disabled={pendiente || (nuevoGrupo && atLimit)}
@@ -294,10 +296,10 @@ export function GuestDialog({
               otro.current = false
             }}
             pending={pendiente}
-            pendingLabel={'Guardando…'}
+            pendingLabel={t('Guardando…', 'Saving…')}
             variant="primary"
           >
-            {'Guardar'}
+            {t('Guardar', 'Save')}
           </SubmitButton>
         </footer>
       </form>

@@ -16,6 +16,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/shared/db/client'
 import { users } from '@/shared/db/schema'
 import { clock, minter } from './base'
+import { isLocale, type Locale } from '@/shared/i18n/locales'
 
 export const identity = {
   signIn: signIn({ users: drizzleUserRepository, sessions: drizzleSessionRepository, hasher: argon2Hasher, minter, clock }),
@@ -41,6 +42,20 @@ export const identity = {
   /** Los guarda tal cual vienen ya limpios: vacío es borrar. El correo no se toca aquí. */
   guardarMisDatos: async (userId: string, datos: { nombre: string | null; telefono: string | null }): Promise<void> => {
     await db.update(users).set({ fullName: datos.nombre, phone: datos.telefono }).where(eq(users.id, userId))
+  },
+  /** El idioma del último aparato con que entró (`0094`): el de sus correos. Nulo si no ha entrado desde el 14 oct. Nunca lanza. */
+  idiomaDe: async (userId: string): Promise<Locale | null> =>
+    db
+      .select({ locale: users.locale })
+      .from(users)
+      .where(eq(users.id, userId))
+      .then((filas) => {
+        const valor = filas[0]?.locale ?? null
+        return valor !== null && isLocale(valor) ? valor : null
+      })
+      .catch(() => null),
+  guardarIdioma: async (userId: string, locale: Locale): Promise<void> => {
+    await db.update(users).set({ locale }).where(eq(users.id, userId))
   },
   /** El modo soporte: el admin actúa como el cliente, sin su contraseña. */
   support: drizzleSupportStore,

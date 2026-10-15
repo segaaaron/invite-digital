@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { prefiereMenosMovimiento } from './motion'
 import { useCancion } from './MusicPlayer'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * La canción de los diseños que **no pintan reproductor** (Editorial, Civil, Destino): un botón
@@ -27,10 +28,11 @@ export function MusicaFlotante({
   /** El botón propio de la maqueta (Esencia): fondo, filete y tinta, con pausa/play en vez de la nota. */
   readonly piel?: { readonly fondo: string; readonly borde: string; readonly tinta: string; readonly sombra?: string }
 }) {
+  const t = useT()
   const { sonando, alternar, boton, audioProps } = useCancion(audioSrc, false)
   const [reducido] = useState(prefiereMenosMovimiento)
   if (audioSrc === undefined || audioSrc === '') return null
-  const cancion = [track, artist].filter((t) => t !== undefined && t !== '').join(' · ') || 'la música'
+  const cancion = [track, artist].filter((t) => t !== undefined && t !== '').join(' · ') || t('la música', 'the music')
 
   return (
     <>
@@ -48,7 +50,7 @@ export function MusicaFlotante({
         }}
       >
       <button
-        aria-label={sonando ? `Pausar ${cancion}` : `Reproducir ${cancion}`}
+        aria-label={sonando ? t(`Pausar ${cancion}`, `Pause ${cancion}`) : t(`Reproducir ${cancion}`, `Play ${cancion}`)}
         aria-pressed={sonando}
         onClick={alternar}
         ref={boton}
@@ -71,7 +73,7 @@ export function MusicaFlotante({
           padding: 0,
           opacity: sonando || piel !== undefined ? 1 : 0.8,
         }}
-        title={sonando ? 'Pausar la música' : 'Reproducir la música'}
+        title={sonando ? t('Pausar la música', 'Pause the music') : t('Reproducir la música', 'Play the music')}
         type="button"
       >
         {/* El latido va en un halo detrás, no en el botón: el blanco del toque no se mueve. */}

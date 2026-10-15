@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { T } from '@/shared/i18n/idioma-navegador'
 import Image from '@/shared/design/ui/ImagenConCarga'
 
 /**
@@ -30,7 +31,9 @@ export function PuertaConFoto({ children, frase = false, pie = false }: { childr
         <p className="relative font-display text-[22px] italic min-[860px]:hidden">Luxury Atelier</p>
         {frase ? (
           <div className="relative hidden flex-col gap-5 min-[860px]:flex">
-            <p className="max-w-[20ch] font-display text-[34px] leading-[1.2] font-normal italic">Cada celebración empieza con un sobre que se abre.</p>
+            <p className="max-w-[20ch] font-display text-[34px] leading-[1.2] font-normal italic">
+          <T en="Every celebration begins with an envelope being opened." es="Cada celebración empieza con un sobre que se abre." />
+        </p>
             <span aria-hidden className="flex w-16 flex-col gap-1">
               <span className="h-px bg-gold" />
               <span className="h-px bg-gold" />
@@ -42,7 +45,9 @@ export function PuertaConFoto({ children, frase = false, pie = false }: { childr
       <section className="relative -mt-6 flex flex-col items-center justify-between gap-10 rounded-t-[24px] bg-bg px-5 pt-8 pb-8 min-[860px]:mt-0 min-[860px]:rounded-none min-[860px]:px-10 min-[860px]:pt-0">
         <span aria-hidden className="hidden min-[860px]:block" />
         <div className="flex w-full max-w-[360px] flex-col gap-7">{children}</div>
-        {pie ? <p className="text-center text-[13px] text-ink-mute">Luxury Atelier, invitaciones digitales hechas a mano en Bolivia</p> : <span aria-hidden />}
+        {pie ? <p className="text-center text-[13px] text-ink-mute">
+          <T en="Luxury Atelier, digital invitations handmade in Bolivia" es="Luxury Atelier, invitaciones digitales hechas a mano en Bolivia" />
+        </p> : <span aria-hidden />}
       </section>
     </main>
   )

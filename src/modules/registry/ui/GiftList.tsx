@@ -9,6 +9,8 @@ import type { GiftRow } from '../application/ports'
 import { markPurchasedAction, releaseGiftAsAtelierAction, removeGiftAction } from '@/app/_acciones/registry/actions'
 import { GiftForm } from './GiftForm'
 import { Pill } from '@/shared/design/ui/panel/PanelKit'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 type Props = {
   eventId: string
@@ -22,13 +24,14 @@ type Props = {
  * reservado, verde comprado. Son `--color-line`, `--color-warn` y `--color-ok` de
  * `tokens.css`; aquí no hay ni un hexadecimal.
  */
-const ESTADO: Record<GiftStatus, { tono: 'ok' | 'pending' | 'neutro'; texto: string }> = {
-  available: { tono: 'ok', texto: 'Disponible' },
-  reserved: { tono: 'pending', texto: 'Reservado' },
-  purchased: { tono: 'neutro', texto: 'Comprado' },
-}
+const estadoDe = (t: T): Record<GiftStatus, { tono: 'ok' | 'pending' | 'neutro'; texto: string }> => ({
+  available: { tono: 'ok', texto: t('Disponible', 'Available') },
+  reserved: { tono: 'pending', texto: t('Reservado', 'Reserved') },
+  purchased: { tono: 'neutro', texto: t('Comprado', 'Purchased') },
+})
 
 function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> & { gift: GiftRow }) {
+  const t = useT()
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [editando, setEditando] = useState(false)
@@ -40,11 +43,11 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
     empezar(async () => {
       const r = await accion()
       if (r.ok) setAviso(r.message ?? null)
-      else setError(r.message ?? 'No se pudo completar la operación.')
+      else setError(r.message ?? t('No se pudo completar la operación.', 'Could not complete the operation.'))
     })
   }
 
-  const { tono, texto } = ESTADO[gift.status]
+  const { tono, texto } = estadoDe(t)[gift.status]
   // Comprado es definitivo: la tarjeta no ofrece ninguna salida de ese estado, igual que
   // el dominio no la permite. Un botón deshabilitado invitaría a intentarlo.
   const definitivo = gift.status === 'purchased'
@@ -58,7 +61,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
       </header>
 
       {/* Editando, sigue diciendo quién lo reservó: corregir el precio no borra la reserva. */}
-      {editando && gift.claimedByLabel !== null ? <p className="text-[13px] text-ink-mute">Reservado por {gift.claimedByLabel}</p> : null}
+      {editando && gift.claimedByLabel !== null ? <p className="text-[13px] text-ink-mute">{t('Reservado por', 'Reserved by')} {gift.claimedByLabel}</p> : null}
 
       {editando ? null : (
         <>
@@ -73,12 +76,12 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
               rel="noopener noreferrer"
               target="_blank"
             >
-              {gift.store === null ? 'Ver en la tienda' : `${gift.store}, ver en la tienda`}
+              {gift.store === null ? t('Ver en la tienda', 'View in store') : t(`${gift.store}, ver en la tienda`, `${gift.store}, view in store`)}
             </a>
           )}
           <div className="mt-2 flex items-baseline justify-between gap-3">
             <p className="font-display text-[22px] font-medium">{formatAmount(gift.priceCents, currency).replace(/,00$/, '')}</p>
-            <p className="text-right text-[12.5px] text-ink-mute">{gift.claimedByLabel === null ? 'Nadie lo eligió aún' : `por ${gift.claimedByLabel}`}</p>
+            <p className="text-right text-[12.5px] text-ink-mute">{gift.claimedByLabel === null ? t('Nadie lo eligió aún', 'Nobody picked it yet') : `${t('por', 'by')} ${gift.claimedByLabel}`}</p>
           </div>
         </>
       )}
@@ -96,7 +99,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
                 onClick={() => correr(() => markPurchasedAction({ id: gift.id, eventId, eventSlug }))}
                 type="button"
               >
-                Marcar comprado
+                {t('Marcar comprado', 'Mark purchased')}
               </button>
               {gift.status === 'reserved' ? (
                 <button
@@ -105,7 +108,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
                   onClick={() => correr(() => releaseGiftAsAtelierAction({ id: gift.id, eventId, eventSlug }))}
                   type="button"
                 >
-                  Liberar reserva
+                  {t('Liberar reserva', 'Release reservation')}
                 </button>
               ) : null}
             </>
@@ -120,7 +123,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
             onClick={() => setEditando(true)}
             type="button"
           >
-            Editar
+            {t('Editar', 'Edit')}
           </button>
           <button
             className="min-h-8 max-[767px]:min-h-11 cursor-pointer text-[13px] text-ink-mute hover:text-ink disabled:opacity-40"
@@ -128,7 +131,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
             onClick={() => correr(() => removeGiftAction({ id: gift.id, eventId, eventSlug }))}
             type="button"
           >
-            Eliminar
+            {t('Eliminar', 'Delete')}
           </button>
         </footer>
       )}
@@ -148,12 +151,13 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
 }
 
 export function GiftList({ eventId, eventSlug, currency, gifts }: Props) {
+  const t = useT()
   if (gifts.length === 0) {
     return (
       <EmptyState
-        description="Añade lo que te gustaría recibir. Tus invitados lo ven en su invitación y lo apartan para que nadie lo repita."
+        description={t('Añade lo que te gustaría recibir. Tus invitados lo ven en su invitación y lo apartan para que nadie lo repita.', 'Add what you would like to receive. Your guests see it in their invitation and reserve it so nobody repeats it.')}
         icon={<GiftIcon />}
-        title="Tu mesa de regalos está vacía"
+        title={t('Tu mesa de regalos está vacía', 'Your gift registry is empty')}
       />
     )
   }

@@ -9,6 +9,7 @@ import { EyeIcon } from '@/shared/design/ui/icons'
 import { fechaHora } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 import { getDictionary } from '@/shared/i18n/dictionaries'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 
 /** Lo que Google enseña de cada página cuando «Buscadores» está vacío: los textos del diccionario. */
 function seoPorDefecto() {
@@ -23,7 +24,10 @@ function seoPorDefecto() {
   }
 }
 
-export const metadata = { title: 'La web · Administración' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('La web · Administración', 'The website · Administration') }
+}
 export const dynamic = 'force-dynamic'
 
 /**
@@ -31,6 +35,8 @@ export const dynamic = 'force-dynamic'
  * sociales, textos legales y buscadores—, editable sin tocar código y con historial.
  */
 export default async function AdminWebPage() {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   await requireAdmin()
   const [ajustes, versiones] = await Promise.all([admin.siteSettings(), admin.siteVersions(20)])
 
@@ -39,17 +45,17 @@ export default async function AdminWebPage() {
       <PanelHeader
         actions={
           <PanelButton className="max-[767px]:hidden" external href="/es">
-            <EyeIcon className="size-4" /> Ver la web
+            <EyeIcon className="size-4" /> {t('Ver la web', 'See the website')}
           </PanelButton>
         }
         pestanas={<PestanasDeAdmin />}
-        title="Ajustes" tituloEnCelular="La web"
+        title={t('Ajustes', 'Settings')} tituloEnCelular={t('La web', 'The website')}
       />
 
       {isErr(ajustes) ? (
         <PanelCard>
           <p className="text-[13px] text-danger" role="alert">
-            No pudimos leer los datos de la web. La base no responde; vuelve a intentarlo en un momento.
+            {t('No pudimos leer los datos de la web. La base no responde; vuelve a intentarlo en un momento.', 'We could not read the website data. The database is not responding; try again in a moment.')}
           </p>
         </PanelCard>
       ) : (
@@ -63,7 +69,7 @@ export default async function AdminWebPage() {
           versiones={
             isErr(versiones)
               ? []
-              : versiones.value.map((v) => ({ id: v.id, fecha: fechaHora(v.createdAt), actorEmail: v.actorEmail, campos: v.campos }))
+              : versiones.value.map((v) => ({ id: v.id, fecha: fechaHora(v.createdAt, locale), actorEmail: v.actorEmail, campos: v.campos }))
           }
         />
       )}

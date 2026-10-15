@@ -8,6 +8,7 @@ import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
 import { ABRIR_BUSCADOR } from '@/shared/design/ui/panel/avisos-del-panel'
 import { esEntradaActiva, type NavItem, type NavSection } from './nav'
 import { NAV_ICONS } from './nav-icons'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * **Quién ha entrado**, siempre. La tarjeta enseñaba el nombre del evento abierto y parecía
@@ -92,11 +93,12 @@ export function PanelSidebar({
   /** Ya no se usa: la campana vive en la barra de arriba. */
   conAcciones?: boolean
 }) {
+  const t = useT()
   const pathname = usePathname()
 
   return (
     <aside
-      aria-label={evento === null ? 'Menú del panel' : 'Menú del evento'}
+      aria-label={evento === null ? t('Menú del panel', 'Panel menu') : t('Menú del evento', 'Event menu')}
       className="sticky top-0 flex h-dvh flex-col overflow-y-auto bg-shell-deep bg-[radial-gradient(140%_60%_at_0%_0%,var(--color-shell)_0%,var(--color-shell-deep)_60%)] px-4.5 pt-6.5 pb-5.5 text-shell-soft"
     >
       {evento === null ? (
@@ -105,7 +107,7 @@ export function PanelSidebar({
             <SelloLA />
             <span className="min-w-0">
               <span className="block font-display text-[21px] leading-[1.05] font-medium">Luxury Atelier</span>
-              <span className="block text-[12.5px] text-shell-mute">{brandSub === 'ADMINISTRACIÓN' ? 'Panel del atelier' : brandSub === 'PANEL' ? 'Tu panel' : brandSub}</span>
+              <span className="block text-[12.5px] text-shell-mute">{brandSub === 'ADMINISTRACIÓN' ? t('Panel del atelier', 'Atelier panel') : brandSub === 'PANEL' ? t('Tu panel', 'Your panel') : brandSub}</span>
             </span>
           </Link>
           {conBuscador ? (
@@ -116,7 +118,7 @@ export function PanelSidebar({
             >
               <span className="inline-flex items-center gap-2.5">
                 {NAV_ICONS.buscar}
-                Buscar o ir a…
+                {t('Buscar o ir a…', 'Search or go to…')}
               </span>
               <kbd className="font-sans text-[12px] font-medium text-gold-light">⌘K</kbd>
             </button>
@@ -198,6 +200,7 @@ function TarjetaDelEvento({ evento, conFlecha = false }: { evento: PanelEvento; 
 
 /** Quien entró: iniciales, nombre, «Mi cuenta» y la salida, como en la maqueta. */
 function TarjetaDeUsuario({ user }: { user: PanelUser }) {
+  const t = useT()
   return (
     <div className="flex items-center gap-3 px-2.5">
       <span aria-hidden className="grid size-[38px] shrink-0 place-items-center rounded-full bg-avatar text-[13px] font-semibold text-shell-deep">
@@ -213,25 +216,25 @@ function TarjetaDeUsuario({ user }: { user: PanelUser }) {
             onClick={() => void leaveSupportAction().then((hecho) => hecho.status === 'ok' && window.location.assign(hecho.href))}
             type="button"
           >
-            Regresar al panel de admin
+            {t('Regresar al panel de admin', 'Return to the admin panel')}
           </button>
         ) : (
           <Link className="text-[12.5px] text-shell-mute no-underline hover:text-shell-ink" href="/panel/cuenta">
-            Mi cuenta
+            {t('Mi cuenta', 'My account')}
           </Link>
         )}
       </span>
       <ConfirmAction
         action={signOutAction}
-        confirmLabel="Cerrar sesión"
-        description="Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña."
-        title="Cerrar sesión"
+        confirmLabel={t('Cerrar sesión', 'Sign out')}
+        description={t('Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña.', 'You will leave the panel on this device. To come back you will have to sign in with your email and password.')}
+        title={t('Cerrar sesión', 'Sign out')}
         trigger={
           <>
             <svg aria-hidden className="size-[19px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
               <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
             </svg>
-            <span className="sr-only">Cerrar sesión</span>
+            <span className="sr-only">{t('Cerrar sesión', 'Sign out')}</span>
           </>
         }
         triggerClassName="grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg text-shell-mute transition-colors hover:bg-shell-ink/7 hover:text-shell-ink"

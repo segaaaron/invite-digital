@@ -4,14 +4,7 @@ import { FeatureLocked } from './FeatureLocked'
 
 describe('FeatureLocked', () => {
   it('dice qué plan sí trae la función', () => {
-    render(
-      <FeatureLocked
-        eventSlug="boda-rojas"
-        mejorar={{ href: '/panel/eventos/boda-rojas/plan', label: 'Ver planes' }}
-        reason="El plan atelier no incluye la mesa de regalos; lo trae el plan gala."
-        title="Regalos"
-      />,
-    )
+    render(<FeatureLocked eventSlug="boda-rojas" mejorar={{ href: '/panel/eventos/boda-rojas/plan', label: 'Ver planes' }} reason="El plan atelier no incluye la mesa de regalos; lo trae el plan gala." title="Regalos" />)
 
     expect(screen.getByText(/gala/)).toBeInTheDocument()
   })

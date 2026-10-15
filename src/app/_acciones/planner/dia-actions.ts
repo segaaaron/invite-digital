@@ -10,6 +10,9 @@ import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import type { PlannerResult } from '@/modules/planner/application/planner-use-cases'
 import { campo } from '@/shared/forms/campo'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import type { T } from '@/shared/i18n/t'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 export type DiaActionState =
   | { status: 'idle' }
@@ -26,23 +29,25 @@ export type DiaActionState =
 const valoresDe = (fd: FormData): Record<string, string> =>
   Object.fromEntries([...fd.entries()].filter(([, v]) => typeof v === 'string') as [string, string][])
 
-const NO_INCLUIDO: Record<'plannerCompleto' | 'plannerTotal', string> = {
-  plannerCompleto: 'Tu plan no incluye proveedores, cronograma ni cortejo.',
-  plannerTotal: 'Tu plan no incluye los enlaces para proveedores.',
-}
+const noIncluido = (t: T): Record<'plannerCompleto' | 'plannerTotal', string> => ({
+  plannerCompleto: t('Tu plan no incluye proveedores, cronograma ni cortejo.', 'Your plan doesn’t include vendors, schedule or wedding party.'),
+  plannerTotal: t('Tu plan no incluye los enlaces para proveedores.', 'Your plan doesn’t include vendor links.'),
+})
 
 async function incluido(eventId: string, feature: Extract<PlanFeature, 'plannerCompleto' | 'plannerTotal'>): Promise<DiaActionState | null> {
-  return isErr(await plans.requireFeature(eventId, feature)) ? { status: 'error', message: NO_INCLUIDO[feature] } : null
+  return isErr(await plans.requireFeature(eventId, feature)) ? { status: 'error', message: noIncluido(await tr())[feature] } : null
 }
 
 async function fiestaDe(actor: Awaited<ReturnType<typeof requireSession>>, eventId: string) {
+  const t = await tr()
   const evento = await events.getByIdFor(actor, eventId, { section: 'cliente' })
-  if (isErr(evento)) throw new Error(evento.error.detail)
+  if (isErr(evento)) throw new Error(traducir(evento.error.detail, t))
   return fiestaDeTema(evento.value.themeKey)
 }
 
-function responder(resultado: PlannerResult, eventSlug: string, fd?: FormData): DiaActionState {
-  if (!resultado.ok) return { status: 'error', message: resultado.mensaje, ...(fd ? { valores: valoresDe(fd) } : {}) }
+async function responder(resultado: PlannerResult, eventSlug: string, fd?: FormData): Promise<DiaActionState> {
+  const t = await tr()
+  if (!resultado.ok) return { status: 'error', message: traducir(resultado.mensaje, t), ...(fd ? { valores: valoresDe(fd) } : {}) }
   revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
   return { status: 'success' }
 }
@@ -50,6 +55,7 @@ function responder(resultado: PlannerResult, eventSlug: string, fd?: FormData): 
 // ─── Proveedores ─────────────────────────────────────────────────────────────
 
 export async function saveVendorAction(_previo: DiaActionState, fd: FormData): Promise<DiaActionState> {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = campo(fd, 'eventId')
   const eventSlug = campo(fd, 'eventSlug')
@@ -60,7 +66,7 @@ export async function saveVendorAction(_previo: DiaActionState, fd: FormData): P
   let precioCents: number | null = null
   if (campo(fd, 'price').trim() !== '') {
     const leido = parseAmount(campo(fd, 'price'))
-    if (isErr(leido)) return { status: 'error', message: leido.error.detail, valores: valoresDe(fd) }
+    if (isErr(leido)) return { status: 'error', message: traducir(leido.error.detail, t), valores: valoresDe(fd) }
     precioCents = leido.value
   }
   const id = campo(fd, 'vendorId')
@@ -103,6 +109,7 @@ export async function removeVendorAction(_previo: DiaActionState, fd: FormData):
 
 /** El enlace de solo lectura del proveedor. Se enseña una vez: en la base queda su hash. */
 export async function emitVendorLinkAction(_previo: DiaActionState, fd: FormData): Promise<DiaActionState> {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = campo(fd, 'eventId')
   const eventSlug = campo(fd, 'eventSlug')
@@ -110,7 +117,7 @@ export async function emitVendorLinkAction(_previo: DiaActionState, fd: FormData
   const corte = await incluido(eventId, 'plannerTotal')
   if (corte) return corte
   const emitido = await planner.dia.emitVendorLink(eventId, campo(fd, 'vendorId'))
-  if (!emitido.ok) return { status: 'error', message: emitido.mensaje }
+  if (!emitido.ok) return { status: 'error', message: traducir(emitido.mensaje, t) }
   revalidatePath(`/panel/eventos/${eventSlug}/planner/proveedores`)
   return { status: 'success', enlace: `${env.SITE_URL.replace(/\/+$/, '')}/v/${emitido.token}` }
 }
@@ -230,6 +237,7 @@ export async function setVendorArrivedAction(_previo: DiaActionState, fd: FormDa
 }
 
 export async function uploadDocumentAction(_previo: DiaActionState, fd: FormData): Promise<DiaActionState> {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = campo(fd, 'eventId')
   const eventSlug = campo(fd, 'eventSlug')
@@ -237,7 +245,7 @@ export async function uploadDocumentAction(_previo: DiaActionState, fd: FormData
   const corte = await incluido(eventId, 'plannerCompleto')
   if (corte) return corte
   const archivo = fd.get('file')
-  if (!(archivo instanceof File) || archivo.size === 0) return { status: 'error', message: 'Elige un archivo.' }
+  if (!(archivo instanceof File) || archivo.size === 0) return { status: 'error', message: t('Elige un archivo.', 'Choose a file.') }
   const resultado = await planner.dia.saveDocument(
     eventId,
     { kind: campo(fd, 'kind'), topic: campo(fd, 'topic'), vendorId: campo(fd, 'vendorId'), budgetItemId: campo(fd, 'budgetItemId') },

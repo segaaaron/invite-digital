@@ -6,17 +6,20 @@ import { DoorMode } from '@/modules/checkin/ui/DoorMode'
 import { requireSession } from '@/app/_acciones/sesion'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 // El modo puerta se instala en la pantalla de inicio: es como lo va a usar el personal.
-export const metadata = {
-  title: 'Modo puerta',
-  manifest: '/manifest.webmanifest',
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Modo puerta', 'Door mode'), manifest: '/manifest.webmanifest' }
 }
 
 // El manifiesto cambia con cada llegada y con cada grupo nuevo: esta página no se cachea.
 export const dynamic = 'force-dynamic'
 
 export default async function DoorPage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
 
@@ -29,7 +32,7 @@ export default async function DoorPage({ params }: { params: Promise<{ slug: str
 
   const permitido = await plans.requireFeature(event.value.id, 'checkin')
   if (isErr(permitido)) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={permitido.error.detail} title="Modo puerta" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={traducir(permitido.error.detail, t)} title={t('Modo puerta', 'Door mode')} />
   }
 
   const manifest = await checkin.manifest(event.value.id)

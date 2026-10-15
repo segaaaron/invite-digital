@@ -28,8 +28,14 @@ import { AccionDeLaIsla } from '@/shared/design/ui/panel/AccionDeLaIsla'
 import { PlusIcon } from '@/shared/design/ui/icons'
 import Link from 'next/link'
 import { isErr } from '@/shared/result'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
+import { INTL, type T } from '@/shared/i18n/t'
+import { traducir } from '@/shared/i18n/en-ingles'
 
-export const metadata = { title: 'Presupuesto' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Presupuesto', 'Budget') }
+}
 export const dynamic = 'force-dynamic'
 
 /** «Bs 85.000»: las cifras del presupuesto sin céntimos, como la maqueta (E23); con céntimos solo si los hay. */
@@ -37,22 +43,23 @@ const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY).replace(/,00
 
 /** El color de cada categoría, en el orden en que aparecen: la barra y el punto de la fila. */
 const COLORES = ['bg-reparto-1', 'bg-reparto-2', 'bg-reparto-3', 'bg-reparto-4', 'bg-reparto-5', 'bg-reparto-6'] as const
-const DIA_SEMANA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', timeZone: 'UTC' })
-const DIA_Y_NUMERO = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', timeZone: 'UTC' })
-const mayuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+const DIA_SEMANA = { es: new Intl.DateTimeFormat(INTL.es, { weekday: 'long', timeZone: 'UTC' }), en: new Intl.DateTimeFormat(INTL.en, { weekday: 'long', timeZone: 'UTC' }) }
+const DIA_Y_NUMERO = { es: new Intl.DateTimeFormat(INTL.es, { weekday: 'long', day: 'numeric', timeZone: 'UTC' }), en: new Intl.DateTimeFormat(INTL.en, { weekday: 'long', day: 'numeric', timeZone: 'UTC' }) }
+const mayuscula = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1)
 
 /** Qué le queda a la categoría, en palabras: «Pagado», «Falta Bs 6.750», «Te pasaste» o «Libre». */
-function estadoDeFila(c: { asignado: number; comprometido: number; pagado: number }): { texto: string; tono: 'ok' | 'laton' | 'no' | 'neutro' } {
-  if (c.asignado > 0 && c.comprometido > c.asignado) return { texto: 'Te pasaste', tono: 'no' }
-  if (c.comprometido - c.pagado > 0) return { texto: `Falta ${bs(c.comprometido - c.pagado)}`, tono: 'laton' }
-  if (c.comprometido > 0 && c.comprometido >= c.asignado) return { texto: 'Pagado', tono: 'ok' }
-  return { texto: 'Libre', tono: 'neutro' }
+function estadoDeFila(c: { asignado: number; comprometido: number; pagado: number }, t: T): { texto: string; tono: 'ok' | 'laton' | 'no' | 'neutro'; libre?: true } {
+  if (c.asignado > 0 && c.comprometido > c.asignado) return { texto: t('Te pasaste', 'Over budget'), tono: 'no' }
+  if (c.comprometido - c.pagado > 0) return { texto: t(`Falta ${bs(c.comprometido - c.pagado)}`, `${bs(c.comprometido - c.pagado)} left`), tono: 'laton' }
+  if (c.comprometido > 0 && c.comprometido >= c.asignado) return { texto: t('Pagado', 'Paid'), tono: 'ok' }
+  return { texto: t('Libre', 'Available'), tono: 'neutro', libre: true }
 }
 /** El importe como se escribe en el campo: `1234.50`. */
 const campo = (cents: number) => `${Math.trunc(cents / 100)}.${String(cents % 100).padStart(2, '0')}`
 
 export default async function PresupuestoPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ panel?: string; categoria?: string }> }) {
   const actor = await requireSession()
+  const [t, locale] = await Promise.all([tr(), idiomaDeLaPeticion()])
   const { slug } = await params
   const { panel, categoria } = await searchParams
 
@@ -70,18 +77,18 @@ export default async function PresupuestoPage({ params, searchParams }: { params
   const partidas = await planner.listBudget(event.value.id)
   const totales = totalesDelPresupuesto(partidas)
   const evento = { eventId: event.value.id, eventSlug: event.value.slug }
-  const opciones = { categorias: categoriasDe(fiesta), pagadores: PAGADORES.map((clave) => ({ clave, nombre: nombreDePagador(fiesta, clave) })) }
+  const opciones = { categorias: categoriasDe(fiesta).map((c) => ({ ...c, nombre: traducir(c.nombre, t) })), pagadores: PAGADORES.map((clave) => ({ clave, nombre: traducir(nombreDePagador(fiesta, clave), t) })) }
   const base = `/panel/eventos/${event.value.slug}/planner/presupuesto`
 
   // El total y su reparto: el punto de partida del presupuesto.
   const plan = await planner.getBudgetPlan(event.value.id)
-  const resumen = plan === null ? [] : resumenPorCategoria(partidas, fiesta, plan.asignaciones)
+  const resumen = plan === null ? [] : resumenPorCategoria(partidas, fiesta, plan.asignaciones).map((c) => ({ ...c, nombre: traducir(c.nombre, t) }))
   const sinAsignar = plan === null ? 0 : plan.totalCents - resumen.reduce((n, c) => n + c.asignado, 0)
   const filas = [
     ...resumen
       .filter((c) => c.asignado > 0 || c.comprometido > 0)
       .map((c, i) => ({ ...c, color: COLORES[i % COLORES.length] ?? COLORES[0] })),
-    ...(sinAsignar > 0 ? [{ clave: 'sin-asignar', nombre: 'Sin asignar', asignado: sinAsignar, comprometido: 0, pagado: 0, partidas: 0, estado: 'libre' as const, color: 'bg-line-panel-strong' }] : []),
+    ...(sinAsignar > 0 ? [{ clave: 'sin-asignar', nombre: t('Sin asignar', 'Unassigned'), asignado: sinAsignar, comprometido: 0, pagado: 0, partidas: 0, estado: 'libre' as const, color: 'bg-line-panel-strong' }] : []),
   ]
   const libre = plan === null ? 0 : plan.totalCents - totales.comprometido
   const proximos = pagosQueVencen(partidas, hoy)
@@ -91,10 +98,10 @@ export default async function PresupuestoPage({ params, searchParams }: { params
     return {
       id: p.id,
       category: p.category,
-      categoria: nombreDeCategoria(fiesta, p.category),
+      categoria: traducir(nombreDeCategoria(fiesta, p.category), t),
       concept: p.concept,
       payer: p.payer,
-      quienPaga: p.payer === 'padrino' && p.padrinoLabel ? `${nombreDePagador(fiesta, 'padrino')} · ${p.padrinoLabel}` : nombreDePagador(fiesta, p.payer),
+      quienPaga: p.payer === 'padrino' && p.padrinoLabel ? `${traducir(nombreDePagador(fiesta, 'padrino'), t)} · ${p.padrinoLabel}` : traducir(nombreDePagador(fiesta, p.payer), t),
       padrinoLabel: p.padrinoLabel,
       notes: p.notes,
       previsto: bs(c.previsto),
@@ -107,7 +114,7 @@ export default async function PresupuestoPage({ params, searchParams }: { params
         id: g.id,
         importe: bs(g.amountCents),
         etiqueta: g.label ? g.label.charAt(0).toUpperCase() + g.label.slice(1) : null,
-        vence: g.dueDate === null ? null : fecha(new Date(`${g.dueDate}T12:00:00.000Z`)),
+        vence: g.dueDate === null ? null : fecha(new Date(`${g.dueDate}T12:00:00.000Z`), locale),
         pagado: g.paidAt !== null,
         atrasado: g.paidAt === null && g.dueDate !== null && g.dueDate < hoy,
       })),
@@ -127,15 +134,15 @@ export default async function PresupuestoPage({ params, searchParams }: { params
     plan === null
       ? []
       : [
-          { nombre: 'Total', valor: bs(plan.totalCents) },
-          { nombre: 'Pagado', valor: bs(totales.pagado) },
+          { nombre: t('Total', 'Total'), valor: bs(plan.totalCents) },
+          { nombre: t('Pagado', 'Paid'), valor: bs(totales.pagado) },
           {
-            nombre: 'Por pagar',
+            nombre: t('Por pagar', 'To pay'),
             valor: bs(totales.falta),
             tono: 'text-gold-deep',
-            ...(primero?.dueDate ? { nota: primero.dueDate < hoy ? 'Hay un pago vencido' : `El próximo vence el ${DIA_SEMANA.format(new Date(`${primero.dueDate}T00:00:00Z`))}` } : {}),
+            ...(primero?.dueDate ? { nota: primero.dueDate < hoy ? t('Hay un pago vencido', 'A payment is overdue') : t(`El próximo vence el ${DIA_SEMANA.es.format(new Date(`${primero.dueDate}T00:00:00Z`))}`, `The next one is due ${DIA_SEMANA.en.format(new Date(`${primero.dueDate}T00:00:00Z`))}`) } : {}),
           },
-          { nombre: libre < 0 ? 'Te pasaste' : 'Libre', valor: bs(Math.abs(libre)), ...(libre < 0 ? { tono: 'text-danger-deep' } : {}) },
+          { nombre: libre < 0 ? t('Te pasaste', 'Over budget') : t('Libre', 'Available'), valor: bs(Math.abs(libre)), ...(libre < 0 ? { tono: 'text-danger-deep' } : {}) },
         ]
 
   return (
@@ -144,40 +151,40 @@ export default async function PresupuestoPage({ params, searchParams }: { params
         actions={
           editable && plan !== null ? (
             <span className="flex flex-wrap gap-2.5">
-              <PanelButton href={`${base}?panel=reparto`}>Ajustar el reparto</PanelButton>
+              <PanelButton href={`${base}?panel=reparto`}>{t('Ajustar el reparto', 'Adjust the allocation')}</PanelButton>
               <PanelButton href={`${base}?panel=pago`} variant="primary">
-                <PlusIcon className="size-4" /> Registrar un pago
+                <PlusIcon className="size-4" /> {t('Registrar un pago', 'Record a payment')}
               </PanelButton>
             </span>
           ) : null
         }
-        meta={plan === null ? 'Empieza por cuánto quieres gastar.' : 'Cuánto tienes, en qué se va y lo que falta pagar.'}
-        title="Presupuesto"
+        meta={plan === null ? t('Empieza por cuánto quieres gastar.', 'Start with how much you want to spend.') : t('Cuánto tienes, en qué se va y lo que falta pagar.', 'How much you have, where it goes and what is left to pay.')}
+        title={t('Presupuesto', 'Budget')}
       />
 
       {editable ? (
         <AccionDeLaIsla>
-          <Link aria-label="Anotar un gasto" className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=partida`}>
+          <Link aria-label={t('Anotar un gasto', 'Add an expense')} className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=partida`}>
             <PlusIcon className="size-4.5" />
-          Añadir
+            {t('Añadir', 'Add')}
           </Link>
         </AccionDeLaIsla>
       ) : null}
 
       {panel === 'partida' && editable ? (
-        <PanelDialog closeHref={base} title="Anotar un gasto" width={620}>
+        <PanelDialog closeHref={base} title={t('Anotar un gasto', 'Add an expense')} width={620}>
           <ItemForm categoria={categoria} cerrarEn={base} evento={evento} opciones={opciones} />
         </PanelDialog>
       ) : null}
       {panel === 'reparto' && editable && plan !== null ? (
-        <PanelDialog closeHref={base} title="Ajustar el reparto" width={620}>
+        <PanelDialog closeHref={base} title={t('Ajustar el reparto', 'Adjust the allocation')} width={620}>
           <RepartoForm categorias={resumen.map((c) => ({ clave: c.clave, nombre: c.nombre, campoAsignado: campo(c.asignado) }))} evento={evento} />
         </PanelDialog>
       ) : null}
       {panel === 'pago' && editable ? (
-        <PanelDialog closeHref={base} descripcion="Se descuenta de lo que falta pagar." title="Registrar un pago">
+        <PanelDialog closeHref={base} descripcion={t('Se descuenta de lo que falta pagar.', 'It is deducted from what is left to pay.')} title={t('Registrar un pago', 'Record a payment')}>
           {pendientes.length === 0 ? (
-            <p className="text-[15px] text-ink-soft">No hay pagos por registrar. Anota los pagos de cada gasto —anticipo, cuota, saldo— con su fecha, y aquí los marcas hechos.</p>
+            <p className="text-[15px] text-ink-soft">{t('No hay pagos por registrar. Anota los pagos de cada gasto —anticipo, cuota, saldo— con su fecha, y aquí los marcas hechos.', 'No payments to record. Add the payments for each expense —deposit, installment, balance— with their date, and mark them done here.')}</p>
           ) : (
             <RegistrarPagoForm cerrar={base} evento={evento} pendientes={pendientes} />
           )}
@@ -185,8 +192,8 @@ export default async function PresupuestoPage({ params, searchParams }: { params
       ) : null}
 
       {plan === null ? (
-        <PanelCard title="¿Cuánto quieres gastar?">
-          {editable ? <BudgetStart evento={evento} /> : <p className="text-[14px] text-ink-soft">Todavía no se fijó el presupuesto total.</p>}
+        <PanelCard title={t('¿Cuánto quieres gastar?', 'How much do you want to spend?')}>
+          {editable ? <BudgetStart evento={evento} /> : <p className="text-[14px] text-ink-soft">{t('Todavía no se fijó el presupuesto total.', 'The total budget hasn’t been set yet.')}</p>}
         </PanelCard>
       ) : (
         <div className="flex flex-col gap-7">
@@ -211,15 +218,15 @@ export default async function PresupuestoPage({ params, searchParams }: { params
           </div>
 
           {primero === undefined ? null : (
-            <section aria-label="Próximos pagos" className={`${TARJETA_DESTACADA} flex flex-wrap items-center gap-x-8 gap-y-4 px-7 py-5 max-[767px]:flex-col max-[767px]:items-stretch max-[767px]:px-5`}>
-              <h2 className="font-display text-[24px] font-medium max-[767px]:hidden">Próximos pagos</h2>
+            <section aria-label={t('Próximos pagos', 'Upcoming payments')} className={`${TARJETA_DESTACADA} flex flex-wrap items-center gap-x-8 gap-y-4 px-7 py-5 max-[767px]:flex-col max-[767px]:items-stretch max-[767px]:px-5`}>
+              <h2 className="font-display text-[24px] font-medium max-[767px]:hidden">{t('Próximos pagos', 'Upcoming payments')}</h2>
               <p className="text-[14px] text-ink-mute min-[768px]:hidden">
-                Próximo pago, {primero.dueDate ? DIA_Y_NUMERO.format(new Date(`${primero.dueDate}T00:00:00Z`)) : 'sin fecha'}
+                {t('Próximo pago', 'Next payment')}, {primero.dueDate ? DIA_Y_NUMERO[locale].format(new Date(`${primero.dueDate}T00:00:00Z`)) : t('sin fecha', 'no date')}
               </p>
               {proximos.slice(0, 2).map((g, i) => (
                 <div className={`flex flex-col gap-0.5 min-[768px]:border-l min-[768px]:border-line-panel min-[768px]:pl-8 ${i > 0 ? 'max-[767px]:hidden' : ''}`} key={g.id}>
                   <span className="text-[13px] text-ink-mute max-[767px]:hidden">
-                    {g.dueDate === null ? 'Sin fecha' : g.dueDate < hoy ? 'Vencido' : mayuscula(DIA_Y_NUMERO.format(new Date(`${g.dueDate}T00:00:00Z`)))}
+                    {g.dueDate === null ? t('Sin fecha', 'No date') : g.dueDate < hoy ? t('Vencido', 'Overdue') : mayuscula(DIA_Y_NUMERO[locale].format(new Date(`${g.dueDate}T00:00:00Z`)))}
                   </span>
                   <span className="flex items-baseline justify-between gap-3 text-[15px] max-[767px]:font-medium">
                     {mayuscula(quePago(g))}
@@ -231,12 +238,12 @@ export default async function PresupuestoPage({ params, searchParams }: { params
                 <span className="min-[768px]:ml-auto">
                   <span className="max-[767px]:hidden">
                     <MarcarPagado evento={evento} paymentId={primero.id}>
-                      Marcar {primero.concepto.charAt(0).toLowerCase() + primero.concepto.slice(1)} como pagado
+                      {t(`Marcar ${primero.concepto.charAt(0).toLowerCase() + primero.concepto.slice(1)} como pagado`, `Mark ${primero.concepto} as paid`)}
                     </MarcarPagado>
                   </span>
                   <span className="min-[768px]:hidden">
                     <MarcarPagado ancho evento={evento} paymentId={primero.id}>
-                      Marcar como pagado
+                      {t('Marcar como pagado', 'Mark as paid')}
                     </MarcarPagado>
                   </span>
                 </span>
@@ -245,18 +252,18 @@ export default async function PresupuestoPage({ params, searchParams }: { params
           )}
 
           {/* Por categoría (E23): asignado, comprometido, pagado, el avance de lo pagado y qué le queda. */}
-          <section aria-label="Por categoría">
+          <section aria-label={t('Por categoría', 'By category')}>
             <div className="hidden grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))_minmax(0,1.2fr)_minmax(0,1fr)] gap-4 border-b border-line-panel-strong px-2 pb-2.5 text-[13px] font-medium text-ink-mute min-[860px]:grid">
-              <span>Categoría</span>
-              <span>Asignado</span>
-              <span>Comprometido</span>
-              <span>Pagado</span>
-              <span>Avance</span>
-              <span>Estado</span>
+              <span>{t('Categoría', 'Category')}</span>
+              <span>{t('Asignado', 'Allocated')}</span>
+              <span>{t('Comprometido', 'Committed')}</span>
+              <span>{t('Pagado', 'Paid')}</span>
+              <span>{t('Avance', 'Progress')}</span>
+              <span>{t('Estado', 'Status')}</span>
             </div>
             <ul>
               {filas.map((f) => {
-                const estado = estadoDeFila(f)
+                const estado = estadoDeFila(f, t)
                 return (
                   <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-line-panel px-2 py-3.5 text-[14.5px] min-[860px]:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))_minmax(0,1.2fr)_minmax(0,1fr)] max-[859px]:px-0 max-[859px]:py-4 [font-variant-numeric:tabular-nums]" key={f.clave}>
                     <span className="flex items-center gap-3 max-[859px]:items-start">
@@ -274,9 +281,9 @@ export default async function PresupuestoPage({ params, searchParams }: { params
                     </span>
                     <span>
                       <Pill tone={estado.tono === 'laton' ? 'vip' : estado.tono}>
-                        {estado.texto === 'Libre' && f.asignado - f.comprometido > 0 ? (
+                        {estado.libre === true && f.asignado - f.comprometido > 0 ? (
                           <>
-                            Libre<span className="min-[860px]:hidden"> {bs(f.asignado - f.comprometido)}</span>
+                            {t('Libre', 'Available')}<span className="min-[860px]:hidden"> {bs(f.asignado - f.comprometido)}</span>
                           </>
                         ) : (
                           estado.texto
@@ -296,19 +303,19 @@ export default async function PresupuestoPage({ params, searchParams }: { params
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="font-display text-[26px] font-medium" id="cada-gasto">
-                Cada gasto
+                {t('Cada gasto', 'Each expense')}
               </h2>
               <p className="text-[14px] text-ink-mute">
                 {porPagador(partidas, fiesta)
-                  .map((f) => `${f.nombre}: ${bs(f.pagado)} de ${bs(f.comprometido)}`)
-                  .join(' · ') || 'Lo que cuesta cada cosa, quién la paga y sus pagos.'}
+                  .map((f) => t(`${f.nombre}: ${bs(f.pagado)} de ${bs(f.comprometido)}`, `${traducir(f.nombre, t)}: ${bs(f.pagado)} of ${bs(f.comprometido)}`))
+                  .join(' · ') || t('Lo que cuesta cada cosa, quién la paga y sus pagos.', 'What each thing costs, who pays for it and its payments.')}
               </p>
             </div>
             <span className="flex gap-2.5">
-              {partidas.length > 0 ? <BudgetCsvButton csv={presupuestoACsv(partidas, fiesta)} nombre={`presupuesto-${event.value.slug}.csv`} /> : null}
+              {partidas.length > 0 ? <BudgetCsvButton csv={presupuestoACsv(partidas, fiesta)} nombre={`${t('presupuesto', 'budget')}-${event.value.slug}.csv`} /> : null}
               {editable ? (
                 <PanelButton href={`${base}?panel=partida`}>
-                  <PlusIcon className="size-4" /> Anotar un gasto
+                  <PlusIcon className="size-4" /> {t('Anotar un gasto', 'Add an expense')}
                 </PanelButton>
               ) : null}
             </span>

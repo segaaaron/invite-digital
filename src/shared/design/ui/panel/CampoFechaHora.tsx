@@ -4,6 +4,7 @@ import { useId } from 'react'
 import { ClockIcon } from '@/shared/design/ui/icons'
 import { FIELD_CLASS } from './PanelKit'
 import { SelectorDeFecha } from './SelectorDeFecha'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /** Las horas de una fiesta, de media en media: nadie cita a las 19:07. */
 const HORAS = Array.from({ length: 48 }, (_, i) => {
@@ -20,6 +21,7 @@ const HORAS = Array.from({ length: 48 }, (_, i) => {
  * fiesta. El valor que viaja sigue siendo `YYYY-MM-DDTHH:mm`, lo que el dominio ya guarda.
  */
 export function CampoFechaHora({ id, valor, onChange }: { id: string; valor: string; onChange: (valor: string) => void }) {
+  const t = useT()
   const horaId = useId()
   const [fecha = '', hora = ''] = valor.split('T')
   const componer = (f: string, h: string) => (f === '' ? '' : `${f}T${h === '' ? '19:00' : h.slice(0, 5)}`)
@@ -35,7 +37,7 @@ export function CampoFechaHora({ id, valor, onChange }: { id: string; valor: str
         <SelectorDeFecha id={id} onChange={(f) => onChange(componer(f, horaActual))} valor={fecha} />
       </div>
       <label className="sr-only" htmlFor={horaId}>
-        Hora
+        {t('Hora', 'Time')}
       </label>
       <div className="relative w-[128px] shrink-0">
         <ClockIcon className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-mute" />

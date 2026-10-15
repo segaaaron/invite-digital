@@ -12,13 +12,19 @@ import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { diaDelEvento } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
+import type { Locale } from '@/shared/i18n/locales'
+import { INTL, type T } from '@/shared/i18n/t'
+import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Calendario · Administración' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Calendario · Administración', 'Calendar · Administration') }
+}
 export const dynamic = 'force-dynamic'
 
 const BASE = '/panel/admin/eventos/calendario'
-const MES = new Intl.DateTimeFormat('es-BO', { month: 'long', year: 'numeric', timeZone: 'UTC' })
-const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+const formatoDeMes = (locale: Locale) => new Intl.DateTimeFormat(INTL[locale], { month: 'long', year: 'numeric', timeZone: 'UTC' })
+const dias = (t: T) => [t('Lun', 'Mon'), t('Mar', 'Tue'), t('Mié', 'Wed'), t('Jue', 'Thu'), t('Vie', 'Fri'), t('Sáb', 'Sat'), t('Dom', 'Sun')]
 /** Las ventas abiertas con fecha: aún no son eventos, pero ya ocupan el día en la cabeza del planner. */
 const TENTATIVAS = new Set(['nueva', 'contactada', 'esperando_pago', 'por_revisar', 'por_crear_evento'])
 
@@ -34,6 +40,8 @@ type Entrada = { readonly clave: string; readonly titulo: string; readonly fiest
  * En el celular, la rejilla no cabe: se lee como agenda, día por día.
  */
 export default async function CalendarioPage({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
+  const t = await tr()
+  const locale = await idiomaDeLaPeticion()
   await requireAdmin()
   const ahora = new Date()
   const hoy = fechaEnBolivia(ahora)
@@ -43,10 +51,10 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
   if (isErr(eventos)) {
     return (
       <>
-        <PanelHeader kicker="Eventos" title="Calendario" />
+        <PanelHeader kicker={t('Eventos', 'Events')} title={t('Calendario', 'Calendar')} />
         <PanelCard>
           <p className="text-[13px] text-danger" role="alert">
-            No pudimos leer los eventos. La base no responde; vuelve a intentarlo en un momento.
+            {t('No pudimos leer los eventos. La base no responde; vuelve a intentarlo en un momento.', 'We could not read the events. The database is not responding; try again in a moment.')}
           </p>
         </PanelCard>
       </>
@@ -75,33 +83,36 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
   const sabados = delMes.filter((d) => new Date(`${d.iso}T00:00:00Z`).getUTCDay() === 6)
   const sabadosOcupados = sabados.filter((d) => confirmados(d.iso) > 0).length
   const diasLlenos = delMes.filter((d) => confirmados(d.iso) >= capacidad).length
-  const titulo = MES.format(new Date(`${mes}-01T00:00:00Z`))
+  const titulo = formatoDeMes(locale).format(new Date(`${mes}-01T00:00:00Z`))
 
   return (
     <>
       <PanelHeader
         actions={
           <div className="flex items-center gap-2">
-            <PanelButton aria-label="Mes anterior" href={`${BASE}?mes=${mesVecino(mes, -1)}`}>
+            <PanelButton aria-label={t('Mes anterior', 'Previous month')} href={`${BASE}?mes=${mesVecino(mes, -1)}`}>
               <ArrowLeftIcon className="size-4" />
             </PanelButton>
-            <PanelButton href={BASE}>Hoy</PanelButton>
-            <PanelButton aria-label="Mes siguiente" href={`${BASE}?mes=${mesVecino(mes, 1)}`}>
+            <PanelButton href={BASE}>{t('Hoy', 'Today')}</PanelButton>
+            <PanelButton aria-label={t('Mes siguiente', 'Next month')} href={`${BASE}?mes=${mesVecino(mes, 1)}`}>
               <ArrowRightIcon className="size-4" />
             </PanelButton>
           </div>
         }
-        kicker="Eventos"
-        meta={`Tu agenda aguanta ${capacidad} ${capacidad === 1 ? 'evento' : 'eventos'} por día · se cambia en Ajustes › Mensajes y agenda`}
+        kicker={t('Eventos', 'Events')}
+        meta={t(
+          `Tu agenda aguanta ${capacidad} ${capacidad === 1 ? 'evento' : 'eventos'} por día · se cambia en Ajustes › Mensajes y agenda`,
+          `Your calendar holds ${capacidad} ${capacidad === 1 ? 'event' : 'events'} per day · change it in Settings › Messages and calendar`,
+        )}
         title={titulo.charAt(0).toUpperCase() + titulo.slice(1)}
       />
 
       <TiraDeCifras
         cifras={[
-          { label: 'Eventos del mes', value: eventosDelMes },
-          { label: 'Sábados ocupados', value: `${sabadosOcupados} de ${sabados.length}`, detail: `${sabados.length - sabadosOcupados} libres` },
-          { label: 'Días llenos', value: diasLlenos, tono: diasLlenos > 0 ? 'alerta' : 'normal', detail: 'Con la agenda completa' },
-          { label: 'Tentativos', value: tentativasDelMes, detail: 'Ventas abiertas con fecha', href: '/panel/admin/ventas' },
+          { label: t('Eventos del mes', 'Events this month'), value: eventosDelMes },
+          { label: t('Sábados ocupados', 'Saturdays booked'), value: t(`${sabadosOcupados} de ${sabados.length}`, `${sabadosOcupados} of ${sabados.length}`), detail: t(`${sabados.length - sabadosOcupados} libres`, `${sabados.length - sabadosOcupados} free`) },
+          { label: t('Días llenos', 'Full days'), value: diasLlenos, tono: diasLlenos > 0 ? 'alerta' : 'normal', detail: t('Con la agenda completa', 'With the calendar full') },
+          { label: t('Tentativos', 'Tentative'), value: tentativasDelMes, detail: t('Ventas abiertas con fecha', 'Open sales with a date'), href: '/panel/admin/ventas' },
         ]}
       />
 
@@ -110,17 +121,17 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
         <EtiquetaDeFiesta fiesta="xv" />
         <EtiquetaDeFiesta fiesta="cumple" />
         <span className="inline-flex items-center gap-2">
-          <span aria-hidden className="h-3.5 w-6 rounded-full border border-dashed border-ink-mute" /> Tentativo (venta abierta)
+          <span aria-hidden className="h-3.5 w-6 rounded-full border border-dashed border-ink-mute" /> {t('Tentativo (venta abierta)', 'Tentative (open sale)')}
         </span>
         <span className="inline-flex items-center gap-2">
-          <span aria-hidden className="size-3.5 rounded-[4px] ring-2 ring-gold" /> Día lleno
+          <span aria-hidden className="size-3.5 rounded-[4px] ring-2 ring-gold" /> {t('Día lleno', 'Full day')}
         </span>
       </div>
 
       {/* La rejilla, desde tableta. */}
       <div className="hidden overflow-hidden rounded-[22px] border border-line-panel bg-white/80 shadow-card min-[760px]:block">
         <div className="grid grid-cols-7 border-b border-line-panel bg-bg-sunken/40">
-          {DIAS.map((d, i) => (
+          {dias(t).map((d, i) => (
             <span className={`px-3 py-2.5 font-mono text-[10px] tracking-[0.18em] uppercase ${i >= 5 ? 'text-ink' : 'text-ink-mute'}`} key={d}>
               {d}
             </span>
@@ -145,7 +156,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
                     >
                       {d.dia}
                     </span>
-                    {lleno ? <span className="font-mono text-[9px] tracking-[0.14em] text-gold-deep uppercase">Lleno</span> : null}
+                    {lleno ? <span className="font-mono text-[9px] tracking-[0.14em] text-gold-deep uppercase">{t('Lleno', 'Full')}</span> : null}
                   </span>
                   <ul className="flex flex-col gap-1">
                     {entradas.slice(0, 3).map((e) => (
@@ -166,7 +177,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
       <div className="min-[760px]:hidden">
         {delMes.every((d) => (porDia.get(d.iso) ?? []).length === 0) ? (
           <PanelCard>
-            <EmptyState compact title="Nada este mes" />
+            <EmptyState compact title={t('Nada este mes', 'Nothing this month')} />
           </PanelCard>
         ) : (
           <ol className="flex flex-col gap-3">
@@ -175,8 +186,8 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
               .map((d) => (
                 <li className={`rounded-[18px] border bg-white p-3.5 shadow-card ${confirmados(d.iso) >= capacidad ? 'border-gold' : 'border-line-panel'}`} key={d.iso}>
                   <p className="mb-2 flex items-center justify-between text-[13px] text-ink">
-                    <span className="first-letter:uppercase">{diaDelEvento(d.iso)}</span>
-                    {confirmados(d.iso) >= capacidad ? <span className="font-mono text-[9.5px] tracking-[0.14em] text-gold-deep uppercase">Lleno</span> : null}
+                    <span className="first-letter:uppercase">{diaDelEvento(d.iso, locale)}</span>
+                    {confirmados(d.iso) >= capacidad ? <span className="font-mono text-[9.5px] tracking-[0.14em] text-gold-deep uppercase">{t('Lleno', 'Full')}</span> : null}
                   </p>
                   <ul className="flex flex-col gap-1.5">
                     {(porDia.get(d.iso) ?? []).map((e) => (
@@ -194,18 +205,19 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
   )
 }
 
-function Pastilla({ entrada: e }: { entrada: Entrada }) {
+async function Pastilla({ entrada: e }: { entrada: Entrada }) {
+  const t = await tr()
   return (
     <Link
       className={`flex items-center gap-1.5 truncate rounded-full px-2 py-1 text-[11.5px] transition-colors max-[859px]:min-h-11 max-[859px]:px-3 max-[859px]:text-[13px] ${
         e.tentativa ? 'border border-dashed border-ink-mute/60 text-ink-soft hover:border-ink' : 'bg-white text-ink shadow-card ring-1 ring-line-panel hover:ring-ink/40'
       }`}
       href={e.href}
-      title={e.tentativa ? `${e.titulo} · venta abierta` : e.titulo}
+      title={e.tentativa ? t(`${e.titulo} · venta abierta`, `${e.titulo} · open sale`) : e.titulo}
     >
       <span aria-hidden className={`size-1.5 shrink-0 rounded-full ${puntoDeFiesta(e.fiesta)}`} />
       <span className="truncate">{e.titulo}</span>
-      {e.tentativa ? <span className="sr-only"> (tentativo)</span> : null}
+      {e.tentativa ? <span className="sr-only">{t(' (tentativo)', ' (tentative)')}</span> : null}
     </Link>
   )
 }

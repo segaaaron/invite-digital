@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * **La pantalla de cuando algo falla**, la misma en todo el sitio (29 de septiembre): nunca la genérica de Next
@@ -10,9 +11,9 @@ import { useEffect } from 'react'
 export function PantallaDeError({
   error,
   reset,
-  titulo = 'Algo no salió bien',
-  texto = 'No se pudo terminar de cargar. Ya quedó anotado para revisarlo. Vuelve a intentarlo; lo que ya estaba guardado no se perdió.',
-  reintentar = 'Volver a intentar',
+  titulo,
+  texto,
+  reintentar,
   salida,
 }: {
   error: Error & { digest?: string }
@@ -23,6 +24,7 @@ export function PantallaDeError({
   /** Adónde ir si reintentar no basta. Un enlace normal: recarga desde cero. */
   salida?: { href: string; rotulo: string }
 }) {
+  const t = useT()
   useEffect(() => {
     const cuerpo = JSON.stringify({ mensaje: `Pantalla de error${error.digest ? ` · ${error.digest}` : ''}: ${error.message}`, pila: error.stack, ruta: location.pathname })
     void fetch('/api/fallos', { method: 'POST', body: cuerpo, headers: { 'content-type': 'application/json' }, keepalive: true }).catch(() => undefined)
@@ -38,9 +40,9 @@ export function PantallaDeError({
           <path d="M12 10v4.5M12 17.2v.1" />
         </svg>
       </span>
-      <h1 className="font-display text-[38px] leading-tight font-medium text-ink max-[559px]:text-[30px]">{titulo}</h1>
-      <p className="text-[15.5px] leading-[1.6] text-ink-soft">{texto}</p>
-      {error.digest ? <p className="text-[12px] text-ink-mute">Código {error.digest}</p> : null}
+      <h1 className="font-display text-[38px] leading-tight font-medium text-ink max-[559px]:text-[30px]">{titulo ?? t('Algo no salió bien', 'Something went wrong')}</h1>
+      <p className="text-[15.5px] leading-[1.6] text-ink-soft">{texto ?? t('No se pudo terminar de cargar. Ya quedó anotado para revisarlo. Vuelve a intentarlo; lo que ya estaba guardado no se perdió.', 'It couldn’t finish loading. We’ve logged it to look into. Try again; anything already saved was not lost.')}</p>
+      {error.digest ? <p className="text-[12px] text-ink-mute">{t('Código', 'Code')} {error.digest}</p> : null}
       <div className="mt-2 flex flex-wrap justify-center gap-2.5">
         {salida === undefined ? null : (
           // Un enlace de verdad y no `<Link>`: si la página falló, lo sano es cargar la siguiente desde cero.
@@ -49,7 +51,7 @@ export function PantallaDeError({
           </a>
         )}
         <button className="inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-shell-deep px-4.5 text-[14.5px] font-medium text-shell-ink hover:bg-sage" onClick={reset} type="button">
-          {reintentar}
+          {reintentar ?? t('Volver a intentar', 'Try again')}
         </button>
       </div>
     </div>

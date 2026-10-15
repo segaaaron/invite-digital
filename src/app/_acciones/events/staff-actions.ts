@@ -7,6 +7,8 @@ import { canManageStaff, createCredential } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 export type StaffActionState =
   | { status: 'idle' }
@@ -35,6 +37,7 @@ const texto = (formData: FormData, clave: string): string => {
 }
 
 async function adminSobre(formData: FormData) {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = texto(formData, 'eventId')
   const eventSlug = texto(formData, 'eventSlug')
@@ -43,11 +46,11 @@ async function adminSobre(formData: FormData) {
   // siquiera si ese evento existe.
   if (!canManageStaff(actor)) {
     registrarFallo('events/staff-actions', 'alta de acceso denegada', actor.email, eventSlug)
-    return { error: 'Solo el administrador da de alta accesos.' as const }
+    return { error: t('Solo el administrador da de alta accesos.', 'Only the administrator grants access.') }
   }
 
   const evento = await events.getByIdFor(actor, eventId, { section: 'ficha' })
-  if (isErr(evento)) return { error: 'Ese evento ya no existe. Vuelve a cargar la página.' as const }
+  if (isErr(evento)) return { error: t('Ese evento ya no existe. Vuelve a cargar la página.', 'That event no longer exists. Reload the page.') }
 
   return { actor, eventId, eventSlug }
 }
@@ -65,6 +68,7 @@ async function darDeAlta(
   membership: 'puerta' | 'cliente',
   queVe: string,
 ): Promise<StaffActionState> {
+  const t = await tr()
   const contexto = await adminSobre(formData)
   if ('error' in contexto) return { status: 'error', message: contexto.error }
 
@@ -85,13 +89,13 @@ async function darDeAlta(
     revalidatePath(`/panel/eventos/${contexto.eventSlug}/configuracion`)
     return {
       status: 'success',
-      message: `${email} ya tenía cuenta: se le dio acceso ${queVe}.${avisado ? ' Le avisamos por correo.' : ''}`,
+      message: t(`${email} ya tenía cuenta: se le dio acceso ${queVe}.${avisado ? ' Le avisamos por correo.' : ''}`, `${email} already had an account: they were given access ${queVe}.${avisado ? ' We let them know by email.' : ''}`),
     }
   }
 
   // La contraseña provisional **se genera**: nadie la inventa ni la escribe (28 de septiembre).
   const credencial = createCredential({ email, password: texto(formData, 'password') || randomBytes(12).toString('base64url') })
-  if (isErr(credencial)) return { status: 'error', message: credencial.error.detail }
+  if (isErr(credencial)) return { status: 'error', message: traducir(credencial.error.detail, t) }
 
   const { id } = await admin.createUser({
     email: credencial.value.email,
@@ -110,8 +114,8 @@ async function darDeAlta(
   return {
     status: 'success',
     message: avisado
-      ? `${credencial.value.email} ya tiene acceso: le mandamos por correo su contraseña provisional, que cambia al entrar.`
-      : `${credencial.value.email} ya tiene acceso, pero el correo no salió. Pásale esta contraseña provisional, que no se vuelve a mostrar: ${credencial.value.password}`,
+      ? t(`${credencial.value.email} ya tiene acceso: le mandamos por correo su contraseña provisional, que cambia al entrar.`, `${credencial.value.email} now has access: we emailed them their temporary password, which they change when signing in.`)
+      : t(`${credencial.value.email} ya tiene acceso, pero el correo no salió. Pásale esta contraseña provisional, que no se vuelve a mostrar: ${credencial.value.password}`, `${credencial.value.email} now has access, but the email didn’t go out. Give them this temporary password, which won’t be shown again: ${credencial.value.password}`),
   }
 }
 
@@ -145,7 +149,7 @@ async function avisarPorCorreo(eventId: string, email: string, password: string 
  * un cambio de `events.user_id`.
  */
 export async function addEventClientAction(_previous: StaffActionState, formData: FormData): Promise<StaffActionState> {
-  return darDeAlta(formData, 'cliente', 'al panel de este evento')
+  return darDeAlta(formData, 'cliente', (await tr())('al panel de este evento', 'to this event’s panel'))
 }
 
 /**

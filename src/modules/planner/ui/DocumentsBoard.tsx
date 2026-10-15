@@ -7,6 +7,8 @@ import { FileIcon, TrashIcon, UploadIcon } from '@/shared/design/ui/icons'
 import { botonClases, FIELD_CLASS, Field, IconButton, PanelAlert, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { NOMBRE_DE_DOCUMENTO, type TipoDeDocumento } from '../domain/dia-d'
 import type { Evento } from './Accion'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 export type DocumentoVista = {
   readonly id: string
@@ -34,17 +36,18 @@ const TIPOS_DE_ARCHIVO: readonly TipoDeDocumento[] = ['contrato', 'cotizacion', 
  * elegirlo— y queda enlazado a él. La inspiración es un tablero de fotos por tema.
  */
 export function DocumentsBoard({ evento, documentos, proveedores }: { evento: Evento; documentos: readonly DocumentoVista[]; proveedores: readonly Opcion[] }) {
+  const t = useT()
   const [pestana, setPestana] = useState<'contratos' | 'inspiracion'>('contratos')
   const referencias = documentos.filter((d) => d.kind === 'referencia')
   const archivos = documentos.filter((d) => d.kind !== 'referencia')
 
   return (
     <div className="flex flex-col gap-5">
-      <div aria-label="Qué ver" className="flex gap-6 border-b border-line-panel" role="tablist">
+      <div aria-label={t('Qué ver', 'What to view')} className="flex gap-6 border-b border-line-panel" role="tablist">
         {(
           [
-            ['contratos', 'Contratos y facturas', archivos.length],
-            ['inspiracion', 'Inspiración', referencias.length],
+            ['contratos', t('Contratos y facturas', 'Contracts and invoices'), archivos.length],
+            ['inspiracion', t('Inspiración', 'Inspiration'), referencias.length],
           ] as const
         ).map(([clave, texto, cuenta]) => (
           <button
@@ -68,12 +71,11 @@ export function DocumentsBoard({ evento, documentos, proveedores }: { evento: Ev
           <SubirContrato evento={evento} proveedores={proveedores} />
           <section aria-labelledby="tus-documentos" className="flex flex-col gap-2">
             <h2 className="font-display text-[24px] font-medium" id="tus-documentos">
-              Tus documentos
+              {t('Tus documentos', 'Your documents')}
             </h2>
             {archivos.length === 0 ? (
               <p className="text-[14px] leading-[1.7] text-ink-mute">
-                Todavía no subiste nada. Aquí se guardan los contratos, las cotizaciones y las facturas de tu fiesta: privados, solo para ti y tu
-                equipo, y a mano el día que un proveedor diga otra cosa.
+                {t('Todavía no subiste nada. Aquí se guardan los contratos, las cotizaciones y las facturas de tu fiesta: privados, solo para ti y tu equipo, y a mano el día que un proveedor diga otra cosa.', 'You haven’t uploaded anything yet. Your party’s contracts, quotes and invoices are kept here: private, only for you and your team, and handy the day a vendor says otherwise.')}
               </p>
             ) : (
               <ListaDeArchivos documentos={archivos} evento={evento} proveedores={proveedores} />
@@ -85,7 +87,7 @@ export function DocumentsBoard({ evento, documentos, proveedores }: { evento: Ev
           {TEMAS.map((tema) => {
             const fotos = referencias.filter((d) => (d.topic ?? 'Otros') === tema || (tema === 'Otros' && !TEMAS.includes(d.topic as (typeof TEMAS)[number])))
             return (
-              <Tarjeta key={tema} titulo={tema}>
+              <Tarjeta key={tema} titulo={traducir(tema, t)}>
                 {fotos.length === 0 ? null : (
                   <ul className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(120px,1fr))]">
                     {fotos.map((f) => (
@@ -104,7 +106,7 @@ export function DocumentsBoard({ evento, documentos, proveedores }: { evento: Ev
                     ))}
                   </ul>
                 )}
-                <ZonaDeSubida accept="image/jpeg,image/png,image/webp" campos={{ topic: tema }} evento={evento} texto={`Arrastra aquí fotos de ${tema.toLowerCase()}`} />
+                <ZonaDeSubida accept="image/jpeg,image/png,image/webp" campos={{ topic: tema }} evento={evento} texto={t(`Arrastra aquí fotos de ${tema.toLowerCase()}`, `Drag photos of ${traducir(tema, t).toLowerCase()} here`)} />
               </Tarjeta>
             )
           })}
@@ -130,14 +132,15 @@ const COLUMNAS = 'min-[768px]:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,
 
 /** La tabla de la maqueta (E27): archivo, tipo, proveedor, peso y «Descargar». */
 function ListaDeArchivos({ documentos, evento, proveedores }: { documentos: readonly DocumentoVista[]; evento: Evento; proveedores: readonly Opcion[] }) {
+  const t = useT()
   return (
     <div>
       <div className={`hidden gap-4 border-b border-line-panel-strong px-2 pb-2.5 text-[13px] font-medium text-ink-mute min-[768px]:grid ${COLUMNAS}`}>
-        <span>Archivo</span>
-        <span>Tipo</span>
-        <span>Proveedor</span>
-        <span>Peso</span>
-        <span className="sr-only">Acciones</span>
+        <span>{t('Archivo', 'File')}</span>
+        <span>{t('Tipo', 'Type')}</span>
+        <span>{t('Proveedor', 'Vendor')}</span>
+        <span>{t('Peso', 'Size')}</span>
+        <span className="sr-only">{t('Acciones', 'Actions')}</span>
       </div>
       <ul>
         {documentos.map((d) => {
@@ -151,14 +154,14 @@ function ListaDeArchivos({ documentos, evento, proveedores }: { documentos: read
                 </a>
               </span>
               <span className="max-[767px]:col-start-1 max-[767px]:row-start-2">
-                <Pill tone="neutro">{NOMBRE_DE_DOCUMENTO[d.kind]}</Pill>
+                <Pill tone="neutro">{traducir(NOMBRE_DE_DOCUMENTO[d.kind], t)}</Pill>
                 <span className="ml-2 text-[13px] text-ink-mute min-[768px]:hidden">{[proveedor, d.peso].filter(Boolean).join(' · ')}</span>
               </span>
               <span className="truncate max-[767px]:hidden">{proveedor ?? <span className="text-ink-mute">—</span>}</span>
               <span className="text-ink-mute [font-variant-numeric:tabular-nums] max-[767px]:hidden">{d.peso}</span>
               <span className="flex items-center gap-1.5 justify-self-end max-[767px]:col-start-2 max-[767px]:row-span-2 max-[767px]:row-start-1">
                 <a className={botonClases('default')} download href={d.href}>
-                  Descargar
+                  {t('Descargar', 'Download')}
                 </a>
                 <Quitar enLinea evento={evento} id={d.id} nombre={d.originalName} />
               </span>
@@ -172,6 +175,7 @@ function ListaDeArchivos({ documentos, evento, proveedores }: { documentos: read
 
 /** Sube los archivos uno por uno con los datos que se le pasen; dice el primero que falle. */
 function useSubida(evento: Evento) {
+  const t = useT()
   const router = useRouter()
   const [subiendo, empezar] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -187,7 +191,7 @@ function useSubida(evento: Evento) {
         fd.set('file', archivo)
         const r = (await uploadDocumentAction({ status: 'idle' }, fd)) as { status: string; message?: string }
         if (r.status === 'error') {
-          setError(`${archivo.name}: ${r.message ?? 'no se pudo subir.'}`)
+          setError(`${archivo.name}: ${r.message ?? t('no se pudo subir.', 'it couldn’t be uploaded.')}`)
           break
         }
       }
@@ -199,6 +203,7 @@ function useSubida(evento: Evento) {
 
 /** La tarjeta de subida (E27): soltar el archivo encima o elegirlo, con qué es y de qué proveedor a la vista. */
 function SubirContrato({ evento, proveedores }: { evento: Evento; proveedores: readonly Opcion[] }) {
+  const t = useT()
   const id = useId()
   const [tipo, setTipo] = useState<TipoDeDocumento>('contrato')
   const [proveedor, setProveedor] = useState('')
@@ -225,26 +230,26 @@ function SubirContrato({ evento, proveedores }: { evento: Evento; proveedores: r
           <UploadIcon className="size-6 shrink-0 text-gold-deep" />
           <div>
             <h2 className="font-display text-[22px] leading-tight font-medium" id={`${id}-t`}>
-              Subir un documento
+              {t('Subir un documento', 'Upload a document')}
             </h2>
             <label className="cursor-pointer text-[13.5px] text-ink-mute" htmlFor={`${id}-f`}>
-              {subiendo ? 'Subiendo…' : 'Suéltalo aquí o elígelo. PDF o foto, hasta 10 MB.'}
+              {subiendo ? t('Subiendo…', 'Uploading…') : t('Suéltalo aquí o elígelo. PDF o foto, hasta 10 MB.', 'Drop it here or choose it. PDF or photo, up to 10 MB.')}
             </label>
           </div>
         </div>
-        <Field htmlFor={`${id}-k`} label="Tipo">
+        <Field htmlFor={`${id}-k`} label={t('Tipo', 'Type')}>
           <select className={`${FIELD_CLASS} min-w-[150px]`} id={`${id}-k`} onChange={(e) => setTipo(e.target.value as TipoDeDocumento)} value={tipo}>
-            {TIPOS_DE_ARCHIVO.map((t) => (
-              <option key={t} value={t}>
-                {NOMBRE_DE_DOCUMENTO[t]}
+            {TIPOS_DE_ARCHIVO.map((tipo) => (
+              <option key={tipo} value={tipo}>
+                {traducir(NOMBRE_DE_DOCUMENTO[tipo], t)}
               </option>
             ))}
           </select>
         </Field>
         {proveedores.length === 0 ? null : (
-          <Field htmlFor={`${id}-p`} label="Proveedor">
+          <Field htmlFor={`${id}-p`} label={t('Proveedor', 'Vendor')}>
             <select className={`${FIELD_CLASS} min-w-[170px]`} id={`${id}-p`} onChange={(e) => setProveedor(e.target.value)} value={proveedor}>
-              <option value="">Ninguno</option>
+              <option value="">{t('Ninguno', 'None')}</option>
               {proveedores.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.nombre}
@@ -254,7 +259,7 @@ function SubirContrato({ evento, proveedores }: { evento: Evento; proveedores: r
           </Field>
         )}
         <label className={`${botonClases('primary')} cursor-pointer`} htmlFor={`${id}-f`}>
-          Elegir archivo
+          {t('Elegir archivo', 'Choose file')}
         </label>
         <input
           accept="application/pdf,image/jpeg,image/png,image/webp"
@@ -275,13 +280,14 @@ function SubirContrato({ evento, proveedores }: { evento: Evento; proveedores: r
 }
 
 function Quitar({ evento, id, nombre, enLinea = false }: { evento: Evento; id: string; nombre: string; enLinea?: boolean }) {
+  const t = useT()
   const router = useRouter()
   const [quitando, empezar] = useTransition()
   return (
     <IconButton
       className={enLinea ? 'hover:border-danger hover:text-danger' : 'absolute top-1.5 right-1.5 hidden bg-white/95 group-hover:grid group-focus-within:grid hover:text-danger'}
       disabled={quitando}
-      label={`Quitar ${nombre}`}
+      label={t(`Quitar ${nombre}`, `Remove ${nombre}`)}
       onClick={() =>
         empezar(async () => {
           const fd = new FormData()
@@ -300,6 +306,7 @@ function Quitar({ evento, id, nombre, enLinea = false }: { evento: Evento; id: s
 
 /** Soltar o tocar para subir fotos de inspiración al tema de su tarjeta. */
 function ZonaDeSubida({ evento, campos, texto, accept }: { evento: Evento; campos: Record<string, string>; texto: string; accept: string }) {
+  const t = useT()
   const id = useId()
   const [encima, setEncima] = useState(false)
   const { subir, subiendo, error } = useSubida(evento)
@@ -322,11 +329,11 @@ function ZonaDeSubida({ evento, campos, texto, accept }: { evento: Evento; campo
       >
         <UploadIcon className="size-5 shrink-0 text-gold-deep" />
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-[14px] text-ink">{subiendo ? 'Subiendo…' : texto}</span>
-          <span className="text-[12.5px] text-ink-mute">Fotos JPG, PNG o WEBP, hasta 10 MB</span>
+          <span className="text-[14px] text-ink">{subiendo ? t('Subiendo…', 'Uploading…') : texto}</span>
+          <span className="text-[12.5px] text-ink-mute">{t('Fotos JPG, PNG o WEBP, hasta 10 MB', 'JPG, PNG or WEBP photos, up to 10 MB')}</span>
         </span>
         <span aria-hidden className={`${botonClases('default')} pointer-events-none shrink-0`}>
-          Elegir fotos
+          {t('Elegir fotos', 'Choose photos')}
         </span>
         <input
           accept={accept}

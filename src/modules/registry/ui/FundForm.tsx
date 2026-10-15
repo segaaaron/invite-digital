@@ -16,6 +16,8 @@ import {
   SUBMIT_CLASS,
   SUBMIT_CLASS_DARK,
 } from './shared'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 /**
  * El mismo formulario abre un fondo y corrige uno abierto. Con `fund` está en modo
@@ -43,6 +45,7 @@ export function FundForm({
   /** El fondo de ejemplo de esa fiesta (`Vocabulario.ejemplos`): una «Luna de miel» solo en bodas. */
   ejemplo?: { readonly fondo: string; readonly fondoDetalle: string } | undefined
 }) {
+  const t = useT()
   const editando = fund !== undefined
   // Editar se hace dentro de la tarjeta oscura del fondo; abrir uno nuevo, sobre marfil.
   const campo = editando ? FIELD_CLASS_DARK : FIELD_CLASS
@@ -63,7 +66,7 @@ export function FundForm({
   const enviar = () => {
     const meta = centsOrMessage(goal)
     if ('error' in meta) {
-      setError(meta.error)
+      setError(traducir(meta.error, t))
       return
     }
 
@@ -105,7 +108,7 @@ export function FundForm({
     <div className={`flex flex-col gap-5 ${doneHref === undefined ? 'rounded-[18px] border border-line-panel p-6' : ''}`}>
       <div className="grid gap-5 sm:grid-cols-[2fr_1fr]">
         <label className={rotulo} htmlFor={nameId}>
-          Fondo
+          {t('Fondo', 'Fund')}
           <input
             className={campo}
             id={nameId}
@@ -118,7 +121,7 @@ export function FundForm({
         </label>
 
         <label className={rotulo} htmlFor={goalId}>
-          Meta
+          {t('Meta', 'Goal')}
           <input
             className={campo}
             id={goalId}
@@ -132,7 +135,7 @@ export function FundForm({
       </div>
 
       <label className={rotulo} htmlFor={descriptionId}>
-        Descripción
+        {t('Descripción', 'Description')}
         <input
           className={campo}
           id={descriptionId}
@@ -151,7 +154,7 @@ export function FundForm({
 
       <div className="flex flex-wrap items-center gap-4">
         <button className={enviarClase} disabled={pendiente} onClick={enviar} type="button" aria-busy={(pendiente) || undefined}>
-          {editando ? (pendiente ? 'Guardando…' : 'Guardar cambios') : pendiente ? 'Abriendo…' : 'Abrir fondo'}
+          {editando ? (pendiente ? t('Guardando…', 'Saving…') : t('Guardar cambios', 'Save changes')) : pendiente ? t('Abriendo…', 'Opening…') : t('Abrir fondo', 'Open fund')}
         </button>
 
         {editando ? (
@@ -161,7 +164,7 @@ export function FundForm({
             onClick={() => onDone?.()}
             type="button"
           >
-            Cancelar
+            {t('Cancelar', 'Cancel')}
           </button>
         ) : null}
       </div>

@@ -15,6 +15,7 @@ import { createRateLimiter } from '@/shared/http/rate-limit'
 import { registrarFallo } from '@/shared/observability/fallos'
 import { isErr } from '@/shared/result'
 import { faltaParaEnviar } from './puede-invitar'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
 // ============================================================================
 // El enlace general (`0086`): uno por evento, para quien no quiere cargar invitados. Cada
@@ -33,7 +34,7 @@ export async function crearEnlaceGeneralAction(_previo: EnlaceGeneralState, form
   const eventId = await requireEventAccess(actor, { eventId: campo(formData, 'eventId'), eventSlug, section: 'cliente' })
   const token = await guests.general.crear(eventId)
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
-  return { status: 'success', message: 'Enlace general listo. Si ya habías compartido uno, ese dejó de abrir.', url: urlGeneral(token) }
+  return { status: 'success', message: (await tr())('Enlace general listo. Si ya habías compartido uno, ese dejó de abrir.', 'General link ready. If you had shared one before, it stopped opening.'), url: urlGeneral(token) }
 }
 
 export async function quitarEnlaceGeneralAction(_previo: EnlaceGeneralState, formData: FormData): Promise<EnlaceGeneralState> {
@@ -42,7 +43,7 @@ export async function quitarEnlaceGeneralAction(_previo: EnlaceGeneralState, for
   const eventId = await requireEventAccess(actor, { eventId: campo(formData, 'eventId'), eventSlug, section: 'cliente' })
   await guests.general.quitar(eventId)
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
-  return { status: 'success', message: 'Enlace general quitado: ya no abre. Las invitaciones que salieron de él siguen.' }
+  return { status: 'success', message: (await tr())('Enlace general quitado: ya no abre. Las invitaciones que salieron de él siguen.', 'General link removed: it no longer opens. Invitations created from it remain.') }
 }
 
 const urlGeneral = (token: string) => `${env.SITE_URL.replace(/\/+$/, '')}/abierta/${token}`

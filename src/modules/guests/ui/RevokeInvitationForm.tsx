@@ -4,17 +4,19 @@ import { useActionState } from 'react'
 import { revokeInvitationAction, type RevokeInvitationState } from '@/app/_acciones/guests/actions'
 import type { GuestErrorKind } from '../domain/errors'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 const INITIAL: RevokeInvitationState = { status: 'idle' }
 
-const MENSAJES: Record<GuestErrorKind, string> = {
-  invalid_label: 'No pudimos revocar la invitación: los datos no son válidos.',
-  invalid_seats: 'No pudimos revocar la invitación: los datos no son válidos.',
-  not_found: 'Esa invitación ya no existe. Vuelve a cargar la página.',
-  revoked: 'Esa invitación ya estaba revocada.',
-  plan_limit_reached: 'No pudimos revocar la invitación. Inténtalo en un momento.',
-  storage_failure: 'No pudimos revocar la invitación. El enlace sigue activo; inténtalo en un momento.',
-}
+const mensajes = (t: T): Record<GuestErrorKind, string> => ({
+  invalid_label: t('No pudimos revocar la invitación: los datos no son válidos.', 'We couldn’t revoke the invitation: the data is not valid.'),
+  invalid_seats: t('No pudimos revocar la invitación: los datos no son válidos.', 'We couldn’t revoke the invitation: the data is not valid.'),
+  not_found: t('Esa invitación ya no existe. Vuelve a cargar la página.', 'That invitation no longer exists. Reload the page.'),
+  revoked: t('Esa invitación ya estaba revocada.', 'That invitation was already revoked.'),
+  plan_limit_reached: t('No pudimos revocar la invitación. Inténtalo en un momento.', 'We couldn’t revoke the invitation. Try again in a moment.'),
+  storage_failure: t('No pudimos revocar la invitación. El enlace sigue activo; inténtalo en un momento.', 'We couldn’t revoke the invitation. The link is still active; try again in a moment.'),
+})
 
 /**
  * El aviso va aquí, junto al botón, y no en una franja al principio de la página: quien
@@ -22,6 +24,7 @@ const MENSAJES: Record<GuestErrorKind, string> = {
  * que decir, porque es lo que el atelier daría por hecho que no pasó.
  */
 export function RevokeInvitationForm({ groupId, eventSlug }: { groupId: string; eventSlug: string }) {
+  const t = useT()
   const [state, formAction, isPending] = useActionState(sinCaerse(revokeInvitationAction, { status: 'error', message: 'storage_failure' }), INITIAL)
 
   return (
@@ -33,13 +36,13 @@ export function RevokeInvitationForm({ groupId, eventSlug }: { groupId: string; 
           className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep disabled:opacity-40"
           disabled={isPending}
           type="submit" aria-busy={(isPending) || undefined}>
-          {isPending ? 'Revocando…' : 'Revocar enlace'}
+          {isPending ? t('Revocando…', 'Revoking…') : t('Revocar enlace', 'Revoke link')}
         </button>
       </form>
 
       {state.status === 'error' ? (
         <p className="text-right text-[11px] text-danger" role="alert">
-          {MENSAJES[state.message]}
+          {mensajes(t)[state.message]}
         </p>
       ) : null}
     </div>

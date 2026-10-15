@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { useId } from 'react'
+import { T } from '@/shared/i18n/idioma-navegador'
 
 /**
  * **Las piezas del panel que solo existen en el celular** (7 de octubre, maquetas 1 y 2 del panel móvil).
@@ -39,7 +41,7 @@ export function AroDeRespuestas({ porcentaje, detalle, href }: { porcentaje: num
         <circle cx="21" cy="21" fill="none" pathLength="100" r="16" stroke="var(--color-sage)" strokeDasharray={`${p} ${100 - p}`} strokeLinecap="round" strokeWidth="6" />
       </svg>
       <span className="min-w-0 flex-1">
-        <span className="block font-display text-[24px] leading-tight text-ink">{porcentaje === null ? 'Sin invitados aún' : `${p} % respondió`}</span>
+        <span className="block font-display text-[24px] leading-tight text-ink">{porcentaje === null ? <T en="No guests yet" es="Sin invitados aún" /> : <T en={`${p} % replied`} es={`${p} % respondió`} />}</span>
         <span className="mt-0.5 block text-[13px] leading-snug text-ink-soft">{detalle}</span>
       </span>
     </>
@@ -50,9 +52,12 @@ export function AroDeRespuestas({ porcentaje, detalle, href }: { porcentaje: num
 
 /** «Lo próximo»: una sola tarjeta oscura con lo que toca hacer hoy y su botón. */
 export function LoProximo({ titulo, detalle, accion, href }: { titulo: string; detalle?: string; accion: string; href: string }) {
+  const id = useId()
   return (
-    <section aria-label="Lo próximo" className="mb-3 flex flex-col gap-3 rounded-[20px] bg-shell-deep p-4.5 text-shell-ink shadow-card min-[860px]:hidden">
-      <p className="font-mono text-[11px] tracking-[0.18em] text-gold-light uppercase">Lo próximo</p>
+    <section aria-labelledby={id} className="mb-3 flex flex-col gap-3 rounded-[20px] bg-shell-deep p-4.5 text-shell-ink shadow-card min-[860px]:hidden">
+      <p className="font-mono text-[11px] tracking-[0.18em] text-gold-light uppercase" id={id}>
+        <T en="Up next" es="Lo próximo" />
+      </p>
       <p className="font-display text-[23px] leading-tight">{titulo}</p>
       {detalle === undefined ? null : <p className="-mt-1.5 text-[13px] leading-snug opacity-75">{detalle}</p>}
       <Link className="flex min-h-12 items-center justify-center rounded-full bg-linear-to-br from-gold-light to-gold px-5 text-[14px] font-medium text-shell-deep" href={href}>

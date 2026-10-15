@@ -38,6 +38,9 @@ import { iconosDelItinerario, type OpcionDeIcono } from './themes/iconos-itinera
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import { anexoDe, escrito, visibles } from './avance-de-invitacion'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import { INTL, type T } from '@/shared/i18n/t'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 const INICIAL: ContentActionState = { status: 'idle' }
 
@@ -86,7 +89,10 @@ const BLOQUES_DE_FIESTA: Partial<Record<Fiesta, Partial<Record<SectionKey, { tit
 }
 
 /** El nombre y la descripción de un bloque en esta fiesta. */
-const bloqueDe = (section: SectionKey, fiesta: Fiesta) => ({ ...BLOQUES[section], ...BLOQUES_DE_FIESTA[fiesta]?.[section] })
+const bloqueDe = (section: SectionKey, fiesta: Fiesta, t: T) => {
+  const b = { ...BLOQUES[section], ...BLOQUES_DE_FIESTA[fiesta]?.[section] }
+  return { ...b, titulo: traducir(b.titulo, t), descripcion: traducir(b.descripcion, t) }
+}
 
 /** El icono que acompaña a un campo, cuando ayuda a saber qué se escribe ahí. */
 const ICONO_DE_CAMPO: Record<string, Icono> = {
@@ -106,12 +112,12 @@ const ICONO_DE_CAMPO: Record<string, Icono> = {
 /** Guardar una sección nunca tumba la pantalla: un fallo del servidor sale como aviso en la propia tarjeta. */
 const GUARDAR_SIN_CAERSE = sinCaerse(saveContentBlockAction, { status: 'error', message: 'network' })
 
-const ERRORES: Record<string, string> = {
-  network: 'No se pudo guardar: se cortó la conexión o el servidor no respondió. Vuelve a intentarlo; ya quedó anotado.',
-  unknown_section: 'Esa sección no existe en este diseño.',
-  invalid_payload: 'No se pudo leer lo que enviaste. Vuelve a intentarlo.',
-  storage_failure: 'No se pudo guardar. La base no respondió.',
-}
+const errores = (t: T): Record<string, string> => ({
+  network: t('No se pudo guardar: se cortó la conexión o el servidor no respondió. Vuelve a intentarlo; ya quedó anotado.', 'It couldn’t be saved: the connection dropped or the server didn’t respond. Try again; it has been logged.'),
+  unknown_section: t('Esa sección no existe en este diseño.', 'That section doesn’t exist in this design.'),
+  invalid_payload: t('No se pudo leer lo que enviaste. Vuelve a intentarlo.', 'What you sent couldn’t be read. Try again.'),
+  storage_failure: t('No se pudo guardar. La base no respondió.', 'It couldn’t be saved. The database didn’t respond.'),
+})
 
 /**
  * El motivo de no guardar, **con el campo por su nombre** («Lugar», «Ubicación en Google Maps»): antes
@@ -120,18 +126,20 @@ const ERRORES: Record<string, string> = {
  */
 type FormaConRotulos = { readonly fields: readonly { key: string; label: string }[]; readonly list?: { readonly key: string; readonly label: string } | undefined }
 
-function errorDeGuardado(state: { message: string; campo?: string; maximo?: number }, forma: FormaConRotulos, formaAnexo?: FormaConRotulos): string {
+function errorDeGuardado(state: { message: string; campo?: string; maximo?: number }, t: T, forma: FormaConRotulos, formaAnexo?: FormaConRotulos): string {
+  const ERRORES = errores(t)
   if (state.message !== 'texto_largo' && state.message !== 'valor_invalido') return ERRORES[state.message] ?? ERRORES.storage_failure!
   const partes = (state.campo ?? '').split('.')
   // Un nombre de una lista (`roles.godparents.1`): el rótulo es el de la lista.
   const clave = [...partes].reverse().find((p) => !/^\d+$/.test(p)) ?? ''
   const fila = partes.find((p) => /^\d+$/.test(p))
   const listas = [forma.list, formaAnexo?.list].flatMap((l) => (l === undefined ? [] : [l]))
-  const rotulo = [...forma.fields, ...(formaAnexo?.fields ?? []), ...listas].find((f) => f.key === clave)?.label ?? 'Un campo'
-  const donde = fila === undefined ? `«${rotulo}»` : `«${rotulo}» de la fila ${Number(fila) + 1}`
+  const encontrado = [...forma.fields, ...(formaAnexo?.fields ?? []), ...listas].find((f) => f.key === clave)?.label
+  const rotulo = encontrado === undefined ? t('Un campo', 'A field') : traducir(encontrado, t)
+  const donde = fila === undefined ? t(`«${rotulo}»`, `“${rotulo}”`) : t(`«${rotulo}» de la fila ${Number(fila) + 1}`, `“${rotulo}” in row ${Number(fila) + 1}`)
   return state.message === 'texto_largo'
-    ? `${donde} es demasiado largo: acórtalo a ${state.maximo ?? ''} caracteres. No se guardó nada.`
-    : `${donde} no es válido${clave === 'href' ? ': pega el enlace de Google Maps o escribe la dirección' : ''}. No se guardó nada.`
+    ? t(`${donde} es demasiado largo: acórtalo a ${state.maximo ?? ''} caracteres. No se guardó nada.`, `${donde} is too long: shorten it to ${state.maximo ?? ''} characters. Nothing was saved.`)
+    : t(`${donde} no es válido${clave === 'href' ? ': pega el enlace de Google Maps o escribe la dirección' : ''}. No se guardó nada.`, `${donde} is not valid${clave === 'href' ? ': paste the Google Maps link or type the address' : ''}. Nothing was saved.`)
 }
 
 type Props = {
@@ -183,11 +191,12 @@ const IconosDelDiseno = createContext<readonly OpcionDeIcono[]>([])
  * es válido sigue siendo el dominio, en el servidor.
  */
 export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content, media, ejemplo, fiesta = 'boda', temaKey, itinerarioDesde }: Props) {
+  const t = useT()
   const iconos = useMemo(() => (temaKey === undefined ? [] : iconosDelItinerario(temaKey)), [temaKey])
   if (sections.length === 0) {
     return (
       <p className="text-[13px] leading-[1.7] text-ink-soft">
-        El diseño elegido no lleva contenido editable: se compone con el título, la fecha y el lugar del evento.
+        {t('El diseño elegido no lleva contenido editable: se compone con el título, la fecha y el lugar del evento.', 'The chosen design has no editable content: it is built from the event’s title, date and place.')}
       </p>
     )
   }
@@ -217,23 +226,23 @@ const algoEscrito = (estado: EstadoBloque): boolean =>
   Object.values(estado.campos).some((v) => v.trim() !== '') || estado.lista.length > 0 || estado.filas.length > 0
 
 /** En la fila plegada, lo que dice un número: «6 de 20 fotos». El resto, «Lista». */
-const resumenCorto = (content: InvitationContent, seccion: SectionKey): string | null => {
+const resumenCorto = (content: InvitationContent, seccion: SectionKey, t: T): string | null => {
   const bloque = content[seccion]
-  return Array.isArray(bloque) && seccion === 'gallery' ? `${bloque.length} ${bloque.length === 1 ? 'foto' : 'fotos'}` : null
+  return Array.isArray(bloque) && seccion === 'gallery' ? t(`${bloque.length} ${bloque.length === 1 ? 'foto' : 'fotos'}`, `${bloque.length} ${bloque.length === 1 ? 'photo' : 'photos'}`) : null
 }
 
-const FECHA_CORTA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
-const fechaLegible = (valor: string): string => {
+const FECHA_CORTA = { es: new Intl.DateTimeFormat(INTL.es, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }), en: new Intl.DateTimeFormat(INTL.en, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) }
+const fechaLegible = (valor: string, t: T): string => {
   const [dia = '', hora = ''] = valor.split('T')
   const fecha = new Date(`${dia}T00:00:00Z`)
-  return Number.isNaN(fecha.getTime()) ? valor : `${FECHA_CORTA.format(fecha)}${hora === '' ? '' : `, ${hora.slice(0, 5)} h`}`
+  return Number.isNaN(fecha.getTime()) ? valor : `${FECHA_CORTA[t('es', 'en') === 'es' ? 'es' : 'en'].format(fecha)}${hora === '' ? '' : `, ${hora.slice(0, 5)} h`}`
 }
 
 /** Lo que el bloque ya dice, en una línea y en el orden del formulario: «MIS QUINCE · Loreley». */
-const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBloque): string => {
+const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBloque, t: T): string => {
   const bloque = content[seccion]
   if (bloque === undefined || bloque === null) return ''
-  if (Array.isArray(bloque)) return `${bloque.length} ${bloque.length === 1 ? 'elemento' : 'elementos'}`
+  if (Array.isArray(bloque)) return t(`${bloque.length} ${bloque.length === 1 ? 'elemento' : 'elementos'}`, `${bloque.length} ${bloque.length === 1 ? 'item' : 'items'}`)
   const datos = bloque as Record<string, unknown>
   // Los archivos no se resumen: su identificador no le dice nada a quien lo lee.
   const textos = forma.fields
@@ -242,14 +251,14 @@ const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBl
       const v = datos[campo.key]
       if (typeof v !== 'string' || v.trim() === '') return null
       // Los adornos que algunos escriben alrededor —«· MIS QUINCE ·»— no hacen falta aquí.
-      return campo.kind === 'fecha' ? fechaLegible(v) : v.replace(/^[\s·•|-]+|[\s·•|-]+$/g, '')
+      return campo.kind === 'fecha' ? fechaLegible(v, t) : v.replace(/^[\s·•|-]+|[\s·•|-]+$/g, '')
     })
     .filter((v): v is string => v !== null)
   // Los padrinos viven dentro de `roles`; los nombres de todos, compuestos, en `names`.
   const lista = forma.form === 'campos' && forma.anfitriones !== undefined ? [] : forma.form === 'campos' && forma.list !== undefined ? datos[forma.list.key] : undefined
   const nombres = Array.isArray(lista) ? lista.filter((x): x is string => typeof x === 'string') : []
   if (forma.form === 'campos' && forma.list?.kind === 'color' && nombres.length > 0) {
-    return [...textos.slice(0, 2), `${nombres.length} ${nombres.length === 1 ? 'color' : 'colores'}`].join(' · ')
+    return [...textos.slice(0, 2), t(`${nombres.length} ${nombres.length === 1 ? 'color' : 'colores'}`, `${nombres.length} ${nombres.length === 1 ? 'color' : 'colors'}`)].join(' · ')
   }
   return [...textos, ...nombres].slice(0, 3).join(' · ')
 }
@@ -263,6 +272,7 @@ const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBl
  * había. Lo escrito en una tarjeta plegada no se pierde: sigue montada, oculta.
  */
 function Acordeon({ sections: todas, content, ejemplo, hechos, ...resto }: Props & { hechos: number }) {
+  const t = useT()
   // **En el orden de la invitación, de arriba abajo** (28 de septiembre): el diseño declara sus
   // secciones como las pinta —lo vigila `editor-fiel.test`—, así que cada tarjeta que se abre lleva
   // la vista previa un poco más abajo, nunca de vuelta arriba. Antes iban por pasos fijos («portada y
@@ -287,7 +297,7 @@ function Acordeon({ sections: todas, content, ejemplo, hechos, ...resto }: Props
         <div aria-hidden className="h-1.5 flex-1 overflow-hidden rounded-full bg-line-panel">
           <div className="h-full rounded-full bg-shell-deep transition-[width]" style={{ width: `${(hechos / Math.max(1, enOrden.length)) * 100}%` }} />
         </div>
-        <p className="shrink-0 text-[15px] font-medium [font-variant-numeric:tabular-nums]">{`${hechos} de ${enOrden.length} listas`}</p>
+        <p className="shrink-0 text-[15px] font-medium [font-variant-numeric:tabular-nums]">{t(`${hechos} de ${enOrden.length} listas`, `${hechos} of ${enOrden.length} done`)}</p>
       </div>
 
       <ol className="m-0 flex list-none flex-col overflow-hidden rounded-[16px] border border-line-panel bg-tarjeta p-0 max-[767px]:rounded-none max-[767px]:border-none max-[767px]:bg-transparent">
@@ -370,7 +380,8 @@ function BloqueDeContenido({
   media: readonly MediaItem[]
   ejemplo: InvitationContent
 }) {
-  const bloque = bloqueDe(section, fiesta)
+  const t = useT()
+  const bloque = bloqueDe(section, fiesta, t)
   const forma = formaPara(section, pinta, fiesta)
   const cuerpoId = useId()
   const listo = escrito(content, section)
@@ -394,7 +405,7 @@ function BloqueDeContenido({
     if (anexo !== undefined && formaAnexo !== undefined) setEstadoAnexo(estadoInicial(formaAnexo, content[anexo]))
   }
 
-  const error = state.status === 'error' ? errorDeGuardado(state, forma, formaAnexo) : null
+  const error = state.status === 'error' ? errorDeGuardado(state, t, forma, formaAnexo) : null
 
   // Lo que el diseño trae escrito en este bloque: es el ejemplo de cada campo.
   const muestra: Record<string, string> = (() => {
@@ -428,8 +439,8 @@ function BloqueDeContenido({
   const avisoGuardado = state.status === 'success' && avisoVisto !== state
   useEffect(() => {
     if (state.status !== 'success') return
-    const t = setTimeout(() => setAvisoVisto(state), 4000)
-    return () => clearTimeout(t)
+    const temporizador = setTimeout(() => setAvisoVisto(state), 4000)
+    return () => clearTimeout(temporizador)
   }, [state])
 
   // «Guardar y seguir» (E08): al volver guardado, se abre la siguiente. Una foto que se guarda sola no avanza.
@@ -442,7 +453,7 @@ function BloqueDeContenido({
     else onAlternar()
   }, [state, onSiguiente, onAlternar])
 
-  const estadoTexto = listo ? (abierta ? 'Lista' : resumenCorto(content, section) ?? 'Lista') : algoEscrito(estado) ? 'Por completar' : 'Sin empezar'
+  const estadoTexto = listo ? (abierta ? t('Lista', 'Done') : resumenCorto(content, section, t) ?? t('Lista', 'Done')) : algoEscrito(estado) ? t('Por completar', 'To finish') : t('Sin empezar', 'Not started')
 
   return (
     <GuardarLaSeccion.Provider value={pedirGuardado}>
@@ -466,7 +477,7 @@ function BloqueDeContenido({
           role="status"
         >
           <CheckIcon className="size-4 text-gold" />
-          Guardado. La vista previa ya lo enseña.
+          {t('Guardado. La vista previa ya lo enseña.', 'Saved. The preview already shows it.')}
         </p>
       ) : null}
       <input name="eventId" readOnly type="hidden" value={eventId} />
@@ -485,15 +496,15 @@ function BloqueDeContenido({
       {aPantallaCompleta ? (
         <div className="sticky top-0 z-10 -mx-4 mb-2 bg-bg px-4 pt-3 pb-2 min-[768px]:hidden">
           <div className="flex items-center gap-3 rounded-[18px] bg-bg-raised px-3 py-2.5 shadow-[0_8px_24px_-12px_rgb(12_36_32/0.35)]">
-            <button aria-label="Volver a Mi invitación" className="grid size-11 cursor-pointer place-items-center rounded-xl" onClick={onAlternar} type="button">
+            <button aria-label={t('Volver a Mi invitación', 'Back to My invitation')} className="grid size-11 cursor-pointer place-items-center rounded-xl" onClick={onAlternar} type="button">
               <ChevronIcon className="size-5 rotate-90" />
             </button>
             <span className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span className="text-[13px] text-ink-mute">Mi invitación</span>
+              <span className="text-[13px] text-ink-mute">{t('Mi invitación', 'My invitation')}</span>
               <span className="truncate text-[16px] font-medium">{bloque.titulo}</span>
             </span>
             <span className="shrink-0 pr-1 text-[14px] text-ink-mute">
-              Paso {paso.n} de {paso.de}
+              {t(`Paso ${paso.n} de ${paso.de}`, `Step ${paso.n} of ${paso.de}`)}
             </span>
           </div>
         </div>
@@ -521,7 +532,7 @@ function BloqueDeContenido({
           </span>
           {abierta ? null : (
             <span className="sr-only" id={`${cuerpoId}-resumen`}>
-              {listo ? resumen(content, section, forma) || bloque.descripcion : bloque.descripcion}
+              {listo ? resumen(content, section, forma, t) || bloque.descripcion : bloque.descripcion}
             </span>
           )}
           <span
@@ -544,11 +555,12 @@ function BloqueDeContenido({
       {section === 'itinerary' && itinerarioDesde !== undefined ? (
         <div className="flex flex-col items-start gap-3 rounded-[14px] bg-bg-top p-4">
           <p className="text-[13px] leading-[1.6] text-ink-soft">
-            Los momentos de la noche salen de tu <strong className="font-medium text-ink">Cronograma del día</strong>: marca en cada
-            momento «Sale en la invitación» y elige su icono. Así hay una sola lista y la invitación nunca dice otra hora.
+            {t('Los momentos de la noche salen de tu', 'The moments of the night come from your')}{' '}
+            <strong className="font-medium text-ink">{t('Cronograma del día', 'Day schedule')}</strong>
+            {t(': marca en cada momento «Sale en la invitación» y elige su icono. Así hay una sola lista y la invitación nunca dice otra hora.', ': on each moment check “Shows on the invitation” and choose its icon. That way there is only one list and the invitation never says a different time.')}
           </p>
           <PanelButton href={itinerarioDesde} variant="primary">
-            Ir al cronograma
+            {t('Ir al cronograma', 'Go to the schedule')}
           </PanelButton>
         </div>
       ) : forma.form === 'campos' ? (
@@ -579,7 +591,7 @@ function BloqueDeContenido({
             <div className="flex flex-col gap-3 border-t border-line-panel pt-4">
               <p className="m-0 flex items-center gap-2 text-[13px] text-ink">
                 <IconoDeBloque seccion={anexo} />
-                Cómo llegar
+                {t('Cómo llegar', 'How to get there')}
               </p>
               <div className="grid gap-3 min-[560px]:grid-cols-2">
                 {formaAnexo.fields.map((campo) => (
@@ -617,19 +629,19 @@ function BloqueDeContenido({
         className={`flex flex-wrap items-center justify-end gap-2.5 max-[767px]:sticky max-[767px]:bottom-0 max-[767px]:z-10 max-[767px]:-mx-4 max-[767px]:flex-col-reverse max-[767px]:items-stretch max-[767px]:border-t max-[767px]:border-line-panel max-[767px]:bg-bg/96 max-[767px]:px-4 max-[767px]:pt-4 max-[767px]:pb-[max(env(safe-area-inset-bottom),16px)] max-[767px]:backdrop-blur ${section === 'itinerary' && itinerarioDesde !== undefined ? 'hidden' : ''}`}
       >
         <span className="max-[767px]:hidden">
-          <PanelButton onClick={onAlternar}>Cancelar</PanelButton>
+          <PanelButton onClick={onAlternar}>{t('Cancelar', 'Cancel')}</PanelButton>
         </span>
         <span className="min-[768px]:hidden">
           <SubmitButton className="w-full" onClick={() => {
               seguir.current = 'volver'
-            }} pending={isPending} pendingLabel="Guardando…" variant="default">
-            Guardar y volver
+            }} pending={isPending} pendingLabel={t('Guardando…', 'Saving…')} variant="default">
+            {t('Guardar y volver', 'Save and go back')}
           </SubmitButton>
         </span>
         <SubmitButton className="max-[767px]:min-h-13 max-[767px]:w-full" onClick={() => {
             seguir.current = 'seguir'
-          }} pending={isPending} pendingLabel="Guardando…" variant="primary">
-          Guardar y seguir
+          }} pending={isPending} pendingLabel={t('Guardando…', 'Saving…')} variant="primary">
+          {t('Guardar y seguir', 'Save and continue')}
         </SubmitButton>
       </div>
       </div>
@@ -666,9 +678,10 @@ function CampoDeBloque({
   eventId?: string
   eventSlug?: string
 }) {
+  const t = useT()
   const id = useId()
   const pistaId = `${id}-pista`
-  const rotulo = etiqueta ?? campo.label
+  const rotulo = etiqueta ?? traducir(campo.label, t)
 
   return (
     <div className={`flex min-w-0 flex-col gap-2 ${campo.kind === 'parrafo' || campo.kind === 'imagen' || campo.kind === 'icono' || campo.kind === 'fecha' || campo.kind === 'ubicacion' || campo.anchoCompleto === true ? 'min-[560px]:col-span-2' : ''}`}>
@@ -706,7 +719,7 @@ function CampoDeBloque({
           id={id}
           maxLength={campo.max}
           onChange={(evento) => onChange(evento.target.value)}
-          placeholder={ejemplo === undefined || ejemplo === '' ? undefined : `Ej.: ${ejemplo}`}
+          placeholder={ejemplo === undefined || ejemplo === '' ? undefined : `${t('Ej.:', 'E.g.:')} ${ejemplo}`}
           rows={3}
           value={valor}
         />
@@ -721,7 +734,7 @@ function CampoDeBloque({
             id={id}
             maxLength={campo.max}
             onChange={(evento) => onChange(evento.target.value)}
-            placeholder={ejemplo === undefined || ejemplo === '' ? undefined : `Ej.: ${ejemplo}`}
+            placeholder={ejemplo === undefined || ejemplo === '' ? undefined : `${t('Ej.:', 'E.g.:')} ${ejemplo}`}
             type="text"
             value={valor}
           />
@@ -736,7 +749,7 @@ function CampoDeBloque({
 
       {campo.hint === undefined ? null : (
         <p className="text-[11px] leading-[1.5] text-ink-mute" id={pistaId}>
-          {campo.hint}
+          {traducir(campo.hint, t)}
         </p>
       )}
     </div>
@@ -792,6 +805,7 @@ function SelectorDeIcono({ id, rotulo, valor, onChange }: { id: string; rotulo: 
  * campo y el botón, que saltaba hacia abajo; el clic caía en el vacío y no se guardaba nada.
  */
 function CampoUbicacion({ id, valor, onChange, describedBy }: { id: string; valor: string; onChange: (v: string) => void; describedBy?: string | undefined }) {
+  const t = useT()
   const [escrito, setEscrito] = useState(valor)
   const [vista, setVista] = useState(valor)
   const mapa = mapaIncrustado({ href: vista })
@@ -809,7 +823,7 @@ function CampoUbicacion({ id, valor, onChange, describedBy }: { id: string; valo
             setEscrito(e.target.value)
             onChange(enlaceDeUbicacion(e.target.value))
           }}
-          placeholder="https://maps.app.goo.gl/… o Av. Arce 2020, La Paz"
+          placeholder={t('https://maps.app.goo.gl/… o Av. Arce 2020, La Paz', 'https://maps.app.goo.gl/… or Av. Arce 2020, La Paz')}
           type="text"
           value={escrito}
         />
@@ -817,10 +831,10 @@ function CampoUbicacion({ id, valor, onChange, describedBy }: { id: string; valo
       {/* Siempre del mismo alto: que aparezca el mapa no mueve el botón de guardar. */}
       <div className="grid h-[200px] w-full place-items-center overflow-hidden rounded-[12px] border border-line-panel bg-bg-top">
         {mapa !== null ? (
-          <iframe className="size-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" src={mapa} title="Vista del mapa" />
+          <iframe className="size-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" src={mapa} title={t('Vista del mapa', 'Map view')} />
         ) : (
           <p className="px-6 text-center text-[12px] text-ink-mute">
-            {corto ? 'Al guardar buscamos el lugar de ese enlace y aparece el mapa.' : 'Aquí verás el mapa de la ubicación.'}
+            {corto ? t('Al guardar buscamos el lugar de ese enlace y aparece el mapa.', 'When you save, we look up the place for that link and the map appears.') : t('Aquí verás el mapa de la ubicación.', 'You’ll see the location’s map here.')}
           </p>
         )}
       </div>
@@ -828,10 +842,10 @@ function CampoUbicacion({ id, valor, onChange, describedBy }: { id: string; valo
   )
 }
 
-const ERRORES_AL_QUITAR: Record<string, string> = {
-  in_use: 'Esa foto la usa otra parte de la invitación. Cámbiala allí primero.',
-  not_found: 'Esa foto ya no está.',
-}
+const erroresAlQuitar = (t: T): Record<string, string> => ({
+  in_use: t('Esa foto la usa otra parte de la invitación. Cámbiala allí primero.', 'Another part of the invitation uses that photo. Change it there first.'),
+  not_found: t('Esa foto ya no está.', 'That photo is no longer there.'),
+})
 
 const MINIATURA =
   'relative grid aspect-square w-full cursor-pointer place-items-center overflow-hidden rounded-[12px] border bg-bg-top transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink'
@@ -863,6 +877,7 @@ function SelectorDeImagen({
   eventId?: string | undefined
   eventSlug?: string | undefined
 }) {
+  const t = useT()
   const fotos = media.filter((item) => !esPista(item))
   const conocida = fotos.some((imagen) => imagen.id === valor)
   const [quitando, empezar] = useTransition()
@@ -877,7 +892,7 @@ function SelectorDeImagen({
       datos.set('eventSlug', eventSlug)
       datos.set('mediaId', mediaId)
       const r = await sinCaerse(removeMediaAction, { status: 'error', message: 'network' })({ status: 'idle' }, datos)
-      if (r.status === 'error') setAviso(ERRORES_AL_QUITAR[r.message] ?? 'No se pudo quitar la foto.')
+      if (r.status === 'error') setAviso(erroresAlQuitar(t)[r.message] ?? t('No se pudo quitar la foto.', 'The photo couldn’t be removed.'))
     })
   }
 
@@ -887,11 +902,11 @@ function SelectorDeImagen({
     <div aria-labelledby={rotuloId} className="flex flex-col gap-2.5" role="group">
       <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(76px,1fr))]">
         <button aria-pressed={valor === ''} className={`${MINIATURA} ${marca(valor === '')}`} onClick={() => onChange('')} type="button">
-          <span className="px-1 text-center text-[11px] leading-tight text-ink-mute">Sin foto</span>
+          <span className="px-1 text-center text-[11px] leading-tight text-ink-mute">{t('Sin foto', 'No photo')}</span>
         </button>
 
         {valor === '' || conocida ? null : (
-          <button aria-label="Usar la fotografía guardada" aria-pressed className={`${MINIATURA} ${marca(true)}`} onClick={() => onChange(valor)} type="button">
+          <button aria-label={t('Usar la fotografía guardada', 'Use the saved photo')} aria-pressed className={`${MINIATURA} ${marca(true)}`} onClick={() => onChange(valor)} type="button">
             {/* La sirve /media/[id], que no pasa por el optimizador: lleva la puerta de contraseña del evento. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img alt="" className="size-full object-cover" loading="lazy" src={`/media/${valor}`} />
@@ -901,11 +916,11 @@ function SelectorDeImagen({
         {fotos.map((foto) => (
           <div className="group relative" key={foto.id}>
             <button
-              aria-label={`Usar ${foto.originalName}`}
+              aria-label={t(`Usar ${foto.originalName}`, `Use ${foto.originalName}`)}
               aria-pressed={valor === foto.id}
               className={`${MINIATURA} ${marca(valor === foto.id)}`}
               onClick={() => onChange(foto.id)}
-              title={foto.fromGuest ? `${foto.originalName} · la subió un invitado` : foto.originalName}
+              title={foto.fromGuest ? t(`${foto.originalName} · la subió un invitado`, `${foto.originalName} · uploaded by a guest`) : foto.originalName}
               type="button"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -918,7 +933,7 @@ function SelectorDeImagen({
             </button>
             {valor === foto.id || eventId === undefined ? null : (
               <button
-                aria-label={`Quitar ${foto.originalName}`}
+                aria-label={t(`Quitar ${foto.originalName}`, `Remove ${foto.originalName}`)}
                 className="absolute top-1 right-1 grid size-10 cursor-pointer place-items-center rounded-full bg-white/95 text-ink-soft shadow hover:text-danger min-[860px]:hidden min-[860px]:size-6 min-[860px]:group-hover:grid min-[860px]:group-focus-within:grid"
                 disabled={quitando}
                 onClick={() => quitar(foto.id)}
@@ -970,13 +985,14 @@ function SelectorDeAudio({
   eventId?: string | undefined
   eventSlug?: string | undefined
 }) {
+  const t = useT()
   const pistas = media.filter(esPista)
   const conocida = pistas.some((pista) => pista.id === valor)
 
   return (
     <div className="flex flex-col gap-2">
       <select className={FIELD_CLASS} id={id} onChange={(evento) => onChange(evento.target.value)} value={valor}>
-        <option value="">Sin música</option>
+        <option value="">{t('Sin música', 'No music')}</option>
         {pistas.map((pista) => (
           <option key={pista.id} value={pista.id}>
             {pista.originalName}
@@ -1000,7 +1016,7 @@ function SelectorDeAudio({
 
       {pistas.length === 0 ? (
         <p className="text-[11px] leading-[1.5] text-ink-mute">
-          Todavía no subiste ninguna. Súbela con el botón de aquí arriba: queda elegida al subirla.
+          {t('Todavía no subiste ninguna. Súbela con el botón de aquí arriba: queda elegida al subirla.', 'You haven’t uploaded any yet. Upload it with the button above: it is selected once uploaded.')}
         </p>
       ) : null}
     </div>
@@ -1019,7 +1035,9 @@ function ListaSueltaDeBloque({
   onChange: (valores: readonly string[]) => void
   media: readonly MediaItem[]
 }) {
-  if (lista.kind === 'color') return <SelectorDePaleta max={lista.max} onChange={onChange} rotulo={lista.label} valores={valores} />
+  const t = useT()
+  const item = traducir(lista.itemLabel, t)
+  if (lista.kind === 'color') return <SelectorDePaleta max={lista.max} onChange={onChange} rotulo={traducir(lista.label, t)} valores={valores} />
   const campo: Campo = { key: lista.key, label: lista.itemLabel, kind: lista.kind === 'imagen' ? 'imagen' : 'texto', ...(lista.maxTexto === undefined ? {} : { max: lista.maxTexto }) }
 
   return (
@@ -1027,14 +1045,14 @@ function ListaSueltaDeBloque({
       <p className={LABEL_CLASS}>{lista.label}</p>
 
       {valores.length === 0 ? (
-        <p className="text-[12px] text-ink-soft">Ninguno todavía. Si no hay, déjalo así: la invitación no pinta este grupo.</p>
+        <p className="text-[12px] text-ink-soft">{t('Ninguno todavía. Si no hay, déjalo así: la invitación no pinta este grupo.', 'None yet. If there are none, leave it like this: the invitation won’t show this group.')}</p>
       ) : (
         valores.map((valor, indice) => (
           <div className="flex items-end gap-2" key={indice}>
             <div className="min-w-0 grow">
               <CampoDeBloque
                 campo={campo}
-                etiqueta={`${lista.itemLabel.charAt(0).toUpperCase()}${lista.itemLabel.slice(1)} ${indice + 1}`}
+                etiqueta={`${item.charAt(0).toUpperCase()}${item.slice(1)} ${indice + 1}`}
                 media={media}
                 onChange={(nuevo) => onChange(valores.map((v, i) => (i === indice ? nuevo : v)))}
                 valor={valor}
@@ -1042,7 +1060,7 @@ function ListaSueltaDeBloque({
             </div>
             <IconButton
               className="mb-1.5 hover:border-danger hover:text-danger"
-              label={`Quitar ${lista.itemLabel} ${indice + 1}`}
+              label={t(`Quitar ${item} ${indice + 1}`, `Remove ${item} ${indice + 1}`)}
               onClick={() => onChange(valores.filter((_, i) => i !== indice))}
             >
               <TrashIcon className="size-4" />
@@ -1053,7 +1071,7 @@ function ListaSueltaDeBloque({
 
       <div>
         <PanelButton disabled={valores.length >= lista.max} onClick={() => onChange([...valores, ''])}>
-          {`Añadir ${lista.itemLabel}`}
+          {t(`Añadir ${item}`, `Add ${item}`)}
         </PanelButton>
       </div>
     </div>
@@ -1065,6 +1083,7 @@ function ListaSueltaDeBloque({
  * el selector del sistema. Lo elegido se ve arriba, en el orden en que saldrá en la invitación.
  */
 function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; valores: readonly string[]; onChange: (v: readonly string[]) => void; max: number }) {
+  const t = useT()
   const id = useId()
   const elegidos = valores.map((v) => v.toLowerCase())
   const [otro, setOtro] = useState(COLORES_DE_VESTIMENTA[0]!.hex)
@@ -1074,7 +1093,7 @@ function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; 
   // Los de la lista y, detrás, los que se añadieron a mano: todos se eligen y se quitan igual.
   const opciones = [
     ...COLORES_DE_VESTIMENTA,
-    ...elegidos.filter((hex) => !COLORES_DE_VESTIMENTA.some((c) => c.hex === hex)).map((hex) => ({ nombre: 'Tu color', hex })),
+    ...elegidos.filter((hex) => !COLORES_DE_VESTIMENTA.some((c) => c.hex === hex)).map((hex) => ({ nombre: t('Tu color', 'Your color'), hex })),
   ]
 
   return (
@@ -1084,8 +1103,7 @@ function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; 
           {rotulo}
         </p>
         <p className="text-[12px] leading-[1.6] text-ink-soft">
-          Los colores que sugieres a tus invitados para vestirse. Salen como círculos debajo del código de vestimenta; toca uno para
-          elegirlo o quitarlo. Sin colores, la invitación no pinta la paleta.
+          {t('Los colores que sugieres a tus invitados para vestirse. Salen como círculos debajo del código de vestimenta; toca uno para elegirlo o quitarlo. Sin colores, la invitación no pinta la paleta.', 'The colors you suggest your guests wear. They show as circles below the dress code; tap one to choose or remove it. With no colors, the invitation won’t show the palette.')}
         </p>
       </div>
 
@@ -1123,13 +1141,13 @@ function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; 
 
       <div className="flex flex-wrap items-center gap-2">
         <label className="text-[12.5px] text-ink-soft" htmlFor={`${id}-otro`}>
-          Otro color
+          {t('Otro color', 'Another color')}
         </label>
         <input className="h-9 w-12 cursor-pointer rounded-[10px] border border-line-panel bg-white p-1" id={`${id}-otro`} onChange={(e) => setOtro(e.target.value.toLowerCase())} type="color" value={otro} />
         <PanelButton disabled={lleno || elegidos.includes(otro)} onClick={() => alternar(otro)}>
-          Añadir color
+          {t('Añadir color', 'Add color')}
         </PanelButton>
-        <span className="text-[11px] text-ink-mute">{`${elegidos.length} de ${max} elegidos`}</span>
+        <span className="text-[11px] text-ink-mute">{t(`${elegidos.length} de ${max} elegidos`, `${elegidos.length} of ${max} chosen`)}</span>
       </div>
     </div>
   )
@@ -1156,6 +1174,8 @@ function FilasDeBloque({
   onChange: (filas: readonly Readonly<Record<string, string>>[]) => void
   media: readonly MediaItem[]
 }) {
+  const t = useT()
+  const item = traducir(forma.itemLabel, t)
   // La galería enseña todos los huecos que pinta el diseño —uno en «Mascarada», seis en
   // «Botánica»—, cada uno con su foto, sin añadir ni quitar casillas.
   const fijas = forma.fijas === true
@@ -1177,7 +1197,7 @@ function FilasDeBloque({
   return (
     <div className="flex flex-col gap-3">
       {filas.length === 0 ? (
-        <p className="text-[12px] text-ink-soft">Todavía no hay ninguna. El diseño deja su sitio sin pintar.</p>
+        <p className="text-[12px] text-ink-soft">{t('Todavía no hay ninguna. El diseño deja su sitio sin pintar.', 'None yet. The design leaves its space empty.')}</p>
       ) : (
         filas.map((fila, indice) => (
           <div className="flex flex-col gap-3 rounded-[14px] border border-line-panel bg-white p-3.5 shadow-[0_1px_0_rgb(0_0_0/0.02)]" key={indice}>
@@ -1185,19 +1205,19 @@ function FilasDeBloque({
             <div className="flex items-center gap-2 border-b border-line-panel pb-2.5">
               <span className="grid size-6 place-items-center rounded-full bg-bg-top text-[11px] font-medium text-ink-soft">{indice + 1}</span>
               <span className="truncate text-[13px] text-ink">
-                {fila.label?.trim() || fila.title?.trim() || `${forma.itemLabel.charAt(0).toUpperCase()}${forma.itemLabel.slice(1)} ${indice + 1}`}
+                {fila.label?.trim() || fila.title?.trim() || `${item.charAt(0).toUpperCase()}${item.slice(1)} ${indice + 1}`}
                 {fila.time?.trim() ? <span className="ml-2 text-ink-mute">{fila.time}</span> : null}
               </span>
               <span className="ml-auto flex gap-1.5">
-                <IconButton disabled={indice === 0} label={`Subir ${forma.itemLabel} ${indice + 1}`} onClick={() => mover(indice, indice - 1)}>
+                <IconButton disabled={indice === 0} label={t(`Subir ${item} ${indice + 1}`, `Move ${item} ${indice + 1} up`)} onClick={() => mover(indice, indice - 1)}>
                   <ChevronIcon className="size-4 rotate-180" />
                 </IconButton>
-                <IconButton disabled={indice === filas.length - 1} label={`Bajar ${forma.itemLabel} ${indice + 1}`} onClick={() => mover(indice, indice + 1)}>
+                <IconButton disabled={indice === filas.length - 1} label={t(`Bajar ${item} ${indice + 1}`, `Move ${item} ${indice + 1} down`)} onClick={() => mover(indice, indice + 1)}>
                   <ChevronIcon className="size-4" />
                 </IconButton>
                 <IconButton
                   className="hover:border-danger hover:text-danger"
-                  label={`Quitar ${forma.itemLabel} ${indice + 1}`}
+                  label={t(`Quitar ${item} ${indice + 1}`, `Remove ${item} ${indice + 1}`)}
                   onClick={() => onChange(filas.filter((_, i) => i !== indice))}
                 >
                   <TrashIcon className="size-4" />
@@ -1210,7 +1230,7 @@ function FilasDeBloque({
                   campo={campo}
                   eventId={eventId}
                   eventSlug={eventSlug}
-                  etiqueta={`${campo.label} · ${forma.itemLabel} ${indice + 1}`}
+                  etiqueta={`${traducir(campo.label, t)} · ${item} ${indice + 1}`}
                   key={campo.key}
                   media={media}
                   onChange={(valor) =>
@@ -1229,7 +1249,7 @@ function FilasDeBloque({
           disabled={filas.length >= forma.max}
           onClick={() => onChange([...filas, filaVacia(forma.fields)])}
         >
-          {`Añadir ${forma.itemLabel}`}
+          {t(`Añadir ${item}`, `Add ${item}`)}
         </PanelButton>
       </div>
     </div>
@@ -1257,6 +1277,8 @@ function GaleriaDeFotos({
   onChange: (filas: readonly Readonly<Record<string, string>>[]) => void
   media: readonly MediaItem[]
 }) {
+  const t = useT()
+  const item = traducir(forma.itemLabel, t)
   const [activa, setActiva] = useState(0)
   const fila = filas[activa] ?? {}
   const conFoto = filas.filter((f) => (f.imageId ?? '') !== '').length
@@ -1270,16 +1292,16 @@ function GaleriaDeFotos({
     onChange(copia)
     setActiva(hasta)
   }
-  const nombre = (i: number) => `Foto ${i + 1}`
+  const nombre = (i: number) => t(`Foto ${i + 1}`, `Photo ${i + 1}`)
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-[12.5px] text-ink-soft">
-          {filas.length === 1 ? 'Tu invitación tiene una foto. Toca la casilla para elegirla.' : `Tu invitación tiene ${filas.length} fotos, en este orden. Toca una casilla para elegir la suya.`}
+          {filas.length === 1 ? t('Tu invitación tiene una foto. Toca la casilla para elegirla.', 'Your invitation has one photo. Tap the box to choose it.') : t(`Tu invitación tiene ${filas.length} fotos, en este orden. Toca una casilla para elegir la suya.`, `Your invitation has ${filas.length} photos, in this order. Tap a box to choose its photo.`)}
         </p>
         <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${conFoto === filas.length ? 'bg-sage/15 text-sage' : 'bg-bg-top text-ink-soft'}`}>
-          {`${conFoto} de ${filas.length} con foto`}
+          {t(`${conFoto} de ${filas.length} con foto`, `${conFoto} of ${filas.length} with a photo`)}
         </span>
       </div>
 
@@ -1290,7 +1312,7 @@ function GaleriaDeFotos({
           return (
             <li key={i}>
               <button
-                aria-label={`${nombre(i)}${id === '' ? ', sin foto' : ''}`}
+                aria-label={`${nombre(i)}${id === '' ? t(', sin foto', ', no photo') : ''}`}
                 aria-pressed={elegida}
                 className={`group relative block aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-[14px] border transition ${
                   elegida ? 'border-ink ring-2 ring-ink ring-offset-2' : id === '' ? 'border-dashed border-line-panel-strong hover:border-ink' : 'border-line-panel hover:-translate-y-0.5 hover:shadow-md'
@@ -1303,7 +1325,7 @@ function GaleriaDeFotos({
                     <span className="grid size-10 place-items-center rounded-full border border-line-panel bg-white text-ink-soft transition group-hover:text-ink">
                       <PlusIcon className="size-4" />
                     </span>
-                    <span className="hidden text-[11px] tracking-[0.12em] uppercase min-[560px]:inline">Añadir</span>
+                    <span className="hidden text-[11px] tracking-[0.12em] uppercase min-[560px]:inline">{t('Añadir', 'Add')}</span>
                   </span>
                 ) : (
                   <>
@@ -1339,20 +1361,20 @@ function GaleriaDeFotos({
           </span>
           <span className="flex min-w-0 flex-col">
             <span className="text-[14px] text-ink">{nombre(activa)}</span>
-            <span className="text-[11.5px] text-ink-mute">{(fila.imageId ?? '') === '' ? 'Elige una de tus fotos o sube una nueva.' : 'Toca otra de tus fotos para cambiarla.'}</span>
+            <span className="text-[11.5px] text-ink-mute">{(fila.imageId ?? '') === '' ? t('Elige una de tus fotos o sube una nueva.', 'Choose one of your photos or upload a new one.') : t('Toca otra de tus fotos para cambiarla.', 'Tap another of your photos to change it.')}</span>
           </span>
           <span className="ml-auto flex shrink-0 gap-1.5">
             {(fila.imageId ?? '') === '' ? null : (
-              <IconButton className="hover:border-danger hover:text-danger" label={`Quitar la foto de la ${nombre(activa).toLowerCase()}`} onClick={() => cambiar('imageId', '')}>
+              <IconButton className="hover:border-danger hover:text-danger" label={t(`Quitar la foto de la ${nombre(activa).toLowerCase()}`, `Remove the photo from ${nombre(activa).toLowerCase()}`)} onClick={() => cambiar('imageId', '')}>
                 <TrashIcon className="size-4" />
               </IconButton>
             )}
             {filas.length > 1 ? (
               <>
-              <IconButton disabled={activa === 0} label={`Mover la ${nombre(activa).toLowerCase()} antes`} onClick={() => mover(activa - 1)}>
+              <IconButton disabled={activa === 0} label={t(`Mover la ${nombre(activa).toLowerCase()} antes`, `Move ${nombre(activa).toLowerCase()} earlier`)} onClick={() => mover(activa - 1)}>
                 <ChevronIcon className="size-4 rotate-90" />
               </IconButton>
-              <IconButton disabled={activa === filas.length - 1} label={`Mover la ${nombre(activa).toLowerCase()} después`} onClick={() => mover(activa + 1)}>
+              <IconButton disabled={activa === filas.length - 1} label={t(`Mover la ${nombre(activa).toLowerCase()} después`, `Move ${nombre(activa).toLowerCase()} later`)} onClick={() => mover(activa + 1)}>
                 <ChevronIcon className="size-4 -rotate-90" />
               </IconButton>
               </>
@@ -1365,7 +1387,7 @@ function GaleriaDeFotos({
               campo={campo}
               eventId={eventId}
               eventSlug={eventSlug}
-              etiqueta={`${campo.label} · ${forma.itemLabel} ${activa + 1}`}
+              etiqueta={`${traducir(campo.label, t)} · ${item} ${activa + 1}`}
               key={`${campo.key}-${activa}`}
               media={media}
               onChange={(valor) => cambiar(campo.key, valor)}

@@ -9,8 +9,13 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { isErr } from '@/shared/result'
 import { hora } from '@/shared/format/fecha'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
-export const metadata = { title: 'Ingreso al evento' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Ingreso al evento', 'Event check-in') }
+}
 
 // Las llegadas entran mientras el atelier mira esta pantalla: no se cachea.
 export const dynamic = 'force-dynamic'
@@ -25,6 +30,7 @@ export const dynamic = 'force-dynamic'
  * máquina no tiene cámara, que es lo que pasaba al entrar aquí desde la barra.
  */
 export default async function CheckinPage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
 
@@ -37,7 +43,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
 
   const permitido = await plans.requireFeature(event.value.id, 'checkin')
   if (isErr(permitido)) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={permitido.error.detail} title="Check-in" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={traducir(permitido.error.detail, t)} title="Check-in" />
   }
 
   const estado = await checkin.state(event.value.id)
@@ -69,7 +75,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <PanelHeader kicker="Día del evento" meta="Escanea el pase o busca por nombre. La familia entra junta con un toque." title="Ingreso al evento" />
+      <PanelHeader kicker={t('Día del evento', 'Event day')} meta={t('Escanea el pase o busca por nombre. La familia entra junta con un toque.', 'Scan the pass or search by name. The family checks in together with one tap.')} title={t('Ingreso al evento', 'Event check-in')} />
       <EnVivo modo="auto" tipos={['ingreso']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
       <ControlDeIngreso
         escanerHref={`/panel/eventos/${event.value.slug}/puerta`}

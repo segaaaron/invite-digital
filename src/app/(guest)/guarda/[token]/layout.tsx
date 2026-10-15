@@ -5,6 +5,7 @@ import { VIEWPORT } from '@/shared/config/viewport'
 import { leerSaveTheDate } from './datos'
 import '../../../globals.css'
 import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormularios'
+import { IdiomaProvider } from '@/shared/i18n/idioma-navegador'
 
 export const viewport = VIEWPORT
 export const dynamic = 'force-dynamic'
@@ -15,8 +16,8 @@ export default async function SaveTheDateLayout({ children, params }: { children
   if (datos === null) notFound()
   return (
     <html className={`${sans.variable} ${display.variable}`} lang={datos.event.locale}>
-      <body className="bg-ink antialiased">
-        <ValidacionDeFormularios />{children}</body>
+      <body className="bg-ink antialiased"><IdiomaProvider locale={datos.event.locale}>
+        <ValidacionDeFormularios />{children}</IdiomaProvider></body>
     </html>
   )
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { DoorManifestGroup } from '../application/get-door-manifest'
 import { resolveLocally } from './local-resolve'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /** `scanned` es el enlace; con el código corto va nulo y se registra por la invitación. */
 export type ManualCandidate = { readonly scanned: string | null; readonly group: DoorManifestGroup; readonly yaDentro: boolean }
@@ -33,6 +34,7 @@ export function ManualPassDialog({
   onConfirmGrupo: (groupId: string) => void
   onClose: () => void
 }) {
+  const t = useT()
   const [codigo, setCodigo] = useState('')
   const [candidato, setCandidato] = useState<ManualCandidate | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -51,7 +53,7 @@ export function ManualPassDialog({
     }
     const local = await resolveLocally(codigo.trim(), groups, arrivedIds)
     if (local.kind === 'unknown' || !local.group) {
-      setError('Ese código no es de este evento. Revísalo o busca por nombre.')
+      setError(t('Ese código no es de este evento. Revísalo o busca por nombre.', 'That code isn’t from this event. Check it or search by name.'))
       setCandidato(null)
       return
     }
@@ -73,8 +75,8 @@ export function ManualPassDialog({
       <div className="w-full max-w-[420px] rounded-3xl bg-bg-top p-6 text-ink shadow-float" role="dialog" aria-modal>
         {candidato === null ? (
           <>
-            <p className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">Código manual</p>
-            <h2 className="mt-1.5 font-display text-[24px] font-light">Escribe el código del pase</h2>
+            <p className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">{t('Código manual', 'Manual code')}</p>
+            <h2 className="mt-1.5 font-display text-[24px] font-light">{t('Escribe el código del pase', 'Type the pass code')}</h2>
 
             <input
               ref={campo}
@@ -85,7 +87,7 @@ export function ManualPassDialog({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') void buscar()
               }}
-              placeholder="Código del pase, por ejemplo K7P3X"
+              placeholder={t('Código del pase, por ejemplo K7P3X', 'Pass code, for example K7P3X')}
               value={codigo}
             />
 
@@ -101,7 +103,7 @@ export function ManualPassDialog({
                 onClick={onClose}
                 type="button"
               >
-                Cancelar
+                {t('Cancelar', 'Cancel')}
               </button>
               <button
                 className="flex-1 rounded-full bg-ink px-4 py-3.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase disabled:opacity-40"
@@ -109,7 +111,7 @@ export function ManualPassDialog({
                 onClick={() => void buscar()}
                 type="button"
               >
-                Buscar
+                {t('Buscar', 'Search')}
               </button>
             </div>
           </>
@@ -123,12 +125,12 @@ export function ManualPassDialog({
             <h2 className="mt-4 text-center font-display text-[26px] leading-tight font-light italic">{titular}</h2>
             <p className="mt-3 text-center">
               <span className="rounded-[var(--radius-pill)] bg-bg-sunken px-3.5 py-1.5 font-mono text-[10px] tracking-[0.2em] text-ink-soft uppercase">
-                {candidato.group.tableLabel ?? 'Mesa por asignar'}
+                {candidato.group.tableLabel ?? t('Mesa por asignar', 'Table to be assigned')}
               </span>
             </p>
             {candidato.yaDentro ? (
               <p className="mt-3 text-center text-[12px] text-ink-soft">
-                Este grupo ya tenía gente dentro. Al registrar podrás ajustar cuántos hay en total.
+                {t('Este grupo ya tenía gente dentro. Al registrar podrás ajustar cuántos hay en total.', 'This group already had people inside. When checking in you can adjust how many there are in total.')}
               </p>
             ) : null}
 
@@ -138,14 +140,14 @@ export function ManualPassDialog({
                 onClick={() => setCandidato(null)}
                 type="button"
               >
-                Cancelar
+                {t('Cancelar', 'Cancel')}
               </button>
               <button
                 className="flex-1 rounded-full bg-ink px-4 py-3.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase"
                 onClick={() => (candidato.scanned === null ? onConfirmGrupo(candidato.group.id) : onConfirm(candidato.scanned))}
                 type="button"
               >
-                ✓ Registrar ingreso
+                {t('✓ Registrar ingreso', '✓ Check in')}
               </button>
             </div>
           </>

@@ -13,6 +13,7 @@ import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormularios'
 import { PortadasQueEsperan } from '@/modules/events/ui/themes/kit/PortadasQueEsperan'
 import { SinVerCodigo } from '@/modules/events/ui/themes/kit/SinVerCodigo'
+import { IdiomaProvider } from '@/shared/i18n/idioma-navegador'
 
 export const viewport = VIEWPORT
 
@@ -51,13 +52,13 @@ export default async function InvitationLayout({
       lang={invitation.value.event.locale}
       suppressHydrationWarning
     >
-      <body className="antialiased theme-protegida">
+      <body className="antialiased theme-protegida"><IdiomaProvider locale={invitation.value.event.locale}>
         <SinVerCodigo />
         <CapturaDeFallos />
         <ValidacionDeFormularios />
         <TextosDeError textos={getDictionary(invitation.value.event.locale).invitation.error}>{children}</TextosDeError>
         <PortadasQueEsperan />
-      </body>
+      </IdiomaProvider></body>
     </html>
   )
 }

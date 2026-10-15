@@ -15,77 +15,80 @@ import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
 import { RobotLuxury, TarjetaDeLuxury } from './RobotLuxury'
 import { despertarAudio, dictadoPropioListo, escucharPropio, soltarMicrofono, type Escucha } from './dictado-propio'
 import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer, unirResultados, vocesParaElegir } from './voz'
+import { useIdioma, useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 /** `muestra`: lo que se ve en la burbuja cuando el texto para Luxury lleva datos de más (el id de un adjunto). */
 type Burbuja = { rol: 'usuario' | 'asistente'; texto: string; muestra?: string; envio?: Contenido; error?: boolean }
 
-const ERRORES_DE_SUBIDA: Record<string, string> = {
-  too_large: 'Pesa demasiado: fotos hasta 8 MB, canciones hasta 30 MB.',
-  unsupported_type: 'Ese archivo no vale: fotos en JPG, PNG, WEBP o AVIF; canciones en MP3, M4A o WAV; documentos en PDF o imagen.',
-  photo_limit: 'Ya subiste todas las fotos que incluye tu plan. Quita una para subir otra.',
-  storage_failure: 'No se pudo guardar el archivo. Vuelve a intentarlo.',
-}
-const TIPOS_DE_DOCUMENTO = [
-  ['contrato', 'Contrato'],
-  ['cotizacion', 'Cotización'],
-  ['factura', 'Factura'],
-] as const
+const erroresDeSubida = (t: T): Record<string, string> => ({
+  too_large: t('Pesa demasiado: fotos hasta 8 MB, canciones hasta 30 MB.', 'Too large: photos up to 8 MB, songs up to 30 MB.'),
+  unsupported_type: t('Ese archivo no vale: fotos en JPG, PNG, WEBP o AVIF; canciones en MP3, M4A o WAV; documentos en PDF o imagen.', 'That file will not work: photos in JPG, PNG, WEBP or AVIF; songs in MP3, M4A or WAV; documents in PDF or image.'),
+  photo_limit: t('Ya subiste todas las fotos que incluye tu plan. Quita una para subir otra.', 'You uploaded all the photos your plan includes. Remove one to upload another.'),
+  storage_failure: t('No se pudo guardar el archivo. Vuelve a intentarlo.', 'Could not save the file. Try again.'),
+})
+const TIPOS_DE_DOCUMENTO = ['contrato', 'cotizacion', 'factura'] as const
+const nombreDeDocumento = (t: T): Record<(typeof TIPOS_DE_DOCUMENTO)[number], string> => ({
+  contrato: t('Contrato', 'Contract'),
+  cotizacion: t('Cotización', 'Quote'),
+  factura: t('Factura', 'Invoice'),
+})
 
-const SUGERENCIAS = ['¿Qué me falta esta semana?', '¿Quién falta por responder?', 'Quiero registrar invitados', '¿Cómo mando las invitaciones?']
+const sugerencias = (t: T) => [t('¿Qué me falta esta semana?', 'What is left this week?'), t('¿Quién falta por responder?', 'Who has not replied yet?'), t('Quiero registrar invitados', 'I want to add guests'), t('¿Cómo mando las invitaciones?', 'How do I send the invitations?')]
 
 /** Lo que se ve mientras Luxury consulta: dice qué está mirando, no «pensando…». */
-const CONSULTANDO: Record<string, string> = {
-  ir_a: 'Abriendo la pantalla…',
-  resumen_del_evento: 'Mirando las cifras de tu evento…',
-  buscar_invitados: 'Revisando tu lista de invitados…',
-  tareas: 'Revisando tus tareas…',
-  presupuesto: 'Revisando tu presupuesto…',
-  proveedores: 'Revisando tus proveedores…',
-  cronograma: 'Revisando el cronograma…',
-  agenda: 'Revisando tu agenda…',
-  mi_invitacion: 'Leyendo tu invitación…',
-  mesas: 'Revisando tus mesas…',
-  regalos: 'Revisando tu mesa de regalos…',
-  mensajes: 'Leyendo tu libro de firmas…',
-  como_se_hace: 'Buscando cómo se hace…',
-  preparar_envio: 'Preparando el envío…',
-  preparar_recordatorios: 'Viendo a quién recordar…',
-  registrar_invitados: 'Registrando invitados…',
-  cambiar_invitados: 'Cambiando tus invitados…',
-  escribir_invitacion: 'Escribiendo tu invitación…',
-  renombrar_evento: 'Cambiando el nombre del evento…',
-  gestionar_tareas: 'Actualizando tus tareas…',
-  gestionar_presupuesto: 'Actualizando tu presupuesto…',
-  gestionar_cronograma: 'Actualizando el cronograma…',
-  gestionar_agenda: 'Actualizando tu agenda…',
-  gestionar_proveedores: 'Actualizando tus proveedores…',
-  gestionar_mesas: 'Actualizando tus mesas…',
-  gestionar_regalos: 'Actualizando tu mesa de regalos…',
-  agradecer_mensajes: 'Escribiendo los agradecimientos…',
-  registrar_ingreso: 'Registrando el ingreso…',
-  documentos: 'Revisando tus documentos…',
-  borrar_documento: 'Borrando el documento…',
-  qr_de_transferencia: 'Guardando el QR de tu banco…',
-  poner_foto: 'Poniendo la foto…',
-  opciones_de_invitacion: 'Guardando las opciones…',
-  estilo_de_invitacion: 'Cambiando colores y letra…',
-  cortejo: 'Revisando el cortejo…',
-  gestionar_cortejo: 'Actualizando el cortejo…',
-  recepcion: 'Revisando la recepción…',
-  gestionar_recepcion: 'Actualizando la recepción…',
-  sumar_planner: 'Dando acceso a tu planner…',
-  deshacer_ingreso: 'Deshaciendo el ingreso…',
-  extras: 'Revisando los extras…',
-  pedir_extra: 'Pidiendo el extra…',
-  puerta: 'Mirando el ingreso…',
-  encargo: 'Revisando tu diseño…',
-  gestionar_encargo: 'Hablando con el atelier…',
-  gestionar_ensayos: 'Agendando el ensayo…',
-  quitar_planner: 'Quitando el acceso…',
-}
+const textoConsultando = (t: T): Record<string, string> => ({
+  ir_a: t('Abriendo la pantalla…', 'Opening the screen…'),
+  resumen_del_evento: t('Mirando las cifras de tu evento…', 'Looking at your event numbers…'),
+  buscar_invitados: t('Revisando tu lista de invitados…', 'Checking your guest list…'),
+  tareas: t('Revisando tus tareas…', 'Checking your tasks…'),
+  presupuesto: t('Revisando tu presupuesto…', 'Checking your budget…'),
+  proveedores: t('Revisando tus proveedores…', 'Checking your vendors…'),
+  cronograma: t('Revisando el cronograma…', 'Checking the schedule…'),
+  agenda: t('Revisando tu agenda…', 'Checking your calendar…'),
+  mi_invitacion: t('Leyendo tu invitación…', 'Reading your invitation…'),
+  mesas: t('Revisando tus mesas…', 'Checking your tables…'),
+  regalos: t('Revisando tu mesa de regalos…', 'Checking your gift registry…'),
+  mensajes: t('Leyendo tu libro de firmas…', 'Reading your guestbook…'),
+  como_se_hace: t('Buscando cómo se hace…', 'Looking up how it is done…'),
+  preparar_envio: t('Preparando el envío…', 'Preparing the send-out…'),
+  preparar_recordatorios: t('Viendo a quién recordar…', 'Seeing whom to remind…'),
+  registrar_invitados: t('Registrando invitados…', 'Adding guests…'),
+  cambiar_invitados: t('Cambiando tus invitados…', 'Updating your guests…'),
+  escribir_invitacion: t('Escribiendo tu invitación…', 'Writing your invitation…'),
+  renombrar_evento: t('Cambiando el nombre del evento…', 'Renaming the event…'),
+  gestionar_tareas: t('Actualizando tus tareas…', 'Updating your tasks…'),
+  gestionar_presupuesto: t('Actualizando tu presupuesto…', 'Updating your budget…'),
+  gestionar_cronograma: t('Actualizando el cronograma…', 'Updating the schedule…'),
+  gestionar_agenda: t('Actualizando tu agenda…', 'Updating your calendar…'),
+  gestionar_proveedores: t('Actualizando tus proveedores…', 'Updating your vendors…'),
+  gestionar_mesas: t('Actualizando tus mesas…', 'Updating your tables…'),
+  gestionar_regalos: t('Actualizando tu mesa de regalos…', 'Updating your gift registry…'),
+  agradecer_mensajes: t('Escribiendo los agradecimientos…', 'Writing the thank-yous…'),
+  registrar_ingreso: t('Registrando el ingreso…', 'Checking them in…'),
+  documentos: t('Revisando tus documentos…', 'Checking your documents…'),
+  borrar_documento: t('Borrando el documento…', 'Deleting the document…'),
+  qr_de_transferencia: t('Guardando el QR de tu banco…', 'Saving your bank QR…'),
+  poner_foto: t('Poniendo la foto…', 'Placing the photo…'),
+  opciones_de_invitacion: t('Guardando las opciones…', 'Saving the options…'),
+  estilo_de_invitacion: t('Cambiando colores y letra…', 'Changing colours and fonts…'),
+  cortejo: t('Revisando el cortejo…', 'Checking the wedding party…'),
+  gestionar_cortejo: t('Actualizando el cortejo…', 'Updating the wedding party…'),
+  recepcion: t('Revisando la recepción…', 'Checking reception…'),
+  gestionar_recepcion: t('Actualizando la recepción…', 'Updating reception…'),
+  sumar_planner: t('Dando acceso a tu planner…', 'Giving your planner access…'),
+  deshacer_ingreso: t('Deshaciendo el ingreso…', 'Undoing the check-in…'),
+  extras: t('Revisando los extras…', 'Checking the extras…'),
+  pedir_extra: t('Pidiendo el extra…', 'Ordering the extra…'),
+  puerta: t('Mirando el ingreso…', 'Looking at check-in…'),
+  encargo: t('Revisando tu diseño…', 'Checking your design…'),
+  gestionar_encargo: t('Hablando con el atelier…', 'Talking to the atelier…'),
+  gestionar_ensayos: t('Agendando el ensayo…', 'Scheduling the rehearsal…'),
+  quitar_planner: t('Quitando el acceso…', 'Removing access…'),
+})
 
 /** Los enlaces del propio evento que Luxury escribe se vuelven enlaces de verdad; nada de fuera. */
-function conEnlaces(texto: string, slug: string, alNavegar: () => void): ReactNode {
+function conEnlaces(texto: string, slug: string, alNavegar: () => void, t: T): ReactNode {
   const base = `/panel/eventos/${slug}`
   // Si el modelo escribe markdown (13 oct): sin los «**» de las negritas, y «[texto](ruta)» enlaza con su texto.
   const partes = texto.replace(/\*\*(.+?)\*\*/g, '$1').split(/(\[[^\]\n]+\]\(\/panel\/eventos\/[^)\s]+\)|\/panel\/eventos\/[a-z0-9-]+(?:\/[\w\-/?=&]*)?)/g)
@@ -96,7 +99,7 @@ function conEnlaces(texto: string, slug: string, alNavegar: () => void): ReactNo
       return (
         <Fragment key={i}>
           <Link className="font-medium text-ink underline underline-offset-4 hover:text-gold-deep" href={limpia} onClick={alNavegar}>
-            {md?.[1] ?? (limpia.slice(base.length) || 'el resumen')}
+            {md?.[1] ?? (limpia.slice(base.length) || t('el resumen', 'the overview'))}
           </Link>
           {md ? '' : parte.slice(limpia.length)}
         </Fragment>
@@ -115,6 +118,7 @@ function conEnlaces(texto: string, slug: string, alNavegar: () => void): ReactNo
  */
 /** `destinos`: las pantallas de la barra de quien mira (por su papel y su plan); «ir_a» solo abre esas. */
 export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: string; destinos: readonly string[] }) {
+  const t = useT()
   const [burbujas, setBurbujas] = useState<Burbuja[]>([])
   /**
    * **La conversación sobrevive a recargar** (14 oct: «cuando le pido que me lleve a invitaciones o regalos se pierde
@@ -141,13 +145,13 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
   useEffect(() => {
     if (!cargada.current) return
     try {
-      const sinEnvios = burbujas.slice(-40).map(({ envio, ...b }) => (envio === undefined ? b : { ...b, texto: b.texto || 'Te dejé los mensajes de WhatsApp listos para enviar.' }))
+      const sinEnvios = burbujas.slice(-40).map(({ envio, ...b }) => (envio === undefined ? b : { ...b, texto: b.texto || t('Te dejé los mensajes de WhatsApp listos para enviar.', 'I left the WhatsApp messages ready to send.') }))
       if (sinEnvios.length === 0) window.sessionStorage.removeItem(claveDeConversacion)
       else window.sessionStorage.setItem(claveDeConversacion, JSON.stringify(sinEnvios))
     } catch {
       // Lleno o bloqueado: la conversación sigue en memoria igual.
     }
-  }, [burbujas, claveDeConversacion])
+  }, [burbujas, claveDeConversacion, t])
   const [texto, setTexto] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [consultando, setConsultando] = useState<string | null>(null)
@@ -201,7 +205,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
       const hoy = new Date().toISOString().slice(0, 10)
       if (window.localStorage.getItem(CLAVE_DEL_SALUDO) !== hoy) {
         window.localStorage.setItem(CLAVE_DEL_SALUDO, hoy)
-        saludo = setTimeout(() => decirAfuera.current('Hola, soy Luxury. Tócame para escribirme, o toca el micrófono y háblame: te ayudo con tu evento.'), 1500)
+        saludo = setTimeout(() => decirAfuera.current(t('Hola, soy Luxury. Tócame para escribirme, o toca el micrófono y háblame: te ayudo con tu evento.', 'Hi, I am Luxury. Tap me to write to me, or tap the microphone and talk to me: I help you with your event.')), 1500)
       }
     } catch {
       // Sin almacenamiento (privado): sin saludo.
@@ -211,7 +215,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
       clearTimeout(callar)
       clearTimeout(saludo)
     }
-  }, [])
+  }, [t])
   const conversando = useRef(false)
   const rondas = useRef(0)
   const seguirConversacion = useRef(() => {})
@@ -255,16 +259,16 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
       : ultima.texto !== ''
         ? paraLeer(ultima.texto)
         : ultima.envio !== undefined
-          ? 'Te dejé los mensajes de WhatsApp listos en el chat: ábrelo y toca enviar en cada uno.'
+          ? t('Te dejé los mensajes de WhatsApp listos en el chat: ábrelo y toca enviar en cada uno.', 'I left the WhatsApp messages ready in the chat: open it and tap send on each one.')
           : null
   const escuchando = dictado.estado === 'escuchando'
-  const escucharDe = escuchando ? (dictado.oyendo ? 'Te escucho…' : 'Abriendo el micrófono…') : null
+  const escucharDe = escuchando ? (dictado.oyendo ? t('Te escucho…', 'I am listening…') : t('Abriendo el micrófono…', 'Opening the microphone…')) : null
   const fuera = {
     texto: despedidaFuera !== null && !conversacion ? despedidaFuera : respuestaFuera,
     estado:
       dictado.aviso !== null && !escuchando
         ? dictado.aviso
-        : (escucharDe ?? (ocupado && respuestaFuera === null ? 'Pensando…' : null)),
+        : (escucharDe ?? (ocupado && respuestaFuera === null ? t('Pensando…', 'Thinking…') : null)),
     dicho: escuchando ? texto : '',
   }
   // Terminada la conversación (dijo «listo», calló o falló), la tarjeta se queda un momento y se va.
@@ -352,7 +356,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
         signal: control.signal,
       })
       if (!respuesta.ok || respuesta.body === null) {
-        const aviso = respuesta.status === 429 ? 'Vas muy rápido: espera un momento y vuelve a escribirme.' : 'No pude responder ahora. Vuelve a intentarlo en un momento.'
+        const aviso = respuesta.status === 429 ? t('Vas muy rápido: espera un momento y vuelve a escribirme.', 'You are going very fast: wait a moment and write to me again.') : t('No pude responder ahora. Vuelve a intentarlo en un momento.', 'I could not answer now. Try again in a moment.')
         enLaUltima((b) => ({ ...b, texto: aviso, error: true }))
         return
       }
@@ -375,7 +379,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
             recibido += salida.delta
             if (leyendo) lectura.alimentar(salida.delta)
             enLaUltima((b) => ({ ...b, texto: b.texto + salida.delta }))
-          } else if (salida.tipo === 'consultando') setConsultando(CONSULTANDO[salida.herramienta] ?? 'Consultando…')
+          } else if (salida.tipo === 'consultando') setConsultando(textoConsultando(t)[salida.herramienta] ?? t('Consultando…', 'Looking…'))
           else if (salida.tipo === 'propuesta') {
             const envio = salida.propuesta
             // Los botones de WhatsApp piden tocarlos: la conversación por voz termina aquí.
@@ -400,7 +404,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
       lectura.callar()
       if (conversando.current) terminarConversacion()
       const motivo = control.signal.reason
-      const aviso = motivo === 'detenido' ? 'Detenido.' : motivo === 'lento' ? 'Tardé demasiado en responder. Vuelve a preguntarme.' : 'Se cortó la conexión. Vuelve a intentarlo.'
+      const aviso = motivo === 'detenido' ? 'Detenido.' : motivo === 'lento' ? t('Tardé demasiado en responder. Vuelve a preguntarme.', 'I took too long to answer. Ask me again.') : t('Se cortó la conexión. Vuelve a intentarlo.', 'The connection dropped. Try again.')
       enLaUltima((b) => ({ ...b, texto: b.texto === '' ? aviso : `${b.texto}\n\n${aviso}`, error: b.texto === '' }))
     } finally {
       // «Llévame a invitados» (9 oct): se abre la pantalla, como al tocar un enlace del chat. Solo si está en
@@ -442,7 +446,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
     }
     const esFoto = archivo.type.startsWith('image/')
     const esCancion = archivo.type.startsWith('audio/')
-    if (!esFoto && !esCancion) return setAvisoDeSubida(ERRORES_DE_SUBIDA.unsupported_type!)
+    if (!esFoto && !esCancion) return setAvisoDeSubida(erroresDeSubida(t).unsupported_type!)
     setSubiendo(`Subiendo «${archivo.name}»…`)
     try {
       const fd = new FormData()
@@ -450,23 +454,23 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
       fd.set('eventSlug', slug)
       fd.set('file', esFoto ? await reducirFoto(archivo) : archivo)
       const r = await uploadMediaAction({ status: 'idle' }, fd)
-      if (r.status !== 'success' || r.mediaId === undefined) return setAvisoDeSubida(r.status === 'error' ? (ERRORES_DE_SUBIDA[r.message] ?? ERRORES_DE_SUBIDA.storage_failure!) : ERRORES_DE_SUBIDA.storage_failure!)
+      if (r.status !== 'success' || r.mediaId === undefined) return setAvisoDeSubida(r.status === 'error' ? (erroresDeSubida(t)[r.message] ?? erroresDeSubida(t).storage_failure!) : erroresDeSubida(t).storage_failure!)
       setTexto('')
       if (esFoto) {
-        const pide = pedido === '' ? 'Pon esta foto en mi invitación donde mejor quede.' : pedido
+        const pide = pedido === '' ? t('Pon esta foto en mi invitación donde mejor quede.', 'Put this photo in my invitation wherever it fits best.') : pedido
         void enviar(`${pide}\n[Adjunto: foto «${archivo.name}», foto_id ${r.mediaId}]`, false, `${pide}\n📎 ${archivo.name}`)
       } else {
-        const dice = pedido === '' ? 'Te mandé la canción de la invitación.' : pedido
+        const dice = pedido === '' ? t('Te mandé la canción de la invitación.', 'I sent you the invitation song.') : pedido
         void enviar(`${dice}\n[Adjunto: canción «${archivo.name}»: ya se subió y ya es la canción que suena en la invitación]`, false, `${dice}\n📎 ${archivo.name}`)
       }
     } catch {
-      setAvisoDeSubida('No se pudo subir: se cortó la conexión. Vuelve a intentarlo.')
+      setAvisoDeSubida(t('No se pudo subir: se cortó la conexión. Vuelve a intentarlo.', 'Could not upload: the connection dropped. Try again.'))
     } finally {
       setSubiendo(null)
     }
   }
 
-  async function subirDocumento(tipo: (typeof TIPOS_DE_DOCUMENTO)[number][0]) {
+  async function subirDocumento(tipo: (typeof TIPOS_DE_DOCUMENTO)[number]) {
     const archivo = documento
     if (archivo === null) return
     setDocumento(null)
@@ -479,12 +483,12 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
       fd.set('file', archivo)
       const r = await uploadDocumentAction({ status: 'idle' }, fd)
       if (r.status === 'error') return setAvisoDeSubida(r.message)
-      const nombre = TIPOS_DE_DOCUMENTO.find(([k]) => k === tipo)![1].toLowerCase()
+      const nombre = nombreDeDocumento(t)[tipo].toLowerCase()
       const dice = texto.trim() === '' ? `Te mandé un documento: ${nombre}.` : texto.trim()
       setTexto('')
       void enviar(`${dice}\n[Adjunto: «${archivo.name}» guardado en Documentos como ${nombre}]`, false, `${dice}\n📎 ${archivo.name}`)
     } catch {
-      setAvisoDeSubida('No se pudo subir: se cortó la conexión. Vuelve a intentarlo.')
+      setAvisoDeSubida(t('No se pudo subir: se cortó la conexión. Vuelve a intentarlo.', 'Could not upload: the connection dropped. Try again.'))
     } finally {
       setSubiendo(null)
     }
@@ -523,8 +527,8 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
       if (conversando.current && esDespedida(dicho)) {
         setTexto('')
         terminarConversacion()
-        if (modoFueraRef.current) setDespedidaFuera('Cuando quieras. Toca el micrófono si me necesitas.')
-        lectura.una('Cuando quieras.')
+        if (modoFueraRef.current) setDespedidaFuera(t('Cuando quieras. Toca el micrófono si me necesitas.', 'Whenever you like. Tap the microphone if you need me.'))
+        lectura.una(t('Cuando quieras.', 'Whenever you like.'))
         return
       }
       rondas.current += 1
@@ -561,9 +565,9 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                     {estadoFuera === null ? null : (
                       <span aria-hidden className={`size-2.5 shrink-0 rounded-full motion-safe:animate-pulse ${estadoFuera === 'escucha' ? 'bg-danger' : 'bg-gold'}`} />
                     )}
-                    {escucharDe ?? (ocupado ? 'Pensando…' : lectura.hablando ? 'Hablando…' : 'Cuando quieras')}
+                    {escucharDe ?? (ocupado ? t('Pensando…', 'Thinking…') : lectura.hablando ? t('Hablando…', 'Speaking…') : t('Cuando quieras', 'Whenever you like'))}
                   </span>
-                  {escuchando && !dictado.oyendo ? <span className="mt-1 block text-[13px] text-ink-mute">Un segundo: espera a «Te escucho» para hablar.</span> : null}
+                  {escuchando && !dictado.oyendo ? <span className="mt-1 block text-[13px] text-ink-mute">{t('Un segundo: espera a «Te escucho» para hablar.', 'One second: wait for “I am listening” to speak.')}</span> : null}
                   {fuera.texto === null ? null : escuchando ? (
                     <span className="mt-2.5 line-clamp-2 block border-l-2 border-gold/50 pl-3 text-[13px] leading-[1.5] text-ink-mute">{fuera.texto}</span>
                   ) : (
@@ -589,7 +593,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                       }}
                       type="button"
                     >
-                      {estadoFuera === 'habla' ? 'Callar' : quieto ? 'Cerrar' : 'Cancelar'}
+                      {estadoFuera === 'habla' ? t('Callar', 'Stop talking') : quieto ? t('Cerrar', 'Close') : t('Cancelar', 'Cancel')}
                     </button>
                     {escuchando ? (
                       <button
@@ -598,11 +602,11 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                         onClick={() => dictado.terminar()}
                         type="button"
                       >
-                        Enviar ya
+                        {t('Enviar ya', 'Send now')}
                       </button>
                     ) : (
                       <button className="min-h-11 flex-1 cursor-pointer rounded-[10px] bg-shell-deep px-3 text-[14px] font-medium text-shell-ink hover:bg-sage" onClick={abrir} type="button">
-                        Abrir el chat
+                        {t('Abrir el chat', 'Open the chat')}
                       </button>
                     )}
                   </span>
@@ -621,7 +625,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                   <span className="block text-[13.5px] leading-normal">{afuera.texto}</span>
                   {afuera.seguir ? (
                     <button className="relative z-[1] mt-3 min-h-11 w-full cursor-pointer rounded-[10px] bg-shell-deep px-4 text-[14px] font-medium text-shell-ink hover:bg-sage" onClick={abrir} type="button">
-                      Seguir conversando
+                      {t('Seguir conversando', 'Keep talking')}
                     </button>
                   ) : null}
                 </TarjetaDeLuxury>
@@ -676,7 +680,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                 <h2 className="font-display text-[26px] leading-tight font-light" id={titulo}>
                   {NOMBRE_DEL_ASISTENTE}
                 </h2>
-                <p className="text-[12px] text-ink-mute">Tu planner. Responde con los datos de este evento.</p>
+                <p className="text-[12px] text-ink-mute">{t('Tu planner. Responde con los datos de este evento.', 'Your planner. Answers with this event’s data.')}</p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -687,24 +691,24 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                   onClick={() => setVerVoces(!verVoces)}
                   type="button"
                 >
-                  Voz
+                  {t('Voz', 'Voice')}
                 </button>
               ) : null}
               {lectura.disponible ? (
                 // Que conteste en voz alta cuando se le habla; se apaga aquí (y «Callar» corta la que suena).
                 <button
-                  aria-label={lectura.activa ? 'No leer las respuestas en voz alta' : 'Leer las respuestas en voz alta'}
+                  aria-label={lectura.activa ? t('No leer las respuestas en voz alta', 'Do not read answers out loud') : t('Leer las respuestas en voz alta', 'Read answers out loud')}
                   aria-pressed={lectura.activa}
                   className="flex size-10 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink max-[859px]:size-11"
                   onClick={() => lectura.alternar()}
-                  title={lectura.activa ? 'Responde en voz alta cuando le hablas' : 'Solo responde por escrito'}
+                  title={lectura.activa ? t('Responde en voz alta cuando le hablas', 'Answers out loud when you talk to it') : t('Solo responde por escrito', 'Answers in writing only')}
                   type="button"
                 >
                   <Altavoz apagado={!lectura.activa} className="size-[18px]" />
                 </button>
               ) : null}
               <button
-                aria-label="Cerrar"
+                aria-label={t('Cerrar', 'Close')}
                 className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[13px] transition-colors hover:border-ink max-[859px]:size-11"
                 onClick={cerrar}
                 type="button"
@@ -729,17 +733,17 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                 }}
                 type="button"
               >
-                Nueva conversación
+                {t('Nueva conversación', 'New conversation')}
               </button>
             )}
             {burbujas.length === 0 ? (
               <div className="flex flex-col gap-4">
                 <p className="text-[14px] leading-relaxed text-ink-soft">
                   Hola, soy {NOMBRE_DEL_ASISTENTE}. Pregúntame por tus invitados, tus tareas o tu presupuesto, o pídeme lo que quieras hacer —registrar
-                  invitados, escribir tu invitación, armar mesas o tareas— y lo hago. {dictado.disponible ? 'Puedes escribirme o tocar el micrófono y hablarme: te respondo en voz alta.' : null}
+                  invitados, escribir tu invitación, armar mesas o tareas— y lo hago. {dictado.disponible ? t('Puedes escribirme o tocar el micrófono y hablarme: te respondo en voz alta.', 'You can write to me or tap the microphone and talk to me: I answer out loud.') : null}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {SUGERENCIAS.map((s) => (
+                  {sugerencias(t).map((s) => (
                     <button
                       className="min-h-11 cursor-pointer rounded-full border border-line-panel-strong bg-white px-3.5 py-2 text-[13px] text-ink-soft transition-colors hover:border-ink hover:text-ink"
                       key={s}
@@ -767,10 +771,10 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                     )}
                     <div className="flex min-w-0 flex-col gap-2 pl-6">
                       {b.texto === '' ? null : b.error ? (
-                        <p className="rounded-[16px] rounded-bl-[4px] border border-danger/30 bg-danger/5 px-3.5 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap text-danger">{conEnlaces(b.texto, slug, cerrar)}</p>
+                        <p className="rounded-[16px] rounded-bl-[4px] border border-danger/30 bg-danger/5 px-3.5 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap text-danger">{conEnlaces(b.texto, slug, cerrar, t)}</p>
                       ) : (
                         <TarjetaDeLuxury perlas={i === burbujas.length - 1 ? 'izquierda' : null}>
-                          <p className="text-[13.5px] leading-relaxed whitespace-pre-wrap">{conEnlaces(b.texto, slug, cerrar)}</p>
+                          <p className="text-[13.5px] leading-relaxed whitespace-pre-wrap">{conEnlaces(b.texto, slug, cerrar, t)}</p>
                         </TarjetaDeLuxury>
                       )}
                       {b.envio === undefined ? null : <TarjetaDeEnvio eventId={eventId} filas={b.envio.filas} slug={slug} tipo={b.envio.tipo} />}
@@ -782,7 +786,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
             {ocupado && (consultando !== null || burbujas.at(-1)?.texto === '') ? (
               <p className="flex items-center gap-2 self-start text-[12.5px] text-ink-mute" role="status">
                 <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-gold" />
-                {consultando ?? 'Escribiendo…'}
+                {consultando ?? t('Escribiendo…', 'Writing…')}
               </p>
             ) : null}
             <div ref={final} />
@@ -820,7 +824,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                     void enviar(e.currentTarget.value, dictado.tomarTeclado())
                   }
                 }}
-                placeholder={dictado.disponible ? 'Escríbele o háblale…' : `Escríbele a ${NOMBRE_DEL_ASISTENTE}…`}
+                placeholder={dictado.disponible ? t('Escríbele o háblale…', 'Write or talk to it…') : `Escríbele a ${NOMBRE_DEL_ASISTENTE}…`}
                 ref={campo}
                 rows={1}
                 value={texto}
@@ -837,11 +841,11 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                 type="file"
               />
               <button
-                aria-label="Adjuntar una foto, la canción o un documento"
+                aria-label={t('Adjuntar una foto, la canción o un documento', 'Attach a photo, the song or a document')}
                 className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-line-panel-strong bg-white text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={ocupado || subiendo !== null}
                 onClick={() => selectorDeArchivo.current?.click()}
-                title="Adjuntar una foto, la canción o un documento"
+                title={t('Adjuntar una foto, la canción o un documento', 'Attach a photo, the song or a document')}
                 type="button"
               >
                 <Clip className="size-[18px]" />
@@ -849,7 +853,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
               {dictado.disponible ? (
                 dictado.estado === 'escuchando' ? (
                   <button
-                    aria-label="Terminar de hablar y enviar"
+                    aria-label={t('Terminar de hablar y enviar', 'Finish speaking and send')}
                     className="relative grid size-11 shrink-0 cursor-pointer place-items-center rounded-full bg-danger text-white"
                     onClick={dictado.terminar}
                     type="button"
@@ -872,7 +876,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
               {ocupado ? (
                 // Mientras responde, «Detener»: antes no había forma de cortar una respuesta que no llegaba.
                 <button
-                  aria-label="Detener la respuesta"
+                  aria-label={t('Detener la respuesta', 'Stop the answer')}
                   className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full bg-ink text-white"
                   onClick={() => peticion.current?.abort('detenido')}
                   type="button"
@@ -907,7 +911,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
             ) : dictado.estado === 'escuchando' ? (
               <p aria-live="polite" className="flex items-center gap-2 text-[12.5px] text-ink-soft" role="status">
                 <span aria-hidden className="size-2 animate-pulse rounded-full bg-danger" />
-                {dictado.oyendo ? 'Te escucho… Al terminar de hablar, te respondo.' : 'Abriendo el micrófono… espera a «Te escucho».'}
+                {dictado.oyendo ? t('Te escucho… Al terminar de hablar, te respondo.', 'I am listening… When you finish speaking, I answer.') : t('Abriendo el micrófono… espera a «Te escucho».', 'Opening the microphone… wait for “I am listening”.')}
               </p>
             ) : lectura.hablando ? (
               <p aria-live="polite" className="flex items-center gap-2 text-[12.5px] text-ink-soft" role="status">
@@ -927,9 +931,9 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
             {documento === null ? null : (
               <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-ink-soft" role="group" aria-label={`Qué es «${documento.name}»`}>
                 <span>¿Qué es «{documento.name}»?</span>
-                {TIPOS_DE_DOCUMENTO.map(([clave, nombre]) => (
+                {TIPOS_DE_DOCUMENTO.map((clave) => (
                   <button className="min-h-9 cursor-pointer rounded-full border border-line-panel-strong bg-white px-3 text-ink hover:border-ink" key={clave} onClick={() => void subirDocumento(clave)} type="button">
-                    {nombre}
+                    {nombreDeDocumento(t)[clave]}
                   </button>
                 ))}
                 <button className="min-h-9 cursor-pointer px-2 text-ink-mute underline" onClick={() => setDocumento(null)} type="button">
@@ -961,18 +965,19 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
  * chat y deja la invitación marcada enviada, con las mismas acciones que «Enviar invitaciones».
  */
 function TarjetaDeEnvio({ filas, tipo, slug, eventId }: { filas: readonly FilaDeEnvio[]; tipo: 'invitacion' | 'recordatorio'; slug: string; eventId: string }) {
+  const t = useT()
   const [hechas, setHechas] = useState<ReadonlySet<string>>(new Set())
   const [aviso, setAviso] = useState<string | null>(null)
 
   const marcar = async (f: FilaDeEnvio): Promise<string | null> => {
     if (tipo === 'recordatorio' && f.recordatorio !== undefined) {
-      const r = await markReminderSentAction({ eventId, eventSlug: slug, guestGroupId: f.id, kind: f.recordatorio }).catch(() => ({ status: 'error' as const, message: 'se cortó la conexión' }))
+      const r = await markReminderSentAction({ eventId, eventSlug: slug, guestGroupId: f.id, kind: f.recordatorio }).catch(() => ({ status: 'error' as const, message: t('se cortó la conexión', 'the connection dropped') }))
       return r.status === 'error' ? r.message : null
     }
     const fd = new FormData()
     fd.set('eventSlug', slug)
     fd.set('groupId', f.id)
-    const r = await sendInvitationAction({ status: 'idle' }, fd).catch(() => ({ status: 'error' as const, message: 'se cortó la conexión' }))
+    const r = await sendInvitationAction({ status: 'idle' }, fd).catch(() => ({ status: 'error' as const, message: t('se cortó la conexión', 'the connection dropped') }))
     return r.status === 'error' ? r.message : null
   }
 
@@ -1001,7 +1006,7 @@ function TarjetaDeEnvio({ filas, tipo, slug, eventId }: { filas: readonly FilaDe
   }
 
   return (
-    <section aria-label={tipo === 'invitacion' ? 'Invitaciones para enviar' : 'Recordatorios para enviar'} className="rounded-[16px] border border-gold/40 bg-bg-top px-4 py-3.5">
+    <section aria-label={tipo === 'invitacion' ? t('Invitaciones para enviar', 'Invitations to send') : t('Recordatorios para enviar', 'Reminders to send')} className="rounded-[16px] border border-gold/40 bg-bg-top px-4 py-3.5">
       <p className="font-mono text-[10.5px] tracking-[0.14em] text-gold-deep uppercase">
         {tipo === 'invitacion' ? `${hechas.size} de ${filas.length} enviadas` : `${hechas.size} de ${filas.length} recordados`}
       </p>
@@ -1010,7 +1015,7 @@ function TarjetaDeEnvio({ filas, tipo, slug, eventId }: { filas: readonly FilaDe
           <li className="flex items-center gap-3" key={f.id}>
             <span className="min-w-0 flex-1">
               <span className="block text-[13.5px] leading-snug font-medium text-ink [overflow-wrap:anywhere]">{f.nombre}</span>
-              <span className="block text-[12px] text-ink-mute">{f.telefono ?? 'Sin WhatsApp: elegirás el chat al abrirlo'}</span>
+              <span className="block text-[12px] text-ink-mute">{f.telefono ?? t('Sin WhatsApp: elegirás el chat al abrirlo', 'No WhatsApp: you will pick the chat when opening it')}</span>
             </span>
             {hechas.has(f.id) ? (
               <span className="shrink-0 text-[12.5px] text-sage-deep">Enviada ✓</span>
@@ -1061,15 +1066,16 @@ function EnConversacion({
   interrumpir: () => void
   terminar: () => void
 }) {
+  const t = useT()
   const TEXTO = {
-    escuchando: abriendo ? 'Abriendo el micrófono…' : 'Te escucho…',
-    pensando: 'Pensando…',
-    hablando: 'Te respondo. Toca para interrumpir.',
+    escuchando: abriendo ? t('Abriendo el micrófono…', 'Opening the microphone…') : t('Te escucho…', 'I am listening…'),
+    pensando: t('Pensando…', 'Thinking…'),
+    hablando: t('Te respondo. Toca para interrumpir.', 'Answering. Tap to interrupt.'),
   } as const
   return (
     <div aria-live="polite" className="flex items-center gap-3 rounded-[16px] border border-line-panel bg-white px-3.5 py-2.5" role="status">
       <button
-        aria-label={estado === 'hablando' ? 'Interrumpir y hablar' : TEXTO[estado]}
+        aria-label={estado === 'hablando' ? t('Interrumpir y hablar', 'Interrupt and talk') : TEXTO[estado]}
         className="relative grid size-11 shrink-0 cursor-pointer place-items-center rounded-full disabled:cursor-default"
         disabled={estado !== 'hablando'}
         onClick={interrumpir}
@@ -1083,10 +1089,10 @@ function EnConversacion({
       </button>
       <div className="min-w-0 flex-1">
         <p className="text-[13px] text-ink">{TEXTO[estado]}</p>
-        <p className="text-[12px] text-ink-mute">Conversación por voz · di «listo» para terminar</p>
+        <p className="text-[12px] text-ink-mute">{t('Conversación por voz · di «listo» para terminar', 'Voice conversation · say “done” to finish')}</p>
       </div>
       <button className="min-h-11 shrink-0 cursor-pointer rounded-full border border-line-panel-strong bg-white px-3.5 text-[12.5px] text-ink hover:border-ink" onClick={terminar} type="button">
-        Terminar
+        {t('Terminar', 'Finish')}
       </button>
     </div>
   )
@@ -1108,6 +1114,8 @@ function VocesDeLuxury({
   elegir: (idioma: 'es' | 'en', voiceURI: string | null) => void
   probar: (idioma: 'es' | 'en') => void
 }) {
+  const t = useT()
+  const locale = useIdioma()
   const fila = (idioma: 'es' | 'en', rotulo: string) => {
     const lista = vocesParaElegir(voces, idioma)
     return (
@@ -1119,7 +1127,7 @@ function VocesDeLuxury({
             onChange={(e) => elegir(idioma, e.target.value === '' ? null : e.target.value)}
             value={elegidas[idioma] ?? ''}
           >
-            <option value="">Automática (la mejor de tu aparato)</option>
+            <option value="">{t('Automática (la mejor de tu aparato)', 'Automatic (your device’s best)')}</option>
             {lista.map((v) => (
               <option key={v.voiceURI} value={v.voiceURI}>
                 {v.name} · {v.lang}
@@ -1128,26 +1136,42 @@ function VocesDeLuxury({
           </select>
         </label>
         <button className="min-h-11 shrink-0 cursor-pointer rounded-full border border-line-panel-strong bg-white px-3.5 text-[12.5px] text-ink hover:border-ink" onClick={() => probar(idioma)} type="button">
-          Probar
+          {t('Probar', 'Try')}
         </button>
       </div>
     )
   }
   return (
     <div className="flex flex-col gap-3 border-b border-line-panel bg-white/60 px-5 py-4">
-      {fila('es', 'Voz en español')}
-      {fila('en', 'Voz en inglés')}
+      {fila('es', t('Voz en español', 'Spanish voice'))}
+      {fila('en', t('Voz en inglés', 'English voice'))}
       <details className="text-[12.5px] leading-relaxed text-ink-soft">
-        <summary className="cursor-pointer text-ink">¿Suena robótica? Descarga una voz natural (gratis)</summary>
-        <p className="mt-2">
-          <strong>iPhone:</strong> Ajustes › Accesibilidad › Leer y hablar (o Contenido leído) › Voces › Español (México) › <strong>Paulina</strong> ›
-          descarga la versión <strong>Mejorada</strong> o <strong>Premium</strong> y déjala elegida. Para inglés, English › <strong>Ava</strong> o
-          Samantha, también mejorada. Vuelve aquí y toca Probar.
-        </p>
-        <p className="mt-1.5">
-          <strong>Android:</strong> Ajustes › Accesibilidad › Salida de texto a voz › Motor de Google › Instalar datos de voz › Español (Estados Unidos o
-          México). <strong>Computadora:</strong> en Edge, las voces «Natural» de Microsoft.
-        </p>
+        <summary className="cursor-pointer text-ink">{t('¿Suena robótica? Descarga una voz natural (gratis)', 'Sounds robotic? Download a natural voice (free)')}</summary>
+        {locale === 'es' ? (
+          <>
+            <p className="mt-2">
+              <strong>iPhone:</strong> Ajustes › Accesibilidad › Leer y hablar (o Contenido leído) › Voces › Español (México) › <strong>Paulina</strong> ›
+              descarga la versión <strong>Mejorada</strong> o <strong>Premium</strong> y déjala elegida. Para inglés, English › <strong>Ava</strong> o
+              Samantha, también mejorada. Vuelve aquí y toca Probar.
+            </p>
+            <p className="mt-1.5">
+              <strong>Android:</strong> Ajustes › Accesibilidad › Salida de texto a voz › Motor de Google › Instalar datos de voz › Español (Estados Unidos o
+              México). <strong>Computadora:</strong> en Edge, las voces «Natural» de Microsoft.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mt-2">
+              <strong>iPhone:</strong> Settings › Accessibility › Read &amp; Speak (or Spoken Content) › Voices › English › <strong>Ava</strong> or Samantha ›
+              download the <strong>Enhanced</strong> or <strong>Premium</strong> version and keep it selected. For Spanish, Español (México) ›{' '}
+              <strong>Paulina</strong>, also enhanced. Come back here and tap Try.
+            </p>
+            <p className="mt-1.5">
+              <strong>Android:</strong> Settings › Accessibility › Text-to-speech output › Google engine › Install voice data › English (United States).{' '}
+              <strong>Computer:</strong> in Edge, Microsoft’s “Natural” voices.
+            </p>
+          </>
+        )}
       </details>
     </div>
   )
@@ -1247,20 +1271,21 @@ const recorte = (texto: string) => (texto.length <= 170 ? texto : `${texto.slice
 /** Cuánto puede tardar en decirse una frase, holgado (~9 caracteres por segundo y 3 s de margen). */
 const duracionHolgada = (texto: string) => 3000 + texto.length * 110
 
-const SEGUIR_HABLANDO = 'Toca el micrófono para seguir hablando.'
+const seguirHablando = (t: T) => t('Toca el micrófono para seguir hablando.', 'Tap the microphone to keep talking.')
 
-const DICTA_CON_EL_TECLADO = 'Dicta con el micrófono de tu teclado (🎤 junto a la barra espaciadora) y toca Enviar: te respondo en voz alta. En iPhone también puedes decir «Oye Siri, Luxury» (actívalo en Mi cuenta).'
+const dictaConElTeclado = (t: T) =>
+  t('Dicta con el micrófono de tu teclado (🎤 junto a la barra espaciadora) y toca Enviar: te respondo en voz alta. En iPhone también puedes decir «Oye Siri, Luxury» (actívalo en Mi cuenta).', 'Dictate with your keyboard microphone (🎤 next to the space bar) and tap Send: I answer out loud. On iPhone you can also say “Hey Siri, Luxury” (turn it on in My account).')
 
 /** Lo que se le dice a la persona cuando el navegador no puede escuchar, según su error. */
-const AVISO_DE_VOZ: Record<string, string> = {
-  'no-speech': 'No te oí. Toca el micrófono y vuelve a hablar.',
-  'not-allowed': 'Para hablarme, permite el micrófono: toca el candado junto a la dirección, activa «Micrófono» y vuelve a tocarlo.',
+const avisoDeVoz = (t: T): Record<string, string> => ({
+  'no-speech': t('No te oí. Toca el micrófono y vuelve a hablar.', 'I did not hear you. Tap the microphone and speak again.'),
+  'not-allowed': t('Para hablarme, permite el micrófono: toca el candado junto a la dirección, activa «Micrófono» y vuelve a tocarlo.', 'To talk to me, allow the microphone: tap the padlock next to the address, turn on “Microphone” and tap it again.'),
   'service-not-allowed':
-    'Tu aparato no deja dictar aquí. En iPhone, activa Ajustes › General › Teclado › Dictado; o usa el micrófono de tu teclado para dictar.',
-  'audio-capture': 'No encontré un micrófono en este aparato. Puedes escribirme.',
-  network: 'Tu navegador no pudo escucharte ahora (sin conexión). Usa el micrófono de tu teclado o escríbeme.',
-  'language-not-supported': 'Tu navegador no dicta en este idioma. Usa el micrófono de tu teclado o escríbeme.',
-}
+    t('Tu aparato no deja dictar aquí. En iPhone, activa Ajustes › General › Teclado › Dictado; o usa el micrófono de tu teclado para dictar.', 'Your device does not allow dictation here. On iPhone, turn on Settings › General › Keyboard › Dictation; or use your keyboard microphone to dictate.'),
+  'audio-capture': t('No encontré un micrófono en este aparato. Puedes escribirme.', 'I could not find a microphone on this device. You can write to me.'),
+  network: t('Tu navegador no pudo escucharte ahora (sin conexión). Usa el micrófono de tu teclado o escríbeme.', 'Your browser could not hear you now (offline). Use your keyboard microphone or write to me.'),
+  'language-not-supported': t('Tu navegador no dicta en este idioma. Usa el micrófono de tu teclado o escríbeme.', 'Your browser does not dictate in this language. Use your keyboard microphone or write to me.'),
+})
 
 /**
  * **Hablarle a Luxury** con el reconocimiento de voz **del propio navegador** (Web Speech API): gratis, sin
@@ -1281,6 +1306,7 @@ function useDictado(
    */
   conversacion: { enRonda: () => boolean; cortar: (aviso: string | null) => void },
 ) {
+  const t = useT()
   const modo = useSyncExternalStore(sinCambios, modoDeDictado, () => 'ninguno')
   const disponible = modo !== 'ninguno'
   const [estado, setEstado] = useState<'quieto' | 'escuchando'>('quieto')
@@ -1314,7 +1340,7 @@ function useDictado(
     setAviso(null)
     // Dentro del toque: iOS solo deja arrancar el audio en un gesto (al reabrir en la conversación ya está en marcha).
     despertarAudio()
-    if (!dictadoPropioListo()) setAviso('Preparando el dictado de Luxury (solo la primera vez, unos 45 MB; mejor con wifi)…')
+    if (!dictadoPropioListo()) setAviso(t('Preparando el dictado de Luxury (solo la primera vez, unos 45 MB; mejor con wifi)…', 'Preparing Luxury’s dictation (first time only, about 45 MB; better on wifi)…'))
     const base = textoActual.trim()
     const unido = (t: string) => [base, t].filter((x) => x !== '').join(' ')
     let escucha: Escucha | null = null
@@ -1361,14 +1387,14 @@ function useDictado(
         if (!terminarAqui()) return
         anotarVoz(`el dictado propio falló (${motivo})`)
         // En mitad de la conversación (reabierto sin toque), basta con tocar para seguir.
-        if (conversacion.enRonda() && motivo !== 'NotAllowedError') return conversacion.cortar(SEGUIR_HABLANDO)
+        if (conversacion.enRonda() && motivo !== 'NotAllowedError') return conversacion.cortar(seguirHablando(t))
         conversacion.cortar(null)
         usarTeclado(
           motivo === 'NotAllowedError'
-            ? AVISO_DE_VOZ['not-allowed']!
+            ? avisoDeVoz(t)['not-allowed']!
             : motivo === 'descarga-lenta'
-              ? 'El dictado tarda en bajarse (unos 45 MB): prueba con wifi. Mientras, dicta con el micrófono de tu teclado y toca Enviar.'
-              : DICTA_CON_EL_TECLADO,
+              ? t('El dictado tarda en bajarse (unos 45 MB): prueba con wifi. Mientras, dicta con el micrófono de tu teclado y toca Enviar.', 'Dictation is slow to download (about 45 MB): try on wifi. Meanwhile, dictate with your keyboard microphone and tap Send.')
+              : dictaConElTeclado(t),
         )
       },
     }).then((e) => {
@@ -1381,7 +1407,7 @@ function useDictado(
     if (modo === 'propio') return empezarPropio(textoActual)
     const Reconocer = reconocedorDelNavegador()
     if (modo === 'teclado' || Reconocer === null) {
-      usarTeclado(DICTA_CON_EL_TECLADO)
+      usarTeclado(dictaConElTeclado(t))
       return
     }
     actual.current?.cerrar(false)
@@ -1421,7 +1447,7 @@ function useDictado(
         conversacion.cortar(null)
         if (!enRonda && navigator.maxTouchPoints > 0) {
           anotarVoz('el micrófono se cerró sin oír nada')
-          usarTeclado(DICTA_CON_EL_TECLADO)
+          usarTeclado(dictaConElTeclado(t))
         }
       }
     }
@@ -1448,7 +1474,7 @@ function useDictado(
       // Callarse en la conversación no es un fallo: se termina y ya.
       if (conversacion.enRonda()) {
         if (e.error !== 'no-speech') anotarVoz(`el micrófono no se reabrió solo (${e.error})`)
-        conversacion.cortar(e.error === 'no-speech' ? null : SEGUIR_HABLANDO)
+        conversacion.cortar(e.error === 'no-speech' ? null : seguirHablando(t))
         return
       }
       anotarVoz(`el dictado del navegador falló (${e.error})`)
@@ -1461,10 +1487,10 @@ function useDictado(
         actual.current = null
         setEstado('quieto')
         setOyendo(false)
-        usarTeclado(DICTA_CON_EL_TECLADO)
+        usarTeclado(dictaConElTeclado(t))
         return
       }
-      setAviso(AVISO_DE_VOZ[e.error] ?? 'Tu navegador no pudo escucharte. Puedes escribirme.')
+      setAviso(avisoDeVoz(t)[e.error] ?? t('Tu navegador no pudo escucharte. Puedes escribirme.', 'Your browser could not hear you. You can write to me.'))
     }
     r.onend = () => cerrar(true)
     // Los 8 s de silencio cuentan desde que el micrófono **graba**: la primera vez el iPhone pregunta dos permisos
@@ -1483,9 +1509,9 @@ function useDictado(
       anotarVoz(`el dictado no arrancó (${causa instanceof Error ? causa.name : 'desconocido'})`)
       cerrar(false)
       // Reabrirlo solo (sin toque) lo niegan algunos navegadores: se pide el toque.
-      if (conversacion.enRonda()) return conversacion.cortar(SEGUIR_HABLANDO)
+      if (conversacion.enRonda()) return conversacion.cortar(seguirHablando(t))
       conversacion.cortar(null)
-      setAviso('Tu navegador no pudo escucharte. Puedes escribirme.')
+      setAviso(t('Tu navegador no pudo escucharte. Puedes escribirme.', 'Your browser could not hear you. You can write to me.'))
     }
   }
 

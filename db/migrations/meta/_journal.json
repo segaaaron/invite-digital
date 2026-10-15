@@ -652,6 +652,13 @@
       "when": 1792015000000,
       "tag": "0093_planes_gala_imperial",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1792016000000,
+      "tag": "0094_idioma_de_la_cuenta",
+      "breakpoints": true
     }
   ]
 }

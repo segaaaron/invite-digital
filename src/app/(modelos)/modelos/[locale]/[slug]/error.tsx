@@ -1,16 +1,18 @@
 'use client'
 
 import { PantallaDeError } from '@/shared/design/ui/PantallaDeError'
+import { useIdioma, useT } from '@/shared/i18n/idioma-navegador'
 
-/** El escaparate de un modelo. */
 export default function ErrorDelModelo({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const t = useT()
+  const locale = useIdioma()
   return (
     <PantallaDeError
       error={error}
-      reintentar="Volver a intentar · Try again"
+      reintentar={t('Volver a intentar', 'Try again')}
       reset={reset}
-      salida={{ href: '/es/colecciones', rotulo: 'Ver los modelos' }}
-      texto="No se pudo cargar este modelo. Vuelve a intentarlo en un momento."
+      salida={{ href: locale === 'es' ? '/es/colecciones' : '/en/collections', rotulo: t('Ver los modelos', 'See the designs') }}
+      texto={t('No se pudo cargar este modelo. Vuelve a intentarlo en un momento.', 'This design couldn’t load. Please try again in a moment.')}
     />
   )
 }

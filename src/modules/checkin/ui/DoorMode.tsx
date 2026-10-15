@@ -13,6 +13,8 @@ import { EligePersonas } from './EligePersonas'
 import { resolveLocally } from './local-resolve'
 import { openOutbox, type Outbox } from './outbox'
 import { ScanResultCard } from './ScanResultCard'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 // El bucle va sobre setTimeout, jamás sobre requestAnimationFrame: con la pestaña de
 // fondo el navegador lo baja a un fotograma por segundo y el escáner se para solo. Ya
@@ -61,7 +63,7 @@ const vistaDe = (group: DoorManifestGroup) => ({
   people: group.people,
 })
 
-const ACCESO_CERRADO = 'Tu acceso a esta puerta se cerró. Pide a quien te sumó un enlace nuevo.'
+const accesoCerrado = (t: T) => t('Tu acceso a esta puerta se cerró. Pide a quien te sumó un enlace nuevo.', 'Your access to this door was closed. Ask whoever added you for a new link.')
 
 type Props = {
   eventId: string
@@ -73,6 +75,7 @@ type Props = {
 }
 
 export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL_PANEL, cabecera }: Props) {
+  const t = useT()
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
@@ -98,7 +101,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
    * una cosa y la base otra: eso hay que cantarlo en el momento, no al cerrar el salón.
    */
   const [desajuste, setDesajuste] = useState<string | null>(null)
-  const [cameraMessage, setCameraMessage] = useState('Encendiendo la cámara…')
+  const [cameraMessage, setCameraMessage] = useState(t('Encendiendo la cámara…', 'Turning on the camera…'))
   const [pending, setPending] = useState(0)
   const outboxRef = useRef<Promise<Outbox | null> | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -195,10 +198,10 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       await box.drop(outcomes.map((o) => o.scanId))
     } catch {
       await box.bumpTries(batch.map((s) => s.scanId))
-      if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(ACCESO_CERRADO)
+      if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(accesoCerrado(t))
     }
     setPending(await box.count())
-  }, [acciones, eventId, eventSlug, getOutbox])
+  }, [acciones, eventId, eventSlug, getOutbox, t])
 
   useEffect(() => {
     const onOnline = () => void flush()
@@ -291,8 +294,8 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       void acciones
         .checkInByGroup({ eventId, eventSlug, groupId: group.id, scanId, arrivedCount: null, scannedAtMs: ahora.getTime(), personIds })
         .catch(async () => {
-          if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(ACCESO_CERRADO)
-          else setDesajuste('No se pudo registrar la llegada. Vuelve a intentarlo.')
+          if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(accesoCerrado(t))
+          else setDesajuste(t('No se pudo registrar la llegada. Vuelve a intentarlo.', 'The arrival couldn’t be recorded. Try again.'))
         })
       return
     }
@@ -339,7 +342,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onCode])
+  }, [onCode, t])
 
   useEffect(() => {
     let stream: MediaStream | null = null
@@ -348,18 +351,18 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
 
     const start = async () => {
       if (!window.isSecureContext) {
-        setCameraMessage('La cámara necesita HTTPS o localhost. Busca al invitado por su nombre.')
+        setCameraMessage(t('La cámara necesita HTTPS o localhost. Busca al invitado por su nombre.', 'The camera needs HTTPS or localhost. Search for the guest by name.'))
         return
       }
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
       } catch {
-        setCameraMessage('No se pudo abrir la cámara. Busca al invitado por su nombre.')
+        setCameraMessage(t('No se pudo abrir la cámara. Busca al invitado por su nombre.', 'The camera couldn’t be opened. Search for the guest by name.'))
         return
       }
       const video = videoRef.current
       if (!video || stopped) {
-        stream.getTracks().forEach((t) => t.stop())
+        stream.getTracks().forEach((pista) => pista.stop())
         return
       }
       video.srcObject = stream
@@ -407,9 +410,9 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
     return () => {
       stopped = true
       if (timer) clearTimeout(timer)
-      stream?.getTracks().forEach((t) => t.stop())
+      stream?.getTracks().forEach((pista) => pista.stop())
     }
-  }, [onCode])
+  }, [onCode, t])
 
   /** Registrar a una invitación elegida sin escanear: por nombre o por el código corto del pase. */
   function elegirGrupo(groupId: string) {
@@ -437,8 +440,8 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
             })
             .then(apply)
             .catch(async () => {
-              if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(ACCESO_CERRADO)
-              else setDesajuste('No se pudo registrar la llegada. Vuelve a intentarlo.')
+              if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(accesoCerrado(t))
+              else setDesajuste(t('No se pudo registrar la llegada. Vuelve a intentarlo.', 'The arrival couldn’t be recorded. Try again.'))
             })
           }
 
@@ -452,24 +455,24 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       ) : null}
       <header className="relative z-10 flex items-center gap-3 p-4 text-white">
         <span className="font-mono text-[11px] tracking-[var(--tracking-luxe)]">
-          <b aria-label="Invitaciones que han llegado" className="font-mono text-[19px] font-semibold">
+          <b aria-label={t('Invitaciones que han llegado', 'Invitations that have arrived')} className="font-mono text-[19px] font-semibold">
             {tally.arrivedGroups}
           </b>{' '}
           <span className="opacity-55">
-            de {tally.expectedGroups} · {tally.headsInside} dentro
+            {t(`de ${tally.expectedGroups} · ${tally.headsInside} dentro`, `of ${tally.expectedGroups} · ${tally.headsInside} inside`)}
           </span>
         </span>
         {pending > 0 ? (
           <span
-            aria-label="Escaneos por subir"
+            aria-label={t('Escaneos por subir', 'Scans to upload')}
             className="ml-auto rounded-full bg-warn px-3 py-1 font-mono text-[13px]"
           >
-            {pending} por subir
+            {t(`${pending} por subir`, `${pending} to upload`)}
           </span>
         ) : (
           // Cero pendientes es la señal de que se puede cerrar la puerta y guardar el
           // teléfono. Se anuncia siempre, aunque no ocupe sitio en pantalla.
-          <span aria-label="Escaneos por subir" className="sr-only">
+          <span aria-label={t('Escaneos por subir', 'Scans to upload')} className="sr-only">
             0
           </span>
         )}
@@ -480,7 +483,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
           <p className="rounded-[14px] bg-danger px-4 py-3 font-mono text-[11px] text-white" role="alert">
             {desajuste}{' '}
             <button className="underline" onClick={() => setDesajuste(null)} type="button">
-              Entendido
+              {t('Entendido', 'Got it')}
             </button>
           </p>
         </div>
@@ -499,14 +502,14 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
             onClick={() => setManualOpen(true)}
             className="flex-1 rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[13px] uppercase tracking-[var(--tracking-luxe)] text-white"
           >
-            ⌨ Código manual
+            {t('⌨ Código manual', '⌨ Manual code')}
           </button>
           <button
             type="button"
             onClick={() => setSheetOpen(true)}
             className="flex-1 rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[13px] uppercase tracking-[var(--tracking-luxe)] text-white"
           >
-            ☰ Lista de invitados
+            {t('☰ Lista de invitados', '☰ Guest list')}
           </button>
         </div>
       )}
@@ -547,7 +550,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
               ),
             )
             void acciones.adjust({ eventId, scanId, arrivedCount, eventSlug }).then((r) => {
-              if (r.status === 'error') setDesajuste('No se pudo corregir la cantidad. El contador de arriba no es el del servidor.')
+              if (r.status === 'error') setDesajuste(t('No se pudo corregir la cantidad. El contador de arriba no es el del servidor.', 'The amount couldn’t be corrected. The counter above isn’t the server’s.'))
             })
           }}
           onUndo={(scanId) => {
@@ -572,7 +575,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
             }
             setOutcome(null)
             void acciones.void({ eventId, scanId, eventSlug }).then((r) => {
-              if (r.status === 'error') setDesajuste('No se pudo deshacer la llegada. Sigue registrada en el servidor.')
+              if (r.status === 'error') setDesajuste(t('No se pudo deshacer la llegada. Sigue registrada en el servidor.', 'The arrival couldn’t be undone. It is still recorded on the server.'))
             })
           }}
           onDismiss={() => {

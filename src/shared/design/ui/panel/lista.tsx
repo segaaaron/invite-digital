@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { T } from '@/shared/i18n/idioma-navegador'
+import type { T as Traductor } from '@/shared/i18n/t'
 import type { ReactNode } from 'react'
-import { DotsIcon } from '../icons'
 import { SelectorDeFiltro } from './SelectorDeFiltro'
 
 /**
@@ -13,28 +14,28 @@ import { SelectorDeFiltro } from './SelectorDeFiltro'
 /** La fiesta de un evento o de una venta. `null`: no se sabe todavía. */
 export type FiestaDeLista = 'boda' | 'xv' | 'cumple' | null
 
-const FIESTA: Record<Exclude<FiestaDeLista, null>, { texto: string; clases: string; punto: string; monograma: string }> = {
+const FIESTA: Record<Exclude<FiestaDeLista, null>, { texto: [string, string]; clases: string; punto: string; monograma: string }> = {
   boda: {
-    texto: 'Boda',
+    texto: ['Boda', 'Wedding'],
     clases: 'bg-fiesta-boda-soft text-fiesta-boda-ink',
     punto: 'bg-fiesta-boda',
     monograma: 'bg-fiesta-boda-soft text-fiesta-boda-ink',
   },
   xv: {
-    texto: 'XV',
+    texto: ['XV', 'Quince'],
     clases: 'bg-fiesta-xv-soft text-fiesta-xv-ink',
     punto: 'bg-fiesta-xv',
     monograma: 'bg-fiesta-xv-soft text-fiesta-xv-ink',
   },
   cumple: {
-    texto: 'Cumpleaños',
+    texto: ['Cumpleaños', 'Birthday'],
     clases: 'bg-fiesta-cumple-soft text-fiesta-cumple-ink',
     punto: 'bg-fiesta-cumple',
     monograma: 'bg-fiesta-cumple-soft text-fiesta-cumple-ink',
   },
 }
 
-export const nombreDeFiesta = (fiesta: FiestaDeLista): string => (fiesta === null ? 'Sin fiesta' : FIESTA[fiesta].texto)
+export const nombreDeFiesta = (fiesta: FiestaDeLista, t: Traductor): string => (fiesta === null ? t('Sin fiesta', 'No party type') : t(...FIESTA[fiesta].texto))
 export const puntoDeFiesta = (fiesta: FiestaDeLista): string => (fiesta === null ? 'bg-ink-mute/40' : FIESTA[fiesta].punto)
 
 /** «Boda», «XV», «Cumpleaños» con su color. El color acompaña a la palabra, nunca la sustituye. */
@@ -44,7 +45,7 @@ export function EtiquetaDeFiesta({ fiesta }: { fiesta: FiestaDeLista }) {
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-[10px] tracking-[0.14em] uppercase ${f.clases}`}>
       <span aria-hidden className={`size-1.5 rounded-full ${f.punto}`} />
-      {f.texto}
+      <T en={f.texto[1]} es={f.texto[0]} />
     </span>
   )
 }
@@ -191,21 +192,7 @@ export function FilaDeLista({
  * «⋯»: las acciones que no son la principal. `<details>` nativo —sin estado, sin JavaScript—; las
  * que no se deshacen van en rojo y con su `ConfirmAction` dentro.
  */
-export function MenuDeAcciones({ children, etiqueta = 'Más acciones' }: { children: ReactNode; etiqueta?: string }) {
-  return (
-    <details className="relative">
-      <summary
-        aria-label={etiqueta}
-        className="flex size-9 cursor-pointer list-none items-center justify-center rounded-full border max-[859px]:size-11 border-line-panel-strong bg-white text-ink-soft shadow-card transition-colors hover:border-ink hover:text-ink [&::-webkit-details-marker]:hidden"
-      >
-        <DotsIcon className="size-4" />
-      </summary>
-      <div className="absolute top-[calc(100%+8px)] right-0 z-40 flex w-[240px] flex-col gap-0.5 rounded-[16px] border border-line-panel bg-bg-raised p-1.5 shadow-lift [&>*]:w-full">
-        {children}
-      </div>
-    </details>
-  )
-}
+export { MenuDeAcciones } from './menu-de-acciones'
 
 /** Clases de una opción dentro de `MenuDeAcciones`. */
 export const opcionDeMenu = (peligro = false) =>
@@ -308,22 +295,3 @@ export function BarraDeFiltros({
   )
 }
 
-/** El conmutador Tablero / Lista (o Cartera / Calendario): dos enlaces, la vista en la dirección. */
-export function ConmutadorDeVista({ opciones, actual }: { opciones: readonly { key: string; label: string; href: string; icono: ReactNode }[]; actual: string }) {
-  return (
-    <nav aria-label="Vista" className="flex rounded-full border border-line-panel bg-white/70 p-1">
-      {opciones.map((o) => (
-        <Link
-          aria-current={o.key === actual ? 'page' : undefined}
-          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] transition-colors max-[859px]:min-h-11 max-[859px]:px-4 max-[859px]:text-[13px] ${o.key === actual ? 'bg-ink text-white' : 'text-ink-soft hover:text-ink'}`}
-          href={o.href}
-          key={o.key}
-          scroll={false}
-        >
-          {o.icono}
-          {o.label}
-        </Link>
-      ))}
-    </nav>
-  )
-}

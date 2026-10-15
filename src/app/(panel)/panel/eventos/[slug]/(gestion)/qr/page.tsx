@@ -7,8 +7,12 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
 
-export const metadata = { title: 'Códigos QR' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Códigos QR', 'QR codes') }
+}
 export const dynamic = 'force-dynamic'
 
 /**
@@ -19,6 +23,7 @@ export const dynamic = 'force-dynamic'
  * ninguna de las dos cosas.
  */
 export default async function QrPage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
 
@@ -33,9 +38,9 @@ export default async function QrPage({ params }: { params: Promise<{ slug: strin
   return (
     <>
       <PanelHeader
-        kicker="Difusión"
-        meta="Apuntan aquí y redirigen: el destino se cambia sin reimprimir"
-        title="Códigos QR"
+        kicker={t('Difusión', 'Promotion')}
+        meta={t('Apuntan aquí y redirigen: el destino se cambia sin reimprimir', 'They point here and redirect: the destination changes without reprinting')}
+        title={t('Códigos QR', 'QR codes')}
       />
 
       <PanelCard>

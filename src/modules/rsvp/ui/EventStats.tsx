@@ -1,7 +1,10 @@
+'use client'
+
 import { ChartIcon } from '@/shared/design/ui/icons'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import type { EventStats as Stats } from '../domain/stats'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * El embudo de conversión de la maqueta: una fila por paso, con su carril y su cifra a
@@ -17,18 +20,19 @@ import type { EventStats as Stats } from '../domain/stats'
  * que dice el donut que tiene al lado, con los mismos números.
  */
 export function EventStats({ stats }: { stats: Stats }) {
+  const t = useT()
   if (stats.empty) {
     // Ceros y porcentajes en un evento recién creado se leen como un evento que nadie
     // contesta. Es distinto de no haber invitado a nadie todavía, y se dice.
     return (
-      <EmptyState compact description="Añade a tus invitados y aquí verás cuánta gente respondió." icon={<ChartIcon />} title="Aún no hay invitados" />
+      <EmptyState compact description={t('Añade a tus invitados y aquí verás cuánta gente respondió.', 'Add your guests and here you will see how many replied.')} icon={<ChartIcon />} title={t('Aún no hay invitados', 'No guests yet')} />
     )
   }
 
   const pasos = [
-    { label: 'Invitaciones enviadas', count: stats.groupsInvited, percent: 100 },
-    { label: 'Respondieron', count: stats.groupsResponded, percent: stats.respondedPercent ?? 0 },
-    { label: 'Confirmaron', count: stats.groupsAttending, percent: stats.attendingPercent ?? 0 },
+    { label: t('Invitaciones enviadas', 'Invitations sent'), count: stats.groupsInvited, percent: 100 },
+    { label: t('Respondieron', 'Replied'), count: stats.groupsResponded, percent: stats.respondedPercent ?? 0 },
+    { label: t('Confirmaron', 'Attending'), count: stats.groupsAttending, percent: stats.attendingPercent ?? 0 },
   ]
 
   // Solo el embudo: los cupos confirmados ya los dice la tarjeta «Confirmados» del resumen, arriba.

@@ -11,19 +11,27 @@ import { ExtrasCard } from '@/modules/plans/ui/ExtrasCard'
 import { DEFAULT_CURRENCY, formatAmount } from '@/shared/money'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { isErr } from '@/shared/result'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import type { T } from '@/shared/i18n/t'
+import { traducir } from '@/shared/i18n/en-ingles'
 
-export const metadata = { title: 'Extras' }
+export async function generateMetadata() {
+  const t = await tr()
+  return { title: t('Extras', 'Extras') }
+}
 export const dynamic = 'force-dynamic'
 
-const ESTADO = {
-  pending_payment: { estado: 'Esperando pago', tono: 'pending' },
-  proof_submitted: { estado: 'Comprobante en revisión', tono: 'maybe' },
-  approved: { estado: 'Activo', tono: 'ok' },
-  rejected: { estado: 'Rechazado', tono: 'no' },
-  cancelled: { estado: 'Cancelado', tono: 'no' },
-} as const
+const estadoDe = (t: T) =>
+  ({
+    pending_payment: { estado: t('Esperando pago', 'Awaiting payment'), tono: 'pending' },
+    proof_submitted: { estado: t('Comprobante en revisión', 'Receipt under review'), tono: 'maybe' },
+    approved: { estado: t('Activo', 'Active'), tono: 'ok' },
+    rejected: { estado: t('Rechazado', 'Rejected'), tono: 'no' },
+    cancelled: { estado: t('Cancelado', 'Cancelled'), tono: 'no' },
+  }) as const
 
 export default async function ExtrasPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ pedido?: string }> }) {
+  const t = await tr()
   const actor = await requireSession()
   const { slug } = await params
   const { pedido: refAbierta } = await searchParams
@@ -44,13 +52,13 @@ export default async function ExtrasPage({ params, searchParams }: { params: Pro
       ? []
       : (await plans.listActiveExtras())
           .filter((x) => (x.effect !== 'asistente' || asistente.disponible) && extraDisponible(conLuxury, x.effect, { encargo: encargo !== null }).ok)
-        .map((x) => ({ slug: x.slug, name: x.name, precio: formatAmount(x.priceCents, x.currency).replace(/,00$/, ''), que: NOMBRE_DE_EFECTO[x.effect] }))
+        .map((x) => ({ slug: x.slug, name: x.name, precio: formatAmount(x.priceCents, x.currency).replace(/,00$/, ''), que: traducir(NOMBRE_DE_EFECTO[x.effect], t) }))
   // Solo los de este evento: antes se leía la bandeja entera del negocio, con comprobantes, y
   // se filtraba aquí. Si la lectura falla, la lista sale vacía como antes.
   const pedidos = (await orders.extrasDe(event.value.id).catch(() => [])).map((order) => ({
     ref: order.publicRef,
     name: order.addonName ?? order.addonSlug ?? 'Extra',
-    ...ESTADO[order.status],
+    ...estadoDe(t)[order.status],
     monto: order.amountCents === null ? '' : formatAmount(order.amountCents, order.currency ?? DEFAULT_CURRENCY).replace(/,00$/, ''),
     porPagar: order.status === 'pending_payment',
     que: (order.addonSlug === null ? undefined : extras.find((x) => x.slug === order.addonSlug)?.que) ?? '',
@@ -63,10 +71,10 @@ export default async function ExtrasPage({ params, searchParams }: { params: Pro
 
   return (
     <>
-      <PanelHeader meta="Suma lo que te falte. Se activa cuando confirmamos tu pago." title="Extras" />
+      <PanelHeader meta={t('Suma lo que te falte. Se activa cuando confirmamos tu pago.', 'Add whatever you’re missing. It activates once we confirm your payment.')} title={t('Extras', 'Extras')} />
       <ExtrasCard eventId={event.value.id} eventSlug={event.value.slug} extras={extras} pedidos={pedidos} sinPedido={actor.soporte?.eventoSinCliente === event.value.id} />
       {abierto === undefined ? null : (
-        <PanelDialog closeHref={base} descripcion="Transfiere y sube el comprobante. Lo activamos el mismo día." title={`Pedir ${abierto.name}`} width={560}>
+        <PanelDialog closeHref={base} descripcion={t('Transfiere y sube el comprobante. Lo activamos el mismo día.', 'Transfer and upload the receipt. We activate it the same day.')} title={t(`Pedir ${abierto.name}`, `Request ${abierto.name}`)} width={560}>
           <div className="flex flex-col gap-4">
             <div className="flex items-start justify-between gap-4 rounded-[14px] border border-line-panel bg-bg-raised p-4.5">
               <span className="flex flex-col gap-0.5">
@@ -76,22 +84,22 @@ export default async function ExtrasPage({ params, searchParams }: { params: Pro
               <span className="font-display text-[30px] leading-none font-medium [font-variant-numeric:lining-nums]">{abierto.monto}</span>
             </div>
             {pago === null ? (
-              <p className="text-[14.5px] text-ink-mute">Los datos de la transferencia aún no están cargados. Escríbenos por WhatsApp y te los pasamos.</p>
+              <p className="text-[14.5px] text-ink-mute">{t('Los datos de la transferencia aún no están cargados. Escríbenos por WhatsApp y te los pasamos.', 'The transfer details aren’t loaded yet. Message us on WhatsApp and we’ll send them.')}</p>
             ) : (
               <div className="flex items-center gap-5">
                 {pago.hasQrImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img alt="QR de cobro" className="size-30 shrink-0 rounded-[14px] border border-line-panel bg-bg-raised object-contain p-2" src="/qr-de-cobro" />
+                  <img alt={t('QR de cobro', 'Payment QR')} className="size-30 shrink-0 rounded-[14px] border border-line-panel bg-bg-raised object-contain p-2" src="/qr-de-cobro" />
                 ) : null}
                 <dl className="m-0 flex flex-col gap-1 text-[15px]">
                   <dd className="m-0">{pago.bank}</dd>
                   <dd className="m-0">{pago.accountHolder}</dd>
-                  <dd className="m-0">Cuenta {pago.accountNumber}</dd>
-                  <dd className="m-0 text-ink-mute">Glosa: {abierto.ref}</dd>
+                  <dd className="m-0">{t('Cuenta', 'Account')} {pago.accountNumber}</dd>
+                  <dd className="m-0 text-ink-mute">{t('Glosa', 'Reference')}: {abierto.ref}</dd>
                 </dl>
               </div>
             )}
-            <ProofUpload panel={{ despuesHref: base }} publicRef={abierto.ref} textos={getDictionary('es').orders.form} />
+            <ProofUpload panel={{ despuesHref: base }} publicRef={abierto.ref} textos={getDictionary(t('es', 'en') === 'es' ? 'es' : 'en').orders.form} />
           </div>
         </PanelDialog>
       )}

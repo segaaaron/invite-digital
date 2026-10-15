@@ -6,9 +6,11 @@ import { botonClases, FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/
 import { decideOrderAction, type DecideOrderState } from '@/app/_acciones/orders/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import type { T } from '@/shared/i18n/t'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: DecideOrderState = { status: 'idle' }
-const MOTIVOS = ['El monto no coincide', 'No se ve el comprobante', 'Es de otro pedido'] as const
+const motivos = (t: T) => [t('El monto no coincide', 'The amount does not match'), t('No se ve el comprobante', 'The receipt is not visible'), t('Es de otro pedido', 'It belongs to another order')]
 const MAX_NOTA = 440
 
 /**
@@ -40,10 +42,13 @@ export function OrderDecision({
   /** Quién verá el motivo del rechazo (E33). */
   nombre?: string | null
 }) {
+  const t = useT()
   const [estado, accion, pendiente] = useActionState<DecideOrderState, FormData>(sinCaerse(decideOrderAction), INICIAL)
   const id = useId()
   const rechazo = useRef<HTMLDialogElement>(null)
-  const [motivo, setMotivo] = useState<string>(MOTIVOS[0])
+  const [elegido, setElegido] = useState(0)
+  const lista = motivos(t)
+  const motivo = lista[elegido] ?? ''
   const [nota, setNota] = useState('')
   const cerrar = () => rechazo.current?.close()
   const pila = nombre?.split(' ')[0] ?? null
@@ -54,7 +59,7 @@ export function OrderDecision({
 
       {importe === null ? null : (
         <p className="rounded-[12px] border border-gold/40 bg-gold/8 px-4 py-3 text-[13px] text-ink">
-          Comprueba que la transferencia sea de <b className="font-medium">{importe}</b> antes de aprobar.
+          {t('Comprueba que la transferencia sea de', 'Check that the transfer is for')} <b className="font-medium">{importe}</b> {t('antes de aprobar.', 'before approving.')}
         </p>
       )}
 
@@ -65,8 +70,8 @@ export function OrderDecision({
         <input name="clientEmail" type="hidden" value={correo} />
       ) : (
         <label className="flex flex-col gap-2" htmlFor={`${id}-correo`}>
-          <span className={LABEL_CLASS}>Correo del cliente · le llega ahí su acceso</span>
-          <input className={FIELD_CLASS} id={`${id}-correo`} maxLength={160} name="clientEmail" placeholder="novios@correo.com" type="email" />
+          <span className={LABEL_CLASS}>{t('Correo del cliente · le llega ahí su acceso', 'Client email · their access is sent there')}</span>
+          <input className={FIELD_CLASS} id={`${id}-correo`} maxLength={160} name="clientEmail" placeholder={t('novios@correo.com', 'couple@email.com')} type="email" />
         </label>
       )}
 
@@ -83,9 +88,9 @@ export function OrderDecision({
       <div className="flex flex-wrap justify-end gap-2.5">
         {/* Rechazar abre su diálogo (E33): motivo de lista y una nota que el cliente lee. */}
         <button aria-haspopup="dialog" className={botonClases('danger')} disabled={pendiente} onClick={() => rechazo.current?.showModal()} type="button">
-          Rechazar
+          {t('Rechazar', 'Reject')}
         </button>
-        <SubmitButton name="decision" value="approved" variant="primary" pending={pendiente} pendingLabel={'Guardando…'}>{'Aprobar pago'}</SubmitButton>
+        <SubmitButton name="decision" value="approved" variant="primary" pending={pendiente} pendingLabel={t('Guardando…', 'Saving…')}>{t('Aprobar pago', 'Approve payment')}</SubmitButton>
       </div>
 
       <dialog
@@ -97,28 +102,30 @@ export function OrderDecision({
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
             <h2 className="font-display text-[30px] leading-tight font-medium max-[767px]:text-[26px]" id={`${id}-rechazo`}>
-              Rechazar el comprobante
+              {t('Rechazar el comprobante', 'Reject the receipt')}
             </h2>
-            <p className="text-[15px] text-ink-mute">{nombre ?? 'El cliente'} verá tu motivo y podrá subir otro. El pedido no se pierde.</p>
+            <p className="text-[15px] text-ink-mute">
+              {nombre ?? t('El cliente', 'The client')} {t('verá tu motivo y podrá subir otro. El pedido no se pierde.', 'will see your reason and can upload another. The order is not lost.')}
+            </p>
           </div>
-          <button aria-label="Cerrar" className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink transition-colors hover:border-gold" onClick={cerrar} type="button">
+          <button aria-label={t('Cerrar', 'Close')} className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink transition-colors hover:border-gold" onClick={cerrar} type="button">
             <CloseIcon className="size-4" />
           </button>
         </div>
         <fieldset className="mt-5 flex flex-col gap-2.5">
-          <legend className={`${LABEL_CLASS} mb-2.5`}>Motivo</legend>
-          {MOTIVOS.map((m) => (
+          <legend className={`${LABEL_CLASS} mb-2.5`}>{t('Motivo', 'Reason')}</legend>
+          {lista.map((m, i) => (
             <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-[10px] border border-line-panel-strong bg-bg-raised px-4 text-[15px] has-[:checked]:border-shell-deep" key={m}>
-              <input checked={motivo === m} className="size-4 accent-shell-deep" name={`${id}-motivo`} onChange={() => setMotivo(m)} type="radio" />
+              <input checked={elegido === i} className="size-4 accent-shell-deep" name={`${id}-motivo`} onChange={() => setElegido(i)} type="radio" />
               {m}
             </label>
           ))}
         </fieldset>
         <label className="mt-5 flex flex-col gap-2" htmlFor={id}>
-          <span className={LABEL_CLASS}>Nota para {pila ?? 'el cliente'}</span>
-          <textarea className={`${FIELD_CLASS} min-h-24`} id={id} maxLength={MAX_NOTA} onChange={(e) => setNota(e.target.value)} placeholder="Recibimos otro monto: sube el comprobante de lo que falta." value={nota} />
+          <span className={LABEL_CLASS}>{t('Nota para', 'Note for')} {pila ?? t('el cliente', 'the client')}</span>
+          <textarea className={`${FIELD_CLASS} min-h-24`} id={id} maxLength={MAX_NOTA} onChange={(e) => setNota(e.target.value)} placeholder={t('Recibimos otro monto: sube el comprobante de lo que falta.', 'We received a different amount: upload the receipt for the rest.')} value={nota} />
           <span className="flex justify-between text-[13px] text-ink-mute">
-            <span>Obligatoria</span>
+            <span>{t('Obligatoria', 'Required')}</span>
             <span>
               {nota.length}/{MAX_NOTA}
             </span>
@@ -128,10 +135,10 @@ export function OrderDecision({
         <input name="note" type="hidden" value={nota.trim() === '' ? '' : `${motivo}. ${nota.trim()}`} />
         <div className="mt-5 flex flex-wrap justify-end gap-2.5 max-[767px]:flex-col-reverse max-[767px]:items-stretch">
           <button className={botonClases('default')} onClick={cerrar} type="button">
-            Cancelar
+            {t('Cancelar', 'Cancel')}
           </button>
           <button className={botonClases('peligro')} disabled={pendiente || nota.trim() === ''} name="decision" onClick={() => setTimeout(cerrar)} type="submit" value="rejected">
-            Rechazar y avisarle
+            {t('Rechazar y avisarle', 'Reject and notify')}
           </button>
         </div>
       </dialog>

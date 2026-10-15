@@ -6,6 +6,8 @@ import { addTeamMemberAction, removeTeamMemberAction, type TeamActionState } fro
 import { FIELD_CLASS, Field, Iniciales, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
 export type MiembroVista = {
   readonly userId: string
@@ -29,13 +31,13 @@ export type PorteroVista = {
   readonly ultima: string | null
 }
 
-const PAPEL = { anfitrion: 'Anfitrión, quien compró', coanfitrion: 'Co-anfitrión', planner: 'Ve tareas, presupuesto, proveedores y el Día D' } as const
+const papel = (t: T) => ({ anfitrion: t('Anfitrión, quien compró', 'Host, who bought it'), coanfitrion: t('Co-anfitrión', 'Co-host'), planner: t('Ve tareas, presupuesto, proveedores y el Día D', 'Sees tasks, budget, vendors and D-Day') }) as const
 
 const EQUIPO_INICIAL: TeamActionState = { status: 'idle' }
 const PORTERO_INICIAL: PorterActionState = { status: 'idle' }
 
 /** `null` es sin límite. */
-const cupo = (actuales: number, limite: number | null) => (limite === null ? `${actuales}, sin límite` : `${actuales} de ${limite}`)
+const cupo = (actuales: number, limite: number | null, t: T) => (limite === null ? t(`${actuales}, sin límite`, `${actuales}, no limit`) : t(`${actuales} de ${limite}`, `${actuales} of ${limite}`))
 
 const FILA = 'flex items-center gap-3.5 border-b border-line-panel py-3.5 last:border-none'
 const TARJETA = 'flex flex-col gap-3 rounded-[16px] border border-line-panel bg-tarjeta p-6'
@@ -72,6 +74,7 @@ export function EquipoCard({
   topes: { planners: number | null }
   porteros: { lista: readonly PorteroVista[]; limite: number } | null
 }) {
+  const t = useT()
   const [altaEquipo, sumarEquipo, sumandoEquipo] = useActionState(sinCaerse(addTeamMemberAction), EQUIPO_INICIAL)
   const [altaPortero, sumarPortero, sumandoPortero] = useActionState(sinCaerse(addPorterAction), PORTERO_INICIAL)
   const id = useId()
@@ -81,8 +84,8 @@ export function EquipoCard({
 
   return (
     <div className="grid items-start gap-5 min-[900px]:grid-cols-2">
-      <section aria-label="Tu planner" className={TARJETA}>
-        <Cabecera cuenta={topes.planners === 0 ? 'Tu plan no lo incluye' : cupo(planners, topes.planners)} titulo="Tu planner" />
+      <section aria-label={t('Tu planner', 'Your planner')} className={TARJETA}>
+        <Cabecera cuenta={topes.planners === 0 ? t('Tu plan no lo incluye', 'Your plan doesn’t include it') : cupo(planners, topes.planners, t)} titulo={t('Tu planner', 'Your planner')} />
         {miembros.length === 0 ? null : (
           <ul className="flex flex-col">
             {miembros.map((m) => (
@@ -90,7 +93,7 @@ export function EquipoCard({
                 <Iniciales chico nombre={m.nombre ?? m.email} />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-[15px] font-medium">{m.nombre ?? m.email}</span>
-                  <span className="text-[13.5px] text-ink-mute">{[PAPEL[m.papel], m.nombre === null ? null : m.email, m.telefono].filter(Boolean).join(' · ')}</span>
+                  <span className="text-[13.5px] text-ink-mute">{[papel(t)[m.papel], m.nombre === null ? null : m.email, m.telefono].filter(Boolean).join(' · ')}</span>
                 </span>
                 {m.papel === 'anfitrion' || !sumaEquipo ? null : <QuitarMiembro campos={{ eventId, eventSlug, userId: m.userId, email: m.email }} nombre={m.nombre ?? m.email} />}
               </li>
@@ -98,23 +101,23 @@ export function EquipoCard({
           </ul>
         )}
         {!sumaEquipo || topes.planners === 0 ? null : plannersLlenos ? (
-          <p className="text-[13.5px] text-ink-mute">Tu plan admite {topes.planners === 1 ? 'una planner' : `${topes.planners} planners`}. Quita a una para sumar otra.</p>
+          <p className="text-[13.5px] text-ink-mute">{t(`Tu plan admite ${topes.planners === 1 ? 'una planner' : `${topes.planners} planners`}. Quita a una para sumar otra.`, `Your plan allows ${topes.planners === 1 ? 'one planner' : `${topes.planners} planners`}. Remove one to add another.`)}</p>
         ) : (
           <form action={sumarEquipo} className="flex flex-col gap-2 pt-1">
             <input name="eventId" readOnly type="hidden" value={eventId} />
             <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
             <input name="kind" readOnly type="hidden" value="planner" />
-            <Field htmlFor={`${id}-email`} label="Correo">
+            <Field htmlFor={`${id}-email`} label={t('Correo', 'Email')}>
               <span className="flex gap-2">
-                <input autoComplete="off" className={`${FIELD_CLASS} min-w-0 flex-1`} id={`${id}-email`} name="email" placeholder="Su correo; le llega su acceso" required type="email" />
-                <SubmitButton aria-label="Sumar a la planner" pending={sumandoEquipo} pendingLabel="Sumando…" variant="primary">
-                  Sumar
+                <input autoComplete="off" className={`${FIELD_CLASS} min-w-0 flex-1`} id={`${id}-email`} name="email" placeholder={t('Su correo; le llega su acceso', 'Their email; their access goes there')} required type="email" />
+                <SubmitButton aria-label={t('Sumar a la planner', 'Add the planner')} pending={sumandoEquipo} pendingLabel={t('Sumando…', 'Adding…')} variant="primary">
+                  {t('Sumar', 'Add')}
                 </SubmitButton>
               </span>
             </Field>
             <ActionFeedback state={altaEquipo} />
             {altaEquipo.status === 'success' && altaEquipo.password ? (
-              <p aria-label="Contraseña provisional" className="font-codigo text-[16px] tracking-[0.08em] text-ink">
+              <p aria-label={t('Contraseña provisional', 'Temporary password')} className="font-codigo text-[16px] tracking-[0.08em] text-ink">
                 {altaEquipo.password}
               </p>
             ) : null}
@@ -122,13 +125,13 @@ export function EquipoCard({
         )}
       </section>
 
-      <section aria-label="Recepción" className={TARJETA}>
-        <Cabecera cuenta={porteros === null ? 'Tu plan no lo incluye' : cupo(porteros.lista.length, porteros.limite)} titulo="Recepción" />
-        <p className="text-[14px] text-ink-mute">Entran sin cuenta, con un enlace y un PIN, solo el día de la fiesta.</p>
+      <section aria-label={t('Recepción', 'Reception')} className={TARJETA}>
+        <Cabecera cuenta={porteros === null ? t('Tu plan no lo incluye', 'Your plan doesn’t include it') : cupo(porteros.lista.length, porteros.limite, t)} titulo={t('Recepción', 'Reception')} />
+        <p className="text-[14px] text-ink-mute">{t('Entran sin cuenta, con un enlace y un PIN, solo el día de la fiesta.', 'They get in without an account, with a link and a PIN, only on the day of the party.')}</p>
         {porteros === null ? (
-          <p className="text-[14px] text-ink-soft">Tu plan no incluye pases con QR ni personal de recepción.</p>
+          <p className="text-[14px] text-ink-soft">{t('Tu plan no incluye pases con QR ni personal de recepción.', 'Your plan doesn’t include QR passes or reception staff.')}</p>
         ) : porteros.lista.length === 0 ? (
-          <p className="text-[14px] text-ink-soft">Aún no sumaste a nadie.</p>
+          <p className="text-[14px] text-ink-soft">{t('Aún no sumaste a nadie.', 'You haven’t added anyone yet.')}</p>
         ) : (
           <ul className="flex flex-col">
             {porteros.lista.map((portero) => (
@@ -137,11 +140,11 @@ export function EquipoCard({
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="text-[15px] font-medium">{portero.name}</span>
                   <span className="text-[13.5px] text-ink-mute">
-                    {[portero.gate ?? 'Recepción', portero.phone].filter(Boolean).join(' · ')}
+                    {[portero.gate ?? t('Recepción', 'Reception'), portero.phone].filter(Boolean).join(' · ')}
                     {' · '}
                     {portero.registradas === 0
-                      ? 'todavía no registró llegadas'
-                      : `${portero.registradas} invitaci${portero.registradas === 1 ? 'ón' : 'ones'} registrada${portero.registradas === 1 ? '' : 's'}${portero.ultima === null ? '' : `, la última a las ${portero.ultima}`}`}
+                      ? t('todavía no registró llegadas', 'hasn’t recorded arrivals yet')
+                      : t(`${portero.registradas} invitaci${portero.registradas === 1 ? 'ón' : 'ones'} registrada${portero.registradas === 1 ? '' : 's'}${portero.ultima === null ? '' : `, la última a las ${portero.ultima}`}`, `${portero.registradas} invitation${portero.registradas === 1 ? '' : 's'} recorded${portero.ultima === null ? '' : `, the last at ${portero.ultima}`}`)}
                   </span>
                 </span>
                 <QuitarPortero campos={{ eventId, eventSlug, porterId: portero.id }} nombre={portero.name} />
@@ -153,11 +156,11 @@ export function EquipoCard({
         {altaPortero.status === 'created' ? (
           <div className="flex flex-col gap-3 rounded-[12px] bg-pill-ok p-4" role="status">
             <p className="text-[14.5px]">
-              <strong className="font-medium">{altaPortero.nombre}</strong> ya puede entrar a la puerta.
+              <strong className="font-medium">{altaPortero.nombre}</strong> {t('ya puede entrar a la puerta.', 'can now access the door.')}
             </p>
             <dl className="grid gap-3 min-[560px]:grid-cols-[1fr_auto]">
               <div className="flex min-w-0 flex-col gap-1">
-                <dt className={LABEL_CLASS}>Enlace</dt>
+                <dt className={LABEL_CLASS}>{t('Enlace', 'Link')}</dt>
                 <dd className="font-codigo text-[12.5px] break-all">{altaPortero.enlace}</dd>
               </div>
               <div className="flex flex-col gap-1">
@@ -165,38 +168,38 @@ export function EquipoCard({
                 <dd className="font-codigo text-[22px] tracking-[0.2em]">{altaPortero.pin}</dd>
               </div>
             </dl>
-            <p className="text-[13px] text-ink-soft">Cópialos ahora: el PIN no se vuelve a mostrar.</p>
+            <p className="text-[13px] text-ink-soft">{t('Cópialos ahora: el PIN no se vuelve a mostrar.', 'Copy them now: the PIN won’t be shown again.')}</p>
             {altaPortero.whatsapp === null ? null : (
               <PanelButton external href={altaPortero.whatsapp} size="sm" variant="primary">
-                Enviar por WhatsApp
+                {t('Enviar por WhatsApp', 'Send via WhatsApp')}
               </PanelButton>
             )}
           </div>
         ) : null}
 
         {porteros === null ? null : porterosLlenos ? (
-          <p className="text-[13.5px] text-ink-mute">Tu plan admite hasta {porteros.limite} personas de recepción a la vez. Quita a una para sumar otra.</p>
+          <p className="text-[13.5px] text-ink-mute">{t(`Tu plan admite hasta ${porteros.limite} personas de recepción a la vez. Quita a una para sumar otra.`, `Your plan allows up to ${porteros.limite} reception staff at a time. Remove one to add another.`)}</p>
         ) : (
           <form action={sumarPortero} className="flex flex-col gap-2 pt-1">
             <input name="eventId" readOnly type="hidden" value={eventId} />
             <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
             <input name="papel" readOnly type="hidden" value="portero" />
-            <Field htmlFor={`${id}-nombre`} label="Nombre">
+            <Field htmlFor={`${id}-nombre`} label={t('Nombre', 'Name')}>
               <span className="flex gap-2">
-                <input className={`${FIELD_CLASS} min-w-0 flex-1`} id={`${id}-nombre`} maxLength={80} name="name" placeholder="Quién estará en la puerta" required />
-                <SubmitButton aria-label="Sumar a recepción" pending={sumandoPortero} pendingLabel="Sumando…" variant="primary">
-                  Sumar
+                <input className={`${FIELD_CLASS} min-w-0 flex-1`} id={`${id}-nombre`} maxLength={80} name="name" placeholder={t('Quién estará en la puerta', 'Who will be at the door')} required />
+                <SubmitButton aria-label={t('Sumar a recepción', 'Add to reception')} pending={sumandoPortero} pendingLabel={t('Sumando…', 'Adding…')} variant="primary">
+                  {t('Sumar', 'Add')}
                 </SubmitButton>
               </span>
             </Field>
             <details className="text-[13.5px]">
-              <summary className="cursor-pointer text-ink-mute hover:text-ink">WhatsApp y puerta (opcional)</summary>
+              <summary className="cursor-pointer text-ink-mute hover:text-ink">{t('WhatsApp y puerta (opcional)', 'WhatsApp and door (optional)')}</summary>
               <div className="mt-2 grid gap-3 min-[560px]:grid-cols-2">
                 <Field htmlFor={`${id}-whatsapp`} label="WhatsApp">
                   <input className={FIELD_CLASS} id={`${id}-whatsapp`} inputMode="tel" name="phone" placeholder="+591 700 12345" />
                 </Field>
-                <Field htmlFor={`${id}-puerta`} label="Puerta">
-                  <input className={FIELD_CLASS} id={`${id}-puerta`} maxLength={40} name="gate" placeholder="Entrada principal" />
+                <Field htmlFor={`${id}-puerta`} label={t('Puerta', 'Door')}>
+                  <input className={FIELD_CLASS} id={`${id}-puerta`} maxLength={40} name="gate" placeholder={t('Entrada principal', 'Main entrance')} />
                 </Field>
               </div>
             </details>
@@ -232,6 +235,7 @@ function Quitar({
   enviando: boolean
   error: string | null
 }) {
+  const t = useT()
   const [confirmando, setConfirmando] = useState(false)
   return (
     <span className="flex flex-col items-end gap-1">
@@ -240,14 +244,14 @@ function Quitar({
           {Object.entries(campos).map(([clave, valor]) => (
             <input key={clave} name={clave} readOnly type="hidden" value={valor} />
           ))}
-          <SubmitButton pending={enviando} pendingLabel="Quitando…" variant="danger">
-            Sí, quitar
+          <SubmitButton pending={enviando} pendingLabel={t('Quitando…', 'Removing…')} variant="danger">
+            {t('Sí, quitar', 'Yes, remove')}
           </SubmitButton>
-          <PanelButton onClick={() => setConfirmando(false)}>Cancelar</PanelButton>
+          <PanelButton onClick={() => setConfirmando(false)}>{t('Cancelar', 'Cancel')}</PanelButton>
         </form>
       ) : (
-        <button aria-label={`Quitar a ${nombre}`} className="cursor-pointer text-[14px] font-medium text-gold-deep hover:underline" onClick={() => setConfirmando(true)} type="button">
-          Quitar
+        <button aria-label={t(`Quitar a ${nombre}`, `Remove ${nombre}`)} className="cursor-pointer text-[14px] font-medium text-gold-deep hover:underline" onClick={() => setConfirmando(true)} type="button">
+          {t('Quitar', 'Remove')}
         </button>
       )}
       {error === null ? null : (

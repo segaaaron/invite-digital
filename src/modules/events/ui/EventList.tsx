@@ -6,10 +6,16 @@ import { yaSeCelebro } from '../domain/celebrado'
 import type { Event } from '../domain/event'
 import { fiestaDeTema } from '../domain/fiesta'
 import { portadaParaCompartir } from './themes/portada-para-compartir'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
+import { INTL } from '@/shared/i18n/t'
 
 const FIESTA = { boda: 'Boda', xv: 'XV años', cumple: 'Cumpleaños' } as const
-const DIA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
-const DIA_Y_ANIO = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+const formatos = (intl: string) => ({
+  dia: new Intl.DateTimeFormat(intl, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }),
+  diaYAnio: new Intl.DateTimeFormat(intl, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }),
+})
+const FORMATOS = { es: formatos(INTL.es), en: formatos(INTL.en) }
 
 /** Cómo va cada evento, contado por la página: confirmados de cuántas personas. */
 export type AvanceDelEvento = { readonly vienen: number; readonly personas: number }
@@ -18,10 +24,12 @@ export type AvanceDelEvento = { readonly vienen: number; readonly personas: numb
  * «Mis eventos» (E32): cada evento con la portada de su invitación, la fiesta y el día, en qué está y cómo va. Los
  * celebrados se ven, dichos, y se abren para mirar.
  */
-export function EventList({ events, avance = {} }: { events: readonly Event[]; avance?: Readonly<Record<string, AvanceDelEvento>> }) {
+export async function EventList({ events, avance = {} }: { events: readonly Event[]; avance?: Readonly<Record<string, AvanceDelEvento>> }) {
+  const t = await tr()
+  const { dia: DIA, diaYAnio: DIA_Y_ANIO } = FORMATOS[t('es', 'en') === 'es' ? 'es' : 'en']
   const ahora = new Date()
   if (events.length === 0) {
-    return <EmptyState description="Crea la primera boda o los primeros quince: su invitación, sus invitados y su planner viven dentro." icon={<CalendarIcon />} title="Aún no hay eventos" />
+    return <EmptyState description={t('Crea la primera boda o los primeros quince: su invitación, sus invitados y su planner viven dentro.', 'Create the first wedding or quinceañera: its invitation, guests and planner live inside.')} icon={<CalendarIcon />} title={t('Aún no hay eventos', 'No events yet')} />
   }
   const hoy = Date.parse(`${ahora.toISOString().slice(0, 10)}T00:00:00Z`)
   const algunoCelebrado = events.some((e) => yaSeCelebro(e.eventDate, ahora))
@@ -36,18 +44,18 @@ export function EventList({ events, avance = {} }: { events: readonly Event[]; a
           const cuenta = avance[event.id]
           const portada = portadaParaCompartir(event.themeKey)
           const estado = celebrado
-            ? { texto: 'Celebrado', tono: 'neutro' as const }
+            ? { texto: t('Celebrado', 'Held'), tono: 'neutro' as const }
             : event.status === 'draft'
-              ? { texto: 'Preparando', tono: 'vip' as const }
-              : { texto: dias === 0 ? 'Hoy' : dias === 1 ? 'Mañana' : `En ${dias} días`, tono: 'maybe' as const }
+              ? { texto: t('Preparando', 'Preparing'), tono: 'vip' as const }
+              : { texto: dias === 0 ? t('Hoy', 'Today') : dias === 1 ? t('Mañana', 'Tomorrow') : t(`En ${dias} días`, `In ${dias} days`), tono: 'maybe' as const }
           const progreso = cuenta === undefined || cuenta.personas === 0 ? (celebrado ? 1 : event.status === 'draft' ? 0.25 : 0) : cuenta.vienen / cuenta.personas
           const linea = celebrado
-            ? `Celebrado${cuenta && cuenta.vienen > 0 ? `. ${cuenta.vienen} personas fueron` : ''}`
+            ? t(`Celebrado${cuenta && cuenta.vienen > 0 ? `. ${cuenta.vienen} personas fueron` : ''}`, `Held${cuenta && cuenta.vienen > 0 ? `. ${cuenta.vienen} people attended` : ''}`)
             : event.status === 'draft'
-              ? 'Escribiendo la invitación'
+              ? t('Escribiendo la invitación', 'Writing the invitation')
               : cuenta && cuenta.personas > 0
-                ? `${cuenta.vienen} de ${cuenta.personas} confirmaron`
-                : 'Invitación lista, sin invitados'
+                ? t(`${cuenta.vienen} de ${cuenta.personas} confirmaron`, `${cuenta.vienen} of ${cuenta.personas} confirmed`)
+                : t('Invitación lista, sin invitados', 'Invitation ready, no guests')
           return (
             <li key={event.id}>
               {/* Escritorio: la portada grande encima (E32). Celular: una fila con su miniatura, en su tarjeta (M32). */}
@@ -64,7 +72,7 @@ export function EventList({ events, avance = {} }: { events: readonly Event[]; a
                 </span>
                 <span className="font-display text-[26px] leading-tight font-medium max-[767px]:text-[21px]">{event.title}</span>
                 <span className="text-[14.5px] text-ink-mute max-[767px]:text-[13.5px]">
-                  {FIESTA[fiestaDeTema(event.themeKey)]}, {fecha.getUTCFullYear() === ahora.getUTCFullYear() ? DIA.format(fecha) : DIA_Y_ANIO.format(fecha)}
+                  {traducir(FIESTA[fiestaDeTema(event.themeKey)], t)}, {fecha.getUTCFullYear() === ahora.getUTCFullYear() ? DIA.format(fecha) : DIA_Y_ANIO.format(fecha)}
                 </span>
                 <span className="min-[768px]:mt-1">
                   <Pill tone={estado.tono}>{estado.texto}</Pill>
@@ -78,7 +86,7 @@ export function EventList({ events, avance = {} }: { events: readonly Event[]; a
           )
         })}
       </ul>
-      {algunoCelebrado ? <p className="text-[14px] text-ink-mute">Los celebrados se pueden mirar, pero ya no se editan.</p> : null}
+      {algunoCelebrado ? <p className="text-[14px] text-ink-mute">{t('Los celebrados se pueden mirar, pero ya no se editan.', 'Held events can be viewed, but no longer edited.')}</p> : null}
     </div>
   )
 }

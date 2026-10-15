@@ -13,6 +13,8 @@ import { yaEstaEnLaLista, type YaEsta } from '@/modules/guests'
 import { campo } from '@/shared/forms/campo'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 export type RevokeInvitationState =
   | { status: 'idle' }
@@ -70,6 +72,7 @@ export type GuestActionState = { status: 'idle' | 'success' | 'error'; message: 
  */
 export async function addGuestAction(_previous: GuestActionState, formData: FormData): Promise<GuestActionState> {
   const actor = await requireSession()
+  const t = await tr()
 
   const eventId = await requireEventAccess(actor, {
     eventId: campo(formData, 'eventId'),
@@ -85,7 +88,7 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
     // Tratar un fallo de lectura como «sin límite» convertiría un error pasajero en un
     // salto del tope del plan.
     registrarFallo('guests/actions', 'alta de invitado sin capacidad legible')
-    return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
+    return { status: 'error', message: t('No pudimos comprobar el plan del evento. Inténtalo en un momento.', 'We couldn’t check the event plan. Try again in a moment.') }
   }
 
   const asistencia = campo(formData, 'attending')
@@ -107,12 +110,12 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
 
   if (isErr(result)) {
     registrarFallo('guests/actions', 'alta de invitado rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
   revalidatePath(`/panel/eventos/${eventSlug}`)
-  return { status: 'success', message: 'Invitado añadido.' }
+  return { status: 'success', message: t('Invitado añadido.', 'Guest added.') }
 }
 
 /** «Añadir acompañante», desde la edición de un invitado: suma una persona a su invitación. */
@@ -122,12 +125,13 @@ export async function addPersonAction(input: {
   fullName: string
 }): Promise<PersonActionState> {
   const actor = await requireSession()
+  const t = await tr()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const result = await guests.addPerson({ eventId, guestGroupId: input.guestGroupId, fullName: input.fullName, isCompanion: true })
   if (isErr(result)) {
     registrarFallo('guests/actions', 'alta de acompañante rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
@@ -145,6 +149,7 @@ export async function updatePersonAction(input: {
   guestGroupId?: string
 }): Promise<PersonActionState> {
   const actor = await requireSession()
+  const t = await tr()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const { eventSlug, ...patch } = input
@@ -152,7 +157,7 @@ export async function updatePersonAction(input: {
 
   if (isErr(result)) {
     registrarFallo('guests/actions', 'edición de persona rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
@@ -161,13 +166,14 @@ export async function updatePersonAction(input: {
 
 export async function removePersonAction(input: { eventSlug: string; id: string }): Promise<PersonActionState> {
   const actor = await requireSession()
+  const t = await tr()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   // Si era la última persona de su invitación, la invitación se va con ella.
   const result = await guests.removePerson({ eventId, id: input.id })
   if (isErr(result)) {
     registrarFallo('guests/actions', 'baja de persona rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
@@ -182,12 +188,13 @@ export async function removePersonAction(input: { eventSlug: string; id: string 
  */
 export async function reopenRsvpAction(input: { eventSlug: string; id: string }): Promise<PersonActionState> {
   const actor = await requireSession()
+  const t = await tr()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const result = await guests.reopenRsvp({ eventId, id: input.id })
   if (isErr(result)) {
     registrarFallo('guests/actions', 'no se pudo reabrir la confirmación', result.error.kind, result.error.detail)
-    return { status: 'error', message: 'No se pudo reabrir la confirmación.' }
+    return { status: 'error', message: t('No se pudo reabrir la confirmación.', 'The RSVP couldn’t be reopened.') }
   }
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
@@ -234,18 +241,20 @@ export async function sendInvitationAction(_previous: ResendState, formData: For
  */
 export async function ensureInvitationLinkAction(input: { eventSlug: string; groupId: string }): Promise<{ status: 'success'; url: string } | { status: 'error'; message: string }> {
   const actor = await requireSession()
+  const t = await tr()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
   const falta = await faltaParaEnviar(eventId)
   if (falta !== null) return { status: 'error', message: falta }
   const result = await guests.enlaceDe({ eventId, id: input.groupId })
   if (isErr(result)) {
     registrarFallo('guests/actions', 'enlace no disponible', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
   return { status: 'success', url: invitationUrl(result.value.token, env.SITE_URL) }
 }
 
 async function repartir(eventId: string, eventSlug: string, formData: FormData, modo: 'rotar' | 'mismo'): Promise<ResendState> {
+  const t = await tr()
   const falta = await faltaParaEnviar(eventId)
   if (falta !== null) return { status: 'error', message: falta }
 
@@ -258,7 +267,7 @@ async function repartir(eventId: string, eventSlug: string, formData: FormData, 
 
   if (isErr(result)) {
     registrarFallo('guests/actions', 'reenvío rechazado', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
@@ -291,6 +300,7 @@ export type ImportRowView = {
  */
 export async function importGuestsAction(_previous: ImportState, formData: FormData): Promise<ImportState> {
   const actor = await requireSession()
+  const t = await tr()
 
   const eventSlug = campo(formData, 'eventSlug')
   const eventId = await requireEventAccess(actor, { eventId: campo(formData, 'eventId'), eventSlug, section: 'cliente' })
@@ -312,7 +322,7 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
     registrarFallo('guests/actions', 'importación abortada: no se pudo leer el plan o los grupos actuales')
     return {
       status: 'error',
-      message: 'No pudimos comprobar el límite de tu plan. Vuelve a intentarlo en un momento.',
+      message: t('No pudimos comprobar el límite de tu plan. Vuelve a intentarlo en un momento.', 'We couldn’t check your plan’s limit. Try again in a moment.'),
     }
   }
 
@@ -325,7 +335,7 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
 
   if (isErr(result)) {
     registrarFallo('guests/actions', 'importación rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
@@ -357,6 +367,7 @@ export async function setGroupPhoneAction(input: {
   phone: string
 }): Promise<PersonActionState> {
   const actor = await requireSession()
+  const t = await tr()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const limpio = telefono(input.phone)
@@ -364,7 +375,7 @@ export async function setGroupPhoneAction(input: {
     await guests.setPhone(eventId, input.id, limpio)
   } catch (cause) {
     registrarFallo('guests/actions', 'no se pudo guardar el teléfono', cause)
-    return { status: 'error', message: 'No se pudo guardar el teléfono.' }
+    return { status: 'error', message: t('No se pudo guardar el teléfono.', 'The phone couldn’t be saved.') }
   }
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
@@ -381,15 +392,16 @@ export type AltaDelAsistenteState = { status: 'success'; creadas: number; person
  */
 export async function addGuestsFromAssistantAction(input: { eventSlug: string; invitaciones: unknown }): Promise<AltaDelAsistenteState> {
   const actor = await requireSession()
+  const t = await tr()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const propuesta = esquemaDePropuesta.safeParse(input.invitaciones)
-  if (!propuesta.success) return { status: 'error', message: 'La propuesta no es válida. Pídesela otra vez a Luxury.' }
+  if (!propuesta.success) return { status: 'error', message: t('La propuesta no es válida. Pídesela otra vez a Luxury.', 'The proposal is not valid. Ask Luxury for it again.') }
 
 
   const capacidad = await plans.allowanceFor(eventId)
   const [grupos, personasYa] = await Promise.all([guests.list(eventId), guests.listPeople(eventId)])
-  if (isErr(capacidad) || isErr(grupos) || isErr(personasYa)) return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
+  if (isErr(capacidad) || isErr(grupos) || isErr(personasYa)) return { status: 'error', message: t('No pudimos comprobar el plan del evento. Inténtalo en un momento.', 'We couldn’t check the event plan. Try again in a moment.') }
 
   // Quien ya está en la lista no se vuelve a crear (9 oct): se devuelve para que Luxury lo diga y pregunte.
   const lista = {
@@ -423,7 +435,7 @@ export async function addGuestsFromAssistantAction(input: { eventSlug: string; i
       registrarFallo('guests/actions', 'alta desde el asistente rechazada', result.error.kind, result.error.detail)
       if (creadas > 0) await admin.record(actor, { action: 'asistente.invitados', subject: input.eventSlug, detail: `${creadas} invitaciones` })
       revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
-      return { status: 'error', message: creadas === 0 ? result.error.detail : `Se añadieron ${creadas}; ${principal} no: ${result.error.detail}` }
+      return { status: 'error', message: creadas === 0 ? traducir(result.error.detail, t) : t(`Se añadieron ${creadas}; ${principal} no: ${result.error.detail}`, `${creadas} were added; ${principal} was not: ${traducir(result.error.detail, t)}`) }
     }
     creadas += 1
     personas += invitacion.personas.length

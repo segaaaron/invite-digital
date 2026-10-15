@@ -6,6 +6,8 @@ import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import { QR_KINDS, type QrKind } from '@/modules/qr/domain/qr-code'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 export type QrActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
 
@@ -22,6 +24,7 @@ const texto = (formData: FormData, clave: string): string => {
 const refrescar = (eventSlug: string) => revalidatePath(`/panel/eventos/${eventSlug}/qr`)
 
 export async function createQrCodeAction(_previous: QrActionState, formData: FormData): Promise<QrActionState> {
+  const t = await tr()
   const actor = await requireSession()
 
   const eventId = texto(formData, 'eventId')
@@ -41,7 +44,7 @@ export async function createQrCodeAction(_previous: QrActionState, formData: For
 
   if (isErr(result)) {
     registrarFallo('qr/actions', 'alta de código QR rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   refrescar(eventSlug)
@@ -49,6 +52,7 @@ export async function createQrCodeAction(_previous: QrActionState, formData: For
 }
 
 export async function updateQrCodeAction(_previous: QrActionState, formData: FormData): Promise<QrActionState> {
+  const t = await tr()
   const actor = await requireSession()
 
   const eventId = texto(formData, 'eventId')
@@ -64,7 +68,7 @@ export async function updateQrCodeAction(_previous: QrActionState, formData: For
 
   if (isErr(result)) {
     registrarFallo('qr/actions', 'edición de código QR rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   refrescar(eventSlug)
@@ -72,6 +76,7 @@ export async function updateQrCodeAction(_previous: QrActionState, formData: For
 }
 
 export async function toggleQrCodeAction(_previous: QrActionState, formData: FormData): Promise<QrActionState> {
+  const t = await tr()
   const actor = await requireSession()
 
   const eventId = texto(formData, 'eventId')
@@ -82,7 +87,7 @@ export async function toggleQrCodeAction(_previous: QrActionState, formData: For
 
   if (isErr(result)) {
     registrarFallo('qr/actions', 'cambio de estado de código QR rechazado', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   refrescar(eventSlug)

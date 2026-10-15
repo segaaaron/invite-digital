@@ -5,17 +5,19 @@ import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { addZoneAction, updateZoneAction } from '@/app/_acciones/venue/actions'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { ZONE_KINDS, type VenueZone, type ZoneKind } from '../domain/venue-zone'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
-const NOMBRE_CLASE: Record<ZoneKind, string> = {
-  dance: 'Pista de baile',
-  bar: 'Barra',
-  stage: 'Mesa de honor',
-  music: 'Banda / DJ',
-  entrance: 'Entrada',
-  kitchen: 'Cocina / servicio',
-  photo: 'Photobooth',
-  custom: 'Otro (personalizado)',
-}
+const nombreClase = (t: T): Record<ZoneKind, string> => ({
+  dance: t('Pista de baile', 'Dance floor'),
+  bar: t('Barra', 'Bar'),
+  stage: t('Mesa de honor', 'Head table'),
+  music: t('Banda / DJ', 'Band / DJ'),
+  entrance: t('Entrada', 'Entrance'),
+  kitchen: t('Cocina / servicio', 'Kitchen / service'),
+  photo: t('Photobooth', 'Photo booth'),
+  custom: t('Otro (personalizado)', 'Other (custom)'),
+})
 
 /**
  * «+ Elemento del salón» abre este diálogo, como en la maqueta: tipo y, solo si el tipo
@@ -37,6 +39,7 @@ export function ZoneDialog({
   /** Con zona, el diálogo corrige la que ya existe; sin ella, crea una nueva. */
   zone?: VenueZone | undefined
 }) {
+  const t = useT()
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const editando = zone !== undefined
@@ -59,9 +62,9 @@ export function ZoneDialog({
   }
 
   const guardar = () => {
-    const nombre = kind === 'custom' ? label.trim() : NOMBRE_CLASE[kind]
+    const nombre = kind === 'custom' ? label.trim() : nombreClase(t)[kind]
     if (nombre === '') {
-      setError('Un elemento personalizado necesita un nombre para reconocerlo en el plano.')
+      setError(t('Un elemento personalizado necesita un nombre para reconocerlo en el plano.', 'A custom element needs a name to recognise it on the floor plan.'))
       return
     }
 
@@ -83,7 +86,7 @@ export function ZoneDialog({
           })
         : await addZoneAction({ eventId, eventSlug, kind, label: nombre })
       if (!r.ok) {
-        setError(r.message ?? 'No se pudo guardar el elemento.')
+        setError(r.message ?? t('No se pudo guardar el elemento.', 'Could not save the element.'))
         return
       }
       cerrar()
@@ -101,13 +104,13 @@ export function ZoneDialog({
       }}
     >
       <h2 className="font-display text-[30px] leading-tight font-medium" id={`${idTipo}-titulo`}>
-        {editando ? 'Editar elemento del salón' : 'Añadir elemento del salón'}
+        {editando ? t('Editar elemento del salón', 'Edit venue element') : t('Añadir elemento del salón', 'Add venue element')}
       </h2>
 
       <div className="mt-5 flex flex-col gap-4">
         <div className="flex min-w-0 flex-col gap-2">
           <label className={LABEL_CLASS} htmlFor={idTipo}>
-            Tipo
+            {t('Tipo', 'Type')}
           </label>
           <select
             className={FIELD_CLASS}
@@ -117,7 +120,7 @@ export function ZoneDialog({
           >
             {ZONE_KINDS.map((k) => (
               <option key={k} value={k}>
-                {NOMBRE_CLASE[k]}
+                {nombreClase(t)[k]}
               </option>
             ))}
           </select>
@@ -126,7 +129,7 @@ export function ZoneDialog({
         {kind === 'custom' ? (
           <div className="flex min-w-0 flex-col gap-2">
             <label className={LABEL_CLASS} htmlFor={idNombre}>
-              Nombre
+              {t('Nombre', 'Name')}
             </label>
             <input
               autoFocus
@@ -134,7 +137,7 @@ export function ZoneDialog({
               id={idNombre}
               maxLength={60}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="Ej. Carpa de cigarros"
+              placeholder={t('Ej. Carpa de cigarros', 'E.g. Cigar tent')}
               type="text"
               value={label}
             />
@@ -150,10 +153,10 @@ export function ZoneDialog({
 
       <div className="mt-6 flex justify-end gap-2.5">
         <PanelButton disabled={pendiente} onClick={cerrar}>
-          Cancelar
+          {t('Cancelar', 'Cancel')}
         </PanelButton>
         <PanelButton variant="primary" disabled={pendiente} onClick={guardar} aria-busy={(pendiente) || undefined}>
-          {pendiente ? 'Guardando…' : 'Guardar'}
+          {pendiente ? t('Guardando…', 'Saving…') : t('Guardar', 'Save')}
         </PanelButton>
       </div>
     </dialog>

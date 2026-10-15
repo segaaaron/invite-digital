@@ -5,13 +5,15 @@ import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { addTableAction } from '@/app/_acciones/venue/actions'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
+import { useT } from '@/shared/i18n/idioma-navegador'
+import type { T } from '@/shared/i18n/t'
 
-const NOMBRE_FORMA: Record<TableShape, string> = {
-  round: 'Redonda',
-  rect: 'Rectangular',
-  sweetheart: 'De los novios',
-  imperial: 'Imperial',
-}
+export const nombreForma = (t: T): Record<TableShape, string> => ({
+  round: t('Redonda', 'Round'),
+  rect: t('Rectangular', 'Rectangular'),
+  sweetheart: t('De los novios', 'Sweetheart'),
+  imperial: t('Imperial', 'Imperial'),
+})
 
 /**
  * «+ Añadir mesa» abre este diálogo, como en la maqueta: nombre, capacidad, forma y
@@ -28,14 +30,15 @@ export function TableDialog({
   eventId,
   eventSlug,
   closeHref,
-  mesaPrincipal = 'De los novios',
+  mesaPrincipal,
 }: {
   eventId: string
   eventSlug: string
   closeHref: string
   /** Cómo se llama la mesa principal en esta fiesta: «De los novios» o «De la quinceañera». */
-  mesaPrincipal?: string
+  mesaPrincipal?: string | undefined
 }) {
+  const t = useT()
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const [label, setLabel] = useState('')
@@ -66,7 +69,7 @@ export function TableDialog({
   const guardar = () => {
     const sitios = Number(capacity)
     if (!Number.isInteger(sitios) || sitios < 1) {
-      setError('La capacidad es un número entero de sitios. Una mesa sin sitios no es una mesa.')
+      setError(t('La capacidad es un número entero de sitios. Una mesa sin sitios no es una mesa.', 'Capacity is a whole number of seats. A table without seats is not a table.'))
       return
     }
 
@@ -81,7 +84,7 @@ export function TableDialog({
         notes: notes.trim() || null,
       })
       if (!r.ok) {
-        setError(r.message ?? 'No se pudo crear la mesa.')
+        setError(r.message ?? t('No se pudo crear la mesa.', 'Could not create the table.'))
         return
       }
       cerrar()
@@ -99,19 +102,19 @@ export function TableDialog({
       }}
     >
       <h2 className="font-display text-[30px] leading-tight font-medium" id={`${idLabel}-titulo`}>
-        Añadir mesa
+        {t('Añadir mesa', 'Add table')}
       </h2>
 
       <div className="mt-5 flex flex-col gap-4">
         <label className={LABEL_CLASS} htmlFor={idLabel}>
-          Nombre de la mesa
+          {t('Nombre de la mesa', 'Table name')}
           <input
             autoFocus
             className={FIELD_CLASS}
             id={idLabel}
             maxLength={60}
             onChange={(e) => setLabel(e.target.value)}
-            placeholder="Mesa 01"
+            placeholder={t('Mesa 01', 'Table 01')}
             type="text"
             value={label}
           />
@@ -119,7 +122,7 @@ export function TableDialog({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className={LABEL_CLASS} htmlFor={idCupo}>
-            Capacidad (asientos)
+            {t('Capacidad (asientos)', 'Capacity (seats)')}
             <input
               className={FIELD_CLASS}
               id={idCupo}
@@ -132,7 +135,7 @@ export function TableDialog({
 
           <div className="flex min-w-0 flex-col gap-2">
             <label className={LABEL_CLASS} htmlFor={idForma}>
-              Forma
+              {t('Forma', 'Shape')}
             </label>
             <select
               className={FIELD_CLASS}
@@ -142,7 +145,7 @@ export function TableDialog({
             >
               {TABLE_SHAPES.map((s) => (
                 <option key={s} value={s}>
-                  {s === 'sweetheart' ? mesaPrincipal : NOMBRE_FORMA[s]}
+                  {s === 'sweetheart' ? (mesaPrincipal ?? nombreForma(t)[s]) : nombreForma(t)[s]}
                 </option>
               ))}
             </select>
@@ -150,13 +153,13 @@ export function TableDialog({
         </div>
 
         <label className={LABEL_CLASS} htmlFor={idNotas}>
-          Notas (opcional)
+          {t('Notas (opcional)', 'Notes (optional)')}
           <input
             className={FIELD_CLASS}
             id={idNotas}
             maxLength={200}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Ej. cerca del baño, acceso silla de ruedas…"
+            placeholder={t('Ej. cerca del baño, acceso silla de ruedas…', 'E.g. near the restroom, wheelchair access…')}
             type="text"
             value={notes}
           />
@@ -171,10 +174,10 @@ export function TableDialog({
 
       <div className="mt-6 flex justify-end gap-2.5">
         <PanelButton disabled={pendiente} onClick={cerrar}>
-          Cancelar
+          {t('Cancelar', 'Cancel')}
         </PanelButton>
         <PanelButton variant="primary" disabled={pendiente} onClick={guardar} aria-busy={(pendiente) || undefined}>
-          {pendiente ? 'Guardando…' : 'Guardar'}
+          {pendiente ? t('Guardando…', 'Saving…') : t('Guardar', 'Save')}
         </PanelButton>
       </div>
     </dialog>

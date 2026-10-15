@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { T } from '@/shared/i18n/idioma-navegador'
 
 type ButtonProps = {
   children: ReactNode
@@ -28,7 +29,9 @@ export function Button({ children, href, external, variant = 'gold', type = 'but
           {children}
           {/* Quien usa lector de pantalla tiene que saber que sale del sitio y pierde «atrás». */}
           {' '}
-          <span className="sr-only">(se abre en una pestaña nueva)</span>
+          <span className="sr-only">
+            (<T en="opens in a new tab" es="se abre en una pestaña nueva" />)
+          </span>
         </a>
       )
     }

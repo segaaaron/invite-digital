@@ -12,6 +12,7 @@ import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
 import { MenuDeAcciones, opcionDeMenu } from '@/shared/design/ui/panel/lista'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { useT } from '@/shared/i18n/idioma-navegador'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -51,6 +52,7 @@ export function ShowcaseMusicRow({
   /** «Boda», «XV años»: lo que dice bajo el nombre (maqueta E05). */
   fiesta: string
 }) {
+  const t = useT()
   const [alta, subir, subiendo] = useActionState<AdminActionState, FormData>(sinCaerse(uploadShowcaseMusicAction), INICIAL)
   const [baja, quitar, quitando] = useActionState<AdminActionState, FormData>(sinCaerse(removeShowcaseMusicAction), INICIAL)
   const [renombre, renombrar, renombrando] = useActionState<AdminActionState, FormData>(sinCaerse(renameShowcaseSongAction), INICIAL)
@@ -81,14 +83,14 @@ export function ShowcaseMusicRow({
     // La tarjeta de la maqueta (E05): la portada a 9:16, el nombre con su fiesta y sus ventas, y si está publicado.
     <li className="@container flex flex-col gap-2.5">
       <a
-        aria-label={`Abrir el modelo ${label} en una pestaña nueva`}
+        aria-label={t(`Abrir el modelo ${label} en una pestaña nueva`, `Open the ${label} design in a new tab`)}
         className="group relative block aspect-[9/16] overflow-hidden rounded-[12px] border border-line-panel bg-bg-sunken"
-        href={`/es/modelos/${themeKey}`}
+        href={t(`/es/modelos/${themeKey}`, `/en/designs/${themeKey}`)}
         rel="noopener noreferrer"
         target="_blank"
       >
         <Image
-          alt={`Portada de ${label}`}
+          alt={t(`Portada de ${label}`, `${label} cover`)}
           className={`object-cover object-top transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100 ${publicado ? '' : 'opacity-55 grayscale'}`}
           fill
           sizes="(max-width: 560px) 45vw, 220px"
@@ -102,22 +104,22 @@ export function ShowcaseMusicRow({
           <span className="min-w-0 flex-[1_1_120px]">
             <span className="block truncate font-medium">{label}</span>
             {/* Lo que dice si merece estar en la vitrina: cuánto se vende. */}
-            <span className="block truncate text-[13px] text-ink-mute" title={ventas.ultima === null ? undefined : `La última, ${ventas.ultima}`}>
-              {fiesta}, {ventas.veces === 1 ? '1 venta' : `${ventas.veces} ventas`}
+            <span className="block truncate text-[13px] text-ink-mute" title={ventas.ultima === null ? undefined : t(`La última, ${ventas.ultima}`, `The last one, ${ventas.ultima}`)}>
+              {fiesta}, {ventas.veces === 1 ? t('1 venta', '1 sale') : t(`${ventas.veces} ventas`, `${ventas.veces} sales`)}
             </span>
           </span>
-          <Pill tone={publicado ? 'ok' : 'neutro'}>{publicado ? 'Publicado' : 'Sin publicar'}</Pill>
-          <MenuDeAcciones etiqueta={`Más acciones de ${label}`}>
-            <a className={opcionDeMenu()} href={`/es/modelos/${themeKey}`} rel="noopener noreferrer" target="_blank">
-              Ver el modelo
+          <Pill tone={publicado ? 'ok' : 'neutro'}>{publicado ? t('Publicado', 'Published') : t('Sin publicar', 'Unpublished')}</Pill>
+          <MenuDeAcciones etiqueta={t(`Más acciones de ${label}`, `More actions for ${label}`)}>
+            <a className={opcionDeMenu()} href={t(`/es/modelos/${themeKey}`, `/en/designs/${themeKey}`)} rel="noopener noreferrer" target="_blank">
+              {t('Ver el modelo', 'See the design')}
             </a>
             {publicado ? (
               <ConfirmAction
                 action={cambiarPublicacion}
-                confirmLabel="Retirar de la web"
-                description="Deja de salir en el catálogo y en los precios. No se borra: sus enlaces siguen abriendo y los eventos que lo tienen no cambian."
-                title={`Retirar ${label}`}
-                trigger="Retirar de la web"
+                confirmLabel={t('Retirar de la web', 'Withdraw from the website')}
+                description={t('Deja de salir en el catálogo y en los precios. No se borra: sus enlaces siguen abriendo y los eventos que lo tienen no cambian.', 'It stops appearing in the catalog and pricing. It is not deleted: its links still open and events using it do not change.')}
+                title={t(`Retirar ${label}`, `Withdraw ${label}`)}
+                trigger={t('Retirar de la web', 'Withdraw from the website')}
                 triggerClassName={opcionDeMenu(true)}
               >
                 <input name="themeKey" type="hidden" value={themeKey} />
@@ -130,8 +132,8 @@ export function ShowcaseMusicRow({
         {/* La canción, plegada: se toca una vez y ocupaba media tarjeta en cada modelo. */}
         <details className="group rounded-[10px] border border-line-panel bg-bg-raised" open={alta.status === 'error' || nombreNuevo !== null}>
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-[13px] [&::-webkit-details-marker]:hidden">
-            <span className="min-w-0 truncate text-ink">{tieneMusica ? (cancion === null ? 'Canción sin nombre' : [cancion.track, cancion.artist].filter(Boolean).join(' · ')) : 'Sin canción'}</span>
-            <span className="shrink-0 text-[12px] text-ink-mute group-open:hidden">{tieneMusica ? 'Cambiar' : 'Subir'}</span>
+            <span className="min-w-0 truncate text-ink">{tieneMusica ? (cancion === null ? t('Canción sin nombre', 'Untitled song') : [cancion.track, cancion.artist].filter(Boolean).join(' · ')) : t('Sin canción', 'No song')}</span>
+            <span className="shrink-0 text-[12px] text-ink-mute group-open:hidden">{tieneMusica ? t('Cambiar', 'Change') : t('Subir', 'Upload')}</span>
           </summary>
           <div className="flex flex-col gap-3 border-t border-line-panel px-3.5 pt-3 pb-3.5">
             {tieneMusica ? (
@@ -141,48 +143,48 @@ export function ShowcaseMusicRow({
                   <input name="themeKey" type="hidden" value={themeKey} />
                   {cancion === null ? (
                     <p className="text-[12px] leading-[1.5] text-ink-mute">
-                      Esta canción se subió antes de que guardáramos su nombre. Escríbelo, o vuelve a subirla y lo tomamos del archivo.
+                      {t('Esta canción se subió antes de que guardáramos su nombre. Escríbelo, o vuelve a subirla y lo tomamos del archivo.', 'This song was uploaded before we saved its name. Type it, or upload it again and we take it from the file.')}
                     </p>
                   ) : null}
                   <NombreDeCancion cancion={cancion} id={`${id}-nombre`} />
-                  <SubmitButton variant="default" pending={renombrando} pendingLabel={'Guardando…'}>
-                    {'Guardar nombre'}
+                  <SubmitButton variant="default" pending={renombrando} pendingLabel={t('Guardando…', 'Saving…')}>
+                    {t('Guardar nombre', 'Save name')}
                   </SubmitButton>
                 </form>
               </>
             ) : (
-              <p className="text-[12px] text-ink-mute">Sin archivo, el modelo no suena.</p>
+              <p className="text-[12px] text-ink-mute">{t('Sin archivo, el modelo no suena.', 'Without a file, the design plays no music.')}</p>
             )}
 
             <form action={subir} className="flex flex-col gap-2.5">
               <input name="themeKey" type="hidden" value={themeKey} />
               <FilePicker
                 accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg"
-                hint="MP3, M4A o WAV · la ajustamos sola"
-                label={tieneMusica ? 'Elegir otra canción' : 'Elegir canción'}
+                hint={t('MP3, M4A o WAV · la ajustamos sola', 'MP3, M4A or WAV · we adjust it automatically')}
+                label={tieneMusica ? t('Elegir otra canción', 'Choose another song') : t('Elegir canción', 'Choose a song')}
                 name="musica"
                 onElegir={(archivo) => void alElegir(archivo)}
               />
               {nombreNuevo === null ? null : (
                 <div className="grid gap-2 @[380px]:grid-cols-2">
                   <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-track`}>
-                    <span className={LABEL_CLASS}>Canción</span>
+                    <span className={LABEL_CLASS}>{t('Canción', 'Song')}</span>
                     <input className={FIELD_CLASS} id={`${id}-alta-track`} maxLength={120} name="track" onChange={(e) => setNombreNuevo({ ...nombreNuevo, track: e.target.value })} value={nombreNuevo.track} />
                   </label>
                   <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-artist`}>
-                    <span className={LABEL_CLASS}>Artista</span>
+                    <span className={LABEL_CLASS}>{t('Artista', 'Artist')}</span>
                     <input className={FIELD_CLASS} id={`${id}-alta-artist`} maxLength={120} name="artist" onChange={(e) => setNombreNuevo({ ...nombreNuevo, artist: e.target.value })} value={nombreNuevo.artist} />
                   </label>
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
-                <SubmitButton variant="default" pending={subiendo} pendingLabel={'Subiendo y ajustando…'}>
-                  {tieneMusica ? 'Reemplazar' : 'Subir'}
+                <SubmitButton variant="default" pending={subiendo} pendingLabel={t('Subiendo y ajustando…', 'Uploading and adjusting…')}>
+                  {tieneMusica ? t('Reemplazar', 'Replace') : t('Subir', 'Upload')}
                 </SubmitButton>
                 {tieneMusica ? (
                   // Va a su propio formulario por `form`: con `formAction` se reenviaría el MP3 elegido solo para borrar la canción.
-                  <SubmitButton form={`${id}-quitar`} variant="danger" pending={quitando} pendingLabel={'Quitando…'}>
-                    {'Quitar'}
+                  <SubmitButton form={`${id}-quitar`} variant="danger" pending={quitando} pendingLabel={t('Quitando…', 'Removing…')}>
+                    {t('Quitar', 'Remove')}
                   </SubmitButton>
                 ) : null}
               </div>
@@ -197,8 +199,8 @@ export function ShowcaseMusicRow({
           <form action={cambiarPublicacion} className="mt-auto">
             <input name="themeKey" type="hidden" value={themeKey} />
             <input name="publicar" type="hidden" value="si" />
-            <SubmitButton className="w-full" pending={cambiando} pendingLabel={'Publicando…'} variant="primary">
-              {'Publicar en la web'}
+            <SubmitButton className="w-full" pending={cambiando} pendingLabel={t('Publicando…', 'Publishing…')} variant="primary">
+              {t('Publicar en la web', 'Publish on the website')}
             </SubmitButton>
           </form>
         )}
@@ -213,10 +215,11 @@ export function ShowcaseMusicRow({
 }
 
 function NombreDeCancion({ cancion, id }: { cancion: { track: string; artist: string } | null; id: string }) {
+  const t = useT()
   return (
     <div className="grid gap-2 @[380px]:grid-cols-2">
       <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-track`}>
-        <span className={LABEL_CLASS}>Canción</span>
+        <span className={LABEL_CLASS}>{t('Canción', 'Song')}</span>
         <input
           className={FIELD_CLASS}
           defaultValue={cancion?.track ?? ''}
@@ -227,7 +230,7 @@ function NombreDeCancion({ cancion, id }: { cancion: { track: string; artist: st
         />
       </label>
       <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-artist`}>
-        <span className={LABEL_CLASS}>Artista</span>
+        <span className={LABEL_CLASS}>{t('Artista', 'Artist')}</span>
         <input className={FIELD_CLASS} defaultValue={cancion?.artist ?? ''} id={`${id}-artist`} maxLength={120} name="artist" />
       </label>
     </div>

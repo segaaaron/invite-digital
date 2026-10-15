@@ -24,6 +24,8 @@ import { isAdmin, puedeCrearEventos } from '@/modules/identity'
 import { registrarFallo } from '@/shared/observability/fallos'
 import { esquemaDeTextos } from '@/modules/asistente/domain/herramientas'
 import { bloquesDeTextos, coloresDesconocidos } from './textos-del-asistente'
+import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 export type EventActionState = { status: 'idle' | 'error' | 'success'; message: EventErrorKind | '' }
 
@@ -109,18 +111,19 @@ export type RenombrarState = { status: 'idle' | 'success' | 'error'; message: st
  * quien hizo el pedido. Solo el título; `updateEventAction` le está cerrada a propósito.
  */
 export async function renombrarEventoAction(_previous: RenombrarState, formData: FormData): Promise<RenombrarState> {
+  const t = await tr()
   const actor = await requireSession()
   const eventId = campo(formData, 'eventId')
   await requireEventAccess(actor, { eventId, section: 'cliente' })
 
   const hecho = await eventUseCases.renombrar({ eventId, title: campo(formData, 'title') })
   if (isErr(hecho)) {
-    if (hecho.error.kind === 'invalid_title') return { status: 'error', message: 'El nombre va de 1 a 160 caracteres.' }
+    if (hecho.error.kind === 'invalid_title') return { status: 'error', message: t('El nombre va de 1 a 160 caracteres.', 'The name must be 1 to 160 characters.') }
     registrarFallo('events/actions', 'no se pudo renombrar el evento', hecho.error.kind, hecho.error.detail)
-    return { status: 'error', message: 'No se pudo guardar el nombre. Vuelve a intentarlo en un momento.' }
+    return { status: 'error', message: t('No se pudo guardar el nombre. Vuelve a intentarlo en un momento.', 'The name couldn’t be saved. Try again in a moment.') }
   }
   revalidatePath('/panel', 'layout')
-  return { status: 'success', message: 'Nombre guardado.' }
+  return { status: 'success', message: t('Nombre guardado.', 'Name saved.') }
 }
 
 export async function updateEventAction(_previous: EventActionState, formData: FormData): Promise<EventActionState> {
@@ -170,6 +173,7 @@ export async function deleteEventAction(
   _previous: DeleteEventState,
   formData: FormData,
 ): Promise<DeleteEventState> {
+  const t = await tr()
   const actor = await requireSession()
 
   const eventId = campo(formData, 'eventId')
@@ -182,7 +186,7 @@ export async function deleteEventAction(
 
   if (isErr(result)) {
     registrarFallo('events/actions', 'borrado de evento rechazado', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   redirect('/panel')
@@ -219,11 +223,12 @@ const unlockCookieName = (eventId: string): string => `evento-abierto-${eventId}
  * enlace existe.
  */
 export async function unlockEventAction(_previous: UnlockState, formData: FormData): Promise<UnlockState> {
+  const t = await tr()
   const token = campo(formData, 'token')
   const password = campo(formData, 'password')
 
   const group = await guests.resolveByToken(token)
-  if (isErr(group)) return { status: 'error', message: 'No pudimos abrir la invitación con esos datos.' }
+  if (isErr(group)) return { status: 'error', message: t('No pudimos abrir la invitación con esos datos.', 'We couldn’t open the invitation with those details.') }
 
   const cabeceras = await headers()
   const ip = clientIpFrom({
@@ -234,10 +239,10 @@ export async function unlockEventAction(_previous: UnlockState, formData: FormDa
   const intento = await abrirEvento({ ip, eventId: group.value.eventId, password })
 
   if (intento.status === 'rate_limited') {
-    return { status: 'error', message: 'Demasiados intentos. Espera un minuto y vuelve a probar.' }
+    return { status: 'error', message: t('Demasiados intentos. Espera un minuto y vuelve a probar.', 'Too many attempts. Wait a minute and try again.') }
   }
   if (intento.status === 'invalid') {
-    return { status: 'error', message: 'No pudimos abrir la invitación con esos datos.' }
+    return { status: 'error', message: t('No pudimos abrir la invitación con esos datos.', 'We couldn’t open the invitation with those details.') }
   }
 
   const hash = await eventUseCases.passwordHashOf(group.value.eventId)
@@ -285,6 +290,7 @@ export type PrivacyState = { status: 'idle' } | { status: 'success' } | { status
  * inservibles todos los desbloqueos repartidos, porque la cookie se firma con ese hash.
  */
 export async function setEventPrivacyAction(_previous: PrivacyState, formData: FormData): Promise<PrivacyState> {
+  const t = await tr()
   const actor = await requireSession()
 
   const eventId = campo(formData, 'eventId')
@@ -296,13 +302,13 @@ export async function setEventPrivacyAction(_previous: PrivacyState, formData: F
   // Poner contraseña es de algunos planes; quitarla —dejar la invitación pública— siempre.
   if (!publica) {
     const incluida = await plans.requireFeature(eventId, 'eventPassword')
-    if (isErr(incluida)) return { status: 'error', message: incluida.error.detail }
+    if (isErr(incluida)) return { status: 'error', message: traducir(incluida.error.detail, t) }
   }
 
   const result = await eventUseCases.setPassword({ eventId, password: publica ? null : password })
   if (isErr(result)) {
     registrarFallo('events/actions', 'privacidad rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
@@ -321,16 +327,17 @@ export async function setEventCurrencyAction(input: {
   eventSlug: string
   currency: string
 }): Promise<{ status: 'success' } | { status: 'error'; message: string }> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const row = await eventUseCases.getByIdFor(actor, input.eventId, { section: 'cliente' })
-  if (isErr(row)) return { status: 'error', message: row.error.detail }
+  if (isErr(row)) return { status: 'error', message: traducir(row.error.detail, t) }
 
   const result = await eventUseCases.update({ ...row.value, currency: input.currency })
   if (isErr(result)) {
     registrarFallo('events/actions', 'cambio de moneda rechazado', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
+    return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/regalos`)
@@ -501,42 +508,43 @@ export async function ponerFotoDelAsistenteAction(input: {
   casilla: number | null
   rotulo: string | null
 }): Promise<{ status: 'success'; donde: string } | { status: 'error'; message: string }> {
+  const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'invitacion' })
 
   const [evento, medios, actual] = await Promise.all([eventUseCases.getByIdUnscoped(input.eventId), eventUseCases.media.list(input.eventId), eventUseCases.contentFor(input.eventId, {})])
-  if (isErr(evento)) return { status: 'error', message: 'No se pudo leer el evento.' }
+  if (isErr(evento)) return { status: 'error', message: t('No se pudo leer el evento.', 'The event couldn’t be read.') }
   const foto = medios.find((m) => m.id === input.fotoId)
-  if (foto === undefined || !foto.contentType.startsWith('image/')) return { status: 'error', message: 'Esa foto no está en este evento. Adjúntala otra vez.' }
+  if (foto === undefined || !foto.contentType.startsWith('image/')) return { status: 'error', message: t('Esa foto no está en este evento. Adjúntala otra vez.', 'That photo is not in this event. Attach it again.') }
   const fotos = themeFor(evento.value.themeKey).pinta.fotos
 
   let section: SectionKey
   let valor: unknown
   let donde: string
   if (input.donde === 'retrato') {
-    if (fotos.retrato !== true) return { status: 'error', message: `Este diseño no lleva retrato${fotos.casillas > 0 ? `; tiene ${fotos.casillas} fotos en la galería` : ' ni galería'}.` }
+    if (fotos.retrato !== true) return { status: 'error', message: t(`Este diseño no lleva retrato${fotos.casillas > 0 ? `; tiene ${fotos.casillas} fotos en la galería` : ' ni galería'}.`, `This design has no portrait${fotos.casillas > 0 ? `; it has ${fotos.casillas} photos in the gallery` : ' or gallery'}.`) }
     section = 'hero'
     valor = { ...(actual.hero ?? {}), portraitImageId: foto.id }
-    donde = 'el retrato'
+    donde = t('el retrato', 'the portrait')
   } else {
-    if (fotos.casillas === 0) return { status: 'error', message: `Este diseño no lleva galería${fotos.retrato === true ? '; sí lleva retrato' : ''}.` }
+    if (fotos.casillas === 0) return { status: 'error', message: t(`Este diseño no lleva galería${fotos.retrato === true ? '; sí lleva retrato' : ''}.`, `This design has no gallery${fotos.retrato === true ? '; it does have a portrait' : ''}.`) }
     const filas = [...(actual.gallery ?? [])].slice(0, fotos.casillas)
     const libre = filas.findIndex((f) => f.imageId === undefined)
     const indice = input.casilla === null ? (libre === -1 ? filas.length : libre) : input.casilla - 1
-    if (indice < 0 || indice >= fotos.casillas) return { status: 'error', message: `La galería de este diseño tiene ${fotos.casillas} fotos: elige de la 1 a la ${fotos.casillas}.` }
+    if (indice < 0 || indice >= fotos.casillas) return { status: 'error', message: t(`La galería de este diseño tiene ${fotos.casillas} fotos: elige de la 1 a la ${fotos.casillas}.`, `This design’s gallery has ${fotos.casillas} photos: choose from 1 to ${fotos.casillas}.`) }
     while (filas.length <= indice) filas.push({ label: '' })
     filas[indice] = { label: input.rotulo ?? filas[indice]!.label, imageId: foto.id }
     section = 'gallery'
     valor = filas
-    donde = `la foto ${indice + 1} de la galería`
+    donde = t(`la foto ${indice + 1} de la galería`, `gallery photo ${indice + 1}`)
   }
   const [perdida] = loQueSePerderia(section, valor)
-  if (perdida !== undefined) return { status: 'error', message: 'El rótulo es demasiado largo.' }
+  if (perdida !== undefined) return { status: 'error', message: t('El rótulo es demasiado largo.', 'The caption is too long.') }
   try {
     await eventUseCases.saveContentBlock(input.eventId, section, valor)
   } catch (cause) {
     registrarFallo('events/actions', 'No se pudo poner la foto (Luxury) en el evento %s:', input.eventId, cause)
-    return { status: 'error', message: 'No se pudo guardar. Vuelve a intentarlo.' }
+    return { status: 'error', message: t('No se pudo guardar. Vuelve a intentarlo.', 'It couldn’t be saved. Try again.') }
   }
   if (isAdmin(actor)) await admin.record(actor, { action: 'evento.invitacion', subject: input.eventSlug, detail: section })
   revalidatePath(`/panel/eventos/${input.eventSlug}/configuracion`)
