@@ -711,7 +711,7 @@ test.describe('Admin › Asistente', () => {
     const antes = (await sql<{ value: string }[]>`select value from app_settings where key = 'asistente.config'`)[0]?.value ?? null
     try {
       await page.goto('/panel/admin/asistente')
-      await expect(page.getByRole('heading', { name: 'Ajustes', level: 1 })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Asistente Luxury', level: 1 })).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Luxury este mes' })).toBeVisible()
       await expect(page.getByRole('checkbox', { name: 'Imperial' })).toBeChecked()
       await page.getByLabel('Mensajes al mes por evento').fill('250')

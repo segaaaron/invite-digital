@@ -742,13 +742,13 @@ function CampoDeBloque({
       )}
       {/* Cerca del tope, cuánto queda: el campo no deja pasarse (el tope es el del guardado, `topeDeTexto`). */}
       {campo.max !== undefined && valor.length >= campo.max * 0.8 ? (
-        <p aria-live="polite" className={`text-right font-mono text-[10.5px] ${valor.length >= campo.max ? 'text-gold-deep' : 'text-ink-mute'}`}>
+        <p aria-live="polite" className={`text-right font-mono text-[12px] ${valor.length >= campo.max ? 'text-gold-deep' : 'text-ink-mute'}`}>
           {valor.length} / {campo.max}
         </p>
       ) : null}
 
       {campo.hint === undefined ? null : (
-        <p className="text-[11px] leading-[1.5] text-ink-mute" id={pistaId}>
+        <p className="text-[12px] leading-[1.5] text-ink-mute" id={pistaId}>
           {traducir(campo.hint, t)}
         </p>
       )}
@@ -783,7 +783,7 @@ function SelectorDeIcono({ id, rotulo, valor, onChange }: { id: string; rotulo: 
             <span aria-hidden className="grid size-10 place-items-center [&_svg]:max-h-10 [&_svg]:max-w-10">
               {o.dibujo}
             </span>
-            <span className="text-center text-[10.5px] leading-tight text-ink-soft">{o.nombre}</span>
+            <span className="text-center text-[12px] leading-tight text-ink-soft">{o.nombre}</span>
           </button>
         )
       })}
@@ -902,7 +902,7 @@ function SelectorDeImagen({
     <div aria-labelledby={rotuloId} className="flex flex-col gap-2.5" role="group">
       <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(76px,1fr))]">
         <button aria-pressed={valor === ''} className={`${MINIATURA} ${marca(valor === '')}`} onClick={() => onChange('')} type="button">
-          <span className="px-1 text-center text-[11px] leading-tight text-ink-mute">{t('Sin foto', 'No photo')}</span>
+          <span className="px-1 text-center text-[12px] leading-tight text-ink-mute">{t('Sin foto', 'No photo')}</span>
         </button>
 
         {valor === '' || conocida ? null : (
@@ -1015,7 +1015,7 @@ function SelectorDeAudio({
       )}
 
       {pistas.length === 0 ? (
-        <p className="text-[11px] leading-[1.5] text-ink-mute">
+        <p className="text-[12px] leading-[1.5] text-ink-mute">
           {t('Todavía no subiste ninguna. Súbela con el botón de aquí arriba: queda elegida al subirla.', 'You haven’t uploaded any yet. Upload it with the button above: it is selected once uploaded.')}
         </p>
       ) : null}
@@ -1132,7 +1132,7 @@ function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; 
                     </span>
                   ) : null}
                 </span>
-                <span className={`text-center text-[11px] leading-tight ${activo ? 'text-ink' : 'text-ink-soft'}`}>{color.nombre}</span>
+                <span className={`text-center text-[12px] leading-tight ${activo ? 'text-ink' : 'text-ink-soft'}`}>{color.nombre}</span>
               </button>
             </li>
           )
@@ -1147,7 +1147,7 @@ function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; 
         <PanelButton disabled={lleno || elegidos.includes(otro)} onClick={() => alternar(otro)}>
           {t('Añadir color', 'Add color')}
         </PanelButton>
-        <span className="text-[11px] text-ink-mute">{t(`${elegidos.length} de ${max} elegidos`, `${elegidos.length} of ${max} chosen`)}</span>
+        <span className="text-[12px] text-ink-mute">{t(`${elegidos.length} de ${max} elegidos`, `${elegidos.length} of ${max} chosen`)}</span>
       </div>
     </div>
   )
@@ -1203,7 +1203,7 @@ function FilasDeBloque({
           <div className="flex flex-col gap-3 rounded-[14px] border border-line-panel bg-white p-3.5 shadow-[0_1px_0_rgb(0_0_0/0.02)]" key={indice}>
             {/* Cabecera de la fila: cuál es y sus mandos, arriba, donde se buscan. */}
             <div className="flex items-center gap-2 border-b border-line-panel pb-2.5">
-              <span className="grid size-6 place-items-center rounded-full bg-bg-top text-[11px] font-medium text-ink-soft">{indice + 1}</span>
+              <span className="grid size-6 place-items-center rounded-full bg-bg-top text-[12px] font-medium text-ink-soft">{indice + 1}</span>
               <span className="truncate text-[13px] text-ink">
                 {fila.label?.trim() || fila.title?.trim() || `${item.charAt(0).toUpperCase()}${item.slice(1)} ${indice + 1}`}
                 {fila.time?.trim() ? <span className="ml-2 text-ink-mute">{fila.time}</span> : null}
@@ -1300,7 +1300,7 @@ function GaleriaDeFotos({
         <p className="text-[12.5px] text-ink-soft">
           {filas.length === 1 ? t('Tu invitación tiene una foto. Toca la casilla para elegirla.', 'Your invitation has one photo. Tap the box to choose it.') : t(`Tu invitación tiene ${filas.length} fotos, en este orden. Toca una casilla para elegir la suya.`, `Your invitation has ${filas.length} photos, in this order. Tap a box to choose its photo.`)}
         </p>
-        <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${conFoto === filas.length ? 'bg-sage/15 text-sage' : 'bg-bg-top text-ink-soft'}`}>
+        <span className={`rounded-full px-2.5 py-1 text-[12px] font-medium ${conFoto === filas.length ? 'bg-sage/15 text-sage' : 'bg-bg-top text-ink-soft'}`}>
           {t(`${conFoto} de ${filas.length} con foto`, `${conFoto} of ${filas.length} with a photo`)}
         </span>
       </div>
@@ -1325,7 +1325,7 @@ function GaleriaDeFotos({
                     <span className="grid size-10 place-items-center rounded-full border border-line-panel bg-white text-ink-soft transition group-hover:text-ink">
                       <PlusIcon className="size-4" />
                     </span>
-                    <span className="hidden text-[11px] tracking-[0.12em] uppercase min-[560px]:inline">{t('Añadir', 'Add')}</span>
+                    <span className="hidden text-[12px] tracking-[0.12em] uppercase min-[560px]:inline">{t('Añadir', 'Add')}</span>
                   </span>
                 ) : (
                   <>
@@ -1339,7 +1339,7 @@ function GaleriaDeFotos({
                 )}
                 <span
                   aria-hidden
-                  className={`absolute inset-x-0 bottom-0 px-2.5 pt-6 pb-2 text-left text-[11px] font-medium ${id === '' ? 'text-ink-soft' : 'bg-gradient-to-t from-black/60 to-transparent text-white'}`}
+                  className={`absolute inset-x-0 bottom-0 px-2.5 pt-6 pb-2 text-left text-[12px] font-medium ${id === '' ? 'text-ink-soft' : 'bg-gradient-to-t from-black/60 to-transparent text-white'}`}
                 >
                   {nombre(i)}
                 </span>
@@ -1361,7 +1361,7 @@ function GaleriaDeFotos({
           </span>
           <span className="flex min-w-0 flex-col">
             <span className="text-[14px] text-ink">{nombre(activa)}</span>
-            <span className="text-[11.5px] text-ink-mute">{(fila.imageId ?? '') === '' ? t('Elige una de tus fotos o sube una nueva.', 'Choose one of your photos or upload a new one.') : t('Toca otra de tus fotos para cambiarla.', 'Tap another of your photos to change it.')}</span>
+            <span className="text-[12px] text-ink-mute">{(fila.imageId ?? '') === '' ? t('Elige una de tus fotos o sube una nueva.', 'Choose one of your photos or upload a new one.') : t('Toca otra de tus fotos para cambiarla.', 'Tap another of your photos to change it.')}</span>
           </span>
           <span className="ml-auto flex shrink-0 gap-1.5">
             {(fila.imageId ?? '') === '' ? null : (

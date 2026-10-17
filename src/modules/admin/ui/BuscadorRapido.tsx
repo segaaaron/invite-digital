@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ABRIR_BUSCADOR } from '@/shared/design/ui/panel/avisos-del-panel'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { buscarAction } from '@/app/_acciones/admin/buscar-actions'
-import { CalendarIcon, PlusIcon, ReceiptIcon, SearchIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { ArrowRightIcon, CalendarIcon, PlusIcon, ReceiptIcon, SearchIcon, UsersIcon } from '@/shared/design/ui/icons'
 import type { ResultadosDeBusqueda } from '../domain/busqueda'
 import { diaCorto } from '@/shared/format/fecha'
 import { CREAR } from './MenuCrear'
@@ -142,7 +142,7 @@ export function BuscadorRapido() {
           <button className="min-h-11 shrink-0 cursor-pointer px-1 text-[15px] font-medium text-gold-deep min-[768px]:hidden" onClick={cerrar} type="button">
             {t('Cerrar', 'Close')}
           </button>
-          <kbd className="rounded-md border border-line-panel px-1.5 py-0.5 text-[11px] text-ink-mute max-[767px]:hidden">Esc</kbd>
+          <kbd className="rounded-md border border-line-panel px-1.5 py-0.5 text-[12px] text-ink-mute max-[767px]:hidden">Esc</kbd>
         </form>
 
         <div aria-busy={buscando} aria-live="polite" className="max-h-[60vh] overflow-y-auto px-2 py-1">
@@ -152,7 +152,7 @@ export function BuscadorRapido() {
             lasAcciones.length === 0 ? (
               <p className="px-3 py-6 text-center text-[13px] text-ink-mute">{t(`Pulsa Enter para buscar «${escrito.trim()}».`, `Press Enter to search “${escrito.trim()}”.`)}</p>
             ) : (
-              <Grupo icono="accion" titulo={t('Acciones', 'Actions')} filas={lasAcciones.map((a) => ({ clave: a.href, titulo: a.titulo, detalle: a.detalle, href: a.href }))} alElegir={alElegir} />
+              <Grupo icono="accion" titulo={t('Acciones', 'Actions')} filas={lasAcciones.map((a) => ({ clave: a.href, titulo: a.titulo, detalle: a.detalle, href: a.href, icono: a.href.includes('crear=') ? ('accion' as const) : ('ir' as const) }))} alElegir={alElegir} />
             )
           ) : total === 0 ? (
             <p className="px-3 py-6 text-center text-[13px] text-ink-mute">{t(`Nada con «${buscado}».`, `Nothing for “${buscado}”.`)}</p>
@@ -161,7 +161,7 @@ export function BuscadorRapido() {
               <Grupo icono="evento" titulo={t('Eventos', 'Events')} filas={resultados.eventos.map((e) => ({ clave: e.slug, titulo: e.title, detalle: diaCorto(e.eventDate, undefined, locale), href: `/panel/admin/eventos?evento=${e.slug}` }))} alElegir={alElegir} />
               <Grupo icono="venta" titulo={t('Pedidos', 'Orders')} filas={resultados.pedidos.map((p) => ({ clave: p.ref, titulo: p.customerName, detalle: `${p.ref} · ${estadoDePedido(t)[p.status] ?? p.status}`, href: `/panel/admin/ventas?venta=p-${p.ref}` }))} alElegir={alElegir} />
               <Grupo icono="persona" titulo={t('Consultas', 'Inquiries')} filas={resultados.consultas.map((c) => ({ clave: c.id, titulo: c.name, detalle: t('Consulta', 'Inquiry'), href: `/panel/admin/ventas?consulta=${c.id}` }))} alElegir={alElegir} />
-              <Grupo icono="persona" titulo={t('Cuentas', 'Accounts')} filas={resultados.usuarios.map((u) => ({ clave: u.email, titulo: u.email, detalle: u.role, // Clientes solo junta cuentas de cliente; el resto del equipo vive en Ajustes › Equipo.
+              <Grupo icono="persona" titulo={t('Cuentas', 'Accounts')} filas={resultados.usuarios.map((u) => ({ clave: u.email, titulo: u.email, detalle: ({ admin: t('Administrador', 'Administrator'), atelier: t('Atelier', 'Atelier'), cliente: t('Cliente', 'Client'), puerta: t('Recepción', 'Reception') } as Record<string, string>)[u.role] ?? u.role, // Clientes solo junta cuentas de cliente; el resto del equipo vive en Ajustes › Equipo.
                 href: u.role === 'cliente' ? `/panel/admin/clientes?q=${encodeURIComponent(u.email)}` : '/panel/admin/usuarios' }))} alElegir={alElegir} />
             </>
           )}
@@ -176,17 +176,19 @@ export function BuscadorRapido() {
   )
 }
 
-const ICONO_DE_GRUPO = { accion: PlusIcon, evento: CalendarIcon, venta: ReceiptIcon, persona: UsersIcon } as const
+const ICONO_DE_GRUPO = { accion: PlusIcon, ir: ArrowRightIcon, evento: CalendarIcon, venta: ReceiptIcon, persona: UsersIcon } as const
 
 /** Un grupo de resultados (E18): cada fila con su icono, el nombre y debajo qué es. */
-function Grupo({ titulo, filas, alElegir, icono }: { titulo: string; filas: readonly { clave: string; titulo: string; detalle: string; href: string }[]; alElegir: () => void; icono: keyof typeof ICONO_DE_GRUPO }) {
+function Grupo({ titulo, filas, alElegir, icono }: { titulo: string; filas: readonly { clave: string; titulo: string; detalle: string; href: string; icono?: keyof typeof ICONO_DE_GRUPO }[]; alElegir: () => void; icono: keyof typeof ICONO_DE_GRUPO }) {
   if (filas.length === 0) return null
-  const Icono = ICONO_DE_GRUPO[icono]
   return (
     <section className="py-1">
       <h3 className="px-3 pt-2 pb-1 text-[13px] text-ink-mute">{titulo}</h3>
       <ul>
-        {filas.map((f) => (
+        {filas.map((f) => {
+          // Crear lleva «+»; ir a una pantalla, una flecha (16 oct: todo llevaba «+»).
+          const Icono = ICONO_DE_GRUPO[f.icono ?? icono]
+          return (
           <li key={f.clave}>
             <Link className="group flex items-center gap-3 rounded-[12px] px-3 py-2.5 text-ink no-underline transition-colors hover:bg-pill-pending focus-visible:bg-pill-pending focus-visible:outline-none" href={f.href} onClick={alElegir}>
               <Icono aria-hidden className="size-4 shrink-0 text-ink-mute" />
@@ -199,7 +201,8 @@ function Grupo({ titulo, filas, alElegir, icono }: { titulo: string; filas: read
               </span>
             </Link>
           </li>
-        ))}
+          )
+        })}
       </ul>
     </section>
   )

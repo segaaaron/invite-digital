@@ -55,7 +55,7 @@ export function LoProximo({ titulo, detalle, accion, href }: { titulo: string; d
   const id = useId()
   return (
     <section aria-labelledby={id} className="mb-3 flex flex-col gap-3 rounded-[20px] bg-shell-deep p-4.5 text-shell-ink shadow-card min-[860px]:hidden">
-      <p className="font-mono text-[11px] tracking-[0.18em] text-gold-light uppercase" id={id}>
+      <p className="font-mono text-[12px] tracking-[0.18em] text-gold-light uppercase" id={id}>
         <T en="Up next" es="Lo próximo" />
       </p>
       <p className="font-display text-[23px] leading-tight">{titulo}</p>

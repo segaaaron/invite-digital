@@ -12,7 +12,7 @@ const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@local
  *
  * Sin modo soporte el admin solo ve la ficha —configuración administrativa, plan y vista
  * previa—: invitados, mensajes y el contenido son 404. Entra **como el cliente** de un clic,
- * lo que cambie queda firmado a su nombre, y «Regresar como admin» le devuelve a la cartera.
+ * lo que cambie queda firmado a su nombre, y «Volver al admin» le devuelve a la cartera.
  *
  * **Sesión propia, no la de `auth.setup.ts`.** El modo soporte vive en la sesión: con la
  * compartida, las suites de después seguirían actuando como el cliente.
@@ -103,8 +103,8 @@ test.describe('soporte como el cliente', () => {
 
     await page.goto(`/panel/eventos/${SLUG}`)
     // La salida está en dos sitios a la vista: la franja de arriba y lo primero de la barra.
-    await expect(page.getByRole('button', { name: 'Regresar al panel de admin' })).toBeVisible()
-    await page.getByRole('button', { name: 'Regresar como admin' }).click()
+    await expect(page.getByRole('button', { name: 'Volver al admin' })).toHaveCount(2)
+    await page.getByRole('button', { name: 'Volver al admin' }).first().click()
     await expect(page).toHaveURL(/\/panel\/admin\/eventos$/, { timeout: 30_000 })
     await expect(page.getByRole('heading', { name: 'Esta página no está disponible' })).toHaveCount(0)
     expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(404)
@@ -121,12 +121,12 @@ test.describe('soporte como el cliente', () => {
     await suya.getByLabel('Contraseña').fill(CLIENTE.password)
     await suya.getByRole('button', { name: 'Entrar' }).click()
     await expect(suya).toHaveURL(new RegExp(`/panel/eventos/${SLUG}$`))
-    await expect(suya.getByRole('button', { name: 'Regresar como admin' })).toHaveCount(0)
+    await expect(suya.getByRole('button', { name: 'Volver al admin' })).toHaveCount(0)
     // Ni rastro de la administración en su barra.
     for (const enlace of ['Hoy', 'Usuarios', 'Planes', 'Auditoría']) await expect(suya.getByRole('link', { name: enlace, exact: true })).toHaveCount(0)
-    // Abajo de la barra, su tarjeta (maqueta E21): su nombre y «Mi cuenta», sin «Regresar al panel de admin».
+    // Abajo de la barra, su tarjeta (maqueta E21): su nombre y «Mi cuenta», sin «Volver al admin».
     await expect(suya.getByRole('complementary').getByRole('link', { name: 'Mi cuenta' })).toBeVisible()
-    await expect(suya.getByRole('button', { name: 'Regresar al panel de admin' })).toHaveCount(0)
+    await expect(suya.getByRole('button', { name: 'Volver al admin' })).toHaveCount(0)
     for (const ruta of ['/panel/admin', '/panel/admin/eventos', '/panel/admin/auditoria']) {
       expect((await suya.goto(ruta))?.status(), ruta).toBe(404)
     }
@@ -160,7 +160,7 @@ test.describe('soporte como el cliente', () => {
     expect((await page.goto('/panel/admin/eventos'))?.status()).toBe(404)
 
     await page.goto(`/panel/eventos/${SLUG}`)
-    await page.getByRole('button', { name: 'Regresar como admin' }).click()
+    await page.getByRole('button', { name: 'Volver al admin' }).first().click()
     await expect(page).toHaveURL(/\/panel\/admin\/eventos$/, { timeout: 30_000 })
     expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(404)
     const [entrada] = await sql<{ n: number }[]>`select count(*)::int as n from audit_log where action = 'soporte.entrada' and subject = ${SLUG} and detail = 'como anfitrión (sin cliente)'`

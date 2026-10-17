@@ -69,11 +69,11 @@ export default async function MesaDelPlannerPage() {
                   <Link className="flex items-center justify-between gap-3 py-3 hover:text-ink" href={`/panel/eventos/${f.evento.slug}`}>
                     <span className="flex min-w-0 flex-col">
                       <span className="truncate text-[14px] text-ink">{f.evento.title}</span>
-                      <span className="text-[11px] text-ink-mute">
+                      <span className="text-[12px] text-ink-mute">
                         {dia(f.evento.eventDate)} · {faltan > 1 ? t(`faltan ${faltan} días`, `${faltan} days to go`) : faltan === 1 ? t('mañana', 'tomorrow') : faltan === 0 ? t('es hoy', 'today') : t('celebrado', 'held')}
                       </span>
                     </span>
-                    <span className="font-mono text-[11px] text-ink-soft [font-variant-numeric:tabular-nums]">{f.avance} %</span>
+                    <span className="font-mono text-[12px] text-ink-soft [font-variant-numeric:tabular-nums]">{f.avance} %</span>
                   </Link>
                 </li>
               )
@@ -91,7 +91,7 @@ export default async function MesaDelPlannerPage() {
                   <Link className="flex flex-wrap items-center justify-between gap-3 py-2.5" href={v.href}>
                     <span className="flex min-w-0 flex-col">
                       <span className="text-[13px] text-ink">{v.texto}</span>
-                      <span className="text-[11px] text-ink-mute">
+                      <span className="text-[12px] text-ink-mute">
                         {v.tipo} · {v.evento.title} · {t('vence', 'due')} {dia(v.vence)}
                       </span>
                     </span>

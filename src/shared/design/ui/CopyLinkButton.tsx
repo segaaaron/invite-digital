@@ -33,19 +33,19 @@ export function CopyLinkButton({ url, label }: { url: string; label?: string }) 
       />
       <div className="flex items-center gap-4">
         <button
-          className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep underline-offset-4 hover:underline"
+          className="text-[12px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep underline-offset-4 hover:underline"
           onClick={copy}
           type="button"
         >
           {t('Copiar enlace', 'Copy link')}
         </button>
         {copied ? (
-          <span aria-live="polite" className="text-[11px] text-ink-mute" role="status">
+          <span aria-live="polite" className="text-[12px] text-ink-mute" role="status">
             {t('Copiado', 'Copied')}
           </span>
         ) : null}
         {failed ? (
-          <span className="text-[11px] text-ink-mute">{t('Cópialo a mano desde el campo de arriba', 'Copy it by hand from the field above')}</span>
+          <span className="text-[12px] text-ink-mute">{t('Cópialo a mano desde el campo de arriba', 'Copy it by hand from the field above')}</span>
         ) : null}
       </div>
     </div>

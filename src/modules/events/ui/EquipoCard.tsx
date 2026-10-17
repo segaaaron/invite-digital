@@ -126,7 +126,8 @@ export function EquipoCard({
       </section>
 
       <section aria-label={t('Recepción', 'Reception')} className={TARJETA}>
-        <Cabecera cuenta={porteros === null ? t('Tu plan no lo incluye', 'Your plan doesn’t include it') : cupo(porteros.lista.length, porteros.limite, t)} titulo={t('Recepción', 'Reception')} />
+        {/* Sin recepción en el plan, lo dice una vez el párrafo de abajo (antes, también la cabecera). */}
+        <Cabecera cuenta={porteros === null ? '' : cupo(porteros.lista.length, porteros.limite, t)} titulo={t('Recepción', 'Reception')} />
         <p className="text-[14px] text-ink-mute">{t('Entran sin cuenta, con un enlace y un PIN, solo el día de la fiesta.', 'They get in without an account, with a link and a PIN, only on the day of the party.')}</p>
         {porteros === null ? (
           <p className="text-[14px] text-ink-soft">{t('Tu plan no incluye pases con QR ni personal de recepción.', 'Your plan doesn’t include QR passes or reception staff.')}</p>
@@ -193,7 +194,7 @@ export function EquipoCard({
               </span>
             </Field>
             <details className="text-[13.5px]">
-              <summary className="cursor-pointer text-ink-mute hover:text-ink">{t('WhatsApp y puerta (opcional)', 'WhatsApp and door (optional)')}</summary>
+              <summary className="flex min-h-11 cursor-pointer items-center text-ink-mute hover:text-ink">{t('WhatsApp y puerta (opcional)', 'WhatsApp and door (optional)')}</summary>
               <div className="mt-2 grid gap-3 min-[560px]:grid-cols-2">
                 <Field htmlFor={`${id}-whatsapp`} label="WhatsApp">
                   <input className={FIELD_CLASS} id={`${id}-whatsapp`} inputMode="tel" name="phone" placeholder="+591 700 12345" />
@@ -255,7 +256,7 @@ function Quitar({
         </button>
       )}
       {error === null ? null : (
-        <span className="text-[11px] text-danger-deep" role="alert">
+        <span className="text-[12px] text-danger-deep" role="alert">
           {error}
         </span>
       )}

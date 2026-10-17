@@ -88,7 +88,7 @@ describe('PeopleTable', () => {
   it('el estado se lee en texto, no solo por color', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
     const rsvp = (nombre: string) => fila(nombre).querySelectorAll('td')[1]
-    expect(rsvp('Ana Lucía Vega')).toHaveTextContent('Asistirá')
+    expect(rsvp('Ana Lucía Vega')).toHaveTextContent('Viene')
     expect(rsvp('Acompañante de Ana')).toHaveTextContent('Tal vez')
     expect(rsvp('Roberto Núñez')).toHaveTextContent('Sin responder')
   })
@@ -101,11 +101,11 @@ describe('PeopleTable', () => {
   it('los filtros de la maqueta: asistirán, por responder, no vienen y sin enviar', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /^Asistirán \d+$/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Vienen \d+$/ }))
     expect(within(tabla()).getByText('Ana Lucía Vega')).toBeInTheDocument()
     expect(within(tabla()).queryByText('Roberto Núñez')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /^Por responder \d+$/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Sin responder \d+$/ }))
     expect(within(tabla()).getByText('Acompañante de Ana')).toBeInTheDocument()
     expect(within(tabla()).getByText('Roberto Núñez')).toBeInTheDocument()
     expect(within(tabla()).queryByText('Ana Lucía Vega')).not.toBeInTheDocument()

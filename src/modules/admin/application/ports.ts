@@ -33,6 +33,10 @@ export type AdminEventRow = {
   readonly enviados: number
   /** Y cuántos contestaron, sí o no. */
   readonly respondidos: number
+  /** Personas de esas invitaciones: lo que cuenta el panel del cliente (16 oct: una sola unidad en todo el panel). */
+  readonly personas: number
+  /** Personas que ya dijeron si vienen o no. */
+  readonly personasRespondieron: number
   /** Invitaciones (grupos) que se abrieron al menos una vez. */
   readonly abiertos: number
   /** El cierre de las confirmaciones (`YYYY-MM-DD`). */

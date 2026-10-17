@@ -1,4 +1,8 @@
 import Link from 'next/link'
+import { admin } from '@/app/composition/container'
+import { isErr } from '@/shared/result'
+import { cuantosTiposDeFallo } from '@/shared/observability/lectura'
+import { Pill } from '@/shared/design/ui/panel/PanelKit'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { CardIcon, ChevronIcon, ClockIcon, GlobeIcon, MessageIcon, ShieldIcon, SparkIcon, UsersIcon } from '@/shared/design/ui/icons'
@@ -12,12 +16,12 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic'
 
 const ENTRADAS = [
-  { href: '/panel/admin/fallos', titulo: 'Registro de fallos', detalle: 'Lo que se rompió, en palabras', Icono: ShieldIcon },
   { href: '/panel/admin/usuarios', titulo: 'Equipo', detalle: 'Quién trabaja en el atelier', Icono: UsersIcon },
   { href: '/panel/admin/pagos', titulo: 'Cobros', detalle: 'Cuenta y QR para las transferencias', Icono: CardIcon },
-  { href: '/panel/admin/asistente', titulo: 'Asistente Luxury', detalle: 'Planes, límites y gasto del mes', Icono: SparkIcon },
   { href: '/panel/admin/web', titulo: 'La web', detalle: 'Contacto, testimonios y textos', Icono: GlobeIcon },
   { href: '/panel/admin/mensajes', titulo: 'Mensajes y agenda', detalle: 'Plantillas y capacidad por fin de semana', Icono: MessageIcon },
+  { href: '/panel/admin/asistente', titulo: 'Asistente Luxury', detalle: 'Planes, límites y gasto del mes', Icono: SparkIcon },
+  { href: '/panel/admin/fallos', titulo: 'Registro de fallos', detalle: 'Lo que se rompió, en palabras', Icono: ShieldIcon },
   { href: '/panel/admin/auditoria', titulo: 'Auditoría', detalle: 'Quién cambió qué y cuándo', Icono: ClockIcon },
 ] as const
 
@@ -28,6 +32,15 @@ const ENTRADAS = [
 export default async function AjustesPage() {
   const t = await tr()
   await requireAdmin()
+  // Lo que falta se ve desde la lista: sin banco, titular y cuenta, quien recibe una cotización no sabe a dónde pagar.
+  const cobro = await admin.payment()
+  const faltaCobro = isErr(cobro) || cobro.value.bank === '' || cobro.value.accountHolder === '' || cobro.value.accountNumber === ''
+  // Los de la última semana, como abre el registro.
+  const fallos = await cuantosTiposDeFallo(7).catch(() => 0)
+  const aviso: Record<string, string | null> = {
+    '/panel/admin/pagos': faltaCobro ? t('Faltan datos', 'Missing details') : null,
+    '/panel/admin/fallos': fallos > 0 ? (fallos === 1 ? t('1 por revisar', '1 to review') : t(`${fallos} por revisar`, `${fallos} to review`)) : null,
+  }
   return (
     <>
       <PanelHeader title={t('Ajustes', 'Settings')} />
@@ -42,6 +55,7 @@ export default async function AjustesPage() {
                 <span className="text-[15.5px] font-medium">{traducir(titulo, t)}</span>
                 <span className="text-[13.5px] text-ink-mute">{traducir(detalle, t)}</span>
               </span>
+              {aviso[href] ? <Pill tone="no">{aviso[href]}</Pill> : null}
               <ChevronIcon className="size-4 shrink-0 -rotate-90 text-ink-mute" />
             </Link>
           </li>

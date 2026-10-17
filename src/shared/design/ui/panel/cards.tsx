@@ -44,7 +44,7 @@ export function StatCard({
           {icon}
         </span>
       ) : null}
-      <p className="font-mono text-[11px] tracking-[0.16em] uppercase text-ink-mute">{label}</p>
+      <p className="font-mono text-[12px] tracking-[0.16em] uppercase text-ink-mute">{label}</p>
       <p className="mt-1.5 font-display text-[30px] leading-none font-light text-ink [font-variant-numeric:lining-nums] min-[560px]:text-[44px]">
         {value}
         {suffix ? <span className="ml-1 text-[18px] text-ink-mute">{suffix}</span> : null}
@@ -103,7 +103,7 @@ export function PanelCard({
  * de la maqueta. Vivía escrito a mano en cada vista con clases distintas.
  */
 export function PanelCardLink({ children }: { children: ReactNode }) {
-  return <span className="font-mono text-[10px] tracking-[0.25em] uppercase opacity-70 hover:opacity-100 max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center">{children}</span>
+  return <span className="font-mono text-[12px] tracking-[0.25em] uppercase opacity-70 hover:opacity-100 max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center">{children}</span>
 }
 
 export type DonutSlice = { readonly label: string; readonly value: number; readonly color: string }
@@ -148,7 +148,7 @@ export function DonutChart({ slices, big, caption }: { slices: readonly DonutSli
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-display text-[38px] leading-none font-light text-ink [font-variant-numeric:lining-nums]">{big}</span>
-          <span className="mt-0.5 max-w-[130px] text-center font-mono text-[10px] tracking-[0.2em] uppercase text-ink-mute">{caption}</span>
+          <span className="mt-0.5 max-w-[130px] text-center font-mono text-[12px] tracking-[0.2em] uppercase text-ink-mute">{caption}</span>
         </div>
       </div>
 
@@ -157,7 +157,7 @@ export function DonutChart({ slices, big, caption }: { slices: readonly DonutSli
           <li key={slice.label} className="flex items-center gap-2.5 border-b border-dotted border-line-panel py-2 last:border-none">
             <span aria-hidden className="size-3 rounded-[3px]" style={{ background: slice.color }} />
             <span className="flex-1 text-[13px] text-ink">{slice.label}</span>
-            <span className="font-mono text-[11px] text-ink-soft">
+            <span className="font-mono text-[12px] text-ink-soft">
               {slice.value}
               {total > 0 ? ` (${Math.round((slice.value / total) * 100)}%)` : ''}
             </span>

@@ -42,13 +42,13 @@ const CASA: Record<Filtro, (fila: PersonRowView) => boolean> = {
 
 const etiqueta = (t: T): Record<Filtro, string> => ({
   todos: t('Todos', 'All'),
-  asistiran: t('Asistirán', 'Attending'),
-  'por-responder': t('Por responder', 'Awaiting reply'),
+  asistiran: t('Vienen', 'Coming'),
+  'por-responder': t('Sin responder', 'No reply'),
   'no-vienen': t('No vienen', 'Not coming'),
   'sin-enviar': t('Sin enviar', 'Not sent'),
 })
 
-const estado = (t: T) => ({ yes: t('Asistirá', 'Attending'), no: t('No vendrá', 'Not coming'), maybe: t('Tal vez', 'Maybe') }) as const
+const estado = (t: T) => ({ yes: t('Viene', 'Coming'), no: t('No viene', 'Not coming'), maybe: t('Tal vez', 'Maybe') }) as const
 const TONO = { yes: 'ok', no: 'no', maybe: 'maybe' } as const
 
 /** Diez invitaciones más cada vez: una familia no se parte. */
@@ -319,7 +319,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                           type="button"
                         >
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate font-display text-[20px] leading-tight font-medium">{suyas.length > 1 ? p0.groupLabel : p0.fullName}</span>
+                            {/* El nombre entero, en dos líneas si hace falta: cortado («Yasmin Medrano Avil…») no se sabía quién era (16 oct). */}
+                            <span className="line-clamp-2 block font-display text-[20px] leading-tight font-medium break-words">{suyas.length > 1 ? p0.groupLabel : p0.fullName}</span>
                             <span className="text-[13.5px] text-ink-mute">
                               {suyas.length === 1 ? t('1 persona', '1 person') : t(`${suyas.length} personas`, `${suyas.length} people`)}
                               {p0.tableLabel === null ? '' : `, ${p0.tableLabel.toLowerCase()}`}
@@ -344,7 +345,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                       <li className="flex min-h-11 items-center gap-2.5 border-b border-line-panel last:border-b-0" key={f.id}>
                         <Link className="flex min-h-11 min-w-0 flex-1 items-center truncate text-[15px] text-ink no-underline hover:underline" href={`${base}?panel=editar&persona=${f.id}`}>
                           {f.fullName}
-                          {f.dietaryNote === null ? null : <span className="ml-2 text-[13px] text-ink-mute">{f.dietaryNote}</span>}
+                          {f.dietaryNote === null ? null : <span className="ml-2 text-[13px] text-ink-mute">{t(`· come: ${f.dietaryNote}`, `· diet: ${f.dietaryNote}`)}</span>}
                         </Link>
                         {f.vip ? <Pill tone="vip">VIP</Pill> : null}
                         <Pill tone={f.attending === null ? 'pending' : TONO[f.attending]}>{f.attending === null ? t('Sin responder', 'No reply') : ESTADO[f.attending]}</Pill>
@@ -352,9 +353,14 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     ))}
                   </ul>
                   <div className="flex flex-wrap gap-2.5">
+                    {/* Lo mismo que en el celular: sin enviar, enviarla; enviada y sin respuesta, recordarla. */}
                     {(primera.sentAt ?? null) === null ? (
                       <a className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[14.5px] font-medium text-white no-underline hover:bg-whatsapp-hover" href={`${base}?panel=envio`}>
                         <SendIcon className="size-4" /> {t('Enviar por WhatsApp', 'Send via WhatsApp')}
+                      </a>
+                    ) : todas.some((f) => f.attending === null) ? (
+                      <a className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[14.5px] font-medium text-white no-underline hover:bg-whatsapp-hover" href={`${base}?panel=recordar`}>
+                        <SendIcon className="size-4" /> {t('Enviar recordatorio', 'Send reminder')}
                       </a>
                     ) : null}
                     <PanelButton href={`${base}?panel=pase&persona=${primera.id}`}>
@@ -415,9 +421,6 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     <span className="text-[13px] text-ink-mute">{t('Invitados', 'Guests')}</span>
                     <span className="truncate text-[16px] font-medium">{filas.length > 1 ? primera.groupLabel : primera.fullName}</span>
                   </span>
-                  <Link className="flex min-h-11 items-center px-3 text-[15px] font-medium text-gold-deep no-underline" href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>
-                    {t('Editar', 'Edit')}
-                  </Link>
                 </div>
                 <h2 className="font-display text-[30px] leading-tight font-medium">{filas.length > 1 ? primera.groupLabel : primera.fullName}</h2>
                 <p className="mt-1.5 text-[15px] text-ink-mute">
@@ -432,7 +435,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                           {f.fullName}
                           {f.vip ? <Pill tone="vip">VIP</Pill> : null}
                         </span>
-                        <span className="text-[13px] text-ink-mute">{f.dietaryNote ?? (f.attending === 'no' ? t('Avisó que no puede', 'Said they can’t come') : t('Sin restricciones', 'No restrictions'))}</span>
+                        <span className="text-[13px] text-ink-mute">{f.dietaryNote === null ? (f.attending === 'no' ? t('Avisó que no puede', 'Said they can’t come') : t('Sin restricciones', 'No restrictions')) : t(`Come: ${f.dietaryNote}`, `Diet: ${f.dietaryNote}`)}</span>
                       </span>
                       <Pill tone={f.attending === null ? 'pending' : TONO[f.attending]}>{f.attending === null ? t('Sin responder', 'No reply') : ESTADO[f.attending]}</Pill>
                     </li>
@@ -446,9 +449,11 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                   </span>
                 </Link>
                 <div className="mt-5 flex flex-col gap-2.5">
-                  <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[15.5px] font-medium text-white no-underline" href={`${base}?panel=${(primera.sentAt ?? null) === null ? 'envio' : 'recordar'}`}>
-                    <SendIcon className="size-4" /> {(primera.sentAt ?? null) === null ? t('Enviar por WhatsApp', 'Send via WhatsApp') : t('Enviar recordatorio', 'Send reminder')}
-                  </a>
+                  {(primera.sentAt ?? null) !== null && filas.every((f) => f.attending !== null) ? null : (
+                    <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[15.5px] font-medium text-white no-underline" href={`${base}?panel=${(primera.sentAt ?? null) === null ? 'envio' : 'recordar'}`}>
+                      <SendIcon className="size-4" /> {(primera.sentAt ?? null) === null ? t('Enviar por WhatsApp', 'Send via WhatsApp') : t('Enviar recordatorio', 'Send reminder')}
+                    </a>
+                  )}
                   <PanelButton href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>{t('Editar la invitación', 'Edit the invitation')}</PanelButton>
                 </div>
               </div>

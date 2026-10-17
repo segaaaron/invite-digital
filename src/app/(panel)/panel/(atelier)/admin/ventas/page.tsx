@@ -137,8 +137,8 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
       {cobroListo ? null : (
         <div className={pedida === undefined ? '' : 'max-[767px]:hidden'}>
         <PanelAlert tone="error">
-          Faltan tus datos de cobro: quien recibe una cotización no ve a dónde pagar.{' '}
-          <Link className="font-medium underline underline-offset-4" href="/panel/admin/pagos">
+          {t('Faltan tus datos de cobro: quien recibe una cotización no ve a dónde pagar.', 'Your payment details are missing: whoever receives a quote won’t see where to pay.')}{' '}
+          <Link className="inline-flex min-h-11 items-center font-medium underline underline-offset-4 align-middle" href="/panel/admin/pagos">
             {t('Cargarlos', 'Add them')}
           </Link>
         </PanelAlert>
@@ -230,7 +230,7 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
         </div>
       )}
 
-      {cotizando ? <Cotizacion cerrar={pedida === undefined ? cerrar : enlace({ venta: pedida.clave })} hoy={hoy} venta={pedida} /> : null}
+      {cotizando ? <Cotizacion cerrar={pedida === undefined ? cerrar : enlace({ venta: pedida.clave })} cobroListo={cobroListo} hoy={hoy} venta={pedida} /> : null}
     </div>
   )
 }
@@ -375,7 +375,7 @@ async function PasosDeLaVenta({ venta: v }: { venta: Venta }) {
 }
 
 /** El cotizador en su panel: desde una consulta (con sus datos puestos) o desde «+ Crear». */
-async function Cotizacion({ venta, cerrar, hoy }: { venta: Venta | undefined; cerrar: string; hoy: string }) {
+async function Cotizacion({ venta, cerrar, hoy, cobroListo }: { venta: Venta | undefined; cerrar: string; hoy: string; cobroListo: boolean }) {
   const t = await tr()
   const [planesAdmin, extras, eventos, agenda] = await Promise.all([admin.plans(), plans.listActiveExtras(), admin.events(), admin.mensajes()])
   const ocupacion: Record<string, number> = {}
@@ -389,6 +389,7 @@ async function Cotizacion({ venta, cerrar, hoy }: { venta: Venta | undefined; ce
       <Cotizador
         capacidad={isErr(agenda) ? 3 : agenda.value.capacidad}
         cerrarHref={cerrar}
+        cobroListo={cobroListo}
         consulta={c === null ? null : { id: c.id, nombre: c.name, contacto: c.phone ?? c.email ?? '', fecha: c.eventDate, fiesta: c.fiesta }}
         extras={extras.map((x) => ({ slug: x.slug, name: x.name, priceCents: x.priceCents, que: NOMBRE_DE_EFECTO[x.effect] }))}
         hoy={hoy}

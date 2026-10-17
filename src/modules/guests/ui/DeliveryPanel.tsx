@@ -34,7 +34,7 @@ type Pestana = 'pendientes' | 'enviadas'
 function respuesta(fila: DeliveryRow, t: T): { tone: PillTone; text: string } {
   if (fila.revoked) return { tone: 'no', text: t('Revocada', 'Revoked') }
   if (fila.confirmed === null) return { tone: 'pending', text: t('Sin responder', 'No reply') }
-  return fila.confirmed > 0 ? { tone: 'ok', text: t('Confirmó', 'Confirmed') } : { tone: 'no', text: t('No viene', 'Not coming') }
+  return fila.confirmed > 0 ? { tone: 'ok', text: t('Viene', 'Coming') } : { tone: 'no', text: t('No viene', 'Not coming') }
 }
 
 /** Cada otra forma de enviar: un botón cuadrado con icono y su nombre debajo, como en la hoja de compartir del teléfono. */

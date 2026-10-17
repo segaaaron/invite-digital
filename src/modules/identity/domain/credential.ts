@@ -6,6 +6,9 @@ export type Credential = { readonly email: string; readonly password: string }
 const MIN_PASSWORD_LENGTH = 12
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/** Si tiene forma de correo (la misma regla que el alta). */
+export const esCorreo = (email: string): boolean => EMAIL_SHAPE.test(email)
+
 export function createCredential(input: { email: string; password: string }): Result<Credential, IdentityError> {
   const email = input.email.trim().toLowerCase()
   if (!EMAIL_SHAPE.test(email)) {

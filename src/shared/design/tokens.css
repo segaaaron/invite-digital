@@ -226,7 +226,8 @@
   --color-ink-mute: #5b5a52;
   --color-ink-selection: #0c2420;
   --color-gold: #b8925a;
-  --color-gold-deep: #8f6e3c;
+  /* 4,21:1 sobre el papel no llegaba al 4,5 de WCAG AA (16 oct, medido): un punto más oscuro, mismo latón. */
+  --color-gold-deep: #7f6135;
   --color-gold-light: #c9a66f;
   --color-gold-rgb: 184 146 90;
   --color-on-gold: #0c2420;

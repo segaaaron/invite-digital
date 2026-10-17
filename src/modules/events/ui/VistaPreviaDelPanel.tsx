@@ -6,13 +6,12 @@ import { ArrowLeftIcon, MusicIcon } from '@/shared/design/ui/icons'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
- * «Ver invitación» desde el panel (E56): arriba volver, a quién se la estamos enseñando y si en el celular o en la
- * computadora; abajo, escucharla con su canción. En la computadora el invitado la ve igual que en el celular, dentro
- * de un teléfono, con la pantalla alrededor: eso es lo que se enseña.
+ * «Ver invitación» desde el panel (E56): arriba volver y para quién es; en medio la invitación en su marco, el mismo
+ * del escaparate (sin bisel negro ni conmutador de aparato: el 16 oct el usuario lo quiso como antes, uno solo);
+ * abajo, escucharla con su canción.
  */
-export function VistaPreviaDelPanel({ children, volver, invitado, fuentes }: { children: ReactNode; volver: string; invitado: string; fuentes: string }) {
+export function VistaPreviaDelPanel({ children, volver, fuentes }: { children: ReactNode; volver: string; fuentes: string }) {
   const t = useT()
-  const [aparato, setAparato] = useState<'celular' | 'computadora'>('celular')
   const [sonando, setSonando] = useState(false)
   const [sinCancion, setSinCancion] = useState(false)
   const marco = useRef<HTMLDivElement>(null)
@@ -45,49 +44,14 @@ export function VistaPreviaDelPanel({ children, volver, invitado, fuentes }: { c
         >
           <ArrowLeftIcon className="size-4" /> <span className="max-[559px]:sr-only">{t('Volver al panel', 'Back to the panel')}</span>
         </Link>
-        <p className="min-w-0 flex-1 truncate text-center text-[14.5px] text-shell-ink/75">
-          {t(`Así la ve ${invitado} en su ${aparato}`, `How ${invitado} sees it on their ${aparato === 'celular' ? 'phone' : 'computer'}`)}
-        </p>
-        <div aria-label={t('Ver en', 'View on')} className="flex rounded-[12px] bg-shell-ink/10 p-1" role="group">
-          {(['celular', 'computadora'] as const).map((a) => (
-            <button
-              aria-pressed={aparato === a}
-              className={`min-h-9 max-[767px]:min-h-11 cursor-pointer rounded-[9px] px-3.5 text-[14px] font-medium capitalize transition-colors ${aparato === a ? 'bg-bg text-ink' : 'text-shell-ink/80 hover:text-shell-ink'}`}
-              key={a}
-              onClick={() => setAparato(a)}
-              type="button"
-            >
-              {a === 'celular' ? t('celular', 'phone') : t('computadora', 'computer')}
-            </button>
-          ))}
-        </div>
+        <p className="min-w-0 flex-1 truncate text-center text-[14.5px] text-shell-ink/75">{t('Así la verá tu invitado', 'How your guest will see it')}</p>
+        {/* Contrapeso del botón de volver: el texto queda centrado en la pantalla. */}
+        <span aria-hidden className="w-[150px] max-[559px]:w-11" />
       </header>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-2">
-        <div
-          className={
-            aparato === 'computadora'
-              ? 'flex h-full max-h-[640px] w-[min(1040px,100%)] flex-col overflow-hidden rounded-[14px] border border-shell-ink/15 bg-shell-deep shadow-[0_30px_80px_-30px_rgb(0_0_0/0.7)]'
-              : 'contents'
-          }
-        >
-          {aparato === 'computadora' ? (
-            <span aria-hidden className="flex gap-1.5 border-b border-shell-ink/10 px-3.5 py-2.5">
-              <span className="size-2.5 rounded-full bg-shell-ink/25" />
-              <span className="size-2.5 rounded-full bg-shell-ink/25" />
-              <span className="size-2.5 rounded-full bg-shell-ink/25" />
-            </span>
-          ) : null}
-          <div className={aparato === 'computadora' ? 'flex min-h-0 flex-1 items-center justify-center py-5' : 'contents'}>
-            <div
-              className={`con-mono ${fuentes} relative overflow-hidden rounded-[34px] border-[9px] border-black bg-black shadow-[0_30px_80px_-30px_rgb(0_0_0/0.8)] ${
-                aparato === 'computadora' ? 'h-full w-auto aspect-[9/19]' : 'h-[min(860px,calc(100dvh-150px))] aspect-[9/19.5] max-[559px]:w-full max-[559px]:h-full max-[559px]:aspect-auto max-[559px]:rounded-[18px] max-[559px]:border-0'
-              }`}
-              ref={marco}
-            >
-              <div className="theme-phone-frame !h-full !w-full !max-w-none !rounded-[24px]">{children}</div>
-            </div>
-          </div>
+      <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-2 max-[559px]:px-2">
+        <div className={`con-mono ${fuentes} theme-phone-frame`} ref={marco}>
+          {children}
         </div>
       </div>
 

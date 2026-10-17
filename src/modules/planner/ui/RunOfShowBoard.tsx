@@ -8,7 +8,7 @@ import { ChevronIcon, ClockIcon } from '@/shared/design/ui/icons'
 import { CampoHora } from '@/shared/design/ui/panel/campos-de-fecha'
 import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
 import { FIELD_CLASS, Field, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { ActionFeedback, EmptyState, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { Accion, type Evento, Ocultos } from './Accion'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import { useT } from '@/shared/i18n/idioma-navegador'
@@ -126,7 +126,7 @@ export function MomentoDialog({
                     <span aria-hidden className="grid size-11 place-items-center [&_img]:max-h-11 [&_img]:max-w-11 [&_svg]:max-h-11 [&_svg]:max-w-11">
                       {opcion.dibujo}
                     </span>
-                    <span className="text-center text-[11px] leading-tight text-ink-soft">{opcion.nombre}</span>
+                    <span className="text-center text-[12px] leading-tight text-ink-soft">{opcion.nombre}</span>
                   </label>
                 ))}
               </div>
@@ -196,21 +196,18 @@ export function MomentoDialog({
 /** Sin momentos todavía: qué es esta pantalla y el primer paso. */
 export function CronogramaVacio({ nuevo }: { nuevo: string }) {
   const t = useT()
+  // El mismo vacío que el resto del panel (16 oct: este era el único sin tarjeta).
   return (
-    <div className="flex flex-col items-center gap-4 px-4 py-10 text-center">
-      <span aria-hidden className="grid size-14 place-items-center rounded-full bg-bg-top text-ink-soft">
-        <ClockIcon className="size-6" />
-      </span>
-      <div className="flex flex-col gap-2">
-        <h2 className="font-display text-[26px] leading-tight font-light text-ink">{t('Arma el cronograma de tu día', 'Build your day’s schedule')}</h2>
-        <p className="max-w-[54ch] text-[13.5px] leading-[1.7] text-ink-soft">
-          {t('Suma cada momento con su hora: la misa, la entrada, el vals, la cena. Lo que marques para la invitación es el itinerario que ven tus invitados; lo demás queda para tu equipo.', 'Add each moment with its time: the mass, the entrance, the waltz, the dinner. What you check for the invitation is the itinerary your guests see; the rest stays with your team.')}
-        </p>
-      </div>
-      <PanelButton href={nuevo} variant="primary">
-        {t('Sumar el primer momento', 'Add the first moment')}
-      </PanelButton>
-    </div>
+    <EmptyState
+      action={
+        <PanelButton href={nuevo} variant="primary">
+          {t('Sumar el primer momento', 'Add the first moment')}
+        </PanelButton>
+      }
+      description={t('Suma cada momento con su hora: la misa, la entrada, el vals, la cena. Lo que marques para la invitación es el itinerario que ven tus invitados; lo demás queda para tu equipo.', 'Add each moment with its time: the mass, the entrance, the waltz, the dinner. What you check for the invitation is the itinerary your guests see; the rest stays with your team.')}
+      icon={<ClockIcon />}
+      title={t('Arma el cronograma de tu día', 'Build your day’s schedule')}
+    />
   )
 }
 
@@ -261,17 +258,17 @@ export function RunOfShowBoard({
               {detalle ? <span className="text-[13.5px] text-ink-mute max-[767px]:text-[15px]">{detalle}</span> : null}
               <span className="mt-1.5 flex flex-wrap items-center gap-2 min-[768px]:hidden">
                 <Pill tone={m.enInvitacion ? 'maybe' : 'neutro'}>{m.enInvitacion ? t('En la invitación', 'On the invitation') : t('Solo tu equipo', 'Team only')}</Pill>
-                {m.aviso ? <Pill tone="no">{m.aviso}</Pill> : null}
+                {m.aviso ? <Pill largo tone="no">{m.aviso}</Pill> : null}
               </span>
               {m.aviso ? (
                 <span className="mt-1 max-[767px]:hidden">
-                  <Pill tone="no">{m.aviso}</Pill>
+                  <Pill largo tone="no">{m.aviso}</Pill>
                 </span>
               ) : null}
             </div>
             <span className="flex items-center gap-5 max-[767px]:col-span-3 max-[767px]:hidden">
               <Pill tone={m.enInvitacion ? 'maybe' : 'neutro'}>{m.enInvitacion ? t('En la invitación', 'On the invitation') : t('Solo para tu equipo', 'Team only')}</Pill>
-              <Link aria-label={t(`Editar ${m.title}`, `Edit ${m.title}`)} className="text-[14px] font-medium text-gold-deep no-underline hover:underline" href={`${editarEn}${m.id}`} scroll={false}>
+              <Link aria-label={t(`Editar ${m.title}`, `Edit ${m.title}`)} className="inline-flex min-h-11 min-w-11 items-center text-[14px] font-medium text-gold-deep no-underline hover:underline" href={`${editarEn}${m.id}`} scroll={false}>
                 {t('Editar', 'Edit')}
               </Link>
             </span>
@@ -305,7 +302,7 @@ export function ItinerarioEnLaInvitacion({
       <h2 className="text-[15px] font-medium">{t('Así lo leen tus invitados', 'How your guests read it')}</h2>
       {deEjemplo ? <p className="text-[13px] leading-[1.6] text-ink-mute">{t('Todavía no marcaste momentos: tus invitados ven el itinerario de ejemplo del diseño.', 'You haven’t checked any moments yet: your guests see the design’s sample itinerary.')}</p> : null}
       <Link className={`flex flex-col items-center gap-5 rounded-[16px] border border-line-panel bg-tarjeta px-6 py-7 text-center text-ink no-underline transition-colors hover:border-gold ${deEjemplo ? 'opacity-55' : ''}`} href={vistaPrevia}>
-        <span className="text-[11px] tracking-[0.3em] text-ink-mute uppercase">{t('Itinerario', 'Itinerary')}</span>
+        <span className="text-[12px] tracking-[0.3em] text-ink-mute uppercase">{t('Itinerario', 'Itinerary')}</span>
         {lista.map((f, i) => (
           <span className="flex flex-col" key={`${f.time}-${f.label}-${i}`}>
             <span className="font-display text-[26px] leading-tight font-medium [font-variant-numeric:lining-nums_tabular-nums]">{f.time}</span>

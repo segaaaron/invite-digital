@@ -27,14 +27,14 @@ export function TimelineChart({ bars, caption }: { bars: readonly TimelineBar[];
           </span>
         ))}
       </div>
-      <div className="mt-1.5 flex gap-1 font-mono text-[9px] tracking-[0.15em] text-ink-mute">
+      <div className="mt-1.5 flex gap-1 font-mono text-[12px] tracking-[0.15em] text-ink-mute">
         {bars.map((barra) => (
           <span key={barra.day} className="flex-1 text-center">
             {barra.label}
           </span>
         ))}
       </div>
-      <figcaption className="mt-2 text-[11px] text-ink-mute">{caption}</figcaption>
+      <figcaption className="mt-2 text-[12px] text-ink-mute">{caption}</figcaption>
     </figure>
   )
 }

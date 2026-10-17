@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { INTL } from '@/shared/i18n/t'
 import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 import { admin, events, leads, opinionesDe, orders } from '@/app/composition/container'
 import { generarReferidoAction } from '@/app/_acciones/admin/clientes-actions'
@@ -317,7 +318,8 @@ async function Ficha({
             .toReversed()
             .map((h, i) => (
               <li className="flex items-baseline gap-4 border-b border-line-panel py-3 last:border-b-0" key={`${h.texto}-${i}`}>
-                <span className="w-16 shrink-0 text-[13px] text-ink-mute">{hace(h.cuando, ahora, locale).replace('hace ', '').replace(/ ago$/, '')}</span>
+                {/* Lo que viene (el día de su evento) se dice con su fecha: «hace» de una fecha futura salía «ahora». */}
+                <span className="w-16 shrink-0 text-[13px] text-ink-mute">{h.cuando.getTime() > ahora.getTime() ? new Intl.DateTimeFormat(INTL[locale], { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(h.cuando).replace('.', '') : hace(h.cuando, ahora, locale).replace('hace ', '').replace(/ ago$/, '')}</span>
                 {h.href === null ? (
                   <span className="min-w-0 flex-1 text-[14.5px]">{traducir(h.texto, t)}</span>
                 ) : (
@@ -330,7 +332,7 @@ async function Ficha({
         </ol>
         {principal === null ? null : (
           <p className="mt-2 text-[13.5px] text-ink-mute">
-            {traducir(etapa.etiqueta, t)}
+            {t('Etapa:', 'Stage:')} {traducir(etapa.etiqueta, t)}
             {valor === 0 ? '' : t(`, ${formatAmount(valor, 'BOB')} pagado`, `, ${formatAmount(valor, 'BOB')} paid`)}
           </p>
         )}
@@ -384,9 +386,9 @@ async function Ficha({
                         <div className="rounded-[12px] bg-gold/8 px-3 py-2 text-[12.5px] text-ink">
                           <b className="font-medium">{t(`${o.rating} de 5`, `${o.rating} of 5`)}</b>
                           {o.comment === null ? null : <span className="text-ink-soft"> · «{o.comment}»</span>}
-                          {o.allowPublish ? <span className="block text-[11.5px] text-ink-mute">{t('Deja publicar su opinión en la web', 'Allows publishing their review on the website')}</span> : null}
+                          {o.allowPublish ? <span className="block text-[12px] text-ink-mute">{t('Deja publicar su opinión en la web', 'Allows publishing their review on the website')}</span> : null}
                           {o.allowPublish && o.comment !== null && !isErr(laWeb) && opinionPublicada(laWeb.value, o.comment) ? (
-                            <span className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-sage-deep">
+                            <span className="mt-1.5 flex items-center gap-1.5 text-[12px] text-sage-deep">
                               <CheckIcon className="size-3.5" /> {t('Publicada en la web', 'Published on the website')}
                             </span>
                           ) : o.allowPublish && o.comment !== null && e.id !== null ? (
@@ -412,7 +414,7 @@ async function Ficha({
                           {t('Código', 'Code')} <b className="font-codigo font-medium tracking-[0.12em] text-ink">{codigo}</b>
                         </span>
                         <span className="text-ink-mute">{plural(usos.get(codigo) ?? 0, t('compra con su código', 'purchase with their code'), t('compras con su código', 'purchases with their code'))}</span>
-                        <span className="w-full truncate font-codigo text-[11px] text-ink-mute">{`${sitio}/es?ref=${codigo}#precios`}</span>
+                        <span className="w-full truncate font-codigo text-[12px] text-ink-mute">{`${sitio}/es?ref=${codigo}#precios`}</span>
                       </div>
                     )}
                   </li>
@@ -432,7 +434,7 @@ async function Ficha({
 function Bloque({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-3 font-mono text-[10px] tracking-[0.18em] text-ink-mute uppercase">{titulo}</h3>
+      <h3 className="mb-3 font-mono text-[12px] tracking-[0.18em] text-ink-mute uppercase">{titulo}</h3>
       {children}
     </section>
   )
@@ -441,7 +443,7 @@ function Bloque({ titulo, children }: { titulo: string; children: React.ReactNod
 function Dato({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
-      <dt className="text-[11px] font-medium tracking-[0.1em] text-ink-mute uppercase">{etiqueta}</dt>
+      <dt className="text-[12px] font-medium tracking-[0.1em] text-ink-mute uppercase">{etiqueta}</dt>
       <dd className="text-[14px] break-words text-ink">{children}</dd>
     </div>
   )

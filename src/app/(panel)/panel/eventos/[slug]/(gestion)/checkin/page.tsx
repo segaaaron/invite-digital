@@ -43,7 +43,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
 
   const permitido = await plans.requireFeature(event.value.id, 'checkin')
   if (isErr(permitido)) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={traducir(permitido.error.detail, t)} title="Check-in" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={traducir(permitido.error.detail, t)} title={t('Ingreso al evento', 'Event check-in')} />
   }
 
   const estado = await checkin.state(event.value.id)

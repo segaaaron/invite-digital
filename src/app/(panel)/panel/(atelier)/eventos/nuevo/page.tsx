@@ -1,5 +1,5 @@
-import { notFound } from 'next/navigation'
-import { puedeCrearEventos } from '@/modules/identity'
+import { notFound, redirect } from 'next/navigation'
+import { isAdmin, puedeCrearEventos } from '@/modules/identity'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -7,7 +7,10 @@ import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { tr } from '@/shared/i18n/idioma-servidor'
 
 export default async function NewEventPage() {
-  if (!puedeCrearEventos(await requireSession())) notFound()
+  const actor = await requireSession()
+  if (!puedeCrearEventos(actor)) notFound()
+  // El admin crea desde «Crear › Evento para un cliente»: un solo camino, con el cliente y el plan (16 oct).
+  if (isAdmin(actor)) redirect('/panel/admin/eventos?crear=evento')
   const t = await tr()
 
   return (

@@ -97,7 +97,7 @@ export function CampoTelefono({
         {name === undefined ? null : <input name={name} type="hidden" value={value} />}
       </span>
       {incompleto ? (
-        <span className="text-[11.5px] text-ink-mute" id={`${id}-aviso`}>
+        <span className="text-[12px] text-ink-mute" id={`${id}-aviso`}>
           {t(`Ese número parece incompleto para ${new Intl.DisplayNames(['es'], { type: 'region' }).of(pais) ?? pais}. Se guarda igual.`, `That number looks incomplete for ${new Intl.DisplayNames(['en'], { type: 'region' }).of(pais) ?? pais}. It is saved anyway.`)}
         </span>
       ) : null}

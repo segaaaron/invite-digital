@@ -261,7 +261,7 @@ test('Mensajes y agenda guarda la capacidad del día, y el calendario la usa', a
   await expect.poll(async () => (await sql<{ value: string }[]>`select value from app_settings where key = 'agenda.capacidad'`)[0]?.value).toBe('4')
 
   await page.goto('/panel/admin/eventos/calendario')
-  await expect(page.getByText('Tu agenda aguanta 4 eventos por día')).toBeVisible()
+  await expect(page.getByText('Hasta 4 eventos por día.')).toBeVisible()
 })
 
 test('duplicar un evento lleva a la copia, con su diseño y su plan', async ({ page }) => {

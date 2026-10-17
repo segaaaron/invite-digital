@@ -30,6 +30,9 @@ export type EventoDeSalud = {
   readonly grupos: number
   readonly enviados: number
   readonly respondidos: number
+  /** La respuesta se mide en personas, como en el panel del cliente. */
+  readonly personas: number
+  readonly personasRespondieron: number
   readonly invitacionEscrita: boolean
   readonly clienteSinEntrar: boolean
   readonly saldoPendiente: boolean
@@ -39,7 +42,6 @@ export type AlertaDeSalud = { readonly clave: string; readonly tono: Exclude<Ton
 export type Salud = { readonly tono: TonoDeSalud; readonly texto: string; readonly alertas: readonly AlertaDeSalud[] }
 
 const faltan = (dias: number) => (dias === 0 ? 'es hoy' : dias === 1 ? 'es mañana' : `faltan ${dias} días`)
-const pct = (x: number) => `${Math.round(x * 100)} %`
 
 export function saludDelEvento(e: EventoDeSalud, hoy: string): Salud {
   const dias = diasEntre(hoy, e.eventDate)
@@ -52,8 +54,8 @@ export function saludDelEvento(e: EventoDeSalud, hoy: string): Salud {
   if (e.grupos > 0 && dias <= plazo.repartir && e.enviados / e.grupos < REPARTO_SANO) {
     alertas.push({ clave: 'reparto', tono: 'risk', texto: `Solo ${e.enviados} de ${e.grupos} invitaciones enviadas · ${faltan(dias)}` })
   }
-  if (e.grupos > 0 && diasEntre(hoy, e.rsvpDeadline) < 0 && e.respondidos / e.grupos < RESPUESTA_SANA) {
-    alertas.push({ clave: 'rsvp', tono: 'warn', texto: `Cerró la confirmación y respondió el ${pct(e.respondidos / e.grupos)}` })
+  if (e.personas > 0 && diasEntre(hoy, e.rsvpDeadline) < 0 && e.personasRespondieron / e.personas < RESPUESTA_SANA) {
+    alertas.push({ clave: 'rsvp', tono: 'warn', texto: `Cerró la confirmación: respondieron ${e.personasRespondieron} de ${e.personas} personas` })
   }
   if (e.clienteSinEntrar) alertas.push({ clave: 'sin-entrar', tono: 'warn', texto: 'El cliente todavía no entró a su panel' })
   if (e.saldoPendiente && dias <= SALDO_URGENTE) alertas.push({ clave: 'saldo', tono: 'warn', texto: `Saldo sin cobrar · ${faltan(dias)}` })
@@ -61,6 +63,6 @@ export function saludDelEvento(e: EventoDeSalud, hoy: string): Salud {
   // Lo grave primero: el semáforo dice lo peor y su razón.
   const ordenadas = [...alertas].sort((a, b) => Number(b.tono === 'risk') - Number(a.tono === 'risk'))
   const peor = ordenadas[0]
-  if (peor === undefined) return { tono: 'ok', texto: e.grupos === 0 ? 'En preparación' : `Al día · respondió el ${pct(e.respondidos / e.grupos)}`, alertas: [] }
+  if (peor === undefined) return { tono: 'ok', texto: e.personas === 0 ? 'En preparación' : `Al día · respondieron ${e.personasRespondieron} de ${e.personas} personas`, alertas: [] }
   return { tono: peor.tono, texto: peor.texto, alertas: ordenadas }
 }

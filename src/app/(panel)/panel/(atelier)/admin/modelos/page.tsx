@@ -94,7 +94,7 @@ export default async function AdminModelosPage({ searchParams }: { searchParams:
         }
         meta={t('Lo que vende la web: diseños, planes y extras.', 'What the website sells: designs, plans and extras.')}
         pestanas={<PestanasDeAdmin />}
-        title={t('Catálogo', 'Catalog')}
+        title={t('Modelos', 'Designs')}
       />
 
       {/* Por fiesta a la izquierda; lo que no se vende, a la derecha (maqueta E05). */}

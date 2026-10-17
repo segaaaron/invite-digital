@@ -14,7 +14,7 @@ export function RegresarComoAdmin({ className, children, etiqueta }: { className
   return (
     <button
       aria-busy={saliendo}
-      aria-label={etiqueta ?? t('Regresar como admin', 'Back as admin')}
+      aria-label={etiqueta ?? t('Volver al admin', 'Back to admin')}
       className={className}
       disabled={saliendo}
       onClick={() =>
@@ -25,7 +25,7 @@ export function RegresarComoAdmin({ className, children, etiqueta }: { className
       }
       type="button"
     >
-      {saliendo ? t('Regresando…', 'Going back…') : children}
+      {saliendo ? t('Volviendo…', 'Going back…') : children}
     </button>
   )
 }

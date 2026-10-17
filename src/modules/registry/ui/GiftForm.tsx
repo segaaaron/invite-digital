@@ -172,7 +172,7 @@ export function GiftForm({
 
         {editando ? (
           <button
-            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+            className="font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
             disabled={pendiente}
             onClick={() => onDone?.()}
             type="button"

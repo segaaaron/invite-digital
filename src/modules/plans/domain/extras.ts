@@ -16,7 +16,7 @@ export const NOMBRE_DE_EFECTO: Record<EfectoDeExtra, string> = {
   sumar_planner: 'Sumar un planner',
   dia_d: 'Día D y enlaces para proveedores',
   asistente: 'Luxury, el planner con IA',
-  servicio: 'Servicio (sin cambio en el panel)',
+  servicio: 'Un servicio que hace el equipo',
   mas_rondas: 'Más rondas de corrección (diseño por encargo)',
 }
 

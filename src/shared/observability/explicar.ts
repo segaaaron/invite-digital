@@ -70,6 +70,8 @@ const CAUSAS: readonly (readonly [RegExp, Par])[] = [
   [/ECONNREFUSED|Connection terminated|connect ETIMEDOUT|too many clients/i, ['La base de datos no respondió. Si se repite, revisa el servidor en Dokploy.', 'The database did not respond. If it repeats, check the server in Dokploy.']],
   [/ENOSPC/i, ['El disco del servidor está lleno.', 'The server disk is full.']],
   [/RESEND|resend|correo/i, ['El correo no salió. Revisa la clave de Resend o el estado de su servicio.', 'The email was not sent. Check the Resend key or its service status.']],
+  // Los anotados antes del 16 oct: desde entonces ni se guardan (`esCorteDelCliente`).
+  [/^(Load failed|Failed to fetch|NetworkError when attempting to fetch resource)/i, ['El aparato de quien la abría perdió la conexión a medio cargar. No es un fallo nuestro: puedes borrarlo.', 'The visitor’s device lost its connection while loading. It is not our fault: you can delete it.']],
   [/fetch failed|ENOTFOUND|EAI_AGAIN/i, ['Un servicio externo no respondió.', 'An external service did not respond.']],
   [/micr[oó]fono se cerr[oó] sin o[ií]r/i, ['El micrófono se abrió y no oyó a nadie: suele ser que no se habló o que el permiso tardó en darse.', 'The microphone opened and heard no one: usually nobody spoke or permission took a while.']],
   [/not-allowed|NotAllowedError|permiso/i, ['La persona no dio permiso al micrófono en su navegador.', 'The person did not allow the microphone in their browser.']],
@@ -86,6 +88,8 @@ export function explicarFallo(f: { servicio: string; mensaje: string; detalle: s
 }
 
 function tituloDe(mensaje: string, t: T): string {
+  // El corte de red del navegador llega en inglés y sin contexto («Load failed»): se dice en palabras.
+  if (/^(Load failed|Failed to fetch|NetworkError when attempting to fetch resource)/i.test(mensaje.trim())) return t('Se cortó la conexión del invitado', 'The visitor’s connection dropped')
   // Lo que escribimos nosotros va delante del error técnico: «No se pudo resolver el código: Error: Failed query…».
   const propio = mensaje.split(/:\s*(?:\w*Error|Failed query)\b/)[0]?.trim() ?? ''
   if (propio !== '' && propio !== mensaje.trim()) return frase(propio)

@@ -114,13 +114,11 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
     return d >= 0 && d <= 7
   }).length
   const esteMes = deFiesta.filter((e) => e.eventDate.slice(0, 7) === hoy.slice(0, 7) && e.eventDate >= hoy).length
-  const conRespuestas = deFiesta.filter((e) => e.etapa !== 'celebrada' && e.grupos > 0)
-  const media = conRespuestas.length === 0 ? null : Math.round((conRespuestas.reduce((s2, e) => s2 + e.respondidos / e.grupos, 0) / conRespuestas.length) * 100)
-  const borradores = deFiesta.filter((e) => e.etapa === 'borrador').length
-  const sinInvitados = deFiesta.filter((e) => e.etapa === 'sin_invitados').length
-  const resumenRiesgo =
-    [borradores > 0 ? plural(borradores, t('borrador', 'draft'), t('borradores', 'drafts')) : null, sinInvitados > 0 ? t(`${sinInvitados} sin invitados`, `${sinInvitados} without guests`) : null].filter(Boolean).join(t(' y ', ' and ')) ||
-    t('Con algo que resolver', 'With something to sort out')
+  const conRespuestas = deFiesta.filter((e) => e.etapa !== 'celebrada' && e.personas > 0)
+  const media = conRespuestas.length === 0 ? null : Math.round((conRespuestas.reduce((s2, e) => s2 + e.personasRespondieron / e.personas, 0) / conRespuestas.length) * 100)
+  // «Necesitan algo» dice cuáles: el número y el detalle hablan de lo mismo (antes, el detalle contaba borradores).
+  const enRiesgoNombres = deFiesta.filter((e) => e.salud.tono !== 'ok').map((e) => e.title)
+  const resumenRiesgo = enRiesgoNombres.length <= 2 ? enRiesgoNombres.join(t(' y ', ' and ')) : t(`${enRiesgoNombres.slice(0, 2).join(', ')} y ${enRiesgoNombres.length - 2} más`, `${enRiesgoNombres.slice(0, 2).join(', ')} and ${enRiesgoNombres.length - 2} more`)
   const conteo = new Map<string, number>()
   for (const e of deFiesta) conteo.set(e.etapa, (conteo.get(e.etapa) ?? 0) + 1)
 
@@ -132,11 +130,13 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
     ownerEmail: e.ownerEmail,
     planNombre: e.planSlug === null ? null : (nombreDePlan.get(e.planSlug) ?? e.planSlug),
     portada: CATALOG_KEYS.includes(e.themeKey) ? `/templates/${e.themeKey}.avif` : null,
-    modelo: nombreDeModelo.get(e.themeKey) ?? t('un diseño retirado', 'a withdrawn design'),
+    modelo: nombreDeModelo.get(e.themeKey) ?? null,
     fiesta: e.fiesta,
     grupos: e.grupos,
     enviados: e.enviados,
     respondidos: e.respondidos,
+    personas: e.personas,
+    personasRespondieron: e.personasRespondieron,
     etapa: e.etapa,
     cuando: faltaPara(diasEntre(hoy, e.eventDate), locale),
     salud: { tono: e.salud.tono, texto: traducir(e.salud.texto, t), mas: Math.max(0, e.salud.alertas.length - 1) },
@@ -172,7 +172,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
         <nav aria-label={t('Etapa', 'Stage')} className="flex flex-wrap gap-2.5">
           {[
             { key: 'todas', label: 'Próximos', n: deFiesta.length - celebrados },
-            ...(enRiesgo > 0 || filtroEtapa === 'riesgo' ? [{ key: 'riesgo', label: t('En riesgo', 'At risk'), n: enRiesgo }] : []),
+            ...(enRiesgo > 0 || filtroEtapa === 'riesgo' ? [{ key: 'riesgo', label: t('Necesitan algo', 'Need something'), n: enRiesgo }] : []),
             { key: 'borrador', label: t('Borradores', 'Drafts'), n: conteo.get('borrador') ?? 0 },
             { key: 'sin_invitados', label: t('Sin invitados', 'No guests'), n: conteo.get('sin_invitados') ?? 0 },
             { key: 'celebrada', label: t('Celebrados', 'Celebrated'), n: celebrados },
@@ -226,9 +226,10 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
                       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="truncate font-display text-[19px] leading-tight font-medium">{e.title}</span>
                         <span className="truncate text-[13px] text-ink-mute">{diaDelEvento(e.eventDate, locale)}</span>
-                        <span className="flex items-center gap-2 text-[13px] text-ink-mute">
-                          <Pill tone={tono[e.salud.tono]}>{e.salud.tono === 'ok' ? t('Al día', 'On track') : traducir(e.salud.alertas[0]?.texto ?? e.salud.texto, t)}</Pill>
-                          {t(`${e.respondidos} de ${e.grupos}`, `${e.respondidos} of ${e.grupos}`)}
+                        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-ink-mute">
+                          {/* Corto: la razón entera va en la ficha de al lado; larga se montaba sobre ella. */}
+                          <Pill tone={tono[e.salud.tono]}>{e.salud.tono === 'ok' ? t('Al día', 'On track') : t('Necesita algo', 'Needs something')}</Pill>
+                          <span>{e.personas === 0 ? t('Sin invitados', 'No guests') : t(`${e.personasRespondieron} de ${e.personas} personas`, `${e.personasRespondieron} of ${e.personas} people`)}</span>
                         </span>
                       </span>
                       {dias < 0 ? null : (
@@ -253,7 +254,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
                 <div className="flex min-w-0 flex-col gap-2">
                   <h2 className="font-display text-[28px] leading-tight font-medium">{ev.title}</h2>
                   <p className="text-[14.5px] text-ink-mute">
-                    {t('Con el diseño', 'With the design')} {ev.modelo}
+                    {ev.modelo === null ? t('Con un diseño retirado', 'With a withdrawn design') : `${t('Con el diseño', 'With the design')} ${ev.modelo}`}
                     {ev.planNombre === null ? '' : t(`, plan ${ev.planNombre}`, `, ${ev.planNombre} plan`)}. {diaDelEvento(ev.eventDate, locale)}.
                   </p>
                   <span className="flex flex-wrap gap-2">
@@ -264,9 +265,9 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
               </div>
               <dl className="grid grid-cols-3 border-y border-line-panel">
                 {[
-                  { n: ev.grupos, t: t('invitaciones', 'invitations') },
-                  { n: ev.respondidos, t: t('respondieron', 'replied') },
-                  { n: ev.enviados, t: t('enviadas', 'sent') },
+                  { n: ev.personas, t: t('personas', 'people') },
+                  { n: ev.personasRespondieron, t: t('respondieron', 'replied') },
+                  { n: `${ev.enviados}/${ev.grupos}`, t: t('invitaciones enviadas', 'invitations sent') },
                 ].map((c, i) => (
                   <div className={`py-3.5 ${i === 0 ? '' : 'border-l border-line-panel pl-4'}`} key={c.t}>
                     <dd className="m-0 font-display text-[28px] leading-none font-medium [font-variant-numeric:lining-nums]">{c.n}</dd>
@@ -284,9 +285,10 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
                   </ul>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-2.5">
+              {/* «Abrir el panel» y «Entrar al panel» decían casi lo mismo y hacían otra cosa (16 oct): la ficha se llama ficha. */}
+              <div className="grid grid-cols-2 gap-2.5 max-[1023px]:grid-cols-1">
                 <PanelButton href={`/panel/eventos/${ev.slug}/configuracion`} variant="primary">
-                  {t('Abrir el panel del evento', 'Open the event panel')}
+                  {t('Ver la ficha', 'See the record')}
                 </PanelButton>
                 <EntrarComoCliente anfitriones={ev.anfitriones} eventId={ev.id} />
               </div>
@@ -344,7 +346,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
               <EventAdminRow event={vista(abierto)} />
             </ul>
             <section>
-              <h3 className="mb-3 font-mono text-[10px] tracking-[0.18em] text-ink-mute uppercase">{t('Salud del evento', 'Event health')}</h3>
+              <h3 className="mb-3 font-mono text-[12px] tracking-[0.18em] text-ink-mute uppercase">{t('Salud del evento', 'Event health')}</h3>
               {abierto.salud.alertas.length === 0 ? (
                 <Semaforo tono="ok">{traducir(abierto.salud.texto, t)}</Semaforo>
               ) : (

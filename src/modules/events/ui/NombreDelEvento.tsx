@@ -22,7 +22,7 @@ export function NombreDelEvento({ eventId, title }: { eventId: string; title: st
       <label className="flex flex-col gap-2" htmlFor={id}>
         <span className={LABEL_CLASS}>{t('Cómo se llama en tu panel', 'What it’s called in your panel')}</span>
         <input className={FIELD_CLASS} defaultValue={title} id={id} maxLength={160} name="title" placeholder={t('XV de Amanda', 'Amanda’s Quince')} required type="text" />
-        <span className="text-[11px] text-ink-mute">{t('Solo lo ves tú y tu equipo. Tus invitados ven los nombres de la portada.', 'Only you and your team see it. Your guests see the names on the cover.')}</span>
+        <span className="text-[12px] text-ink-mute">{t('Solo lo ves tú y tu equipo. Tus invitados ven los nombres de la portada.', 'Only you and your team see it. Your guests see the names on the cover.')}</span>
       </label>
       <ActionFeedback state={estado} />
       <div>

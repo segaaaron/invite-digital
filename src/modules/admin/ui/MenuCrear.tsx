@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRef } from 'react'
 import { CalendarIcon, CloseIcon, PlusIcon, ReceiptIcon, UsersIcon } from '@/shared/design/ui/icons'
 import { traducir } from '@/shared/i18n/en-ingles'
+import { useDesplegable } from '@/shared/design/ui/panel/desplegable'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
@@ -24,6 +25,7 @@ export function MenuCrear() {
   const t = useT()
   const menu = useRef<HTMLDetailsElement>(null)
   const cerrar = () => menu.current?.removeAttribute('open')
+  useDesplegable(menu)
   return (
     <details className="group relative" ref={menu}>
       <summary
@@ -59,20 +61,33 @@ export function MenuCrear() {
 }
 
 /** «Crear» en el celular (maqueta M47): en el menú, sobre «Cerrar sesión», abre una hoja desde abajo con las mismas altas. */
-export function MenuCrearMovil() {
+export function MenuCrearMovil({ compacto = false }: { compacto?: boolean }) {
   const t = useT()
   const hoja = useRef<HTMLDialogElement>(null)
   const cerrar = () => hoja.current?.close()
   return (
     <>
-      <button
-        aria-haspopup="dialog"
-        className="mt-3 flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-gold px-4.5 text-[15.5px] font-medium text-shell-deep"
-        onClick={() => hoja.current?.showModal()}
-        type="button"
-      >
-        <PlusIcon className="size-[18px]" /> {t('Crear', 'Create')}
-      </button>
+      {compacto ? (
+        // En la barra de arriba del celular (16 oct): la acción principal del admin no puede vivir al fondo del menú.
+        <button
+          aria-haspopup="dialog"
+          aria-label={t('Crear', 'Create')}
+          className="grid size-11 cursor-pointer place-items-center rounded-[10px] bg-gold text-shell-deep"
+          onClick={() => hoja.current?.showModal()}
+          type="button"
+        >
+          <PlusIcon className="size-[18px]" />
+        </button>
+      ) : (
+        <button
+          aria-haspopup="dialog"
+          className="mt-3 flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-gold px-4.5 text-[15.5px] font-medium text-shell-deep"
+          onClick={() => hoja.current?.showModal()}
+          type="button"
+        >
+          <PlusIcon className="size-[18px]" /> {t('Crear', 'Create')}
+        </button>
+      )}
       <dialog
         aria-labelledby="crear-movil"
         className="mx-0 mt-auto mb-0 w-full max-w-none rounded-t-[20px] border border-line-panel bg-bg px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] text-ink shadow-float backdrop:bg-shell-deep/50"

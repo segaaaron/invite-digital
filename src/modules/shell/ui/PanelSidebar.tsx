@@ -59,7 +59,7 @@ export function SelloLA({ size = 48 }: { size?: number }) {
 function Insignia({ item }: { item: NavItem }) {
   if (!item.count) return null
   return (
-    <span className="ml-auto rounded-full bg-gold px-2 text-[11.5px] leading-[19px] font-semibold text-shell-deep">
+    <span className="ml-auto rounded-full bg-gold px-2 text-[12px] leading-[19px] font-semibold text-shell-deep">
       {item.count}
       {item.countLabel ? <span className="sr-only"> {item.countLabel}</span> : null}
     </span>
@@ -216,7 +216,7 @@ function TarjetaDeUsuario({ user }: { user: PanelUser }) {
             onClick={() => void leaveSupportAction().then((hecho) => hecho.status === 'ok' && window.location.assign(hecho.href))}
             type="button"
           >
-            {t('Regresar al panel de admin', 'Return to the admin panel')}
+            {t('Volver al admin', 'Back to admin')}
           </button>
         ) : (
           <Link className="text-[12.5px] text-shell-mute no-underline hover:text-shell-ink" href="/panel/cuenta">
@@ -224,21 +224,24 @@ function TarjetaDeUsuario({ user }: { user: PanelUser }) {
           </Link>
         )}
       </span>
-      <ConfirmAction
-        action={signOutAction}
-        confirmLabel={t('Cerrar sesión', 'Sign out')}
-        description={t('Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña.', 'You will leave the panel on this device. To come back you will have to sign in with your email and password.')}
-        title={t('Cerrar sesión', 'Sign out')}
-        trigger={
-          <>
-            <svg aria-hidden className="size-[19px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
-              <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
-            </svg>
-            <span className="sr-only">{t('Cerrar sesión', 'Sign out')}</span>
-          </>
-        }
-        triggerClassName="grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg text-shell-mute transition-colors hover:bg-shell-ink/7 hover:text-shell-ink"
-      />
+      {/* En modo soporte no: cerraría la sesión del admin, no la del cliente. */}
+      {user.soporte ? null : (
+        <ConfirmAction
+          action={signOutAction}
+          confirmLabel={t('Cerrar sesión', 'Sign out')}
+          description={t('Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña.', 'You will leave the panel on this device. To come back you will have to sign in with your email and password.')}
+          title={t('Cerrar sesión', 'Sign out')}
+          trigger={
+            <>
+              <svg aria-hidden className="size-[19px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
+                <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
+              </svg>
+              <span className="sr-only">{t('Cerrar sesión', 'Sign out')}</span>
+            </>
+          }
+          triggerClassName="grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg text-shell-mute transition-colors hover:bg-shell-ink/7 hover:text-shell-ink"
+        />
+      )}
     </div>
   )
 }

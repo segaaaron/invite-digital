@@ -9,6 +9,8 @@ const base: EventoDeSalud = {
   grupos: 0,
   enviados: 0,
   respondidos: 0,
+  personas: 0,
+  personasRespondieron: 0,
   invitacionEscrita: false,
   clienteSinEntrar: false,
   saldoPendiente: false,
@@ -32,16 +34,16 @@ describe('saludDelEvento', () => {
 
   it('pasado el cierre con pocas respuestas avisa; con cliente sin entrar también; lo grave va primero', () => {
     const s = saludDelEvento(
-      { ...base, eventDate: '2026-10-12', rsvpDeadline: '2026-09-20', invitacionEscrita: true, grupos: 20, enviados: 20, respondidos: 8, clienteSinEntrar: true },
+      { ...base, eventDate: '2026-10-12', rsvpDeadline: '2026-09-20', invitacionEscrita: true, grupos: 20, enviados: 20, respondidos: 8, personas: 30, personasRespondieron: 12, clienteSinEntrar: true },
       HOY,
     )
     expect(s.tono).toBe('warn')
     expect(s.alertas.map((a) => a.clave)).toEqual(['rsvp', 'sin-entrar'])
-    expect(s.texto).toBe('Cerró la confirmación y respondió el 40 %')
+    expect(s.texto).toBe('Cerró la confirmación: respondieron 12 de 30 personas')
   })
 
   it('al día dice cuánto respondió; celebrado, nada', () => {
-    expect(saludDelEvento({ ...base, eventDate: '2026-10-12', invitacionEscrita: true, grupos: 8, enviados: 8, respondidos: 7 }, HOY).texto).toBe('Al día · respondió el 88 %')
+    expect(saludDelEvento({ ...base, eventDate: '2026-10-12', invitacionEscrita: true, grupos: 8, enviados: 8, respondidos: 7, personas: 10, personasRespondieron: 7 }, HOY).texto).toBe('Al día · respondieron 7 de 10 personas')
     expect(saludDelEvento({ ...base, eventDate: '2026-09-01' }, HOY)).toEqual({ tono: 'ok', texto: 'Celebrado', alertas: [] })
   })
 })

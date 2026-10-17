@@ -92,8 +92,8 @@ export function PassDialog({
           <div
             className="mt-5 flex flex-col items-center gap-4 rounded-[18px] border border-gold/40 bg-linear-to-br from-bg-top to-bg-raised p-7 text-center shadow-float"
           >
-            <p className="font-mono text-[10.5px] tracking-[0.18em] text-gold-deep uppercase">{t('Pase de entrada', 'Entry pass')}</p>
-            <p className="font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase">
+            <p className="font-mono text-[12px] tracking-[0.18em] text-gold-deep uppercase">{t('Pase de entrada', 'Entry pass')}</p>
+            <p className="font-mono text-[12px] tracking-[0.2em] text-ink-mute uppercase">
               {eventTitle} · {eventMeta}
             </p>
             <div className="rounded-xl border border-line-panel bg-white p-2.5">
@@ -103,17 +103,17 @@ export function PassDialog({
             <p className="text-[12px] text-ink-soft">{sitio}</p>
             {codigo === null ? null : (
               <p className="flex flex-col items-center gap-0.5">
-                <span className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">{t('Código', 'Code')}</span>
+                <span className="font-mono text-[12px] tracking-[0.16em] text-ink-mute uppercase">{t('Código', 'Code')}</span>
                 <span className="font-codigo text-[20px] tracking-[0.16em] text-ink">{codigo}</span>
               </p>
             )}
             <span aria-hidden className="h-px w-full bg-[repeating-linear-gradient(90deg,var(--color-line-panel-strong)_0_6px,transparent_6px_12px)]" />
             {url === null ? (
-              <p className="text-[11.5px] leading-[1.6] text-ink-mute">
+              <p className="text-[12px] leading-[1.6] text-ink-mute">
                 {t('Su invitación se envió antes de que el panel guardara los enlaces: este QR lleva su código, y la puerta lo lee igual que su pase.', 'Their invitation was sent before the panel stored links: this QR carries their code, and the door reads it just like their pass.')}
               </p>
             ) : (
-              <p className="font-mono text-[10px] tracking-[0.15em] break-all text-ink-mute">{url}</p>
+              <p className="font-mono text-[12px] tracking-[0.15em] break-all text-ink-mute">{url}</p>
             )}
           </div>
           <div className="mt-6 grid grid-cols-3 gap-2 [&>*]:w-full [&>*]:justify-center [&>*]:px-2">

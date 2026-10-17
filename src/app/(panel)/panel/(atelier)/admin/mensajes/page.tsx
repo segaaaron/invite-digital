@@ -20,7 +20,7 @@ export default async function MensajesPage() {
   const leido = await admin.mensajes()
   return (
     <>
-      <PanelHeader title={t('Ajustes', 'Settings')} tituloEnCelular={t('Mensajes y agenda', 'Messages and calendar')} pestanas={<PestanasDeAdmin />} />
+      <PanelHeader title={t('Mensajes y agenda', 'Messages and calendar')} pestanas={<PestanasDeAdmin />} />
       {isErr(leido) ? (
         <PanelCard>
           <p className="text-[13px] text-danger" role="alert">

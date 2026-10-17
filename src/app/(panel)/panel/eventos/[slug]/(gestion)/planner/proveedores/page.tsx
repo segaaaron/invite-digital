@@ -112,7 +112,7 @@ export default async function ProveedoresPage({ params, searchParams }: { params
           ))}
         </nav>
       )}
-      <VendorsBoard editarHref={conFiltro("proveedor=")} enlacesIncluidos={enlacesIncluidos} evento={evento} proveedores={visibles} />
+      <VendorsBoard editarHref={conFiltro("proveedor=")} enlacesIncluidos={enlacesIncluidos} evento={evento} nuevoHref={conFiltro('panel=proveedor')} proveedores={visibles} />
     </>
   )
 }

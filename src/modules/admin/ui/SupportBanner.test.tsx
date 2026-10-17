@@ -6,8 +6,8 @@ vi.mock('@/app/_acciones/admin/support-actions', () => ({ leaveSupportAction: vi
 describe('SupportBanner', () => {
   it('dice como quién está el admin y ofrece regresar', async () => {
     const { SupportBanner } = await import('./SupportBanner')
-    render(<SupportBanner clienteEmail="novios@ejemplo.bo" />)
+    render(<SupportBanner cliente="novios@ejemplo.bo" />)
     expect(screen.getByRole('status')).toHaveTextContent('novios@ejemplo.bo')
-    expect(screen.getByRole('button', { name: 'Regresar como admin' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Volver al admin' })).toBeInTheDocument()
   })
 })

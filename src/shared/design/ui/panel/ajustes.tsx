@@ -13,7 +13,7 @@ export function SettingsSection({ title, description, children }: { title: strin
   return (
     <section className="grid gap-4 border-t border-line-panel py-6 first:border-t-0 first:pt-0 min-[900px]:grid-cols-[260px_1fr] min-[900px]:gap-10">
       <div className="flex flex-col gap-1.5">
-        <h3 className="text-[15px] font-medium text-ink">{title}</h3>
+        <h2 className="text-[15px] font-medium text-ink">{title}</h2>
         {description ? <p className="text-[12.5px] leading-[1.6] text-ink-mute">{description}</p> : null}
       </div>
       <div className="flex min-w-0 flex-col gap-4">{children}</div>

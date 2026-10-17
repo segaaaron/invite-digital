@@ -116,7 +116,7 @@ export function DoorSearchSheet({ groups, arrivedIds, dentro, open, onPick, onCl
             >
               <span className="min-w-0 flex-1">
                 <span className="block">{g.label}</span>
-                <span className="mt-0.5 block text-[11px] text-ink-mute">
+                <span className="mt-0.5 block text-[12px] text-ink-mute">
                   {[
                     g.tableLabel,
                     entro ? t(`${cuantosDentro} de ${total} dentro${primera ? ` · ${horaEnBolivia(primera)}` : ''}`, `${cuantosDentro} of ${total} inside${primera ? ` · ${horaEnBolivia(primera)}` : ''}`) : t(`${g.seats} cupo${g.seats === 1 ? '' : 's'}`, `${g.seats} seat${g.seats === 1 ? '' : 's'}`),
@@ -127,7 +127,7 @@ export function DoorSearchSheet({ groups, arrivedIds, dentro, open, onPick, onCl
                     .join(' · ')}
                 </span>
               </span>
-              <span className="font-mono text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">{completa ? t('Ya llegó', 'Already arrived') : entro ? t('Registrar al resto', 'Check in the rest') : t('Registrar', 'Check in')}</span>
+              <span className="font-mono text-[12px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">{completa ? t('Ya llegó', 'Already arrived') : entro ? t('Registrar al resto', 'Check in the rest') : t('Registrar', 'Check in')}</span>
             </button>
           ))
         )}

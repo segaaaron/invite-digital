@@ -97,11 +97,12 @@ const GRUPOS: readonly { titulo: string; tipos: readonly TipoDeCortejo[] }[] = [
 ]
 
 /** El cortejo por grupo (E26): iniciales, nombre y lo que apadrina, su teléfono y «Editar». */
-export function CourtBoard({ miembros, editarEn }: { miembros: readonly MiembroVista[]; /** `…?miembro=`: se le suma el id. */ editarEn: string }) {
+export function CourtBoard({ miembros, editarEn, nuevoHref }: { miembros: readonly MiembroVista[]; /** `…?miembro=`: se le suma el id. */ editarEn: string; /** Sumar la primera persona desde el vacío. */ nuevoHref?: string }) {
   const t = useT()
   if (miembros.length === 0) {
     return (
       <EmptyState
+        action={nuevoHref === undefined ? undefined : <PanelButton href={nuevoHref} variant="primary">{t('Añadir la primera persona', 'Add the first person')}</PanelButton>}
         description={t('Padrinos, damas, chambelanes: con su papel, su talla y su teléfono, y los ensayos a los que vienen.', 'Sponsors, bridesmaids, chambelanes: with their role, size and phone, and the rehearsals they attend.')}
         icon={<UsersIcon />}
         title={t('Tu cortejo todavía no tiene a nadie', 'Your wedding party has no one yet')}

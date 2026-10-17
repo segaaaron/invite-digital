@@ -140,7 +140,7 @@ export function EncargoDelCliente({
                   placeholder={t('Cambia la hora a 20:00, pon otra foto en la portada y corrige el nombre de mi mamá.', 'Change the time to 8:00 pm, put another photo on the cover and fix my mom’s name.')}
                   required
                 />
-                <span className="text-[11px] text-ink-mute">{t('Una ronda es un solo mensaje con todos tus cambios juntos. Los errores nuestros no cuentan.', 'A round is a single message with all your changes together. Our own mistakes don’t count.')}</span>
+                <span className="text-[12px] text-ink-mute">{t('Una ronda es un solo mensaje con todos tus cambios juntos. Los errores nuestros no cuentan.', 'A round is a single message with all your changes together. Our own mistakes don’t count.')}</span>
               </label>
               <ActionFeedback state={cambios} />
               <div>

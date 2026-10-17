@@ -43,16 +43,23 @@ export function EventClients({
   const id = useId()
   const cerrar = () => dialogo.current?.close()
 
+  // Quitar es destructivo: se confirma y va en rojo, separado de «Restablecer acceso» (16 oct: iban iguales y
+  // quitaba de un toque).
   const quitar = (member: StaffMember) => (
-    <form action={darBaja}>
+    <ConfirmAction
+      action={darBaja}
+      confirmLabel={t('Quitar el acceso', 'Remove access')}
+      description={t(`${member.email} ya no podrá entrar a este evento. Su cuenta no se borra.`, `${member.email} will no longer be able to enter this event. Their account is not deleted.`)}
+      disabled={dandoBaja}
+      title={t('Quitar el acceso', 'Remove access')}
+      tone="danger"
+      trigger={t('Quitar', 'Remove')}
+      triggerClassName="min-h-11 min-w-11 cursor-pointer text-[14.5px] font-medium text-danger hover:underline disabled:opacity-50 min-[768px]:ml-3 min-[768px]:border-l min-[768px]:border-line-panel min-[768px]:pl-4"
+    >
       <input name="eventId" type="hidden" value={eventId} />
       <input name="eventSlug" type="hidden" value={eventSlug} />
       <input name="userId" type="hidden" value={member.userId} />
-      {/* Quita el acceso a **esta** boda, nunca la cuenta. */}
-      <button className="min-h-11 cursor-pointer text-[14.5px] font-medium text-gold-deep hover:underline disabled:opacity-50" disabled={dandoBaja} title={t('Le quita el acceso a este evento', 'Removes their access to this event')} type="submit">
-        {t('Quitar', 'Remove')}
-      </button>
-    </form>
+    </ConfirmAction>
   )
 
   return (

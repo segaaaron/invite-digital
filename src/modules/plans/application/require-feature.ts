@@ -29,6 +29,9 @@ const desdeFila = capacidadDePlan
  * módulos: que la mesa de regalos venga con un plan y no con otro es una decisión
  * comercial, y no tiene nada que ver con las reglas de un regalo ni de una mesa.
  */
+/** «gala» → «Gala»: el plan se nombra como en la web, con mayúscula (16 oct). */
+const nombreDePlan = (slug: string): string => slug.charAt(0).toUpperCase() + slug.slice(1)
+
 export const requireFeature =
   (deps: { plans: PlanReader }) =>
   async (eventId: string, feature: PlanFeature): Promise<Result<Allowance, PlansError>> =>
@@ -47,8 +50,8 @@ export const requireFeature =
           plansError(
             'feature_not_included',
             conLaFuncion === null
-              ? `El plan ${allowance.value.planSlug} no incluye ${NOMBRE[feature]}.`
-              : `El plan ${allowance.value.planSlug} no incluye ${NOMBRE[feature]}; lo trae el plan ${conLaFuncion}.`,
+              ? `El plan ${nombreDePlan(allowance.value.planSlug)} no incluye ${NOMBRE[feature]}.`
+              : `El plan ${nombreDePlan(allowance.value.planSlug)} no incluye ${NOMBRE[feature]}; lo trae el plan ${nombreDePlan(conLaFuncion)}.`,
           ),
         )
       },

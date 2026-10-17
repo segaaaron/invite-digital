@@ -6,7 +6,7 @@ import type { HelpContact } from './topics'
 
 const CAMPO =
   'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
-const ROTULO = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
+const ROTULO = 'font-mono text-[12px] tracking-[0.3em] text-ink-mute uppercase'
 
 /** El texto que se lleva el atelier, ya montado. */
 export function supportMessage(input: { name: string; email: string; message: string }, saludo = 'Soporte Luxury Atelier'): string {
@@ -65,7 +65,7 @@ export function SupportForm({ contacto }: { contacto: HelpContact }) {
       <div className="flex flex-wrap items-center gap-3">
         <a
           aria-disabled={vacio || whatsapp === null}
-          className={`w-fit rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px ${
+          className={`w-fit rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[12px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px ${
             vacio || whatsapp === null ? 'pointer-events-none opacity-40' : ''
           }`}
           href={whatsapp ?? undefined}
@@ -76,7 +76,7 @@ export function SupportForm({ contacto }: { contacto: HelpContact }) {
         </a>
       </div>
 
-      <p className="text-[11px] leading-[1.6] text-ink-mute">
+      <p className="text-[12px] leading-[1.6] text-ink-mute">
         Se abre WhatsApp con el mensaje escrito para que lo envíes tú. Nada se manda solo.
       </p>
     </div>

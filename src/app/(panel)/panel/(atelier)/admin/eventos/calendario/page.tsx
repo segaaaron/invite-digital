@@ -90,19 +90,19 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
       <PanelHeader
         actions={
           <div className="flex items-center gap-2">
-            <PanelButton aria-label={t('Mes anterior', 'Previous month')} href={`${BASE}?mes=${mesVecino(mes, -1)}`}>
+            <PanelButton className="min-w-11 justify-center" aria-label={t('Mes anterior', 'Previous month')} href={`${BASE}?mes=${mesVecino(mes, -1)}`}>
               <ArrowLeftIcon className="size-4" />
             </PanelButton>
             <PanelButton href={BASE}>{t('Hoy', 'Today')}</PanelButton>
-            <PanelButton aria-label={t('Mes siguiente', 'Next month')} href={`${BASE}?mes=${mesVecino(mes, 1)}`}>
+            <PanelButton className="min-w-11 justify-center" aria-label={t('Mes siguiente', 'Next month')} href={`${BASE}?mes=${mesVecino(mes, 1)}`}>
               <ArrowRightIcon className="size-4" />
             </PanelButton>
           </div>
         }
         kicker={t('Eventos', 'Events')}
         meta={t(
-          `Tu agenda aguanta ${capacidad} ${capacidad === 1 ? 'evento' : 'eventos'} por día · se cambia en Ajustes › Mensajes y agenda`,
-          `Your calendar holds ${capacidad} ${capacidad === 1 ? 'event' : 'events'} per day · change it in Settings › Messages and calendar`,
+          `Hasta ${capacidad} ${capacidad === 1 ? 'evento' : 'eventos'} por día.`,
+          `Up to ${capacidad} ${capacidad === 1 ? 'event' : 'events'} per day.`,
         )}
         title={titulo.charAt(0).toUpperCase() + titulo.slice(1)}
       />
@@ -124,7 +124,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
           <span aria-hidden className="h-3.5 w-6 rounded-full border border-dashed border-ink-mute" /> {t('Tentativo (venta abierta)', 'Tentative (open sale)')}
         </span>
         <span className="inline-flex items-center gap-2">
-          <span aria-hidden className="size-3.5 rounded-[4px] ring-2 ring-gold" /> {t('Día lleno', 'Full day')}
+          <span aria-hidden className="h-3.5 w-6 rounded-[4px] border-2 border-gold bg-pill-pending" /> {t('Día lleno', 'Full day')}
         </span>
       </div>
 
@@ -132,7 +132,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
       <div className="hidden overflow-hidden rounded-[22px] border border-line-panel bg-white/80 shadow-card min-[760px]:block">
         <div className="grid grid-cols-7 border-b border-line-panel bg-bg-sunken/40">
           {dias(t).map((d, i) => (
-            <span className={`px-3 py-2.5 font-mono text-[10px] tracking-[0.18em] uppercase ${i >= 5 ? 'text-ink' : 'text-ink-mute'}`} key={d}>
+            <span className={`px-3 py-2.5 font-mono text-[12px] tracking-[0.18em] uppercase ${i >= 5 ? 'text-ink' : 'text-ink-mute'}`} key={d}>
               {d}
             </span>
           ))}
@@ -156,7 +156,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
                     >
                       {d.dia}
                     </span>
-                    {lleno ? <span className="font-mono text-[9px] tracking-[0.14em] text-gold-deep uppercase">{t('Lleno', 'Full')}</span> : null}
+                    {lleno ? <span className="font-mono text-[12px] tracking-[0.14em] text-gold-deep uppercase">{t('Lleno', 'Full')}</span> : null}
                   </span>
                   <ul className="flex flex-col gap-1">
                     {entradas.slice(0, 3).map((e) => (
@@ -165,7 +165,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
                       </li>
                     ))}
                   </ul>
-                  {entradas.length > 3 ? <span className="px-1 text-[11px] text-ink-mute">y {entradas.length - 3} más</span> : null}
+                  {entradas.length > 3 ? <span className="px-1 text-[12px] text-ink-mute">{t(`y ${entradas.length - 3} más`, `and ${entradas.length - 3} more`)}</span> : null}
                 </div>
               )
             })}
@@ -187,7 +187,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
                 <li className={`rounded-[18px] border bg-white p-3.5 shadow-card ${confirmados(d.iso) >= capacidad ? 'border-gold' : 'border-line-panel'}`} key={d.iso}>
                   <p className="mb-2 flex items-center justify-between text-[13px] text-ink">
                     <span className="first-letter:uppercase">{diaDelEvento(d.iso, locale)}</span>
-                    {confirmados(d.iso) >= capacidad ? <span className="font-mono text-[9.5px] tracking-[0.14em] text-gold-deep uppercase">{t('Lleno', 'Full')}</span> : null}
+                    {confirmados(d.iso) >= capacidad ? <span className="font-mono text-[12px] tracking-[0.14em] text-gold-deep uppercase">{t('Lleno', 'Full')}</span> : null}
                   </p>
                   <ul className="flex flex-col gap-1.5">
                     {(porDia.get(d.iso) ?? []).map((e) => (
@@ -209,7 +209,7 @@ async function Pastilla({ entrada: e }: { entrada: Entrada }) {
   const t = await tr()
   return (
     <Link
-      className={`flex items-center gap-1.5 truncate rounded-full px-2 py-1 text-[11.5px] transition-colors max-[859px]:min-h-11 max-[859px]:px-3 max-[859px]:text-[13px] ${
+      className={`flex items-center gap-1.5 truncate rounded-full px-2 py-1 text-[12px] transition-colors max-[859px]:min-h-11 max-[859px]:px-3 max-[859px]:text-[13px] ${
         e.tentativa ? 'border border-dashed border-ink-mute/60 text-ink-soft hover:border-ink' : 'bg-white text-ink shadow-card ring-1 ring-line-panel hover:ring-ink/40'
       }`}
       href={e.href}

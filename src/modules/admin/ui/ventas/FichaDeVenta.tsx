@@ -281,7 +281,7 @@ async function Recorrido({ venta: v, comprobantes, moneda }: { venta: Venta; com
             className={`absolute top-1.5 -left-5 size-[11px] rounded-full border-2 border-bg-raised ${h.tono === 'ok' ? 'bg-sage' : h.tono === 'no' ? 'bg-danger' : i === hitos.length - 1 ? 'bg-gold' : 'bg-ink-mute/60'}`}
           />
           <p className="text-[13.5px] text-ink">{h.texto}</p>
-          <p className="font-mono text-[10.5px] tracking-[0.08em] text-ink-mute">{fechaHora(h.cuando, locale)}</p>
+          <p className="font-mono text-[12px] tracking-[0.08em] text-ink-mute">{fechaHora(h.cuando, locale)}</p>
         </li>
       ))}
       {v.etapa === 'por_crear_evento' ? (
@@ -315,7 +315,7 @@ async function ListaDeComprobantes({ comprobantes }: { comprobantes: readonly Co
             href={`/panel/pedidos/comprobante/${k.id}`}
           >
             {k.originalName}
-            <span className="font-mono text-[10.5px] text-ink-mute">{fechaHora(k.uploadedAt, locale)}</span>
+            <span className="font-mono text-[12px] text-ink-mute">{fechaHora(k.uploadedAt, locale)}</span>
           </a>
         </li>
       ))}
@@ -326,7 +326,7 @@ async function ListaDeComprobantes({ comprobantes }: { comprobantes: readonly Co
 async function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
-      <dt className="text-[11px] font-medium tracking-[0.1em] text-ink-mute uppercase">{etiqueta}</dt>
+      <dt className="text-[12px] font-medium tracking-[0.1em] text-ink-mute uppercase">{etiqueta}</dt>
       <dd className="text-[14px] break-words text-ink">{children}</dd>
     </div>
   )

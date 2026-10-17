@@ -62,7 +62,7 @@ export function FilePicker({
         <span aria-live="polite" className="truncate pr-8 text-[13px] text-ink">
           {elegido ? elegido.nombre : label}
         </span>
-        <span className="text-[11px] text-ink-mute">{elegido ? `${tamano(elegido.bytes)} · ${t('pulsa para cambiarlo', 'tap to change it')}` : hint}</span>
+        <span className="text-[12px] text-ink-mute">{elegido ? `${tamano(elegido.bytes)} · ${t('pulsa para cambiarlo', 'tap to change it')}` : hint}</span>
       </span>
       <input
         accept={accept}

@@ -72,7 +72,7 @@ export function HelpCenter({ contacto }: { contacto: HelpContact }) {
       </ul>
 
       <section className="flex flex-col gap-3 rounded-card border border-line p-6">
-        <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">¿Sigues con la duda?</h2>
+        <h2 className="text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">¿Sigues con la duda?</h2>
         {whatsapp === null ? (
           <p className="text-[13px] leading-[1.7] text-ink-soft">El administrador todavía no ha configurado el WhatsApp de soporte.</p>
         ) : (

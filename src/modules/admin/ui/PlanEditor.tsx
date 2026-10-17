@@ -253,7 +253,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
         {plan.eventos > 0 ? (
           <span className="text-[12px] text-ink-mute">
             {t(
-              `Los límites y funciones se aplican ya a sus ${plan.eventos} evento${plan.eventos === 1 ? '' : 's'}.`,
+              plan.eventos === 1 ? 'Los límites y funciones se aplican ya a su evento.' : `Los límites y funciones se aplican ya a sus ${plan.eventos} eventos.`,
               `Limits and features apply right away to its ${plan.eventos} event${plan.eventos === 1 ? '' : 's'}.`,
             )}
           </span>

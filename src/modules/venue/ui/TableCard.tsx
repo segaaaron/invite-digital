@@ -113,7 +113,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal }
           <span className="font-mono text-[13px] text-ink-soft">
             {table.taken} / {table.capacity}
           </span>
-          <span className="font-mono text-[10.5px] tracking-[var(--tracking-luxe)] uppercase">{texto}</span>
+          <span className="font-mono text-[12px] tracking-[var(--tracking-luxe)] uppercase">{texto}</span>
           <IconButton disabled={pendiente} label={t(`Editar ${table.label}`, `Edit ${table.label}`)} onClick={() => setEditando(true)}>
             ✎
           </IconButton>
@@ -144,7 +144,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal }
       </header>
 
       {table.notes === null ? null : (
-        <p className="flex items-start gap-1.5 rounded-lg bg-bg-raised px-2.5 py-1.5 text-[11px] text-ink-soft">
+        <p className="flex items-start gap-1.5 rounded-lg bg-bg-raised px-2.5 py-1.5 text-[12px] text-ink-soft">
           <PinIcon className="mt-px shrink-0" />
           {table.notes}
         </p>
@@ -165,7 +165,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal }
         {seatRing(table.capacity, table.groups, table.shape).map((silla, indice) => (
           <span
             key={indice}
-            className={`absolute flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[10.5px] ${
+            className={`absolute flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[12px] ${
               silla.occupant === null
                 ? 'border-line-panel bg-bg-sunken text-ink-mute'
                 : silla.vip
@@ -195,7 +195,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal }
           {table.groups.map((group) => (
             <li
               key={group.id}
-              className="flex items-center gap-1.5 rounded-pill bg-pill-pending px-2.5 py-1 text-[11px] text-ink"
+              className="flex items-center gap-1.5 rounded-pill bg-pill-pending px-2.5 py-1 text-[12px] text-ink"
             >
               <span>{group.label}</span>
               {group.dietary === true ? (
@@ -314,7 +314,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal }
               {t('Guardar cambios', 'Save changes')}
             </button>
             <button
-              className="font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+              className="font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
               disabled={pendiente}
               onClick={() => setEditando(false)}
               type="button"

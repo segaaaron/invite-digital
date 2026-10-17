@@ -92,7 +92,7 @@ export function EstiloDelEventoCard({
 
 function Muestra({ hex, nombre, valor, checked }: { hex: string; nombre: string; valor: string; checked: boolean }) {
   return (
-    <label className="flex w-[64px] cursor-pointer flex-col items-center gap-1.5 text-center text-[10.5px] leading-tight text-ink-soft">
+    <label className="flex w-[64px] cursor-pointer flex-col items-center gap-1.5 text-center text-[12px] leading-tight text-ink-soft">
       <input
         aria-label={nombre}
         className="size-9 cursor-pointer appearance-none rounded-full border border-line-panel-strong outline-offset-2 checked:outline-2 checked:outline-ink"
@@ -122,7 +122,8 @@ function Letras({
   return (
     <fieldset className="flex flex-col gap-2.5">
       <legend className={`${LABEL_CLASS} mb-2.5`}>{etiqueta}</legend>
-      <div className="grid grid-cols-2 gap-2 min-[560px]:grid-cols-4">
+      {/* Por ancho, no por número de columnas: en la tarjeta de media pantalla cuatro columnas cortaban «Ori…» (16 oct). */}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
         <Letra checked={actual === null} familia={null} name={name} nombre={t('Original', 'Original')} valor="" />
         {opciones.map((o) => (
           <Letra checked={actual === o.clave} clase={o.clase} familia={o.familia} key={o.clave} name={name} nombre={o.nombre} valor={o.clave} />
@@ -134,9 +135,9 @@ function Letras({
 
 function Letra({ name, valor, nombre, familia, clase, checked }: { name: string; valor: string; nombre: string; familia: string | null; clase?: string; checked: boolean }) {
   return (
-    <label className={`${FIELD_CLASS} flex cursor-pointer items-center gap-2 has-[:checked]:border-ink ${clase ?? ''}`}>
+    <label className={`${FIELD_CLASS} flex h-auto min-h-12 cursor-pointer items-center gap-2 py-2 has-[:checked]:border-ink ${clase ?? ''}`}>
       <input className="accent-ink" defaultChecked={checked} name={name} type="radio" value={valor} />
-      <span className="truncate text-[17px] leading-none" style={familia === null ? undefined : { fontFamily: familia }}>
+      <span className="text-[17px] leading-tight break-words" style={familia === null ? undefined : { fontFamily: familia }}>
         {nombre}
       </span>
     </label>

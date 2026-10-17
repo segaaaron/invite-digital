@@ -203,7 +203,8 @@ export function lineaDeTiempo(c: Cliente): HitoDeCliente[] {
     ...c.pedidos
       .filter((p): p is typeof p & { decidedAt: Date } => p.status === 'approved' && p.decidedAt instanceof Date)
       .map((p) => ({ cuando: p.decidedAt, texto: 'Pago aprobado', href: `/panel/admin/ventas?venta=p-${p.publicRef}` })),
-    ...c.eventos.map((e) => ({ cuando: new Date(`${e.eventDate}T12:00:00Z`), texto: e.title, href: `/panel/eventos/${e.slug}/configuracion` })),
+    // Dice qué es («Su evento …»), no solo el título suelto: «VALERIA» a secas no se entendía (16 oct).
+    ...c.eventos.map((e) => ({ cuando: new Date(`${e.eventDate}T12:00:00Z`), texto: `Su evento «${e.title}»`, href: `/panel/eventos/${e.slug}/configuracion` })),
   ]
   return hitos.sort((a, b) => a.cuando.getTime() - b.cuando.getTime())
 }

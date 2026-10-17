@@ -65,7 +65,7 @@ describe('requireFeature', () => {
     // cliente a qué plan subir.
     const result = await requireFeature({ plans: conPlan('plan-atelier') })('evento-1', 'checkin')
 
-    expect(isErr(result) && result.error.detail).toContain('gala')
+    expect(isErr(result) && result.error.detail).toContain('Gala')
   })
 
   it('si ningún plan del catálogo la trae, el rechazo no inventa un plan', async () => {

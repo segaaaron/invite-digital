@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { ArrowLeftIcon } from '@/shared/design/ui/icons'
 import { BuscadorRapido } from './BuscadorRapido'
-import { MenuCrear } from './MenuCrear'
+import { MenuCrear, MenuCrearMovil } from './MenuCrear'
 import { IslaDelAdmin, RutaDelAdmin } from './PestanasDeAdmin'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
@@ -53,7 +53,7 @@ export function BarraDelAdmin({
           <RutaDelAdmin hoy={hoy} />
         ) : (
           <nav aria-label={t('Ruta', 'Path')} className="flex items-center gap-2 text-[14px]">
-            <Link className="text-ink-mute no-underline hover:text-ink" href="/panel/admin/eventos">
+            <Link className="inline-flex min-h-11 items-center text-ink-mute no-underline hover:text-ink" href="/panel/admin/eventos">
               {t('Eventos', 'Events')}
             </Link>
             <span aria-hidden>/</span>
@@ -66,6 +66,9 @@ export function BarraDelAdmin({
         {campana}
         <div className="hidden min-[768px]:block">
           <MenuCrear />
+        </div>
+        <div className="min-[768px]:hidden">
+          <MenuCrearMovil compacto />
         </div>
       </div>
     </header>

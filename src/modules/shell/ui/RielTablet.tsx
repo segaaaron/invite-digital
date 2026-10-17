@@ -42,7 +42,7 @@ export function entradasDelRiel(sections: readonly NavSection[], enEvento: boole
 }
 
 const ENTRADA =
-  'relative flex min-h-[52px] w-full flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-center text-[11.5px] leading-tight font-medium no-underline transition-colors'
+  'relative flex min-h-[52px] w-full flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-center text-[12px] leading-tight font-medium no-underline transition-colors'
 
 /**
  * **El carril de la tablet** (768–1279 px, maqueta «Esmeralda y Latón»): 92 px de esmeralda con el sello —o la
@@ -96,7 +96,7 @@ export function RielTablet() {
               </span>
               <span className="line-clamp-2">{label}</span>
               {item.count ? (
-                <span className="absolute top-1 right-3.5 min-w-4.5 rounded-full bg-gold px-1 text-[10.5px] leading-4.5 font-semibold text-shell-deep">
+                <span className="absolute top-1 right-3.5 min-w-4.5 rounded-full bg-gold px-1 text-[12px] leading-4.5 font-semibold text-shell-deep">
                   {item.count}
                   {item.countLabel ? <span className="sr-only"> {item.countLabel}</span> : null}
                 </span>
@@ -154,7 +154,7 @@ export function SubpestanasDeTablet() {
             <li key={item.href}>
               <Link
                 aria-current={activa ? 'page' : undefined}
-                className={`-mb-px flex h-12 items-center border-b-[1.5px] px-0.5 text-[15px] font-medium whitespace-nowrap no-underline transition-colors ${
+                className={`-mb-px flex h-12 min-w-11 items-center justify-center border-b-[1.5px] px-0.5 text-[15px] font-medium whitespace-nowrap no-underline transition-colors ${
                   activa ? 'border-gold text-shell-deep' : 'border-transparent text-ink-mute hover:text-shell-deep'
                 }`}
                 href={item.href}

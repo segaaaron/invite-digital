@@ -43,7 +43,7 @@ export function EtiquetaDeFiesta({ fiesta }: { fiesta: FiestaDeLista }) {
   if (fiesta === null) return null
   const f = FIESTA[fiesta]
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-[10px] tracking-[0.14em] uppercase ${f.clases}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-[12px] tracking-[0.14em] uppercase ${f.clases}`}>
       <span aria-hidden className={`size-1.5 rounded-full ${f.punto}`} />
       <T en={f.texto[1]} es={f.texto[0]} />
     </span>
@@ -91,7 +91,7 @@ export function Importe({ texto, tamano = 'grande' }: { texto: string; tamano?: 
   const cifra = resto.join(' ')
   return (
     <span className="inline-flex items-baseline gap-1.5 text-ink">
-      <span className="font-mono text-[10.5px] tracking-[0.12em] text-ink-mute uppercase">{cifra === '' ? '' : moneda}</span>
+      <span className="font-mono text-[12px] tracking-[0.12em] text-ink-mute uppercase">{cifra === '' ? '' : moneda}</span>
       <span className={`font-display leading-none [font-variant-numeric:lining-nums] ${tamano === 'grande' ? 'text-[34px]' : 'text-[18px]'}`}>{cifra === '' ? moneda : cifra}</span>
     </span>
   )
@@ -109,9 +109,9 @@ export function TiraDeCifras({ cifras }: { cifras: readonly Cifra[] }) {
       {cifras.map((c) => {
         const cuerpo = (
           <>
-            <dt className="font-mono text-[9.5px] tracking-[0.18em] text-ink-mute uppercase">{c.label}</dt>
+            <dt className="font-mono text-[12px] tracking-[0.18em] text-ink-mute uppercase">{c.label}</dt>
             <dd className={`mt-1 font-display text-[26px] leading-none [font-variant-numeric:lining-nums] ${c.tono === 'alerta' ? 'text-danger-deep' : 'text-ink'}`}>{c.value}</dd>
-            {c.detail === undefined ? null : <dd className="mt-1 truncate text-[11.5px] text-ink-mute">{c.detail}</dd>}
+            {c.detail === undefined ? null : <dd className="mt-1 truncate text-[12px] text-ink-mute">{c.detail}</dd>}
           </>
         )
         return (
@@ -238,7 +238,7 @@ export function BarraDeFiltros({
                   >
                     {o.label}
                     {o.count === undefined ? null : (
-                      <span className={`font-mono text-[10.5px] ${o.key === actual ? 'text-white/70' : 'text-ink-mute'}`}>{o.count}</span>
+                      <span className={`font-mono text-[12px] ${o.key === actual ? 'text-white/70' : 'text-ink-mute'}`}>{o.count}</span>
                     )}
                   </Link>
                 </li>
@@ -266,7 +266,7 @@ export function BarraDeFiltros({
               >
                 <span aria-hidden className={`size-2 rounded-full ${o.fiesta === null ? 'bg-linear-to-br from-fiesta-boda via-fiesta-xv to-fiesta-cumple' : puntoDeFiesta(o.fiesta)}`} />
                 {o.label}
-                {o.count === undefined ? null : <span className="font-mono text-[10.5px] text-ink-mute">{o.count}</span>}
+                {o.count === undefined ? null : <span className="font-mono text-[12px] text-ink-mute">{o.count}</span>}
               </Link>
             ))}
         <div className="flex min-w-0 flex-1 basis-[340px] items-center justify-end gap-2 max-[559px]:basis-full">

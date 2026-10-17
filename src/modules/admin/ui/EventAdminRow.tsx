@@ -24,12 +24,15 @@ export type EventAdminView = {
   readonly planNombre: string | null
   /** La portada del diseño, o `null` si es un tema antiguo sin portada en el catálogo. */
   readonly portada: string | null
-  /** El nombre del modelo: «Botánica», «Mascarada». Un retirado lo dice. */
-  readonly modelo: string
+  /** El nombre del modelo: «Botánica», «Mascarada». `null` si el diseño se retiró. */
+  readonly modelo: string | null
   readonly fiesta: FiestaDeLista
   readonly grupos: number
   readonly enviados: number
   readonly respondidos: number
+  /** Personas de sus invitaciones y cuántas respondieron: la misma unidad que el panel del cliente. */
+  readonly personas: number
+  readonly personasRespondieron: number
   readonly etapa: Etapa
   /** «en 12 días», «hoy», «hace 3 meses». Lo compone la página con la fecha de Bolivia. */
   readonly cuando: string
@@ -62,16 +65,18 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
   const whatsapp = conTelefono?.phone ? enlaceWhatsapp(conTelefono.phone, t(`Hola, te escribimos de Luxury Atelier por ${event.title}.`, `Hi, we are writing from Luxury Atelier about ${event.title}.`)) : null
   const fecha = new Date(`${event.eventDate}T00:00:00Z`)
   const ficha = `/panel/eventos/${event.slug}/configuracion`
-  const ratio = event.grupos === 0 ? 0 : event.respondidos / event.grupos
+  const ratio = event.personas === 0 ? 0 : event.personasRespondieron / event.personas
   const fiesta = event.fiesta === 'xv' ? t('XV años', 'Quinceañera') : event.fiesta === 'cumple' ? t('Cumpleaños', 'Birthday') : t('Boda', 'Wedding')
   const avance =
     event.grupos === 0
       ? event.etapa === 'borrador'
         ? t('Falta escribir la invitación', 'Invitation not written yet')
         : t('Invitación lista, sin invitados', 'Invitation ready, no guests')
-      : event.etapa === 'repartiendo'
-        ? t(`${event.enviados} de ${event.grupos} invitaciones enviadas`, `${event.enviados} of ${event.grupos} invitations sent`)
-        : t(`${event.respondidos} de ${event.grupos} confirmaron`, `${event.respondidos} of ${event.grupos} replied`)
+      : event.personas === 0
+        ? t('Sin personas cargadas', 'No people added')
+        : t(`${event.personasRespondieron} de ${event.personas} personas respondieron`, `${event.personasRespondieron} of ${event.personas} people replied`)
+  // Una sola medida en la barra (las respuestas); el reparto, si falta, dicho debajo.
+  const faltaRepartir = event.grupos > 0 && event.enviados < event.grupos ? t(`${event.enviados} de ${event.grupos} ${event.grupos === 1 ? 'invitación enviada' : 'invitaciones enviadas'}`, `${event.enviados} of ${event.grupos} invitations sent`) : null
 
   return (
     <li className={`group relative grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 border-b border-line-panel px-3.5 py-3.5 transition-colors hover:bg-fila ${COLUMNAS_DE_CARTERA} max-[859px]:px-0`}>
@@ -87,8 +92,8 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
         <Link className="font-medium text-ink no-underline after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-gold" href={ficha}>
           {event.title}
         </Link>
-        <span className="block truncate text-[13px] text-ink-mute max-[859px]:hidden">
-          {fiesta} «{event.modelo}», {t('plan', 'plan')} {event.planNombre ?? t('sin asignar', 'unassigned')} · {ANIO.format(fecha)}
+        <span className="block truncate text-[13px] text-ink-mute max-[859px]:hidden" title={`${fiesta} · ${event.modelo ?? ''} · ${event.planNombre ?? ''}`}>
+          {fiesta} {event.modelo === null ? t('(diseño retirado)', '(withdrawn design)') : `«${event.modelo}»`}, {t('plan', 'plan')} {event.planNombre ?? t('sin asignar', 'unassigned')} · {ANIO.format(fecha)}
         </span>
         {event.salud.tono === 'ok' ? null : (
           <span className="mt-0.5 block text-[12.5px] max-[859px]:hidden">
@@ -102,10 +107,10 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
 
       <span className="min-w-0 text-[14.5px] max-[859px]:hidden">
         <span className="block truncate" title={event.anfitriones.map((a) => a.email).join(', ')}>
-          {cliente === undefined ? <span className="text-ink-mute">{t('Sin cliente', 'No client')}</span> : cliente.email}
+          {cliente === undefined ? <span className="text-ink-mute">{t('Sin cliente', 'No client')}</span> : (cliente.nombre ?? cliente.email)}
           {event.anfitriones.length > 1 ? <span className="text-ink-mute">{t(` y ${event.anfitriones.length - 1} más`, ` and ${event.anfitriones.length - 1} more`)}</span> : null}
         </span>
-        <span className="block truncate text-[12px] text-ink-mute">{event.ownerEmail === null ? t('Sin responsable', 'No one responsible') : t(`Lo lleva ${event.ownerEmail}`, `Run by ${event.ownerEmail}`)}</span>
+        <span className="block truncate text-[12px] text-ink-mute" title={event.ownerEmail ?? undefined}>{event.ownerEmail === null ? t('Sin responsable', 'No one responsible') : t(`Lo lleva ${event.ownerEmail}`, `Run by ${event.ownerEmail}`)}</span>
       </span>
 
       <span className="max-[859px]:col-start-3 max-[859px]:row-start-1 max-[859px]:self-start">
@@ -115,10 +120,11 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
       <span className="flex min-w-0 flex-col gap-1.5 max-[859px]:col-span-2 max-[859px]:col-start-2 max-[859px]:-mt-1">
         {event.grupos === 0 ? null : (
           <span aria-hidden className="h-1.5 overflow-hidden rounded-full bg-line-panel">
-            <span className="block h-full bg-shell-deep" style={{ width: `${(event.etapa === 'repartiendo' ? event.enviados / event.grupos : ratio) * 100}%` }} />
+            <span className="block h-full bg-shell-deep" style={{ width: `${ratio * 100}%` }} />
           </span>
         )}
         <span className="text-[12.5px] text-ink-mute">{avance}</span>
+        {faltaRepartir === null ? null : <span className="text-[12.5px] text-ink-mute">{faltaRepartir}</span>}
       </span>
 
       {/* Encima del enlace de la fila (`relative z-10`): abrir la ficha y lo demás en «⋯». */}

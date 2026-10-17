@@ -11,7 +11,7 @@ import { NewTaskForm, SeedTasksButton, TaskBoard, type GrupoDeTareas, type Tarea
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
-import { diaCorto, fecha } from '@/shared/format/fecha'
+import { diaCorto, diasHasta, fecha } from '@/shared/format/fecha'
 import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { PlusIcon } from '@/shared/design/ui/icons'
 import { isErr, isOk } from '@/shared/result'
@@ -189,15 +189,21 @@ export default async function TareasPage({
         {todas.length === 0 ? (
           <PanelCard title={txt('Tu plan de tareas', 'Your task plan')}>
             <div className="flex flex-col items-center gap-4 py-4 text-center">
+              {/* Con la fiesta encima, la plantilla de meses no sirve: dejaba quince tareas «para hoy» la víspera (16 oct). */}
+              {diasHasta(event.value.eventDate, new Date()) <= 14 ? (
+                <p className="max-w-[52ch] rounded-[12px] bg-pill-pending px-4 py-3 text-[14px] leading-[1.6] text-pill-pending-ink">
+                  {txt(`Faltan ${Math.max(0, diasHasta(event.value.eventDate, new Date()))} días. La plantilla es para preparar la fiesta con meses de tiempo: con la fecha tan cerca, mejor añade solo lo que te falta con «Añadir tarea».`, `${Math.max(0, diasHasta(event.value.eventDate, new Date()))} days to go. The template is for planning with months of time: with the date this close, just add what you still need with “Add task”.`)}
+                </p>
+              ) : null}
               <p className="max-w-[52ch] text-[13px] leading-[1.7] text-ink-soft">
-                {txt(`Tu lista de pendientes para ${fiesta === 'xv' ? 'los XV' : 'la boda'}: lo que hay que ir resolviendo mes a mes —salón, vestido, fotógrafo, invitaciones—, con fechas contadas hacia atrás desde el ${diaLegible(event.value.eventDate, 'es')}. Lo que ya pasó vence hoy; puedes editar, quitar o sumar tareas.`, `Your to-do list for the ${fiesta === 'xv' ? 'quinceañera' : 'wedding'}: what to sort out month by month —venue, dress, photographer, invitations—, with dates counted back from ${diaLegible(event.value.eventDate, 'en')}. Anything already past is due today; you can edit, remove or add tasks.`)}
+                {txt(`Tu lista de pendientes para ${fiesta === 'xv' ? 'los XV' : fiesta === 'cumple' ? 'el cumpleaños' : 'la boda'}: lo que hay que ir resolviendo mes a mes —salón, vestido, fotógrafo, invitaciones—, con fechas contadas hacia atrás desde el ${diaLegible(event.value.eventDate, 'es')}. Lo que ya pasó vence hoy; puedes editar, quitar o sumar tareas.`, `Your to-do list for the ${fiesta === 'xv' ? 'quinceañera' : fiesta === 'cumple' ? 'birthday' : 'wedding'}: what to sort out month by month —venue, dress, photographer, invitations—, with dates counted back from ${diaLegible(event.value.eventDate, 'en')}. Anything already past is due today; you can edit, remove or add tasks.`)}
               </p>
               {/* Qué se va a crear, antes de pulsar: las primeras de la plantilla con su fecha. */}
               {(() => {
                 const plantilla = sembrarTareas(fiesta, event.value.eventDate, hoy)
                 return (
                   <div className="w-full max-w-[460px] rounded-[16px] border border-line-panel bg-bg-top/40 p-4 text-left">
-                    <p className="mb-2 text-[11px] font-medium tracking-[0.1em] text-ink-mute uppercase">{txt(`Así empieza · ${plantilla.length} tareas`, `How it starts · ${plantilla.length} tasks`)}</p>
+                    <p className="mb-2 text-[12px] font-medium tracking-[0.1em] text-ink-mute uppercase">{txt(`Así empieza · ${plantilla.length} tareas`, `How it starts · ${plantilla.length} tasks`)}</p>
                     <ul aria-label={txt('Vista previa de la plantilla', 'Template preview')} className="flex flex-col gap-1.5">
                       {plantilla.slice(0, 4).map((t) => (
                         <li className="flex items-baseline justify-between gap-3 text-[13px] text-ink" key={t.sortOrder}>

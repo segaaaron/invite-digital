@@ -289,7 +289,7 @@ export function EditPersonDialog({
               value={attending}
             >
               <option value="">{t('Pendiente', 'Pending')}</option>
-              <option value="yes">{t('Asistirá', 'Attending')}</option>
+              <option value="yes">{t('Viene', 'Coming')}</option>
               <option value="no">{t('No podrá', 'Can’t come')}</option>
               <option value="maybe">{t('Tal vez', 'Maybe')}</option>
             </select>

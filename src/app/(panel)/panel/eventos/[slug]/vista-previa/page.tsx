@@ -59,7 +59,7 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
   const variables = definicion.fonts.map((clave) => themeFonts[clave].variable).join(' ')
 
   return (
-    <VistaPreviaDelPanel fuentes={variables} invitado={INVITADO_DE_MUESTRA.label} volver={`/panel/eventos/${event.value.slug}/configuracion`}>
+    <VistaPreviaDelPanel fuentes={variables} volver={`/panel/eventos/${event.value.slug}/configuracion`}>
       <EstiloDeLaInvitacion estilo={await events.estilo.leer(event.value.id)} tema={definicion}>
         <Tema
           content={contenido}

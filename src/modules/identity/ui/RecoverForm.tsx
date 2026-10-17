@@ -119,7 +119,7 @@ export function RecoverForm() {
             />
           </div>
 
-          <p className="text-[11px] leading-[1.7] text-ink-mute">
+          <p className="text-[12px] leading-[1.7] text-ink-mute">
             {t('Al menos 12 caracteres. El código caduca en diez minutos y sirve una sola vez.', 'At least 12 characters. The code expires in ten minutes and works only once.')}
           </p>
 

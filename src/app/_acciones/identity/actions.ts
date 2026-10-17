@@ -287,6 +287,28 @@ export async function guardarMisDatosAction(_previo: MisDatosState, formData: Fo
   return { status: 'success', message: t('Guardado.', 'Saved.') }
 }
 
+/**
+ * Cambia el correo de la propia cuenta con el código que llegó al correo **actual** (`requestAccountCodeAction`).
+ * Antes Mi cuenta decía «crea otra cuenta y borra esta» (16 oct). En modo soporte no: es la cuenta del cliente.
+ */
+export async function cambiarCorreoAction(_previo: CodigoDeCuentaState, formData: FormData): Promise<CodigoDeCuentaState> {
+  const t = await tr()
+  const actor = await requireSession()
+  if (actor.soporte) return { status: 'error', message: t('En modo soporte no se cambia el correo del cliente.', 'In support mode the client’s email is not changed.') }
+  const hecho = await identity.cambiarCorreo({ userId: actor.userId, email: campo(formData, 'correo'), code: campo(formData, 'code') })
+  if (isErr(hecho)) {
+    if (hecho.error.kind === 'storage_failure') registrarFallo('identity/actions', 'no se pudo cambiar el correo de la cuenta', hecho.error.kind, hecho.error.detail)
+    const mensaje: Record<string, string> = {
+      invalid_email: t('Revisa el correo nuevo: no tiene forma de correo.', 'Check the new email: it doesn’t look like an email.'),
+      email_taken: t('Ese correo ya es de otra cuenta.', 'That email already belongs to another account.'),
+      invalid_credentials: t('El código no es válido, ya se usó o caducó. Pide uno nuevo.', 'The code is not valid, was already used or expired. Request a new one.'),
+    }
+    return { status: 'error', message: mensaje[hecho.error.kind] ?? t('No pudimos cambiarlo. Inténtalo en un momento.', 'We couldn’t change it. Try again in a moment.') }
+  }
+  revalidatePath('/panel', 'layout')
+  return { status: 'done', message: t(`Listo: ahora entras con ${hecho.value}.`, `Done: you now sign in with ${hecho.value}.`) }
+}
+
 export async function signOutAction(): Promise<void> {
   const jar = await cookies()
   const token = jar.get(SESSION_COOKIE)?.value

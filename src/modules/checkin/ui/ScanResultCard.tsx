@@ -59,13 +59,13 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
     >
       {outcome.kind === 'unknown' ? (
         <>
-          <p className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] opacity-85">{t('✕ Pase no válido', '✕ Invalid pass')}</p>
+          <p className="font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] opacity-85">{t('✕ Pase no válido', '✕ Invalid pass')}</p>
           <p className="mt-2 font-display text-[30px] italic leading-tight">{t('Este código no es de tu evento', 'This code isn’t from your event')}</p>
           <p className="mt-1.5 text-[13px] opacity-80">{t('Puede ser el pase de otra fiesta, o un QR cualquiera.', 'It may be another party’s pass, or just any QR.')}</p>
         </>
       ) : (
         <>
-          <p className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] opacity-85">
+          <p className="font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] opacity-85">
             {outcome.kind === 'welcome'
               ? t('✓ Bienvenidos', '✓ Welcome')
               : conPersonas && todosDentro
@@ -154,7 +154,7 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
           <button
             type="button"
             onClick={() => onUndo(outcome.scanId)}
-            className="flex-1 rounded-full border border-white/30 bg-black/20 px-4 py-3.5 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)]"
+            className="flex-1 rounded-full border border-white/30 bg-black/20 px-4 py-3.5 font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)]"
           >
             {t('Deshacer', 'Undo')}
           </button>
@@ -162,7 +162,7 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
         <button
           type="button"
           onClick={onDismiss}
-          className="flex-1 rounded-full bg-white px-4 py-3.5 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
+          className="flex-1 rounded-full bg-white px-4 py-3.5 font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink"
         >
           {outcome.kind === 'welcome' ? t('Siguiente invitado', 'Next guest') : t('Cerrar', 'Close')}
         </button>

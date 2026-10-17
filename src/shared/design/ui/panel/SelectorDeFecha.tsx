@@ -162,7 +162,7 @@ export function SelectorDeFecha({
             <thead>
               <tr>
                 {DIAS[locale].map((dia) => (
-                  <th className="pb-1.5 text-center text-[11px] font-normal text-ink-mute" key={dia} scope="col">
+                  <th className="pb-1.5 text-center text-[12px] font-normal text-ink-mute" key={dia} scope="col">
                     {dia}
                   </th>
                 ))}

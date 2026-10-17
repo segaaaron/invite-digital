@@ -50,7 +50,7 @@ export function EntrarComoCliente({
         onClick={() =>
           anfitriones.length > 1 ? dialogo.current?.showModal() : entrarComo(anfitriones[0]?.userId ?? null)
         }
-        title={anfitriones.length === 1 ? t(`Entrar como ${anfitriones[0]!.email}`, `Sign in as ${anfitriones[0]!.email}`) : anfitriones.length === 0 ? t('Sin cliente: entras como anfitrión del evento', 'No client: you enter as the event host') : undefined}
+        title={anfitriones.length === 1 ? t(`Entrar como el cliente: ${anfitriones[0]!.nombre ?? anfitriones[0]!.email}`, `Sign in as the client: ${anfitriones[0]!.nombre ?? anfitriones[0]!.email}`) : anfitriones.length === 0 ? t('Sin cliente: entras como anfitrión del evento', 'No client: you enter as the event host') : undefined}
         type="button"
       >
         {entrando ? t('Entrando…', 'Entering…') : anfitriones.length === 0 ? t('Entrar al panel del evento', 'Open the event panel') : t('Entrar como el cliente', 'Sign in as the client')}
@@ -73,7 +73,7 @@ export function EntrarComoCliente({
           <div className="mt-4 flex flex-col gap-2">
             {anfitriones.map((a) => (
               <button className={botonClases('default')} disabled={entrando} key={a.userId} onClick={() => entrarComo(a.userId)} type="button">
-                {a.email}
+                {a.nombre ?? a.email}
               </button>
             ))}
           </div>

@@ -33,11 +33,11 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   await page.getByLabel('RSVP').selectOption('yes')
   await page.getByLabel('Invitado VIP').check()
   await page.getByRole('button', { name: 'Guardar', exact: true }).click()
-  // La fila (maqueta E03) lo dice: la marca VIP junto al nombre y «Asistirá»; el chip filtra a quienes asisten.
+  // La fila (maqueta E03) lo dice: la marca VIP junto al nombre y «Viene»; el chip filtra a quienes asisten.
   const fila = page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Ana Lucía Vega' }) })
   await expect(fila.getByText('VIP', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Asistirán' }).click()
-  await expect(fila.getByText('Asistirá', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: /^Vienen \d/ }).click()
+  await expect(fila.getByText('Viene', { exact: true })).toBeVisible()
 
   // 4. El reporte del catering sale de esas restricciones.
   await page.goto(`/panel/eventos/${SLUG}/mesas`)

@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'node:crypto'
 import { attempt, err, isErr, ok, type Result } from '@/shared/result'
-import { createCredential } from '../domain/credential'
+import { createCredential, esCorreo } from '../domain/credential'
 import { identityError, type IdentityError } from '../domain/errors'
 import { canAttemptReset, newOtp, normalizeOtp, otpExpiry } from '../domain/password-reset'
 import type { PasswordHasher, PasswordResetRepository, SessionRepository, TokenMinter, UserRepository } from './ports'
@@ -144,3 +144,34 @@ export const requestAccountCode = (deps: Deps) => async (userId: string): Promis
     },
     (cause) => identityError('storage_failure', `No se pudo emitir el código: ${String(cause)}`),
   )
+
+/**
+ * **Cambia el correo de la cuenta** (16 oct; antes Mi cuenta mandaba a crear otra cuenta y borrar esta). Lo autoriza
+ * el código que llega al correo **actual**, como cerrar las demás sesiones: con la contraseña compartida, cualquiera
+ * que entrara podría quedarse con la cuenta. El nuevo no puede ser el de otra cuenta, y lo demás se valida **antes**
+ * de gastar el código.
+ */
+export const changeEmail =
+  (deps: {
+    resets: PasswordResetRepository
+    minter: TokenMinter
+    clock: () => Date
+    emails: { findIdByEmail(email: string): Promise<string | null>; updateEmail(userId: string, email: string): Promise<void> }
+  }) =>
+  async (input: { userId: string; email: string; code: string }): Promise<Result<string, IdentityError>> =>
+    attempt(
+      async () => {
+        const email = input.email.trim().toLowerCase()
+        if (!esCorreo(email)) return err(identityError('invalid_email', `Correo sin forma de correo: ${email}`))
+        const dueno = await deps.emails.findIdByEmail(email)
+        if (dueno !== null && dueno !== input.userId) return err(identityError('email_taken', 'Ese correo ya es de otra cuenta.'))
+        const code = normalizeOtp(input.code)
+        if (code === null) return err(identityError('invalid_credentials', 'El código no tiene forma de código.'))
+        const gastado = await gastarCodigo(deps, input.userId, code)
+        if (isErr(gastado)) return gastado
+        await deps.resets.consume(gastado.value, deps.clock())
+        await deps.emails.updateEmail(input.userId, email)
+        return ok(email)
+      },
+      (cause) => identityError('storage_failure', `No se pudo cambiar el correo: ${String(cause)}`),
+    )

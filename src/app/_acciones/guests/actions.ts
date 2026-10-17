@@ -445,7 +445,7 @@ export async function addGuestsFromAssistantAction(input: { eventSlug: string; i
     lista.personas.push(...invitacion.personas.map((fullName) => ({ guestGroupId: id, fullName })))
   }
 
-  await admin.record(actor, { action: 'asistente.invitados', subject: input.eventSlug, detail: `${creadas} invitaciones, ${personas} personas` })
+  await admin.record(actor, { action: 'asistente.invitados', subject: input.eventSlug, detail: `${creadas} ${creadas === 1 ? 'invitación' : 'invitaciones'}, ${personas} ${personas === 1 ? 'persona' : 'personas'}` })
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
   revalidatePath(`/panel/eventos/${input.eventSlug}`)
   return { status: 'success', creadas, personas, yaEstaban }

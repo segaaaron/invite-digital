@@ -26,7 +26,7 @@ const ETIQUETA_FUENTE: Record<Source, string> = {
   mensaje: 'Mensaje copiado',
   compartir: 'Compartido desde el teléfono',
   general: 'Enlace general',
-  direct: 'Directo (sin canal)',
+  direct: 'su enlace directo',
   other: 'Otras',
 }
 

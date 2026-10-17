@@ -97,7 +97,7 @@ export function QrManager({
             required
             type="text"
           />
-          <span className="text-[11px] leading-[1.7] text-ink-mute">
+          <span className="text-[12px] leading-[1.7] text-ink-mute">
             {t('Puedes cambiarlo después sin reimprimir nada: el código apunta aquí, no allá.', 'You can change it later without reprinting: the code points here, not there.')}
           </span>
         </div>
@@ -177,8 +177,8 @@ function QrRow({ code, eventId, eventSlug }: { code: QrView; eventId: string; ev
             <Pill tone={code.active ? 'ok' : 'no'}>{code.active ? t('Activo', 'Active') : t('Apagado', 'Off')}</Pill>
             <Pill tone="pending">{tipo(t)[code.kind] ?? code.kind}</Pill>
           </span>
-          <span className="mt-1 block truncate font-codigo text-[11px] text-ink-mute">{code.target}</span>
-          <span className="mt-0.5 block text-[11px] text-ink-mute">
+          <span className="mt-1 block truncate font-codigo text-[12px] text-ink-mute">{code.target}</span>
+          <span className="mt-0.5 block text-[12px] text-ink-mute">
             {t(`${code.scanCount} escaneo${code.scanCount === 1 ? '' : 's'}`, `${code.scanCount} scan${code.scanCount === 1 ? '' : 's'}`)}
           </span>
         </span>

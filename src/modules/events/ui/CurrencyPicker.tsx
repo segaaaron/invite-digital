@@ -35,7 +35,7 @@ export function CurrencyPicker({
     <label className="flex items-center gap-2.5">
       <span className={LABEL_CLASS}>{t('Moneda', 'Currency')}</span>
       <select
-        className="rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-60 max-[859px]:min-h-11 max-[859px]:text-[16px]"
+        className="rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-3.5 py-2 font-mono text-[12px] tracking-[0.25em] text-ink uppercase disabled:opacity-60 max-[859px]:min-h-11 max-[859px]:text-[16px]"
         disabled={pending}
         onChange={(e) => {
           const siguiente = e.target.value as Currency
@@ -64,7 +64,7 @@ export function CurrencyPicker({
       </select>
     </label>
       {error === null ? null : (
-        <p className="max-w-[28ch] text-right text-[11px] text-danger" role="alert">
+        <p className="max-w-[28ch] text-right text-[12px] text-danger" role="alert">
           {error}
         </p>
       )}

@@ -36,11 +36,14 @@ export function AjustesDelAsistente({ config, planes, urlDeSiri }: { config: Con
             </label>
           ))}
         </div>
-        <p className="mt-2 text-[13px] text-ink-mute">{t('Los eventos de estos planes ven a Luxury. El corte está en el servidor.', 'Events on these plans see Luxury. The cut-off is on the server.')}</p>
+        <p className="mt-2 text-[13px] text-ink-mute">{t('Los eventos de estos planes tienen a Luxury. Los demás pueden comprarlo como extra.', 'Events on these plans have Luxury. Others can buy it as an extra.')}</p>
       </fieldset>
       <details className="group rounded-[12px] border border-line-panel">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 text-[14.5px] font-medium [&::-webkit-details-marker]:hidden">
-          {t('Luxury con Siri', 'Luxury with Siri')}
+          <span className="flex flex-col">
+            {t('Luxury con Siri', 'Luxury with Siri')}
+            <span className="text-[13px] font-normal text-ink-mute">{t('Opcional: hablarle a Luxury desde el iPhone con «Oye Siri, Luxury».', 'Optional: talk to Luxury from the iPhone with “Hey Siri, Luxury”.')}</span>
+          </span>
           <span aria-hidden className="text-ink-mute transition-transform group-open:rotate-180">⌄</span>
         </summary>
         <div className="flex flex-col gap-3 border-t border-line-panel px-4 py-4 text-[13.5px] text-ink-mute">

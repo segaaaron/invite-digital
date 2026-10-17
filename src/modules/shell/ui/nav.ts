@@ -137,7 +137,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           label: t('Configurar', 'Configure'),
           items: [
             {
-              href: '/panel/admin/fallos',
+              href: '/panel/admin/usuarios',
               label: t('Ajustes', 'Settings'),
               icon: 'configuracion',
               activo: ['/panel/admin/ajustes', '/panel/admin/fallos', '/panel/admin/usuarios', '/panel/admin/pagos', '/panel/admin/asistente', '/panel/admin/web', '/panel/admin/mensajes', '/panel/admin/auditoria'],
@@ -175,7 +175,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         items: [
           { href: base, label: t('Resumen', 'Overview'), icon: 'resumen' },
           { href: en('/configuracion'), label: t('Mi invitación', 'My invitation'), icon: 'editar' },
-          { href: en('/invitados'), label: t('Invitados', 'Guests'), icon: 'invitados', count: counts.invitados ?? null, countLabel: t('personas', 'people') },
+          { href: en('/invitados'), label: t('Invitados', 'Guests'), icon: 'invitados' },
           { href: en('/mesas'), label: t('Mesas', 'Tables'), icon: 'mesas' },
           { href: en('/regalos'), label: t('Regalos', 'Gifts'), icon: 'regalos' },
           { href: en('/mensajes'), label: t('Libro de firmas', 'Guestbook'), icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: t('sin agradecer', 'not thanked') },
@@ -209,7 +209,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: equipo === 'coanfitrion' ? null : en('/equipo'), label: t('Equipo y recepción', 'Team and reception'), icon: 'equipo' },
           // Comprar es del anfitrión.
           { href: equipo === 'anfitrion' ? en('/extras') : null, label: t('Extras', 'Extras'), icon: 'extras' },
-          { href: en('/ajustes'), label: t('Configuración', 'Settings'), icon: 'configuracion' },
+          // «Configuración» bajo «Ajustes», con «Mi invitación» en /configuracion, se cruzaban (16 oct): se nombra por lo que tiene.
+          { href: en('/ajustes'), label: t('Datos y estilo', 'Details and style'), icon: 'configuracion' },
           { href: extra.misEventos ? '/panel' : null, label: t('Mis eventos', 'My events'), icon: 'eventos' },
           { href: mesa, label: t('Mesa del planner', 'Planner desk'), icon: 'eventos' },
         ],
@@ -248,7 +249,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       label: t('Evento activo', 'Active event'),
       items: [
         { href: base, label: t('Resumen', 'Overview'), icon: 'resumen' },
-        { href: en('/invitados'), label: t('Invitados', 'Guests'), icon: 'invitados', count: counts.invitados ?? null, countLabel: t('grupos', 'groups') },
+        { href: en('/invitados'), label: t('Invitados', 'Guests'), icon: 'invitados' },
         { href: en('/mesas'), label: t('Mesas', 'Tables'), icon: 'mesas' },
         { href: en('/regalos'), label: t('Regalos', 'Gifts'), icon: 'regalos' },
         { href: en('/mensajes'), label: t('Mensajes', 'Messages'), icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: t('sin leer', 'unread') },

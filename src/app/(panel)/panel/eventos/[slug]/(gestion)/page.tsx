@@ -111,7 +111,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           : !invitacionLista
             ? escribir
             : pendientes > 0
-              ? { titulo: pendientes === 1 ? t('1 invitado aún no responde', '1 guest hasn’t replied yet') : t(`${pendientes} invitados aún no responden`, `${pendientes} guests haven’t replied yet`), detalle: t('Un recordatorio por WhatsApp suele traer la mitad de vuelta.', 'A WhatsApp reminder usually brings half of them back.'), accion: t('Enviar recordatorios', 'Send reminders'), href: `${base}/invitados`, secundaria: { accion: t('Ver quiénes son', 'See who they are'), href: `${base}/invitados` } }
+              ? // En personas, como la dona y la lista de Invitados (16 oct: «2 aún no responden» junto a «3 sin responder»).
+                { titulo: sinResponder === 1 ? t('1 invitado aún no responde', '1 guest hasn’t replied yet') : t(`${sinResponder} invitados aún no responden`, `${sinResponder} guests haven’t replied yet`), detalle: t('Un recordatorio por WhatsApp suele traer la mitad de vuelta.', 'A WhatsApp reminder usually brings half of them back.'), accion: t('Enviar recordatorios', 'Send reminders'), href: `${base}/invitados?panel=recordar`, secundaria: { accion: t('Ver quiénes son', 'See who they are'), href: `${base}/invitados` } }
               : { titulo: t('Todos respondieron', 'Everyone replied'), detalle: vienen === 1 ? t('1 persona viene.', '1 person is coming.') : t(`${vienen} personas vienen.`, `${vienen} people are coming.`), accion: t('Ver invitados', 'View guests'), href: `${base}/invitados`, secundaria: null }
 
   // ── Esta semana: lo que vence o ya venció, cada cosa con adónde ir.
@@ -243,14 +244,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <h2 className="font-display text-[24px] font-medium max-[767px]:sr-only" id="invitacion-titulo">
               {t('Cómo va tu invitación', 'How your invitation is doing')}
             </h2>
-            <Link className="inline-flex min-h-11 items-center text-[14px]" href={`${base}/informe`}>
-              {t('Informe del evento', 'Event report')}
+            <Link className="inline-flex min-h-11 items-center gap-1 text-[14px] font-medium text-gold-deep underline underline-offset-4" href={`${base}/informe`}>
+              {t('Informe del evento', 'Event report')} <span aria-hidden>→</span>
             </Link>
           </div>
           <div className="flex items-center gap-6">
-            <Aro porcentaje={respondio} />
+            <Aro noVienen={noVienen} porcentaje={respondio} total={gente.length} vienen={vienen} />
             <dl className="grid grid-cols-[auto_auto] gap-x-4.5 gap-y-2 text-[14.5px]">
-              <Fila color="bg-shell-deep" etiqueta={t('Asisten', 'Attending')} valor={vienen} />
+              <Fila color="bg-shell-deep" etiqueta={t('Vienen', 'Coming')} valor={vienen} />
               <Fila color="bg-gold" etiqueta={t('No vienen', 'Not coming')} valor={noVienen} />
               <Fila color="bg-line-panel" destacar={sinResponder > 0} etiqueta={t('Sin responder', 'No reply')} valor={sinResponder} />
               <dt className="text-ink-mute max-[767px]:hidden">{t('La vieron', 'Viewed')}</dt>
@@ -264,14 +265,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           )}
         </section>
 
+        {/* Sin nada que venza, no se pinta: un hueco que dice «nada» ocupaba media pantalla (16 oct). */}
+        {semana.length === 0 ? null : (
         <section aria-labelledby="semana-titulo" className="min-w-0 flex-[1_1_360px]">
           <h2 className="mb-1.5 font-display text-[24px] font-medium" id="semana-titulo">
             {t('Esta semana', 'This week')}
           </h2>
-          {semana.length === 0 ? (
-            <p className="border-t border-line-panel py-4 text-[15px] text-ink-mute">{t('Nada vence esta semana.', 'Nothing is due this week.')}</p>
-          ) : (
-            <ul>
+          <ul>
               {semana.map((p) => (
                 <li className="flex items-center gap-4 border-t border-line-panel px-1 py-4 max-[767px]:border-t-0 max-[767px]:px-0 max-[767px]:[&+li]:border-t" key={p.clave}>
                   <svg aria-hidden className="size-[19px] shrink-0 text-gold-deep max-[767px]:hidden" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
@@ -286,9 +286,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   </PanelButton>
                 </li>
               ))}
-            </ul>
-          )}
+          </ul>
         </section>
+        )}
       </div>
 
       {hayPreguntas(preguntas) ? (
@@ -321,15 +321,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   )
 }
 
-/** El aro de respuestas de la maqueta: esmeralda lo respondido, latón el resto. */
-function Aro({ porcentaje }: { porcentaje: number | null }) {
-  const p = porcentaje ?? 0
+/** El aro de respuestas: esmeralda los que vienen, latón los que no, y el resto sin pintar (sin responder). */
+function Aro({ porcentaje, vienen, noVienen, total }: { porcentaje: number | null; vienen: number; noVienen: number; total: number }) {
+  const si = total === 0 ? 0 : (vienen / total) * 100
+  const no = total === 0 ? 0 : (noVienen / total) * 100
   return (
     <div className="relative grid size-[150px] shrink-0 place-items-center max-[767px]:size-[104px]">
       <svg aria-hidden className="absolute inset-0 -rotate-90" viewBox="0 0 42 42">
         <circle cx="21" cy="21" fill="none" r="17" stroke="var(--color-line-panel)" strokeWidth="4" />
-        <circle cx="21" cy="21" fill="none" pathLength="100" r="17" stroke="var(--color-shell-deep)" strokeDasharray={`${p} ${100 - p}`} strokeWidth="4" />
-        {p > 0 && p < 100 ? <circle cx="21" cy="21" fill="none" pathLength="100" r="17" stroke="var(--color-gold)" strokeDasharray={`${Math.min(6, 100 - p)} ${100 - Math.min(6, 100 - p)}`} strokeDashoffset={-p} strokeWidth="4" /> : null}
+        {si > 0 ? <circle cx="21" cy="21" fill="none" pathLength="100" r="17" stroke="var(--color-shell-deep)" strokeDasharray={`${si} ${100 - si}`} strokeWidth="4" /> : null}
+        {no > 0 ? <circle cx="21" cy="21" fill="none" pathLength="100" r="17" stroke="var(--color-gold)" strokeDasharray={`${no} ${100 - no}`} strokeDashoffset={-si} strokeWidth="4" /> : null}
       </svg>
       <span className="text-center">
         <span className="block font-display text-[34px] leading-none font-medium max-[767px]:text-[26px]">{porcentaje === null ? '—' : `${porcentaje}%`}</span>

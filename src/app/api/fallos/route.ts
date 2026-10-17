@@ -1,4 +1,4 @@
-import { guardarFallo } from '@/shared/observability/fallos'
+import { esCorteDelCliente, guardarFallo } from '@/shared/observability/fallos'
 import { clientIpFrom } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 
@@ -20,6 +20,8 @@ export async function POST(request: Request) {
   if (cuerpo === null || typeof cuerpo.mensaje !== 'string' || cuerpo.mensaje.trim() === '') return new Response(null, { status: 400 })
   const error = new Error(cuerpo.mensaje.slice(0, 500))
   error.stack = typeof cuerpo.pila === 'string' ? cuerpo.pila.slice(0, 6000) : error.message
+  // Sin red en el aparato del invitado no es un fallo nuestro: no se anota.
+  if (esCorteDelCliente(error)) return new Response(null, { status: 204 })
   await guardarFallo({
     servicio: 'navegador',
     origen: 'navegador',

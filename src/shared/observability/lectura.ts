@@ -66,3 +66,13 @@ export async function borrarFallosViejos(ahora: Date): Promise<number> {
     .returning({ id: serviceFailures.id })
   return borradas.length
 }
+
+/** Cuántos tipos de fallo distintos hubo en los últimos `dias`: lo que dice la lista de Ajustes sin leerlos todos. */
+export async function cuantosTiposDeFallo(dias: number): Promise<number> {
+  const desde = new Date(Date.now() - dias * 86_400_000)
+  const [fila] = await db
+    .select({ n: sql<number>`count(distinct ${serviceFailures.fingerprint})::int` })
+    .from(serviceFailures)
+    .where(gte(serviceFailures.createdAt, desde))
+  return fila?.n ?? 0
+}

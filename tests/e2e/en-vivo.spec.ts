@@ -43,8 +43,8 @@ test('el invitado confirma y los novios lo ven en su lista sin recargar', async 
 
   const novios = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
   await novios.goto(`/panel/eventos/${eventSlug}/invitados`)
-  await expect(novios.getByText('En vivo', { exact: true })).toBeVisible({ timeout: 10_000 })
-  // Sin nada nuevo, solo el botón de actualizar a mano.
+  // La conexión abierta no se pinta (16 oct: la píldora tapaba contenido); se espera por su marca.
+  await expect(novios.locator('[data-en-vivo="en-vivo"]')).toHaveCount(1, { timeout: 10_000 })
   await expect(novios.getByRole('button', { name: /novedad/ })).toHaveCount(0)
 
   const invitado = await (await browser.newContext()).newPage()
@@ -57,7 +57,6 @@ test('el invitado confirma y los novios lo ven en su lista sin recargar', async 
   await expect(aviso).toBeVisible({ timeout: 5_000 })
   await aviso.click()
   await expect(novios.getByRole('button', { name: /novedad/ })).toHaveCount(0)
-  await expect(novios.getByRole('button', { name: 'Actualizar' })).toBeVisible()
 
   await deleteEvent(eventSlug)
 })
@@ -68,7 +67,7 @@ test('lo que registra otra puerta aparece solo en «Ingreso al evento»', async 
 
   const recepcion = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
   await recepcion.goto(`/panel/eventos/${eventSlug}/checkin`)
-  await expect(recepcion.getByText('En vivo', { exact: true })).toBeVisible({ timeout: 10_000 })
+  await expect(recepcion.locator('[data-en-vivo="en-vivo"]')).toHaveCount(1, { timeout: 10_000 })
   await expect(recepcion.getByRole('tab', { name: /^Dentro 0$/ })).toBeVisible()
 
   // Otra puerta registra la llegada (la escritura llega a la base por donde sea: el aviso sale de ahí).

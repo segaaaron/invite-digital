@@ -5,6 +5,7 @@ import { useId, useState, useTransition } from 'react'
 import { removeDocumentAction, uploadDocumentAction } from '@/app/_acciones/planner/dia-actions'
 import { FileIcon, TrashIcon, UploadIcon } from '@/shared/design/ui/icons'
 import { botonClases, FIELD_CLASS, Field, IconButton, PanelAlert, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { NOMBRE_DE_DOCUMENTO, type TipoDeDocumento } from '../domain/dia-d'
 import type { Evento } from './Accion'
 import { useT } from '@/shared/i18n/idioma-navegador'
@@ -74,9 +75,12 @@ export function DocumentsBoard({ evento, documentos, proveedores }: { evento: Ev
               {t('Tus documentos', 'Your documents')}
             </h2>
             {archivos.length === 0 ? (
-              <p className="text-[14px] leading-[1.7] text-ink-mute">
-                {t('Todavía no subiste nada. Aquí se guardan los contratos, las cotizaciones y las facturas de tu fiesta: privados, solo para ti y tu equipo, y a mano el día que un proveedor diga otra cosa.', 'You haven’t uploaded anything yet. Your party’s contracts, quotes and invoices are kept here: private, only for you and your team, and handy the day a vendor says otherwise.')}
-              </p>
+              <EmptyState
+                compact
+                description={t('Aquí se guardan los contratos, las cotizaciones y las facturas de tu fiesta: privados, solo para ti y tu equipo. Súbelos con «Elegir archivo», arriba.', 'Your party’s contracts, quotes and invoices are kept here: private, only for you and your team. Upload them with “Choose file”, above.')}
+                icon={<FileIcon />}
+                title={t('Todavía no subiste nada', 'You haven’t uploaded anything yet')}
+              />
             ) : (
               <ListaDeArchivos documentos={archivos} evento={evento} proveedores={proveedores} />
             )}
@@ -97,7 +101,7 @@ export function DocumentsBoard({ evento, documentos, proveedores }: { evento: Ev
                           // eslint-disable-next-line @next/next/no-img-element
                           <img alt={f.originalName} className="size-full object-cover" loading="lazy" src={f.href} />
                         ) : (
-                          <a className="grid size-full place-items-center p-2 text-center text-[11px] text-ink-soft underline" href={f.href}>
+                          <a className="grid size-full place-items-center p-2 text-center text-[12px] text-ink-soft underline" href={f.href}>
                             {f.originalName}
                           </a>
                         )}

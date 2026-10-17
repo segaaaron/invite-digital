@@ -274,12 +274,12 @@ export type PillTone = keyof typeof PILL_TONOS
 
 /**
  * Estado en una palabra. El color acompaña al texto y nunca lo sustituye: quien no
- * distingue el verde del rojo lee «Asistirá» igual.
+ * distingue el verde del rojo lee «Viene» igual.
  */
-export function Pill({ tone, children }: { tone: PillTone; children: ReactNode }) {
+export function Pill({ tone, children, largo = false }: { tone: PillTone; children: ReactNode; /** Texto largo (un aviso): parte en líneas en vez de salirse de la pantalla. */ largo?: boolean }) {
   return (
     <span
-      className={`inline-block rounded-[var(--radius-pill)] px-2.75 py-0.75 text-[12.5px] font-medium whitespace-nowrap ${PILL_TONOS[tone]}`}
+      className={`inline-block max-w-full rounded-[var(--radius-pill)] px-2.75 py-0.75 text-[12.5px] font-medium ${largo ? 'whitespace-normal' : 'whitespace-nowrap'} ${PILL_TONOS[tone]}`}
     >
       {children}
     </span>
@@ -426,7 +426,7 @@ export function BarRow({
           style={{ width: `${ancho}%` }}
         />
       </span>
-      <span className={`${wide ? 'w-24' : 'w-10'} shrink-0 text-right font-mono text-[11px] whitespace-nowrap text-ink-soft`}>{value}</span>
+      <span className={`${wide ? 'w-24' : 'w-10'} shrink-0 text-right font-mono text-[12px] whitespace-nowrap text-ink-soft`}>{value}</span>
     </div>
   )
 }

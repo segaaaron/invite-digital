@@ -49,7 +49,7 @@ export default async function FallosPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PanelHeader title={t('Ajustes', 'Settings')} tituloEnCelular={t('Registro de fallos', 'Error log')} bajoPestanas={t('Solo lo que se rompió, dicho en palabras. Cuando lo arregles, bórralo: si vuelve a pasar, aparece otra vez.', 'Only what broke, said in plain words. When you fix it, delete it: if it happens again, it shows up again.')} pestanas={<PestanasDeAdmin />} />
+      <PanelHeader title={t('Registro de fallos', 'Error log')} bajoPestanas={t('Solo lo que se rompió, dicho en palabras. Cuando lo arregles, bórralo: si vuelve a pasar, aparece otra vez.', 'Only what broke, said in plain words. When you fix it, delete it: if it happens again, it shows up again.')} pestanas={<PestanasDeAdmin />} />
       <div className="mb-6 flex flex-wrap items-center gap-2.5">
         {PERIODOS.map((x) => (
           <Link
@@ -113,14 +113,14 @@ export default async function FallosPage({ searchParams }: { searchParams: Promi
                   </form>
                 </div>
                 <details className="group mt-3.5" open={n === 0}>
-                  <summary className="cursor-pointer list-none text-[14px] text-gold-deep [&::-webkit-details-marker]:hidden">
+                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-[14px] text-gold-deep [&::-webkit-details-marker]:hidden">
                     <span className="group-open:hidden">{t('▸ Qué significa y qué hacer', '▸ What it means and what to do')}</span>
                     <span className="hidden group-open:inline">{t('▾ Qué significa y qué hacer', '▾ What it means and what to do')}</span>
                   </summary>
                   <div className="mt-3 grid gap-2.5 rounded-[10px] bg-bg px-4.5 py-4">
                     <div>
                       <div className="text-[12.5px] text-ink-mute">{t('Qué significa', 'What it means')}</div>
-                      <div className="text-[14.5px]">{e.pista ?? t('No es un fallo conocido. Abre el detalle técnico para ver la causa exacta.', 'It is not a known error. Open the technical detail to see the exact cause.')}</div>
+                      <div className="text-[14.5px]">{e.pista ?? t('Todavía no tenemos una explicación en palabras para este caso. En «Detalle técnico» está el mensaje exacto y dónde pasó: con eso se encuentra.', 'We don’t have a plain-words explanation for this case yet. «Technical detail» has the exact message and where it happened: that’s how to find it.')}</div>
                     </div>
                     {f.ruta === null ? null : (
                       <div>
@@ -129,7 +129,7 @@ export default async function FallosPage({ searchParams }: { searchParams: Promi
                       </div>
                     )}
                     <details>
-                      <summary className="min-h-8 cursor-pointer text-[14px] text-gold-deep">{t('Detalle técnico', 'Technical detail')}</summary>
+                      <summary className="flex min-h-11 cursor-pointer items-center text-[14px] text-gold-deep">{t('Detalle técnico', 'Technical detail')}</summary>
                       <dl className="mt-2 grid gap-2 text-[12.5px] min-[640px]:grid-cols-[110px_minmax(0,1fr)]">
                         <dt className="text-ink-mute">{t('Servicio', 'Service')}</dt>
                         <dd className="m-0 font-codigo break-all">{f.servicio}</dd>

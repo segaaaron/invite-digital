@@ -72,7 +72,7 @@ export default async function AdminAuditoriaPage({
 
   return (
     <>
-      <PanelHeader title={t('Ajustes', 'Settings')} tituloEnCelular={t('Auditoría', 'Audit')} pestanas={<PestanasDeAdmin />}
+      <PanelHeader title={t('Auditoría', 'Audit')} pestanas={<PestanasDeAdmin />}
       />
 
       <form action="/panel/admin/auditoria" className="mb-8 grid gap-3 min-[760px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] min-[760px]:items-end" method="get" role="search">
@@ -142,8 +142,9 @@ export default async function AdminAuditoriaPage({
                     <span className="order-3 truncate text-[13px] text-ink-mute min-[760px]:order-none min-[760px]:text-[14.5px] min-[760px]:text-ink">{fila.actorEmail}</span>
                     <span className="order-1 min-[760px]:order-none">{traducir(fraseDeAuditoria(fila.action), t)}</span>
                     <span className="order-2 break-words min-[760px]:order-none">
-                      <Sobre modelos={modelos} eventos={eventos} sujeto={fila.subject} />
-                      {fila.detail === null ? null : <span className="text-ink-mute"> · {fila.detail}</span>}
+                      {/* La huella de un fallo no le dice nada a nadie: lo que se borró va en el detalle. */}
+                      <Sobre modelos={modelos} eventos={eventos} sujeto={fila.action === 'fallos.borrados' ? null : fila.subject} />
+                      {fila.detail === null ? null : <span className="text-ink-mute">{fila.subject === null || fila.action === 'fallos.borrados' ? '' : ' · '}{fila.detail}</span>}
                     </span>
                   </li>
                 ))}
@@ -184,11 +185,14 @@ const dia_ = (locale: Locale) => new Intl.DateTimeFormat(INTL[locale], { day: 'n
 
 /** El sujeto de una fila con su nombre: un evento enlaza a su ficha; un modelo dice cómo se llama. */
 function Sobre({ sujeto, eventos, modelos }: { sujeto: string | null; eventos: ReadonlyMap<string, string>; modelos: ReadonlyMap<string, string> }) {
-  if (sujeto === null) return <>—</>
-  const evento = eventos.get(sujeto)
+  if (sujeto === null) return null
+  // Lo hecho en modo soporte guarda la dirección (`/panel/eventos/<slug>/invitados`): se dice con el nombre del evento.
+  const ruta = /^\/panel\/eventos\/([^/?#]+)/.exec(sujeto)
+  const slug = ruta?.[1] ?? sujeto
+  const evento = eventos.get(slug)
   if (evento !== undefined) {
     return (
-      <Link className="text-gold-deep underline underline-offset-4 max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center" href={`/panel/eventos/${sujeto}/configuracion`}>
+      <Link className="text-gold-deep underline underline-offset-4 max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center" href={`/panel/eventos/${slug}/configuracion`}>
         {evento}
       </Link>
     )

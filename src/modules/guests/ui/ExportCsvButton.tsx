@@ -56,7 +56,7 @@ export function filasToCsv(rows: readonly CsvRow[], t: T = traductor('es')): str
   return `﻿${[cabecera, ...cuerpo].join('\n')}\n`
 }
 
-const estadoPersona = (t: T): Record<string, string> => ({ yes: t('Confirmado', 'Confirmed'), no: t('No viene', 'Not coming'), maybe: t('Tal vez', 'Maybe') })
+const estadoPersona = (t: T): Record<string, string> => ({ yes: t('Viene', 'Coming'), no: t('No viene', 'Not coming'), maybe: t('Tal vez', 'Maybe') })
 
 /**
  * El CSV por persona, que es lo que pide el catering y el protocolo. Cuando el evento no

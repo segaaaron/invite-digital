@@ -1,6 +1,6 @@
 import { and, count, desc, eq, isNull, like, or, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { auditLog, events, guestGroups, invitationViews, plans, planTranslations, rsvpResponses, users } from '@/shared/db/schema'
+import { auditLog, events, guestGroups, guestPeople, invitationViews, plans, planTranslations, rsvpResponses, users } from '@/shared/db/schema'
 import { parseRole } from '@/modules/identity'
 import type { AdminEventRow, AdminRepository, AdminUserRow, AuditRow } from '../application/ports'
 
@@ -82,6 +82,18 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
       .where(isNull(guestGroups.revokedAt))
       .groupBy(guestGroups.eventId)
       .as('conteos')
+    // Las personas, como las cuenta el panel del cliente: respondió quien dijo sí o no (o tal vez).
+    const gente = database
+      .select({
+        eventId: guestGroups.eventId,
+        personas: sql<number>`count(*)::int`.as('personas'),
+        personasRespondieron: sql<number>`(count(*) filter (where ${guestPeople.attending} is not null))::int`.as('personas_respondieron'),
+      })
+      .from(guestPeople)
+      .innerJoin(guestGroups, eq(guestGroups.id, guestPeople.guestGroupId))
+      .where(isNull(guestGroups.revokedAt))
+      .groupBy(guestGroups.eventId)
+      .as('gente')
 
     return database
       .select({
@@ -98,6 +110,8 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         enviados: sql<number>`coalesce(${conteos.enviados}, 0)`,
         respondidos: sql<number>`coalesce(${conteos.respondidos}, 0)`,
         abiertos: sql<number>`coalesce(${conteos.abiertos}, 0)`,
+        personas: sql<number>`coalesce(${gente.personas}, 0)`,
+        personasRespondieron: sql<number>`coalesce(${gente.personasRespondieron}, 0)`,
         rsvpDeadline: events.rsvpDeadline,
         // Nombres escritos a mano y cualificados: dentro de un `sql` interpolado Drizzle emite las
         // columnas sin tabla, y en una subconsulta `"id"` sería de la tabla de dentro.
@@ -113,6 +127,7 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
       .leftJoin(users, eq(users.id, events.userId))
       .leftJoin(plans, eq(plans.id, events.planId))
       .leftJoin(conteos, eq(conteos.eventId, events.id))
+      .leftJoin(gente, eq(gente.eventId, events.id))
       .orderBy(desc(events.eventDate))
   },
 

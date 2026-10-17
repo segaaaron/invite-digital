@@ -567,7 +567,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                       {zoneEditHrefPrefix === undefined ? null : (
                         <a
                           aria-label={t(`Editar ${zone.label}`, `Edit ${zone.label}`)}
-                          className="flex size-6 items-center justify-center rounded-full border border-line-panel bg-bg-raised text-[11px] max-[859px]:size-8 max-[859px]:text-[13px]"
+                          className="flex size-6 items-center justify-center rounded-full border border-line-panel bg-bg-raised text-[12px] max-[859px]:size-8 max-[859px]:text-[13px]"
                           href={`${zoneEditHrefPrefix}${zone.id}`}
                           title={t(`Editar ${zone.label}`, `Edit ${zone.label}`)}
                         >
@@ -576,7 +576,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                       )}
                       <button
                         aria-label={t(`Eliminar ${zone.label}`, `Remove ${zone.label}`)}
-                        className="flex size-6 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-bg-raised text-[11px] max-[859px]:size-8 max-[859px]:text-[13px]"
+                        className="flex size-6 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-bg-raised text-[12px] max-[859px]:size-8 max-[859px]:text-[13px]"
                         onClick={() => borrarZona(zone.id)}
                         title={t(`Eliminar ${zone.label}`, `Remove ${zone.label}`)}
                         type="button"
@@ -634,7 +634,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                   >
                     <span aria-hidden className="flex flex-col items-center leading-none">
                       <span className={`font-display font-medium ${redonda ? 'text-[26px]' : 'text-[20px]'}`}>{numeroDe(table.label)}</span>
-                      <span className="mt-1 text-[11.5px] text-ink-mute [font-variant-numeric:tabular-nums]">
+                      <span className="mt-1 text-[12px] text-ink-mute [font-variant-numeric:tabular-nums]">
                         {table.taken}/{table.capacity}
                       </span>
                     </span>
@@ -733,7 +733,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                     router.push(destino)
                   })
                 }}
-                className="rounded-pill border border-ok px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
+                className="rounded-pill border border-ok px-4 py-2 font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
               >
                 {t('Guardar', 'Save')}
               </button>
@@ -745,14 +745,14 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                   setSalida(null)
                   router.push(destino)
                 }}
-                className="rounded-pill border border-line px-4 py-2 max-[859px]:min-h-11 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
+                className="rounded-pill border border-line px-4 py-2 max-[859px]:min-h-11 font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
               >
                 {t('Descartar y salir', 'Discard and leave')}
               </button>
               <button
                 type="button"
                 onClick={() => setSalida(null)}
-                className="ml-auto rounded-pill bg-ink px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-bg-top"
+                className="ml-auto rounded-pill bg-ink px-4 py-2 font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-top"
               >
                 {t('Cancelar', 'Cancel')}
               </button>

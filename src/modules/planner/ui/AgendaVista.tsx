@@ -184,14 +184,14 @@ export async function MesDeAgenda({
                 <span className="hidden min-w-0 flex-col gap-0.5 min-[700px]:flex">
                   {delDia.slice(0, 3).map((e) => (
                     <span
-                      className={`truncate rounded-[5px] px-1.5 py-0.5 text-[10.5px] leading-tight ${estaAtrasada(e, hoy) ? ATRASADA : TONO[e.clase]} ${e.hecha ? 'line-through opacity-50' : pasado ? 'opacity-70' : ''}`}
+                      className={`truncate rounded-[5px] px-1.5 py-0.5 text-[12px] leading-tight ${estaAtrasada(e, hoy) ? ATRASADA : TONO[e.clase]} ${e.hecha ? 'line-through opacity-50' : pasado ? 'opacity-70' : ''}`}
                       key={`${e.clase}-${e.id}`}
                     >
                       {e.hora === null ? '' : `${e.hora} `}
                       {traducir(e.titulo, t)}
                     </span>
                   ))}
-                  {delDia.length > 3 ? <span className="px-1 text-[10.5px] font-medium text-ink-soft group-hover:text-ink">+{delDia.length - 3} {t('más', 'more')}</span> : null}
+                  {delDia.length > 3 ? <span className="px-1 text-[12px] font-medium text-ink-soft group-hover:text-ink">+{delDia.length - 3} {t('más', 'more')}</span> : null}
                 </span>
               </Link>
             )
@@ -235,9 +235,9 @@ async function Fila({ e, hoy, enlace, accion, vencio = false }: { e: EntradaDeAg
             <span className="truncate text-[12px] text-ink-mute">{[vencio ? t(`venció el ${diaCorto(e.dia, locale)}`, `was due ${diaCorto(e.dia, locale)}`) : null, e.detalle === null || e.detalle === undefined ? null : traducir(e.detalle, t)].filter(Boolean).join(' · ')}</span>
           ) : null}
           {/* Celular: el tipo bajo el título, para que el botón quepa a la derecha. */}
-          <span className={`w-fit rounded-full px-2 py-0.5 text-[10.5px] min-[560px]:hidden ${tono}`}>{nombre}</span>
+          <span className={`w-fit rounded-full px-2 py-0.5 text-[12px] min-[560px]:hidden ${tono}`}>{nombre}</span>
         </span>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10.5px] max-[559px]:hidden ${tono}`}>{nombre}</span>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] max-[559px]:hidden ${tono}`}>{nombre}</span>
       </Link>
       {accion ? <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 pr-2 max-[559px]:max-w-[52%]">{accion}</div> : null}
     </li>
@@ -275,7 +275,7 @@ export async function ListaDeAgenda({
     <ol className="flex flex-col gap-4">
       {dias.map((dia) => (
         <li className="flex flex-col gap-1.5" key={dia}>
-          <p className={`text-[11px] font-medium tracking-[0.1em] uppercase ${dia === hoy ? 'text-ink' : 'text-ink-mute'}`}>{rotuloDelDia(dia, hoy, t, locale)}</p>
+          <p className={`text-[12px] font-medium tracking-[0.1em] uppercase ${dia === hoy ? 'text-ink' : 'text-ink-mute'}`}>{rotuloDelDia(dia, hoy, t, locale)}</p>
           {filas(entradas.filter((e) => e.dia === dia))}
         </li>
       ))}

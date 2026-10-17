@@ -67,11 +67,11 @@ export const createDrizzleStaffRepository = (database: DbExecutor) => ({
   /** Los de una clase con su correo, que es lo único que la pantalla enseña de ellos. */
   /** Los anfitriones de varias bodas en **una** consulta: la cartera los pinta fila a fila. */
   /** Los anfitriones de cada evento, con su teléfono: el admin les escribe por WhatsApp. */
-  async hostsOf(eventIds: readonly string[]): Promise<Map<string, (StaffRow & { readonly phone: string | null })[]>> {
-    const porEvento = new Map<string, (StaffRow & { readonly phone: string | null })[]>()
+  async hostsOf(eventIds: readonly string[]): Promise<Map<string, (StaffRow & { readonly phone: string | null; readonly nombre: string | null })[]>> {
+    const porEvento = new Map<string, (StaffRow & { readonly phone: string | null; readonly nombre: string | null })[]>()
     if (eventIds.length === 0) return porEvento
     const filas = await database
-      .select({ eventId: eventStaff.eventId, userId: eventStaff.userId, email: users.email, phone: users.phone })
+      .select({ eventId: eventStaff.eventId, userId: eventStaff.userId, email: users.email, phone: users.phone, nombre: users.fullName })
       .from(eventStaff)
       .innerJoin(users, eq(users.id, eventStaff.userId))
       .where(and(inArray(eventStaff.eventId, [...eventIds]), eq(eventStaff.membership, 'cliente')))

@@ -1,5 +1,7 @@
 export type IdentityErrorKind =
   | 'invalid_email'
+  /** El correo ya es de otra cuenta. */
+  | 'email_taken'
   | 'weak_password'
   | 'invalid_credentials'
   | 'session_expired'

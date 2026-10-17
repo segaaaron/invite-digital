@@ -32,7 +32,7 @@ export default async function AdminPlanesPage({ searchParams }: { searchParams: 
 
   return (
     <>
-      <PanelHeader title={t('Catálogo', 'Catalog')} meta={t('Precio y límites de cada plan. Los cambios valen para las ventas nuevas.', 'Price and limits of each plan. Changes apply to new sales.')} pestanas={<PestanasDeAdmin />} />
+      <PanelHeader title={t('Planes', 'Plans')} meta={t('Precio y límites de cada plan. Los cambios valen para las ventas nuevas.', 'Price and limits of each plan. Changes apply to new sales.')} pestanas={<PestanasDeAdmin />} />
 
       {isErr(planes) ? (
         <PanelCard>

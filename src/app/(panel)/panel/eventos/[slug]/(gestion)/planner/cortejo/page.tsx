@@ -93,8 +93,9 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
           <EditarMiembro evento={evento} miembro={enEdicion} partidas={partidas} tipos={tipos} />
         </PanelDialog>
       )}
-      <div className="grid items-start gap-x-8 gap-y-8 min-[1100px]:grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)]">
-        <CourtBoard editarEn={`${base}?miembro=`} miembros={miembros} />
+      {/* Dos columnas solo con ensayos al lado: sin ellos el vacío quedaba a media pantalla (16 oct). */}
+      <div className={`grid items-start gap-x-8 gap-y-8 ${ensayos.length === 0 ? '' : 'min-[1100px]:grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)]'}`}>
+        <CourtBoard editarEn={`${base}?miembro=`} miembros={miembros} nuevoHref={`${base}?panel=miembro`} />
         {ensayos.length === 0 ? null : (
           <div className="max-[1099px]:-order-1 min-[1100px]:sticky min-[1100px]:top-6">
             <ProximoEnsayo avisar={avisar} ensayos={ensayos} evento={evento} miembros={miembros} />

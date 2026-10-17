@@ -95,18 +95,12 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
 
   if (oculto) return null
 
-  // Una píldora pequeña a la derecha, no una fila entera: estaba en cada pantalla y empujaba el contenido.
-  // **En el celular solo aparece cuando hay algo que decir** (novedades o sin conexión) y flota sobre la
-  // barra de abajo: en reposo era una fila entera entre la cabecera y lo que se vino a ver (7 de octubre).
-  const enReposo = novedades === 0 && estado !== 'sin-conexion'
+  // **Solo aparece cuando hay algo que decir** (novedades o sin conexión), en todos los anchos: en reposo «En vivo ·
+  // Actualizar» flotaba encima del gráfico del Resumen y de los títulos (16 oct). Centrada abajo, como un aviso.
+  // La marca `data-en-vivo` dice el estado de la conexión sin pintar nada (la usan las e2e para esperar a que abra).
+  if (novedades === 0 && estado !== 'sin-conexion') return <span data-en-vivo={estado} hidden />
   return (
-    <div
-      aria-live="polite"
-      // Fuera del flujo (maqueta «Esmeralda y Latón»: la cabecera de cada pantalla empieza arriba, sin nada encima):
-      // en tablet y escritorio, una píldora fija abajo a la izquierda del contenido; en el celular, centrada abajo y
-      // solo cuando hay algo que decir.
-      className={`fixed z-30 flex print:hidden ${enReposo ? 'max-[767px]:hidden' : 'max-[767px]:inset-x-0 max-[767px]:bottom-[calc(152px+env(safe-area-inset-bottom))] max-[767px]:justify-center'} min-[768px]:bottom-6 min-[768px]:left-[124px] min-[1280px]:bottom-9 min-[1280px]:left-[316px]`}
-    >
+    <div aria-live="polite" data-en-vivo={estado} className="fixed inset-x-0 bottom-[calc(16px+env(safe-area-inset-bottom))] z-30 flex justify-center px-4 print:hidden min-[768px]:pl-[92px] min-[1280px]:pl-[268px]">
       <div className="inline-flex items-center gap-1 rounded-full border border-line-panel bg-white/70 py-0.5 pr-0.5 pl-3 text-[12px] text-ink-mute shadow-card backdrop-blur-sm">
         <span className="flex items-center gap-1.5 pr-1.5">
           <span

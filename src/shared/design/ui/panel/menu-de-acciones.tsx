@@ -1,14 +1,17 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
+import { useDesplegable } from './desplegable'
 import { DotsIcon } from '@/shared/design/ui/icons'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
 /** El «⋯» de cada fila: su etiqueta es lo que buscan las e2e y los lectores de pantalla (`aria-label`, en el idioma de quien mira). */
 export function MenuDeAcciones({ children, etiqueta }: { children: ReactNode; etiqueta?: string }) {
   const t = useT()
+  const menu = useRef<HTMLDetailsElement>(null)
+  useDesplegable(menu)
   return (
-    <details className="relative">
+    <details className="relative" ref={menu}>
       <summary
         aria-label={etiqueta ?? t('Más acciones', 'More actions')}
         className="flex size-9 cursor-pointer list-none items-center justify-center rounded-full border max-[859px]:size-11 border-line-panel-strong bg-white text-ink-soft shadow-card transition-colors hover:border-ink hover:text-ink [&::-webkit-details-marker]:hidden"

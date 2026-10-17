@@ -175,7 +175,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
               <li className="border-t border-line-panel first:border-none" key={p.ref}>
                 {/* En el celular: nombre e importe arriba; referencia, plan y fecha debajo. */}
                 <Link className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-0.5 py-3 transition-colors hover:bg-bg-sunken/50 min-[700px]:grid-cols-[6rem_minmax(0,1fr)_auto_7rem]" href={`/panel/admin/ventas?venta=p-${p.ref}`}>
-                  <span className="order-3 font-codigo text-[11px] tracking-[0.15em] text-ink-mute min-[700px]:order-none">{p.ref}</span>
+                  <span className="order-3 font-codigo text-[12px] tracking-[0.15em] text-ink-mute min-[700px]:order-none">{p.ref}</span>
                   <span className="order-1 min-w-0 truncate text-[14px] text-ink min-[700px]:order-none">
                     {p.customerName}
                     <span className="ml-2 text-[12px] text-ink-mute">{p.planName ?? t('Sin plan', 'No plan')}</span>
@@ -203,7 +203,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
                   <span className="absolute inset-y-0 left-0 rounded-full bg-sage" style={{ width: `${(m.cobrado / techoEvento) * 100}%` }} />
                   <span className="absolute inset-y-0 rounded-full bg-gold/60" style={{ left: `${(m.cobrado / techoEvento) * 100}%`, width: `${(m.abierto / techoEvento) * 100}%` }} />
                 </span>
-                <span className="w-28 shrink-0 text-right font-mono text-[11.5px] text-ink [font-variant-numeric:lining-nums]">{m.cobrado + m.abierto === 0 ? '—' : bs(m.cobrado + m.abierto)}</span>
+                <span className="w-28 shrink-0 text-right font-mono text-[12px] text-ink [font-variant-numeric:lining-nums]">{m.cobrado + m.abierto === 0 ? '—' : bs(m.cobrado + m.abierto)}</span>
               </div>
             ))}
           </div>
@@ -256,7 +256,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
               ))}
             </ul>
           )}
-          <p className="mt-3 text-[11.5px] text-ink-mute">{t(`Hoy es ${formatoMesLargo(locale).format(new Date(`${hoy}T00:00:00Z`))}.`, `It is now ${formatoMesLargo(locale).format(new Date(`${hoy}T00:00:00Z`))}.`)}</p>
+          <p className="mt-3 text-[12px] text-ink-mute">{t(`Hoy es ${formatoMesLargo(locale).format(new Date(`${hoy}T00:00:00Z`))}.`, `It is now ${formatoMesLargo(locale).format(new Date(`${hoy}T00:00:00Z`))}.`)}</p>
         </PanelCard>
           <PanelCard title={t('De dónde llegan y por qué se pierden', 'Where they come from and why they are lost')}>
           {a.origenes.length === 0 && a.motivosDePerdida.length === 0 ? (
@@ -268,7 +268,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
                   {a.origenes.map((o) => (
                     <BarRow key={o.origen} label={traducir(o.origen, t)} ratio={o.consultas / techoOrigen} value={`${o.ganadas}/${o.consultas}`} />
                   ))}
-                  <p className="mt-1 text-[11.5px] text-ink-mute">{t('Compradas sobre consultas, por origen.', 'Bought out of inquiries, by source.')}</p>
+                  <p className="mt-1 text-[12px] text-ink-mute">{t('Compradas sobre consultas, por origen.', 'Bought out of inquiries, by source.')}</p>
                 </div>
               )}
               {a.motivosDePerdida.length === 0 ? null : (

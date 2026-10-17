@@ -28,6 +28,7 @@ const EXENTAS: Record<string, string> = {
   requestAccountCodeAction: 'manda un código al correo del propio actor de la sesión; no toca ningún evento',
   closeOtherSessionsAction: 'cierra las demás sesiones del propio actor, con el código de su correo; no toca ningún evento',
   guardarMisDatosAction: 'cambia el nombre y el teléfono de la propia cuenta del actor de la sesión; no toca ningún evento',
+  cambiarCorreoAction: 'cambia el correo de la propia cuenta del actor, con el código de su correo actual; no toca ningún evento',
   crearLlaveDeSiriAction: 'crea la llave de Siri (una sesión «Atajo de Siri») del propio actor; no toca un evento: la ruta de Siri pasa por las guardias de siempre',
   requestPasswordResetAction: 'pública: quien la llama ha perdido la contraseña y no tiene sesión. Límite de tasa por IP',
   confirmPasswordResetAction: 'pública: se autoriza con el código de un solo uso que llegó al correo, no con sesión',

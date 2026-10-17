@@ -14,6 +14,7 @@ const EXACTOS: Readonly<Record<string, string>> = {
   'Abre su evento y usa «Restablecer acceso»: la contraseña nueva sale en pantalla para pasársela por WhatsApp.': 'Open their event and use “Reset access”: the new password shows on screen so you can send it on WhatsApp.',
   'Su invitación entra en diseño. Mira la fecha de entrega en su ficha.': 'Their invitation goes into design. Check the delivery date on their record.',
   'Falta el saldo para que pueda repartirla.': 'The balance is still due.',
+  'Ese correo ya es de otra cuenta.': 'That email already belongs to another account.',
   'Los avisos funcionan': 'Notifications work',
   'Así te llegarán las novedades de tus eventos.': 'This is how your event updates will reach you.',
   // El admin: pestañas, etapas, motivos, la auditoría y lo que dice «Hoy» (admin/domain, leads/domain).
@@ -30,7 +31,7 @@ const EXACTOS: Readonly<Record<string, string>> = {
   'Sumar un planner': 'Add a planner',
   'Día D y enlaces para proveedores': 'Big day and vendor links',
   'Luxury, el planner con IA': 'Luxury, the AI planner',
-  'Servicio (sin cambio en el panel)': 'Service (no change in the panel)',
+  'Un servicio que hace el equipo': 'A service done by the team',
   'Más rondas de corrección (diseño por encargo)': 'More revision rounds (custom design)',
   'Hoy': 'Today',
   'Clientes': 'Clients',
@@ -162,7 +163,7 @@ const EXACTOS: Readonly<Record<string, string>> = {
   'Enlace copiado': 'Copied link',
   'Compartido desde el teléfono': 'Shared from the phone',
   'Enlace general': 'General link',
-  'Directo (sin canal)': 'Direct (no channel)',
+  'su enlace directo': 'their direct link',
   Otras: 'Other',
   '1 mes antes': '1 month before',
   '12 meses antes': '12 months before',
@@ -832,6 +833,8 @@ const PATRONES: readonly (readonly [RegExp, (...partes: string[]) => string])[] 
   [/^Cantidad inválida: (\S+) sobre (\S+) cupos$/, (a, b) => `Invalid amount: ${a} out of ${b} seats`],
   [/^Contraseña actual incorrecta para (.*)$/, (x) => `Wrong current password for ${x}`],
   [/^Correo inválido: (.*)$/, (x) => `Invalid email: ${x}`],
+  [/^Correo sin forma de correo: (.*)$/, (x) => `Not an email address: ${x}`],
+  [/^No se pudo cambiar el correo: (.*)$/, (x) => `Could not change the email: ${x}`],
   [/^Email inválido: (.*)$/, (x) => `Invalid email: ${x}`],
   [/^Cupo inválido: (\S+)\. Una mesa sin sitios no es una mesa\.$/, (n) => `Invalid capacity: ${n}. A table with no seats is not a table.`],
   [/^Cupos inválidos: (\S+)\. Un grupo sin cupos no es una invitación\.$/, (n) => `Invalid seats: ${n}. A group without seats is not an invitation.`],
@@ -892,8 +895,8 @@ const PATRONES: readonly (readonly [RegExp, (...partes: string[]) => string])[] 
   // La salud de un evento en la cartera del admin (admin/domain/salud).
   [/^(.+) · (es hoy|es mañana|faltan (\d+) días)$/, (que, cuando, n) => `${enIngles(que) ?? que} · ${cuando === 'es hoy' ? 'it’s today' : cuando === 'es mañana' ? 'it’s tomorrow' : `${n} days left`}`],
   [/^Solo (\d+) de (\d+) invitaciones enviadas$/, (a, b) => `Only ${a} of ${b} invitations sent`],
-  [/^Cerró la confirmación y respondió el (.+)$/, (x) => `RSVPs closed and ${x} replied`],
-  [/^Al día · respondió el (.+)$/, (x) => `On track · ${x} replied`],
+  [/^Cerró la confirmación: respondieron (\d+) de (\d+) personas$/, (a, b) => `RSVPs closed: ${a} of ${b} people replied`],
+  [/^Al día · respondieron (\d+) de (\d+) personas$/, (a, b) => `On track · ${a} of ${b} people replied`],
   // «Hoy» del admin (admin/domain/hoy): lo que espera, dicho con su tiempo («hoy», «ayer», «hace N días»).
   [/^La que más espera, (.+)$/, (x) => `The one waiting longest, ${haceEnIngles(x)}`],
   [/^Pagó y espera su evento(?: · evento el (.+))?$/, (f) => `Paid and awaits their event${f === undefined ? '' : ` · event on ${f}`}`],
@@ -913,6 +916,7 @@ const PATRONES: readonly (readonly [RegExp, (...partes: string[]) => string])[] 
   [/^(\d) de 5$/, (n) => `${n} of 5`],
   [/^Opinó (.+), sin comentario$/, (x) => `Reviewed ${haceEnIngles(x)}, without a comment`],
   [/^Pedido (.+)$/, (x) => `Order ${x}`],
+  [/^Su evento «(.+)»$/, (x) => `Their event “${x}”`],
 ]
 
 /** El mensaje en inglés, o `undefined` si no se conoce. */

@@ -14,7 +14,9 @@ export async function generateMetadata() {
 
 export default async function HelpPage() {
   const t = await tr()
-  await requireSession()
+  const actor = await requireSession()
+  // El admin **es** el soporte: escribirse a sí mismo por WhatsApp no tiene sentido (16 oct).
+  const esSoporte = actor.role === 'admin' && actor.soporte === undefined
   const ajustes = await site.settings()
   const contacto = { numero: ajustes.whatsapp, visible: formatoWhatsapp(ajustes.whatsapp), saludo: ajustes.mensajes.soporte.es }
 
@@ -22,14 +24,16 @@ export default async function HelpPage() {
     <>
       <PanelHeader kicker={t('Soporte', 'Support')} title={t('Centro de ayuda', 'Help center')} />
 
-      <div className="grid gap-4.5 min-[900px]:grid-cols-[1.4fr_1fr]">
+      <div className={`grid gap-4.5 ${esSoporte ? '' : 'min-[900px]:grid-cols-[1.4fr_1fr]'}`}>
         <PanelCard>
           <HelpCenter contacto={contacto} />
         </PanelCard>
 
-        <PanelCard title={t('Contactar soporte', 'Contact support')}>
-          <SupportForm contacto={contacto} />
-        </PanelCard>
+        {esSoporte ? null : (
+          <PanelCard title={t('Contactar soporte', 'Contact support')}>
+            <SupportForm contacto={contacto} />
+          </PanelCard>
+        )}
       </div>
     </>
   )

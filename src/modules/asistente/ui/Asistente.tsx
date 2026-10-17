@@ -951,7 +951,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                 {dictado.aviso}
               </p>
             )}
-            <p className="text-[11px] text-ink-mute">{NOMBRE_DEL_ASISTENTE} puede equivocarse: revisa lo que hace en tu panel.</p>
+            <p className="text-[12px] text-ink-mute">{NOMBRE_DEL_ASISTENTE} puede equivocarse: revisa lo que hace en tu panel.</p>
           </form>
         </div>
       </dialog>
@@ -1007,7 +1007,7 @@ function TarjetaDeEnvio({ filas, tipo, slug, eventId }: { filas: readonly FilaDe
 
   return (
     <section aria-label={tipo === 'invitacion' ? t('Invitaciones para enviar', 'Invitations to send') : t('Recordatorios para enviar', 'Reminders to send')} className="rounded-[16px] border border-gold/40 bg-bg-top px-4 py-3.5">
-      <p className="font-mono text-[10.5px] tracking-[0.14em] text-gold-deep uppercase">
+      <p className="font-mono text-[12px] tracking-[0.14em] text-gold-deep uppercase">
         {tipo === 'invitacion' ? `${hechas.size} de ${filas.length} enviadas` : `${hechas.size} de ${filas.length} recordados`}
       </p>
       <ul className="mt-2 flex flex-col gap-2">
@@ -1380,7 +1380,7 @@ function useDictado(
       },
       alCallar: () => {
         if (!terminarAqui()) return
-        if (!conversacion.enRonda()) anotarVoz('el dictado propio no oyó nada')
+        // No oír nada no es un fallo: la persona no habló. Ya no se anota (llenaba el registro: 6 veces en una semana).
         conversacion.cortar(null)
       },
       alFallar: (motivo) => {
@@ -1446,7 +1446,7 @@ function useDictado(
         const enRonda = conversacion.enRonda()
         conversacion.cortar(null)
         if (!enRonda && navigator.maxTouchPoints > 0) {
-          anotarVoz('el micrófono se cerró sin oír nada')
+          // Igual: el micrófono se cerró porque nadie habló. No es un fallo del servicio.
           usarTeclado(dictaConElTeclado(t))
         }
       }

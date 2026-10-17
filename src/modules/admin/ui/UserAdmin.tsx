@@ -2,7 +2,7 @@
 
 import { useActionState, useId } from 'react'
 import { COLUMNAS_DE_EQUIPO } from './columnas-de-equipo'
-import { FIELD_CLASS, LABEL_CLASS, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, Iniciales, LABEL_CLASS, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { MenuDeAcciones, opcionDeMenu } from '@/shared/design/ui/panel/lista'
 import { plural } from '@/shared/format/plural'
 import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
@@ -113,13 +113,12 @@ export function UserRow({ user }: { user: UserView }) {
   return (
     <li className={`grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 border-b border-line-panel px-1 py-3.5 last:border-none ${COLUMNAS_DE_EQUIPO}`}>
       <div className="flex min-w-0 items-center gap-3">
-        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-bg-sunken font-display text-[16px] text-ink-soft uppercase">
-          {(user.nombre ?? user.email).slice(0, 1)}
-        </span>
+        {/* Las mismas iniciales que el resto del panel (en mayúscula y con sus dos letras). */}
+        <Iniciales chico nombre={user.nombre ?? user.email} />
         <div className="flex min-w-0 flex-col">
           <span className="flex min-w-0 items-center gap-2 text-[14px] text-ink">
             <span className="truncate">{user.nombre ?? user.email}</span>
-            {user.esUnoMismo ? <span className="shrink-0 rounded-full bg-bg-sunken px-2 py-0.5 text-[10.5px] text-ink-soft">{t('Tú', 'You')}</span> : null}
+            {user.esUnoMismo ? <span className="shrink-0 rounded-full bg-bg-sunken px-2 py-0.5 text-[12px] text-ink-soft">{t('Tú', 'You')}</span> : null}
           </span>
           <span className="truncate text-[12px] text-ink-mute">{user.nombre === null ? t(`Alta ${user.alta}`, `Added ${user.alta}`) : user.email}</span>
           {error && error.status === 'error' ? (
@@ -171,7 +170,7 @@ export function UserRow({ user }: { user: UserView }) {
               <input name="userId" type="hidden" value={user.id} />
             </ConfirmAction>
             {user.eventos > 0 ? (
-              <p className="px-3 pb-2 text-[11.5px] leading-[1.4] text-ink-mute" id={`${id}-borrar`}>
+              <p className="px-3 pb-2 text-[12px] leading-[1.4] text-ink-mute" id={`${id}-borrar`}>
                 {t('Para borrarla, reasigna o borra antes sus eventos.', 'To delete it, first reassign or delete their events.')}
               </p>
             ) : null}

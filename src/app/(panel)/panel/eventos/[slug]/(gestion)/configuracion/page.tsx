@@ -197,10 +197,11 @@ export default async function ConfiguracionPage({
     const tareasHechas = tareas.filter((t) => t.doneAt !== null).length
     const salud = fila === undefined ? null : saludDelEvento({ ...fila, fiesta: fiestaDeTema(fila.themeKey) }, hoy)
     const planNombre = isErr(capacidad) ? null : (opcionesDePlan.find((p) => p.slug === capacidad.value.planSlug)?.nombre ?? null)
+    // Sin tareas no hay «0 de 0» con su barra vacía (16 oct): la métrica sale cuando hay algo que medir.
     const metricas = [
-      { nombre: t('Confirmados', 'Confirmed'), n: vienen, de: personas.length, tono: 'bg-shell-deep' },
+      { nombre: t('Vienen', 'Coming'), n: vienen, de: personas.length, tono: 'bg-shell-deep' },
       { nombre: t('Invitaciones enviadas', 'Invitations sent'), n: fila?.enviados ?? 0, de: fila?.grupos ?? 0, tono: 'bg-shell-deep' },
-      { nombre: t('Tareas al día', 'Tasks up to date'), n: tareasHechas, de: tareas.length, tono: 'bg-gold' },
+      ...(tareas.length === 0 ? [] : [{ nombre: t('Tareas hechas', 'Tasks done'), n: tareasHechas, de: tareas.length, tono: 'bg-gold' }]),
     ]
     const portada = portadaParaCompartir(event.value.themeKey)
     const TARJETA = 'flex flex-col gap-4 rounded-[16px] border border-line-panel bg-tarjeta p-6 max-[767px]:p-5'
@@ -215,7 +216,7 @@ export default async function ConfiguracionPage({
           <div className="min-w-0 flex-1">
             <PanelHeader
               actions={
-                <span className="flex gap-2.5 max-[767px]:hidden">
+                <span className="flex gap-2.5 max-[1099px]:hidden">
                   <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>
                     <EyeIcon className="size-4" /> {t('Ver la invitación', 'View the invitation')}
                   </PanelButton>
@@ -227,7 +228,11 @@ export default async function ConfiguracionPage({
             />
           </div>
         </div>
-        <div className="mb-5 min-[768px]:hidden">
+        {/* En el celular también se ve la invitación: antes solo quedaba «Entrar como el cliente». */}
+        <div className="mb-5 grid grid-cols-2 gap-2.5 min-[768px]:max-w-[560px] min-[1100px]:hidden">
+          <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>
+            <EyeIcon className="size-4" /> {t('Ver la invitación', 'View the invitation')}
+          </PanelButton>
           <EntrarComoCliente anfitriones={hostsDelEvento} eventId={event.value.id} variant="primary" />
         </div>
 
@@ -242,7 +247,7 @@ export default async function ConfiguracionPage({
                   {faltaPara(diasEntre(hoy, event.value.eventDate), locale).replace(/^./, (c) => c.toUpperCase())}. {salud === null || salud === undefined ? t('Sin datos todavía.', 'No data yet.') : traducir(salud.texto, t)}
                 </p>
               </div>
-              <div className="grid gap-5 min-[700px]:grid-cols-3">
+              <div className={`grid gap-5 ${metricas.length === 3 ? 'min-[700px]:grid-cols-3' : 'min-[700px]:grid-cols-2'}`}>
                 {metricas.map((m) => (
                   <div className="flex flex-col gap-2" key={m.nombre}>
                     <p className="flex items-baseline justify-between gap-2 text-[14px] min-[700px]:flex-col min-[700px]:items-start">

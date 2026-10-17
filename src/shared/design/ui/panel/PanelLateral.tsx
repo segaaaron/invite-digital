@@ -101,7 +101,7 @@ export function PanelLateral({
 export function DatoLateral({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <dt className="text-[11px] font-medium tracking-[0.1em] text-ink-mute uppercase">{label}</dt>
+      <dt className="text-[12px] font-medium tracking-[0.1em] text-ink-mute uppercase">{label}</dt>
       <dd className="text-[14px] text-ink">{children}</dd>
     </div>
   )

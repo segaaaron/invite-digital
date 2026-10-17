@@ -35,7 +35,7 @@ export function EligePersonas({
       role="dialog"
       aria-label={t('Quién entra ahora', 'Who is coming in now')}
     >
-      <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">{t('¿Quién entra ahora?', 'Who is coming in now?')}</p>
+      <p className="font-mono text-[12px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">{t('¿Quién entra ahora?', 'Who is coming in now?')}</p>
       <p className="mt-1.5 font-display text-[28px] leading-tight italic">{group.leadName ?? group.label}</p>
       <p className="mt-1 text-[13px] text-ink-soft">{group.tableLabel ?? t('Mesa por asignar', 'Table to be assigned')}</p>
 
@@ -64,7 +64,7 @@ export function EligePersonas({
               ) : (
                 <p className="flex items-center justify-between gap-3 rounded-2xl bg-ok/10 px-4 py-3.5 text-[15px]">
                   <span>{persona.fullName}</span>
-                  <span className="font-mono text-[11px] text-ok">Entró · {hora(entro)}</span>
+                  <span className="font-mono text-[12px] text-ok">Entró · {hora(entro)}</span>
                 </p>
               )}
             </li>
@@ -74,14 +74,14 @@ export function EligePersonas({
 
       <div className="mt-5 flex gap-2.5">
         <button
-          className="flex-1 rounded-full border border-line-panel-strong px-4 py-3.5 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase"
+          className="flex-1 rounded-full border border-line-panel-strong px-4 py-3.5 font-mono text-[12px] tracking-[var(--tracking-luxe)] uppercase"
           onClick={onCancelar}
           type="button"
         >
           {t('Cancelar', 'Cancel')}
         </button>
         <button
-          className="flex-[2] rounded-full bg-ok px-4 py-3.5 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase disabled:opacity-40"
+          className="flex-[2] rounded-full bg-ok px-4 py-3.5 font-mono text-[12px] tracking-[var(--tracking-luxe)] text-white uppercase disabled:opacity-40"
           disabled={marcadas.size === 0}
           onClick={() => onRegistrar([...marcadas])}
           type="button"

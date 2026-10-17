@@ -95,7 +95,7 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
 
       <dialog
         aria-label={evento === null ? t('Menú', 'Menu') : t('Menú del evento', 'Event menu')}
-        className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-bg p-0 text-ink backdrop:bg-ink/40 motion-safe:animate-slide-up"
+        className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-bg p-0 text-ink backdrop:bg-ink/40 motion-safe:animate-slide-up min-[768px]:right-auto min-[768px]:w-[440px] min-[768px]:border-r min-[768px]:border-line-panel min-[768px]:shadow-float min-[768px]:motion-safe:animate-none"
         ref={hoja}
       >
         <div className="mx-auto flex min-h-full max-w-[640px] flex-col gap-1 px-4 pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),20px)]">
@@ -115,13 +115,13 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
 
           {user.soporte ? (
             <div className="mb-2 flex items-center gap-3 rounded-2xl bg-pill-pending px-4 py-3 text-pill-pending-ink">
-              <p className="min-w-0 flex-1 text-[14px] leading-snug">{t('Estás dentro como el cliente. Lo que cambies queda a tu nombre.', 'You are signed in as the client. Whatever you change is recorded under your name.')}</p>
+              <p className="min-w-0 flex-1 text-[14px] leading-snug">{t(`Viendo el panel de ${user.nombre ?? user.email}. Lo que cambies queda registrado a tu nombre.`, `Viewing the panel of ${user.nombre ?? user.email}. Whatever you change is logged under your name.`)}</p>
               <button
                 className="shrink-0 cursor-pointer rounded-[10px] bg-shell-deep px-4 py-2.5 text-[14px] font-medium text-shell-ink"
                 onClick={() => void leaveSupportAction().then((hecho) => hecho.status === 'ok' && window.location.assign(hecho.href))}
                 type="button"
               >
-                {t('Regresar como admin', 'Return as admin')}
+                {t('Volver al admin', 'Back to admin')}
               </button>
             </div>
           ) : null}
@@ -166,7 +166,7 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
                     aria-current={activa ? 'page' : undefined}
                     className={`flex min-h-[68px] items-center gap-3.5 rounded-[14px] px-2.5 py-1.5 text-ink no-underline ${activa ? 'bg-pill-maybe' : ''}`}
                     // En el celular, Ajustes abre su lista (M26), no la primera pestaña.
-                    href={item.href === '/panel/admin/fallos' ? '/panel/admin/ajustes' : item.href}
+                    href={item.href === '/panel/admin/usuarios' ? '/panel/admin/ajustes' : item.href}
                     key={item.href}
                     onClick={cerrar}
                   >
@@ -210,21 +210,24 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
           <p className="px-2.5 pt-1 text-[13px] text-ink-mute">
             {user.nombre ?? user.email}, {user.rol}
           </p>
-          <ConfirmAction
-            action={signOutAction}
-            confirmLabel={t('Cerrar sesión', 'Sign out')}
-            description={t('Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña.', 'You will leave the panel on this device. To come back you will have to sign in with your email and password.')}
-            title={t('Cerrar sesión', 'Sign out')}
-            trigger={
-              <>
-                <svg aria-hidden className="size-[19px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
-                  <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
-                </svg>
-                {t('Cerrar sesión', 'Sign out')}
-              </>
-            }
-            triggerClassName="mt-3 flex min-h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] border border-line-panel-strong bg-bg-raised text-[16px] font-medium text-ink"
-          />
+          {/* En modo soporte no se ofrece cerrar sesión: cerraría la del admin. La salida es «Volver al admin», arriba. */}
+          {user.soporte ? null : (
+            <ConfirmAction
+              action={signOutAction}
+              confirmLabel={t('Cerrar sesión', 'Sign out')}
+              description={t('Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña.', 'You will leave the panel on this device. To come back you will have to sign in with your email and password.')}
+              title={t('Cerrar sesión', 'Sign out')}
+              trigger={
+                <>
+                  <svg aria-hidden className="size-[19px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
+                    <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
+                  </svg>
+                  {t('Cerrar sesión', 'Sign out')}
+                </>
+              }
+              triggerClassName="mt-3 flex min-h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] border border-line-panel-strong bg-bg-raised text-[16px] font-medium text-ink"
+            />
+          )}
         </div>
       </dialog>
     </>

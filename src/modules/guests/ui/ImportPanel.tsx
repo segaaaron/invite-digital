@@ -43,7 +43,7 @@ export function ImportPanel({
             title={t('Una fila por invitación: nombre, número de cupos y teléfono opcional', 'One row per invitation: name, number of seats and optional phone')}
             required
           />
-          <span className="text-[11.5px] text-ink-mute">
+          <span className="text-[12px] text-ink-mute">
             {t('Tres columnas: nombre de la invitación, cupos y WhatsApp (opcional). Sirve copiar desde Excel o Google Sheets, o escribir separando con punto y coma.', 'Three columns: invitation name, seats and WhatsApp (optional). You can copy from Excel or Google Sheets, or type them separated by semicolons.')}
           </span>
         </label>
@@ -94,7 +94,7 @@ export function ImportPanel({
                   {[t('Línea', 'Line'), t('Invitación', 'Invitation'), t('Cupos', 'Seats'), t('Resultado', 'Result')].map((titulo) => (
                     <th
                       key={titulo}
-                      className="border-b border-line-panel py-3 pr-3 font-mono text-[10.5px] font-medium tracking-[0.16em] text-ink-mute uppercase"
+                      className="border-b border-line-panel py-3 pr-3 font-mono text-[12px] font-medium tracking-[0.16em] text-ink-mute uppercase"
                     >
                       {titulo}
                     </th>
@@ -117,7 +117,7 @@ export function ImportPanel({
                       ) : (
                         <input
                           aria-label={t(`Enlace de ${fila.label}`, `${fila.label}’s link`)}
-                          className="w-full min-w-[240px] rounded-[10px] border border-line-panel-strong bg-white px-2 py-1 font-codigo text-[11px] text-ink"
+                          className="w-full min-w-[240px] rounded-[10px] border border-line-panel-strong bg-white px-2 py-1 font-codigo text-[12px] text-ink"
                           readOnly
                           value={fila.url}
                         />

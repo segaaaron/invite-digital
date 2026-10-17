@@ -30,9 +30,15 @@ export function esFalloDelServicio(partes: readonly unknown[]): boolean {
   return /storage_failure|failure|no se pud|fall[óo] |error|timeout|no respond/i.test(texto)
 }
 
-/** Lo que no es un fallo aunque llegue como excepción: el navegador cortó la carga al irse a otra página. */
+/**
+ * Lo que no es un fallo aunque llegue como excepción: el navegador cortó la carga al irse a otra página, o el
+ * invitado se quedó sin red a medio pedir («Load failed» en Safari, «Failed to fetch» en Chrome, «NetworkError…»
+ * en Firefox). Eso no lo arregla nadie del servicio: llenaba el registro (16 oct, «Load failed» en la invitación).
+ */
 export const esCorteDelCliente = (error: unknown): boolean =>
-  error instanceof Error && /destination stream closed early|aborted|ECONNRESET|EPIPE/i.test(`${error.name} ${error.message}`)
+  error instanceof Error &&
+  (/destination stream closed early|aborted|ECONNRESET|EPIPE/i.test(`${error.name} ${error.message}`) ||
+    /^(Load failed|Failed to fetch|NetworkError when attempting to fetch resource\.?|The network connection was lost\.?)$/i.test(error.message.trim()))
 
 const MAX_MENSAJE = 500
 const MAX_DETALLE = 8000

@@ -195,11 +195,11 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
                 ]}
               />
               <nav aria-label={t('Cambiar de mes', 'Change month')} className="flex items-center gap-1.5">
-                <PanelButton aria-label={t('Mes anterior', 'Previous month')} href={url({ mes: moverMes(mes, -1) })}>
+                <PanelButton className="min-w-11 justify-center" aria-label={t('Mes anterior', 'Previous month')} href={url({ mes: moverMes(mes, -1) })}>
                   ‹
                 </PanelButton>
                 <PanelButton href={url({ mes: hoy.slice(0, 7) })}>{t('Hoy', 'Today')}</PanelButton>
-                <PanelButton aria-label={t('Mes siguiente', 'Next month')} href={url({ mes: moverMes(mes, 1) })}>
+                <PanelButton className="min-w-11 justify-center" aria-label={t('Mes siguiente', 'Next month')} href={url({ mes: moverMes(mes, 1) })}>
                   ›
                 </PanelButton>
               </nav>

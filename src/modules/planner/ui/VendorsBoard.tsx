@@ -105,7 +105,7 @@ export function NewVendorForm(props: { evento: Evento; categorias: readonly Cate
 function EnlaceDeProveedor({ evento, proveedor, incluido }: { evento: Evento; proveedor: ProveedorVista; incluido: boolean }) {
   const t = useT()
   const [estado, emitir, emitiendo] = useActionState(sinCaerse(emitVendorLinkAction), INICIAL)
-  if (!incluido) return <p className="text-[11px] text-ink-mute">{t('Los enlaces para proveedores vienen con Imperial.', 'Vendor links come with Imperial.')}</p>
+  if (!incluido) return <p className="text-[12px] text-ink-mute">{t('Los enlaces para proveedores vienen con Imperial.', 'Vendor links come with Imperial.')}</p>
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-start gap-2">
@@ -123,7 +123,7 @@ function EnlaceDeProveedor({ evento, proveedor, incluido }: { evento: Evento; pr
       </div>
       {estado.status === 'success' && estado.enlace ? (
         <div className="flex flex-col gap-1 rounded-[12px] border border-line-panel bg-bg-raised p-3">
-          <span className="text-[11px] text-ink-mute">{t('Cópialo ahora: no se vuelve a mostrar. Cambiarlo deja sin efecto el anterior.', 'Copy it now: it won’t be shown again. Changing it voids the previous one.')}</span>
+          <span className="text-[12px] text-ink-mute">{t('Cópialo ahora: no se vuelve a mostrar. Cambiarlo deja sin efecto el anterior.', 'Copy it now: it won’t be shown again. Changing it voids the previous one.')}</span>
           <code className="text-[12px] break-all text-ink" aria-label={t('Enlace del proveedor', 'Vendor link')}>
             {estado.enlace}
           </code>
@@ -165,17 +165,21 @@ export function VendorsBoard({
   proveedores,
   enlacesIncluidos,
   editarHref,
+  nuevoHref,
 }: {
   evento: Evento
   proveedores: readonly ProveedorVista[]
   enlacesIncluidos: boolean
   /** La dirección de editar sin el id: `…?proveedor=`. Una función no cruza del servidor al cliente. */
   editarHref: string
+  /** Sumar el primero desde el vacío (como el resto de vacíos del panel: el siguiente paso, dentro). */
+  nuevoHref?: string
 }) {
   const t = useT()
   if (proveedores.length === 0) {
     return (
       <EmptyState
+        action={nuevoHref === undefined ? undefined : <PanelButton href={nuevoHref} variant="primary">{t('Añadir el primer proveedor', 'Add the first vendor')}</PanelButton>}
         description={t('Anota a cada proveedor con su precio y su hora de llegada: su pago entra al presupuesto y sus momentos al cronograma.', 'Add each vendor with their price and arrival time: their payment goes into the budget and their moments into the schedule.')}
         icon={<BuildingIcon />}
         title={t('Aún no sumaste proveedores', 'You haven’t added vendors yet')}

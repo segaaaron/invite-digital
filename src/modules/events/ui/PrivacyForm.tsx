@@ -68,7 +68,7 @@ export function PrivacyForm({
             name="password"
             required
           />
-          <span className="text-[11px] text-ink-mute">
+          <span className="text-[12px] text-ink-mute">
             {t('Cambiarla cierra la invitación a quien ya la había abierto: tendrá que escribir la nueva.', 'Changing it closes the invitation for anyone who had opened it: they’ll have to type the new one.')}
           </span>
         </label>

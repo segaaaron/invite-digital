@@ -378,9 +378,10 @@ export default async function InvitadosPage({
           <>
             <dl className="flex flex-wrap max-[767px]:hidden">
               <Cifra etiqueta={t('Invitados', 'Guests')} valor={filasPersona.length} primera />
-              <Cifra etiqueta={t('Asistirán', 'Attending')} valor={si} />
-              <Cifra detalle={no > 0 ? t(`${no} no ${no === 1 ? 'viene' : 'vienen'}`, `${no} not coming`) : undefined} etiqueta={t('Por responder', 'Awaiting reply')} valor={porResponder} />
-              <Cifra etiqueta={t('Enviadas', 'Sent')} valor={enviadas} de={vivas.length} />
+              <Cifra etiqueta={t('Vienen', 'Coming')} valor={si} />
+              <Cifra detalle={no > 0 ? t(`${no} no ${no === 1 ? 'viene' : 'vienen'}`, `${no} not coming`) : undefined} etiqueta={t('Sin responder', 'No reply')} valor={porResponder} />
+              {/* Esta sí cuenta invitaciones (el envío es por invitación): lo dice la etiqueta. */}
+              <Cifra etiqueta={t('Invitaciones enviadas', 'Invitations sent')} valor={enviadas} de={vivas.length} />
             </dl>
             {/* Celular (v2.1, 14 oct): un solo bloque «8 de 19 respondieron» con la barra repartida y, dentro, lo que falta
                 enviar con su botón. Antes, tres cifras sueltas, un botón negro a lo ancho y dos filas de filtros dejaban la
@@ -400,15 +401,15 @@ export default async function InvitadosPage({
               <p className="flex flex-wrap gap-x-4 gap-y-1 text-[13.5px] text-ink-soft">
                 <span className="flex items-center gap-1.5">
                   <span aria-hidden className="size-2.5 rounded-[3px] bg-ok" />
-                  {t(`${si} asisten`, `${si} attending`)}
+                  {t(`${si} ${si === 1 ? 'viene' : 'vienen'}`, `${si} coming`)}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span aria-hidden className="size-2.5 rounded-[3px] bg-danger" />
-                  {t(`${no} no vienen`, `${no} not coming`)}
+                  {t(`${no} no ${no === 1 ? 'viene' : 'vienen'}`, `${no} not coming`)}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span aria-hidden className="size-2.5 rounded-[3px] bg-bg-sunken ring-1 ring-line-panel-strong ring-inset" />
-                  {t(`${porResponder} esperan`, `${porResponder} waiting`)}
+                  {t(`${porResponder} sin responder`, `${porResponder} no reply`)}
                 </span>
               </p>
               {vivas.length - enviadas > 0 ? (

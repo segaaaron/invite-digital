@@ -91,7 +91,7 @@ export default async function CronogramaPage({ params, searchParams }: { params:
               filas={enInvitacion.map((m) => ({ time: m.startsAt, label: m.title, icono: m.icono }))}
               vistaPrevia={`/panel/eventos/${event.value.slug}/vista-previa`}
             />
-            <a className="text-center text-[13.5px] text-gold-deep" href={`/panel/eventos/${event.value.slug}/cronograma/imprimir`} rel="noopener" target="_blank">
+            <a className="inline-flex min-h-11 items-center justify-center text-[13.5px] text-gold-deep" href={`/panel/eventos/${event.value.slug}/cronograma/imprimir`} rel="noopener" target="_blank">
               {t('Imprimir el cronograma', 'Print the schedule')}
             </a>
           </aside>

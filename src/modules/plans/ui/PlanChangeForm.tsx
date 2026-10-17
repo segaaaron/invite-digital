@@ -22,7 +22,7 @@ const mensajes = (t: T): Record<PlansErrorKind, string> => ({
 const FIELD_CLASS =
   'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
 
-const LABEL_CLASS = 'flex flex-col gap-2 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute'
+const LABEL_CLASS = 'flex flex-col gap-2 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute'
 
 export function PlanChangeForm({
   eventId,
@@ -85,7 +85,7 @@ export function PlanChangeForm({
       ) : null}
 
       <button
-        className="self-start cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 max-[859px]:min-h-11 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+        className="self-start cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 max-[859px]:min-h-11 font-mono text-[12px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
         disabled={isPending}
         type="submit" aria-busy={(isPending) || undefined}>
         {isPending ? t('Enviando…', 'Sending…') : t('Solicitar cambio', 'Request change')}

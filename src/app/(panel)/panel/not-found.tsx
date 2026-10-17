@@ -15,7 +15,7 @@ export default async function NoEncontrado() {
       <title>{t('Página no disponible · Luxury Atelier', 'Page not available · Luxury Atelier')}</title>
       <h1 className="font-display text-[28px] font-light text-ink">{t('Esta página no está disponible', 'This page is not available')}</h1>
       <p className="text-[14px] leading-relaxed text-ink-mute">{t('No existe o tu cuenta no tiene acceso a ella.', 'It doesn’t exist or your account doesn’t have access to it.')}</p>
-      <Link className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute underline underline-offset-4" href="/panel">
+      <Link className="inline-flex min-h-11 items-center text-[14px] font-medium text-ink underline underline-offset-4" href="/panel">
         {t('Volver al panel', 'Back to the panel')}
       </Link>
     </section>

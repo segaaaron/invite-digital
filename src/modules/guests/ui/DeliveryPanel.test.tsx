@@ -89,7 +89,7 @@ describe('DeliveryPanel', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Enviadas (2)' }))
 
     const carlos = screen.getByRole('listitem', { name: 'Carlos Rojas' })
-    expect(within(carlos).getByText('Confirmó')).toBeInTheDocument()
+    expect(within(carlos).getByText('Viene')).toBeInTheDocument()
     expect(within(screen.getByRole('listitem', { name: 'Luis Peña' })).getByText('Sin responder')).toBeInTheDocument()
 
     fireEvent.click(within(carlos).getByRole('button', { name: /Formas de enviar a/ }))

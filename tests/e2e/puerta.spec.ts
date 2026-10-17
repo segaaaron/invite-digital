@@ -73,6 +73,8 @@ test('el personal de puerta con cuenta solo ve el check-in, y el admin se lo qui
   // --- El admin le quita el acceso y deja de entrar.
   await gestor.goto(`/panel/eventos/${SLUG}/configuracion`)
   await tarjeta.getByRole('button', { name: 'Quitar' }).click()
+  // Quitar se confirma (16 oct): el diálogo dice qué pasa y la cuenta no se borra.
+  await gestor.locator('dialog[open]').getByRole('button', { name: 'Quitar el acceso' }).click()
   // Quitada, ya no está en «Accesos»: se espera a que la acción termine antes de probar su entrada.
   await expect(tarjeta.getByRole('listitem').filter({ hasText: PUERTA.email })).toHaveCount(0)
 

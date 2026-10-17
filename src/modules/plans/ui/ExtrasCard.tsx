@@ -76,7 +76,7 @@ export function ExtrasCard({
           {tarjetas.map((tj) => (
             <li className="flex flex-col gap-2 rounded-[16px] border border-line-panel bg-tarjeta p-5" key={tj.clave}>
               <span className="font-display text-[22px] leading-tight font-medium">{tj.nombre}</span>
-              {tj.que ? <span className="text-[14px] text-ink-mute">{tj.que}</span> : null}
+              {tj.que && !repite(tj.nombre, tj.que) ? <span className="text-[14px] text-ink-mute">{tj.que}</span> : null}
               <span className="mt-auto flex items-center justify-between gap-3 pt-3">
                 <span className="font-display text-[24px] font-medium [font-variant-numeric:lining-nums]">{tj.precio}</span>
                 {tj.pedido ? (
@@ -104,4 +104,13 @@ export function ExtrasCard({
       ))}
     </div>
   )
+}
+
+/** Si la línea de abajo dice lo mismo que el título («Luxury, tu planner con IA» / «Luxury, el planner con IA»): no se repite. */
+function repite(nombre: string, que: string): boolean {
+  const palabras = (x: string) => new Set(x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9+]+/).filter((w) => w.length > 2))
+  const a = palabras(nombre)
+  const b = palabras(que)
+  if (b.size === 0) return true
+  return [...b].filter((w) => a.has(w)).length / b.size >= 0.6
 }

@@ -56,7 +56,7 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
 
   return (
     <fieldset className="flex flex-col gap-6 border-0 p-0">
-      <legend className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{t('Diseño', 'Design')}</legend>
+      <legend className="text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{t('Diseño', 'Design')}</legend>
 
       {/* Primero el tipo de fiesta, y solo sus diseños. Cambiar de tipo elige el primero del
           nuevo: un diseño de la otra fiesta no puede quedar elegido fuera de la vista. */}
@@ -65,7 +65,7 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
         {tipos.map((f) => (
           <button
             aria-pressed={tipo === f}
-            className={`cursor-pointer rounded-[var(--radius-pill)] border px-4 py-2 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors ${
+            className={`inline-flex min-h-11 cursor-pointer items-center rounded-[var(--radius-pill)] border px-4 font-mono text-[12px] tracking-[0.25em] uppercase transition-colors ${
               tipo === f ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink-soft hover:border-ink hover:text-ink'
             }`}
             key={f}
@@ -122,7 +122,7 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
                   >
                     <span className="absolute inset-2 border" style={{ borderColor: `${acento}55` }} />
                     <span
-                      className="grid size-8 place-items-center rounded-full border font-display text-[11px]"
+                      className="grid size-8 place-items-center rounded-full border font-display text-[12px]"
                       style={{ borderColor: `${acento}88`, color: acento }}
                     >
                       {tema.sample?.monogram ?? '·'}
@@ -142,7 +142,7 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
                     {/* Abre la invitación entera. El atelier decide mirándola, no leyendo
                         el nombre. En pestaña nueva para no perder el formulario a medias. */}
                     <a
-                      className="font-mono text-[9px] tracking-[0.18em] text-ink-mute uppercase underline-offset-2 hover:text-ink hover:underline max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center max-[859px]:px-2"
+                      className="font-mono text-[12px] tracking-[0.18em] text-ink-mute uppercase underline-offset-2 hover:text-ink hover:underline inline-flex min-h-11 min-w-11 items-center justify-center px-2"
                       href={rutaDe(locale === 'en' ? 'en' : 'es', 'modelos', `/${tema.key}`)}
                       onClick={(evento) => evento.stopPropagation()}
                       rel="noreferrer"

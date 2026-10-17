@@ -96,7 +96,7 @@ export default async function RegalosPage({
           ) : conMesa ? (
             <>
               <PanelButton href={abierto === 'fondo' ? base : `${base}?panel=fondo&vista=fondos`}>
-                <PlusIcon className="size-4" /> {t('Fondo', 'Fund')}
+                <PlusIcon className="size-4" /> {t('Añadir fondo', 'Add fund')}
               </PanelButton>
               <PanelButton href={abierto === 'regalo' ? base : `${base}?panel=regalo`} variant="primary">
                 <PlusIcon className="size-4" /> {t('Añadir regalo', 'Add gift')}
@@ -113,9 +113,10 @@ export default async function RegalosPage({
 
       {conMesa ? (
         <AccionDeLaIsla>
-          <Link aria-label={t('Añadir regalo', 'Add gift')} className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=regalo`}>
+          {/* Dice qué añade: «+ Añadir» a secas no decía si era un regalo o un fondo (16 oct). */}
+          <Link className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={enFondos ? `${base}?panel=fondo&vista=fondos` : `${base}?panel=regalo`}>
             <PlusIcon className="size-4.5" />
-          {t('Añadir', 'Add')}
+            {enFondos ? t('Fondo', 'Fund') : t('Regalo', 'Gift')}
           </Link>
         </AccionDeLaIsla>
       ) : null}

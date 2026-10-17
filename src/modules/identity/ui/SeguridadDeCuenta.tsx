@@ -94,7 +94,7 @@ export function SesionesAbiertas({ sesiones }: { sesiones: readonly SesionVista[
         <p className="text-[13px] text-ink-mute">{t('Solo está abierta tu sesión en este dispositivo.', 'Only your session on this device is open.')}</p>
       ) : (
         <details className="group flex flex-col gap-3">
-          <summary className="inline-flex min-h-10 w-fit cursor-pointer list-none items-center rounded-[10px] border border-line-panel-strong bg-bg-raised px-4 text-[14px] font-medium hover:border-gold group-open:mb-3 [&::-webkit-details-marker]:hidden">
+          <summary className="inline-flex min-h-11 w-fit cursor-pointer list-none items-center rounded-[10px] border border-line-panel-strong bg-bg-raised px-4 text-[14px] font-medium hover:border-gold group-open:mb-3 [&::-webkit-details-marker]:hidden">
             {t('Cerrar en los demás aparatos', 'Sign out of other devices')}
           </summary>
           <p className="mb-3 text-[13.5px] leading-[1.6] text-ink-soft">

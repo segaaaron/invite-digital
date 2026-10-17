@@ -125,7 +125,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
           {(['es', 'en'] as const).map((i) => (
             <button
               aria-pressed={idioma === i}
-              className={`cursor-pointer rounded-[var(--radius-pill)] px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase max-[859px]:min-h-11 ${idioma === i ? 'bg-ink text-white' : 'text-ink-soft'}`}
+              className={`cursor-pointer rounded-[var(--radius-pill)] px-3.5 py-1.5 font-mono text-[12px] tracking-[0.25em] uppercase max-[859px]:min-h-11 ${idioma === i ? 'bg-ink text-white' : 'text-ink-soft'}`}
               key={i}
               onClick={() => setIdioma(i)}
               type="button"
@@ -421,7 +421,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
                       </span>
                       {/* Así lo enseña Google: nombre del sitio, dirección, título y descripción. */}
                       <span aria-hidden className="flex flex-col gap-0.5 rounded-[10px] bg-bg-top/50 px-3.5 py-3">
-                        <span className="text-[11.5px] text-ink-mute">luxuryatelier.net › {idioma}{ruta}</span>
+                        <span className="text-[12px] text-ink-mute">luxuryatelier.net › {idioma}{ruta}</span>
                         <span className="line-clamp-1 text-[16px] leading-snug text-link">{titulo}</span>
                         <span className="line-clamp-2 text-[12.5px] leading-[1.5] text-ink-soft">{descripcion}</span>
                       </span>
@@ -516,7 +516,7 @@ function Campo({
         {contador ? <span className="tracking-normal">{contador}</span> : null}
       </span>
       {children}
-      {ayuda ? <span className="text-[11px] leading-[1.5] text-ink-mute">{ayuda}</span> : null}
+      {ayuda ? <span className="text-[12px] leading-[1.5] text-ink-mute">{ayuda}</span> : null}
     </label>
   )
 }
@@ -530,7 +530,7 @@ function VersionRow({ version, actual, base }: { version: VersionView; actual: b
       <div className="flex items-start justify-between gap-3">
         <span className="flex min-w-0 flex-col">
           <span className="text-[13px] text-ink">{version.fecha}</span>
-          <span className="truncate text-[11px] text-ink-mute">{version.actorEmail}</span>
+          <span className="truncate text-[12px] text-ink-mute">{version.actorEmail}</span>
         </span>
         {actual ? (
           <Pill tone="ok">{t('Actual', 'Current')}</Pill>

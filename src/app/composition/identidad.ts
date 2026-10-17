@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { changePassword } from '@/modules/identity/application/change-password'
-import { closeOtherSessions, confirmPasswordReset, requestAccountCode, requestPasswordReset } from '@/modules/identity/application/password-reset-use-cases'
+import { changeEmail, closeOtherSessions, confirmPasswordReset, requestAccountCode, requestPasswordReset } from '@/modules/identity/application/password-reset-use-cases'
 import { drizzlePasswordResetRepository } from '@/modules/identity/infrastructure/drizzle-password-reset-repository'
 import { authenticateSession } from '@/modules/identity/application/authenticate-session'
 import { signIn } from '@/modules/identity/application/sign-in'
@@ -112,4 +112,16 @@ export const identity = {
     return token
   },
   closeOtherSessions: closeOtherSessions({ resets: drizzlePasswordResetRepository, sessions: drizzleSessionRepository, minter, clock }),
+  /** Cambia el correo de la cuenta con el código que llegó al actual (Mi cuenta). */
+  cambiarCorreo: changeEmail({
+    resets: drizzlePasswordResetRepository,
+    minter,
+    clock,
+    emails: {
+      findIdByEmail: (email: string) => drizzleUserRepository.findIdByEmail(email),
+      updateEmail: async (userId: string, email: string) => {
+        await db.update(users).set({ email }).where(eq(users.id, userId))
+      },
+    },
+  }),
 } as const

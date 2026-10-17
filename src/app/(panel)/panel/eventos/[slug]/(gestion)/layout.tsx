@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { avisos, checkin, events, guests, identity, plans } from '@/app/composition/container'
+import { avisos, checkin, events, identity, plans } from '@/app/composition/container'
 import { Campana } from '@/modules/notifications/ui/Campana'
 import { BarraSuperior } from '@/modules/shell/ui/BarraSuperior'
 import { nombreDePlan } from '../../../_carcasa/nombre-de-plan'
@@ -67,9 +67,8 @@ export default async function EventoLayout({
   const dueno = gestionaElEvento(actor, event.value)
   // La campana: la recepción no recibe avisos, y en modo soporte abrirla dejaría vistos los del cliente.
   const conCampana = actor.role !== 'puerta' && actor.soporte === undefined
-  const [personas, capacidad, insignias, equipo, mesaPlanner, sinVer, misEventos, nombre] = await Promise.all([
-    // Personas, no grupos: la insignia dice «Invitados» y un grupo sin nadie dentro no lo es.
-    guests.contarPersonas(id).catch(() => null),
+  // Sin insignia en «Invitados» (16 oct): era el total, y una insignia se lee como algo pendiente.
+  const [capacidad, insignias, equipo, mesaPlanner, sinVer, misEventos, nombre] = await Promise.all([
     plans.allowanceFor(id),
     insigniasDeAdmin(actor),
     // Quien entra por pertenencia ve la barra de su papel en el equipo.
@@ -100,7 +99,6 @@ export default async function EventoLayout({
   const sections = isAdmin(actor)
     ? panelNav(null, { pedidos: insignias.pedidos, consultas: insignias.consultas }, true, false, false, { t })
     : panelNav(event.value.slug, {
-        invitados: personas,
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
@@ -108,6 +106,7 @@ export default async function EventoLayout({
 
   return (
     <PanelFrame
+      aviso={actor.soporte === undefined ? null : <SupportBanner cliente={actor.soporte.eventoSinCliente === undefined ? (nombre ?? actor.email) : t('el anfitrión del evento (sin cliente)', 'the event host (no client)')} />}
       barra={
         isAdmin(actor) ? (
           <BarraDelAdmin campana={campana} evento={event.value.title} hoy={diaLargo(new Date(), locale)} menu={<MenuMovil crear={<MenuCrearMovil />} />} />
@@ -147,7 +146,6 @@ export default async function EventoLayout({
       }}
       user={{ email: actor.email, nombre, rol: rotuloDeRol(actor.role, t), soporte: actor.soporte !== undefined }}
     >
-      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : t('anfitrión del evento (sin cliente)', 'event host (no client)')} />}
       {celebrado ? (
         <div className="mb-4">
           <PanelAlert tone="info">

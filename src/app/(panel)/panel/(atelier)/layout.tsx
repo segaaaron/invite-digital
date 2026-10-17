@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { avisos, events, guests, identity, plans } from '@/app/composition/container'
+import { avisos, events, identity, plans } from '@/app/composition/container'
 import { Campana } from '@/modules/notifications/ui/Campana'
 import { BarraSuperior } from '@/modules/shell/ui/BarraSuperior'
 import { isAdmin, rolEnEquipo } from '@/modules/identity'
@@ -38,9 +38,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
 
   // Todo lo de la barra en paralelo: eran nueve lecturas en fila antes de pintar nada.
   const conCampana = actor.role !== 'puerta' && actor.soporte === undefined
-  const [grupos, capacidad, insignias, rolEquipo, mesaPlanner, sinVer, nombre] = await Promise.all([
-    // Personas, como dentro del evento: aquí decía 8 (invitaciones) y allí 27 (personas).
-    activo === null ? null : guests.contarPersonas(activo.id).catch(() => null),
+  const [capacidad, insignias, rolEquipo, mesaPlanner, sinVer, nombre] = await Promise.all([
     activo === null ? null : plans.allowanceFor(activo.id),
     insigniasDeAdmin(actor),
     actor.role === 'cliente' && activo !== null ? events.staff.de(actor, activo.id).then(rolEnEquipo) : null,
@@ -57,12 +55,12 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
   const sections = variosEventos
     ? [{ label: t('Tu cuenta', 'Your account'), items: [{ href: '/panel', label: t('Mis eventos', 'My events'), icon: 'eventos' as const }, { href: '/panel/cuenta', label: t('Mi cuenta', 'My account'), icon: 'equipo' as const }] }]
     : panelNav(activo?.slug ?? null, {
-    invitados: grupos,
     pedidos: insignias.pedidos,
     consultas: insignias.consultas,
   }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner, misEventos: actor.role === 'cliente' && listed !== null && !isErr(listed) && listed.value.length > 1, fueraDelPlan: capacidad === null || isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value), t })
   return (
     <PanelFrame
+      aviso={actor.soporte === undefined ? null : <SupportBanner cliente={actor.soporte.eventoSinCliente === undefined ? (nombre ?? actor.email) : t('el anfitrión del evento (sin cliente)', 'the event host (no client)')} />}
       barra={
         admin ? (
           <BarraDelAdmin campana={campana} hoy={diaLargo(new Date(), locale)} menu={<MenuMovil crear={<MenuCrearMovil />} />} />
@@ -87,7 +85,6 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
       }
       user={{ email: actor.email, nombre, rol: rotuloDeRol(actor.role, t), soporte: actor.soporte !== undefined }}
     >
-      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : t('anfitrión del evento (sin cliente)', 'event host (no client)')} />}
       {children}
     </PanelFrame>
   )

@@ -27,7 +27,7 @@ export default async function AsistentePage() {
   const [config, planes, uso] = await Promise.all([asistente.config(), admin.plans(), asistente.resumenDelMes(ahora)])
   return (
     <>
-      <PanelHeader title={t('Ajustes', 'Settings')} tituloEnCelular={t('Asistente Luxury', 'Luxury assistant')} pestanas={<PestanasDeAdmin />} />
+      <PanelHeader title={t('Asistente Luxury', 'Luxury assistant')} pestanas={<PestanasDeAdmin />} />
       <div className="flex flex-wrap items-start gap-6">
         {/* Lo que lleva gastado (maqueta E45), con el robot de Luxury y la barra hasta el techo. */}
         <section aria-labelledby="luxury-este-mes" className="flex min-w-0 flex-[1_1_300px] flex-col gap-3 rounded-[16px] border border-grab-borde bg-bg-raised p-6 shadow-[inset_0_0_0_7px_var(--color-bg-raised),inset_0_0_0_8px_var(--color-grab-filete)]">

@@ -33,7 +33,7 @@ export function RevokeInvitationForm({ groupId, eventSlug }: { groupId: string; 
         <input name="groupId" type="hidden" value={groupId} readOnly />
         <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
         <button
-          className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep disabled:opacity-40"
+          className="text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep disabled:opacity-40"
           disabled={isPending}
           type="submit" aria-busy={(isPending) || undefined}>
           {isPending ? t('Revocando…', 'Revoking…') : t('Revocar enlace', 'Revoke link')}
@@ -41,7 +41,7 @@ export function RevokeInvitationForm({ groupId, eventSlug }: { groupId: string; 
       </form>
 
       {state.status === 'error' ? (
-        <p className="text-right text-[11px] text-danger" role="alert">
+        <p className="text-right text-[12px] text-danger" role="alert">
           {mensajes(t)[state.message]}
         </p>
       ) : null}

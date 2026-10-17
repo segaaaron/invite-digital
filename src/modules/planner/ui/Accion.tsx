@@ -44,7 +44,7 @@ export function Accion({
         {children}
       </PanelButton>
       {estado.status === 'error' ? (
-        <span className="text-[11px] text-danger-deep" role="alert">
+        <span className="text-[12px] text-danger-deep" role="alert">
           {estado.message}
         </span>
       ) : null}

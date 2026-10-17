@@ -454,7 +454,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
         <p className="relative z-10 truncate px-4 pt-3 font-mono text-[13px] tracking-[0.2em] text-white/70 uppercase">{cabecera}</p>
       ) : null}
       <header className="relative z-10 flex items-center gap-3 p-4 text-white">
-        <span className="font-mono text-[11px] tracking-[var(--tracking-luxe)]">
+        <span className="font-mono text-[12px] tracking-[var(--tracking-luxe)]">
           <b aria-label={t('Invitaciones que han llegado', 'Invitations that have arrived')} className="font-mono text-[19px] font-semibold">
             {tally.arrivedGroups}
           </b>{' '}
@@ -480,7 +480,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
 
       {desajuste === null ? null : (
         <div className="relative z-10 px-4">
-          <p className="rounded-[14px] bg-danger px-4 py-3 font-mono text-[11px] text-white" role="alert">
+          <p className="rounded-[14px] bg-danger px-4 py-3 font-mono text-[12px] text-white" role="alert">
             {desajuste}{' '}
             <button className="underline" onClick={() => setDesajuste(null)} type="button">
               {t('Entendido', 'Got it')}

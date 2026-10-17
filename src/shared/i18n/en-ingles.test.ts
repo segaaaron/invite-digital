@@ -53,7 +53,7 @@ describe('los mensajes del dominio, en inglés', () => {
 
 describe('lo que el plan no trae', () => {
   it('dice el plan y la función, y qué plan la trae', () => {
-    expect(enIngles('El plan atelier no incluye el modo puerta; lo trae el plan gala.')).toBe('The atelier plan doesn’t include door mode; the gala plan does.')
-    expect(enIngles('El plan gala no incluye el libro de firmas.')).toBe('The gala plan doesn’t include the guestbook.')
+    expect(enIngles('El plan Atelier no incluye el modo puerta; lo trae el plan Gala.')).toBe('The Atelier plan doesn’t include door mode; the Gala plan does.')
+    expect(enIngles('El plan Gala no incluye el libro de firmas.')).toBe('The Gala plan doesn’t include the guestbook.')
   })
 })

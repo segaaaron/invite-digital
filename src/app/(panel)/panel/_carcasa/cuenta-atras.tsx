@@ -31,8 +31,10 @@ export function cuentaAtras(fiesta: Fiesta, fecha: string, ahora: Date, locale: 
     if (dias < 0) return <>{Fiesta} was on {diaDeLaFiesta(fecha, locale)}</>
     return <>{numero} to go until {fiestaDe}</>
   }
-  if (dias === 0) return <>Hoy es {fiestaDe}</>
-  if (dias === 1) return <>Mañana es {fiestaDe}</>
-  if (dias < 0) return <>{Fiesta} fue el {diaDeLaFiesta(fecha, locale)}</>
+  // «los quince» es plural: «Mañana son los quince», no «Mañana es los quince».
+  const plural = fiesta === 'xv'
+  if (dias === 0) return <>Hoy {plural ? 'son' : 'es'} {fiestaDe}</>
+  if (dias === 1) return <>Mañana {plural ? 'son' : 'es'} {fiestaDe}</>
+  if (dias < 0) return <>{Fiesta} {plural ? 'fueron' : 'fue'} el {diaDeLaFiesta(fecha, locale)}</>
   return <>Faltan {numero} para {fiestaDe}</>
 }

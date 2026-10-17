@@ -5,7 +5,7 @@ import { diasEntre, type Aviso } from '@/modules/admin/domain/hoy'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
-import { Iniciales, PanelButton, Pill, TARJETA_DESTACADA } from '@/shared/design/ui/panel/PanelKit'
+import { PanelButton, Pill, TARJETA_DESTACADA } from '@/shared/design/ui/panel/PanelKit'
 import { CheckIcon } from '@/shared/design/ui/icons'
 import { formatAmount } from '@/shared/money'
 import { diaDelEvento } from '@/shared/format/fecha'
@@ -170,7 +170,6 @@ export default async function AdminPage() {
                 <ul className="mt-3.5 max-[767px]:mt-0">
                   {resto.map((a, i) => (
                     <li className={`flex items-center gap-4 px-1 py-4 ${i === 0 ? '' : 'border-t border-line-panel'}`} key={a.clave}>
-                      <Iniciales nombre={a.titulo} />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{traducir(a.titulo, t)}</p>
                         <p className="text-[14px] text-ink-mute">{traducir(a.detalle, t)}</p>
@@ -199,7 +198,7 @@ export default async function AdminPage() {
             <ol>
               {semana.map((e, i) => {
                 const tally = puertas.get(e.slug)
-                const pct = tally ? (tally.expectedHeads === 0 ? 0 : Math.round((tally.headsInside / tally.expectedHeads) * 100)) : e.grupos === 0 ? 0 : Math.round((e.respondidos / e.grupos) * 100)
+                const pct = tally ? (tally.expectedHeads === 0 ? 0 : Math.round((tally.headsInside / tally.expectedHeads) * 100)) : e.personas === 0 ? 0 : Math.round((e.personasRespondieron / e.personas) * 100)
                 return (
                   <li className={i === 0 ? '' : 'border-t border-line-panel'} key={e.slug}>
                     <Link className="flex items-center gap-4.5 py-4.5 text-ink no-underline" href={`/panel/admin/eventos?evento=${e.slug}`}>
@@ -213,7 +212,7 @@ export default async function AdminPage() {
                           <span className="block h-full bg-shell-deep transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${pct}%` }} />
                         </span>
                         <span className="text-[13px] text-ink-mute">
-                          {tally ? t(`${tally.headsInside} de ${tally.expectedHeads} personas dentro`, `${tally.headsInside} of ${tally.expectedHeads} people inside`) : t(`${e.respondidos} de ${e.grupos} respondieron`, `${e.respondidos} of ${e.grupos} replied`)}
+                          {tally ? t(`${tally.headsInside} de ${tally.expectedHeads} personas dentro`, `${tally.headsInside} of ${tally.expectedHeads} people inside`) : t(`${e.personasRespondieron} de ${e.personas} personas respondieron`, `${e.personasRespondieron} of ${e.personas} people replied`)}
                         </span>
                       </span>
                     </Link>
@@ -263,15 +262,17 @@ export default async function AdminPage() {
             <span className="block font-display text-[34px] leading-[1.15] font-medium">{cierre === null ? '—' : `${cierre} %`}</span>
             <span className="block text-[13px] text-ink-mute">{cierre === null ? t('Aún sin consultas decididas', 'No decided inquiries yet') : t(`de cada 10, ${Math.round(cierre / 10)}`, `${Math.round(cierre / 10)} out of 10`)}</span>
           </div>
-          {meses.length === 0 ? null : (
+          {/* Sin cobros no hay barras que leer: seis rayitas de 6 % parecían puntos sueltos (16 oct). */}
+          {meses.every((m) => m.total === 0) ? null : (
             <div
               aria-label={t(
                 `Cobrado por mes, de ${formatoMes(locale).format(new Date(`${meses[0]!.mes}-01T00:00:00Z`))} a ${nombreDelMes}: ${meses.map((m) => bs(m.total)).join(', ')}`,
                 `Collected per month, from ${formatoMes(locale).format(new Date(`${meses[0]!.mes}-01T00:00:00Z`))} to ${nombreDelMes}: ${meses.map((m) => bs(m.total)).join(', ')}`,
               )}
-              className="flex h-16 flex-none items-end gap-1.75 border-l border-line-panel pl-7"
+              className="flex flex-none flex-col gap-1.5 border-l border-line-panel pl-7"
               role="img"
             >
+              <span aria-hidden className="flex h-12 items-end gap-1.75">
               {meses.map((m, i) => (
                 <span
                   className={`w-3 rounded-[2px] ${i === meses.length - 1 ? 'bg-shell-deep' : 'bg-barra-suave'}`}
@@ -279,6 +280,8 @@ export default async function AdminPage() {
                   style={{ height: `${Math.max(6, Math.round((m.total / techo) * 100))}%` }}
                 />
               ))}
+              </span>
+              <span aria-hidden className="text-[12.5px] text-ink-mute">{t('Últimos 6 meses', 'Last 6 months')}</span>
             </div>
           )}
         </div>

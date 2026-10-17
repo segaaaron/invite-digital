@@ -75,7 +75,7 @@ export function ManualPassDialog({
       <div className="w-full max-w-[420px] rounded-3xl bg-bg-top p-6 text-ink shadow-float" role="dialog" aria-modal>
         {candidato === null ? (
           <>
-            <p className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">{t('Código manual', 'Manual code')}</p>
+            <p className="font-mono text-[12px] tracking-[0.16em] text-ink-mute uppercase">{t('Código manual', 'Manual code')}</p>
             <h2 className="mt-1.5 font-display text-[24px] font-light">{t('Escribe el código del pase', 'Type the pass code')}</h2>
 
             <input
@@ -99,14 +99,14 @@ export function ManualPassDialog({
 
             <div className="mt-5 flex gap-2.5">
               <button
-                className="flex-1 rounded-full border border-line-panel-strong px-4 py-3.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase"
+                className="flex-1 rounded-full border border-line-panel-strong px-4 py-3.5 font-mono text-[12px] tracking-[0.25em] text-ink uppercase"
                 onClick={onClose}
                 type="button"
               >
                 {t('Cancelar', 'Cancel')}
               </button>
               <button
-                className="flex-1 rounded-full bg-ink px-4 py-3.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase disabled:opacity-40"
+                className="flex-1 rounded-full bg-ink px-4 py-3.5 font-mono text-[12px] tracking-[0.25em] text-white uppercase disabled:opacity-40"
                 disabled={codigo.trim() === ''}
                 onClick={() => void buscar()}
                 type="button"
@@ -124,7 +124,7 @@ export function ManualPassDialog({
             </p>
             <h2 className="mt-4 text-center font-display text-[26px] leading-tight font-light italic">{titular}</h2>
             <p className="mt-3 text-center">
-              <span className="rounded-[var(--radius-pill)] bg-bg-sunken px-3.5 py-1.5 font-mono text-[10px] tracking-[0.2em] text-ink-soft uppercase">
+              <span className="rounded-[var(--radius-pill)] bg-bg-sunken px-3.5 py-1.5 font-mono text-[12px] tracking-[0.2em] text-ink-soft uppercase">
                 {candidato.group.tableLabel ?? t('Mesa por asignar', 'Table to be assigned')}
               </span>
             </p>
@@ -136,14 +136,14 @@ export function ManualPassDialog({
 
             <div className="mt-6 flex gap-2.5">
               <button
-                className="flex-1 rounded-full border border-line-panel-strong px-4 py-3.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase"
+                className="flex-1 rounded-full border border-line-panel-strong px-4 py-3.5 font-mono text-[12px] tracking-[0.25em] text-ink uppercase"
                 onClick={() => setCandidato(null)}
                 type="button"
               >
                 {t('Cancelar', 'Cancel')}
               </button>
               <button
-                className="flex-1 rounded-full bg-ink px-4 py-3.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase"
+                className="flex-1 rounded-full bg-ink px-4 py-3.5 font-mono text-[12px] tracking-[0.25em] text-white uppercase"
                 onClick={() => (candidato.scanned === null ? onConfirmGrupo(candidato.group.id) : onConfirm(candidato.scanned))}
                 type="button"
               >

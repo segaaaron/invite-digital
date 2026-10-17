@@ -42,12 +42,13 @@ export const SECCIONES_DEL_ADMIN: readonly Seccion[] = [
   {
     nombre: 'Ajustes',
     pestanas: [
-      { href: '/panel/admin/fallos', label: 'Registro de fallos', corta: 'Fallos' },
+      // Lo que se configura a menudo primero; el registro de fallos y la auditoría, que se consultan, al final (16 oct).
       { href: '/panel/admin/usuarios', label: 'Equipo' },
       { href: '/panel/admin/pagos', label: 'Cobros' },
-      { href: '/panel/admin/asistente', label: 'Asistente Luxury', corta: 'Luxury' },
       { href: '/panel/admin/web', label: 'La web' },
       { href: '/panel/admin/mensajes', label: 'Mensajes y agenda', corta: 'Mensajes' },
+      { href: '/panel/admin/asistente', label: 'Asistente Luxury', corta: 'Luxury' },
+      { href: '/panel/admin/fallos', label: 'Registro de fallos', corta: 'Fallos' },
       { href: '/panel/admin/auditoria', label: 'Auditoría' },
     ],
   },
@@ -91,7 +92,7 @@ export function PestanasDeAdmin({ cuentas = {} }: { cuentas?: Readonly<Record<st
             <li key={p.href}>
               <Link
                 aria-current={activa ? 'page' : undefined}
-                className={`-mb-px flex h-[46px] items-center gap-2 border-b-[1.5px] px-0.5 text-[15px] font-medium whitespace-nowrap no-underline transition-colors ${
+                className={`-mb-px flex h-[46px] min-w-11 items-center justify-center gap-2 border-b-[1.5px] px-0.5 text-[15px] font-medium whitespace-nowrap no-underline transition-colors ${
                   activa ? 'border-gold text-shell-deep' : 'border-transparent text-ink-mute hover:text-shell-deep'
                 }`}
                 href={p.href}

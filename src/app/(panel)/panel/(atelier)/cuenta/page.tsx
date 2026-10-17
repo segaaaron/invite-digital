@@ -66,7 +66,7 @@ export default async function CuentaPage() {
             {t('Tus datos', 'Your details')}
           </h2>
           <MisDatos
-            ayudaCorreo={actor.role === 'admin' ? t('Para cambiarlo, crea la cuenta nueva en Ajustes › Equipo y borra esta.', 'To change it, create the new account in Settings › Team and delete this one.') : t('Para cambiarlo, escríbele al atelier.', 'To change it, message the atelier.')}
+            ayudaCorreo={t('Con él entras al panel y te llegan los códigos.', 'You sign in with it and your codes arrive there.')}
             correo={actor.email}
             nombre={datos.nombre}
             telefono={datos.telefono}

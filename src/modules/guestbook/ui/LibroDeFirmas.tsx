@@ -115,7 +115,7 @@ function Firma({ eventId, eventSlug, message }: { eventId: string; eventSlug: st
           </PanelButton>
         </span>
       ) : (
-        <button className="w-fit cursor-pointer text-[13px] text-ink-mute underline-offset-2 hover:text-ink hover:underline" onClick={() => setAbierta(true)} type="button">
+        <button className="inline-flex min-h-11 w-fit cursor-pointer items-center text-[13.5px] text-ink-mute underline underline-offset-4 hover:text-ink" onClick={() => setAbierta(true)} type="button">
           {t('Editar respuesta', 'Edit reply')}
         </button>
       )}

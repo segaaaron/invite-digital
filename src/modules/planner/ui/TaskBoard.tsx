@@ -104,7 +104,7 @@ function Casilla({ tarea, evento }: { tarea: TareaVista; evento: Evento }) {
         </span>
       </button>
       {estado.status === 'error' ? (
-        <span className="text-[11px] text-danger-deep" role="alert">
+        <span className="text-[12px] text-danger-deep" role="alert">
           {estado.message}
         </span>
       ) : null}
@@ -140,7 +140,7 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
           </span>
         </div>
         {tarea.atajo && !hecha ? (
-          <Link className="shrink-0 text-[14px] font-medium text-gold-deep no-underline hover:underline max-[559px]:hidden" href={tarea.atajo.href}>
+          <Link className="inline-flex min-h-11 shrink-0 items-center text-[14px] font-medium text-gold-deep no-underline hover:underline max-[559px]:hidden" href={tarea.atajo.href}>
             {tarea.atajo.texto}
           </Link>
         ) : null}
@@ -152,7 +152,7 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
       {tarea.porLaApp ? null : (
         <details className="group ml-14">
           {/* En escritorio aparece al pasar por la fila, sin sumarle alto; en el celular, siempre a la vista. */}
-          <summary className="inline-flex min-h-8 max-[767px]:min-h-11 cursor-pointer list-none items-center text-[12.5px] text-ink-mute hover:text-ink focus-visible:opacity-100 min-[860px]:absolute min-[860px]:right-0 min-[860px]:bottom-0 min-[860px]:min-h-6 min-[860px]:opacity-0 min-[860px]:group-hover/fila:opacity-100 min-[860px]:group-open:opacity-100 [&::-webkit-details-marker]:hidden">
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-[13px] text-ink-mute underline-offset-4 hover:text-ink hover:underline min-[860px]:absolute min-[860px]:right-0 min-[860px]:bottom-0 [&::-webkit-details-marker]:hidden">
             {t('Editar, mover o quitar', 'Edit, move or remove')}
           </summary>
           <div className="mt-3 flex flex-col gap-3 pb-1">

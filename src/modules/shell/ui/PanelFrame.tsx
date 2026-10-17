@@ -28,6 +28,7 @@ export function PanelFrame({
   evento,
   conBuscador = false,
   barra,
+  aviso,
   children,
 }: {
   sections: readonly NavSection[]
@@ -38,6 +39,8 @@ export function PanelFrame({
   conBuscador?: boolean
   /** La barra de arriba (`BarraSuperior` o `BarraDelAdmin`), a lo ancho fuera del contenido centrado. */
   barra?: ReactNode
+  /** Lo que va encima de todo el contenido, bajo la barra (la franja de soporte): antes de las pestañas de tablet. */
+  aviso?: ReactNode
   /** Ya no se usan. Se aceptan para no romper a quien los pase. */
   conAcciones?: boolean
   barraInferior?: unknown
@@ -54,6 +57,7 @@ export function PanelFrame({
         <RielTablet />
         <div className="flex min-w-0 flex-col bg-bg min-[768px]:ml-[92px] min-[1280px]:ml-0 print:ml-0 print:bg-white">
           {barra}
+          {aviso}
           <SubpestanasDeTablet />
           <main className="panel-movil relative mx-auto w-full max-w-[1120px] min-w-0 px-4 pb-[calc(96px+env(safe-area-inset-bottom))] min-[768px]:px-8 min-[768px]:pt-8 min-[768px]:pb-32 min-[1280px]:px-12 min-[1280px]:pt-9 min-[1280px]:pb-[140px] print:max-w-none print:p-0">
             {children}

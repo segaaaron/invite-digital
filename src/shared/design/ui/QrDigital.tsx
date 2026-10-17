@@ -54,7 +54,7 @@ export function QrDigital({ url, nombre, className = 'w-28' }: { url: string; no
           </button>
         </div>
         {aviso === null ? null : (
-          <p className="m-0 text-[11.5px] text-danger" role="alert">
+          <p className="m-0 text-[12px] text-danger" role="alert">
             {aviso}
           </p>
         )}

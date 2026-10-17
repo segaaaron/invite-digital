@@ -26,7 +26,7 @@ export default async function AdminExtrasPage() {
   if (!isErr(aprobados)) for (const { order: o } of aprobados.value.pedidos) if (o.addonSlug !== null) vendidos.set(o.addonSlug, (vendidos.get(o.addonSlug) ?? 0) + 1)
   return (
     <>
-      <PanelHeader title={t('Catálogo', 'Catalog')} meta={t('Lo que el cliente compra después, desde su panel. Apagado no aparece en ningún sitio.', 'What the client buys later, from their panel. When off it does not appear anywhere.')} pestanas={<PestanasDeAdmin />} />
+      <PanelHeader title={t('Extras', 'Extras')} meta={t('Lo que el cliente compra después, desde su panel. Apagado no aparece en ningún sitio.', 'What the client buys later, from their panel. When off it does not appear anywhere.')} pestanas={<PestanasDeAdmin />} />
       {/* La tabla de la maqueta (E49): cada extra en su fila, y «Editar» la despliega. */}
       <div className="overflow-hidden rounded-[16px] border border-line-panel bg-bg-raised">
         <CabeceraDeExtras />

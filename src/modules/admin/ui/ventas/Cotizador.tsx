@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useActionState, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { cotizarAction, type CotizacionState } from '@/app/_acciones/admin/ventas-actions'
 import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
-import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { CheckIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { Copiar } from './AccionesDeVenta'
@@ -43,6 +43,7 @@ export function Cotizador({
   ocupacion,
   capacidad,
   hoy,
+  cobroListo = true,
 }: {
   consulta: { readonly id: string; readonly nombre: string; readonly contacto: string; readonly fecha: string | null; readonly fiesta: Fiesta | null } | null
   planes: readonly PlanCotizable[]
@@ -54,6 +55,8 @@ export function Cotizador({
   hoy: string
   /** Adónde vuelve al cerrar: lo pone el panel lateral que lo envuelve. */
   cerrarHref?: string
+  /** Si los datos de cobro están completos: sin ellos el cliente recibe la cotización sin saber a dónde pagar. */
+  cobroListo?: boolean
 }) {
   const t = useT()
   const [estado, accion] = useActionState(sinCaerse(cotizarAction), INICIAL)
@@ -198,7 +201,7 @@ export function Cotizador({
                 value={x.slug}
               />
               <span className="min-w-0 flex-1">{x.name}</span>
-              <span className="shrink-0 text-ink-mute [font-variant-numeric:tabular-nums]">{bs(x.priceCents).replace(/,00$/, '')}</span>
+              <span className="shrink-0 text-ink-mute [font-variant-numeric:tabular-nums]">{bs(x.priceCents)}</span>
             </label>
           ))}
         </fieldset>
@@ -207,7 +210,7 @@ export function Cotizador({
       <div className="flex flex-col gap-2 rounded-[14px] border border-line-panel bg-bg-raised px-4.5 py-4">
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-[15px]">{t('Total', 'Total')}</span>
-          <span className="font-display text-[34px] leading-none font-medium [font-variant-numeric:lining-nums]">{bs(final).replace(/,00$/, '')}</span>
+          <span className="font-display text-[34px] leading-none font-medium [font-variant-numeric:lining-nums]">{bs(final)}</span>
         </div>
         {descuento > 0 ? <Linea etiqueta={t('Descuento', 'Discount')} tono="ok" valor={`− ${bs(descuento)}`} /> : null}
         {descuento < 0 ? <Linea etiqueta={t('Por encima de lista', 'Above list price')} tono="no" valor={bs(-descuento)} /> : null}
@@ -244,6 +247,16 @@ export function Cotizador({
           {estado.message}
         </p>
       ) : null}
+
+      {cobroListo ? null : (
+        // El aviso junto al botón de enviar, no solo arriba en Ventas (16 oct).
+        <PanelAlert tone="error">
+          {t('Faltan tus datos de cobro: quien la reciba no verá a dónde pagar.', 'Your payment details are missing: whoever receives it won’t see where to pay.')}{' '}
+          <Link className="inline-flex min-h-11 items-center font-medium underline underline-offset-4" href="/panel/admin/pagos">
+            {t('Cargarlos', 'Add them')}
+          </Link>
+        </PanelAlert>
+      )}
 
       <div className="flex flex-wrap justify-end gap-2.5 border-t border-line-panel pt-5 max-[767px]:flex-col-reverse max-[767px]:items-stretch">
         <SubmitButton pendingLabel={t('Guardando…', 'Saving…')} variant="default">

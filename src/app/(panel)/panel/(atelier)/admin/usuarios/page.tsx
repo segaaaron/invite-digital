@@ -51,7 +51,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
         }
         bajoPestanas={t('Quién trabaja en el atelier. Los clientes no están aquí: entran a su propio evento.', 'Who works at the atelier. Clients are not here: they sign in to their own event.')}
         pestanas={<PestanasDeAdmin />}
-        title={t('Ajustes', 'Settings')} tituloEnCelular={t('Equipo', 'Team')}
+        title={t('Equipo', 'Team')}
       />
 
       {crear === 'persona' || panel === 'alta' ? (

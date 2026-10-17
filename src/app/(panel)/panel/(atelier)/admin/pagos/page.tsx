@@ -27,7 +27,7 @@ export default async function AdminPagosPage() {
 
   return (
     <>
-      <PanelHeader title={t('Ajustes', 'Settings')} tituloEnCelular={t('Cobros', 'Payments')} pestanas={<PestanasDeAdmin />} />
+      <PanelHeader title={t('Cobros', 'Payments')} pestanas={<PestanasDeAdmin />} />
 
       {isErr(ajustes) ? (
         <PanelCard>

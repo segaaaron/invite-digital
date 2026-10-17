@@ -2,7 +2,7 @@
 
 import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
 import Link from 'next/link'
-import { useActionState, useId, type ReactNode } from 'react'
+import { useActionState, useId, useState, type ReactNode } from 'react'
 import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { CATALOG_KEYS, seAsigna } from '@/shared/design/theme-catalog'
 import { createEventAction, updateEventAction, type EventActionState } from '@/app/_acciones/events/actions'
@@ -58,6 +58,10 @@ export function EventForm({
   const currencyId = useId()
   const templateId = useId()
   const errorId = useId()
+  // El enlace se arma solo con el título (16 oct: pedirlo a mano, con «/panel/eventos/» delante, era jerga);
+  // si se toca, manda lo escrito.
+  const [slug, setSlug] = useState('')
+  const [slugTocado, setSlugTocado] = useState(false)
 
   const error = state.status === 'error' && state.message !== '' ? mensajes(t)[state.message] : null
 
@@ -67,7 +71,16 @@ export function EventForm({
 
       <Bloque titulo={t('El evento', 'The event')}>
         <Campo etiqueta={t('Título', 'Title')} htmlFor={titleId}>
-          <input className={FIELD_CLASS} defaultValue={event?.title} id={titleId} maxLength={160} name="title" required type="text" />
+          <input
+            className={FIELD_CLASS}
+            defaultValue={event?.title}
+            id={titleId}
+            maxLength={160}
+            name="title"
+            onChange={event ? undefined : (e) => (slugTocado ? undefined : setSlug(aSlug(e.target.value)))}
+            required
+            type="text"
+          />
         </Campo>
 
         {/* El enlace interno solo se escribe al crear. Después no se enseña: cambiarlo rompía
@@ -75,20 +88,21 @@ export function EventForm({
         {event ? (
           <input name="slug" readOnly type="hidden" value={event.slug} />
         ) : (
-          <Campo ayuda={t('Minúsculas, números y guiones. Es la dirección del evento dentro del panel.', 'Lowercase letters, numbers and hyphens. It is the event’s address inside the panel.')} etiqueta={t('Enlace del evento', 'Event link')} htmlFor={slugId}>
-            <div className="flex items-center overflow-hidden rounded-[14px] border border-line-panel-strong bg-white focus-within:border-ink">
-              <span aria-hidden className="shrink-0 pl-4 font-mono text-[12px] text-ink-mute">
-                /panel/eventos/
-              </span>
-              <input
-                className="w-full min-w-0 bg-transparent py-3 pr-4 text-[14px] text-ink outline-none"
-                id={slugId}
-                maxLength={64}
-                name="slug"
-                required
-                type="text"
-              />
-            </div>
+          <Campo ayuda={t('Se arma solo con el título. Si lo cambias: minúsculas, números y guiones.', 'It is built from the title. If you change it: lowercase letters, numbers and hyphens.')} etiqueta={t('Enlace del evento', 'Event link')} htmlFor={slugId}>
+            <input
+              className={FIELD_CLASS}
+              id={slugId}
+              maxLength={64}
+              name="slug"
+              onChange={(e) => {
+                setSlugTocado(true)
+                setSlug(e.target.value)
+              }}
+              pattern="[a-z0-9]+(-[a-z0-9]+)*"
+              required
+              type="text"
+              value={slug}
+            />
           </Campo>
         )}
 
@@ -135,11 +149,24 @@ export function EventForm({
           // **En un evento creado, el diseño solo cambia por otro de la misma fiesta**: unos XV
           // por otros XV, una boda por otra boda. La otra fiesta ni se ofrece, y
           // `updateEventAction` lo rechaza también en el servidor.
-          <ThemePicker
-            defaultValue={event.themeKey}
-            definitions={opcionesDeDiseno(themeDefinitions().filter((definicion) => mismaFiesta(definicion.categorySlug, themeFor(event.themeKey).categorySlug)), event.themeKey, t)}
-            locale={event.locale}
-          />
+          // Plegado (16 oct): la rejilla entera de diseños alargaba la ficha varias pantallas. Cerrado, el elegido
+          // viaja igual en el formulario.
+          <details className="group">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-[10px] border border-line-panel-strong bg-bg-raised px-4 text-[14.5px] [&::-webkit-details-marker]:hidden">
+              <span>
+                <span className="text-ink-mute">{t('Diseño actual:', 'Current design:')}</span> <span className="font-medium">{themeFor(event.themeKey).label}</span>
+              </span>
+              <span className="font-medium text-gold-deep group-open:hidden">{t('Cambiar', 'Change')}</span>
+              <span className="hidden font-medium text-gold-deep group-open:inline">{t('Cerrar', 'Close')}</span>
+            </summary>
+            <div className="mt-4">
+              <ThemePicker
+                defaultValue={event.themeKey}
+                definitions={opcionesDeDiseno(themeDefinitions().filter((definicion) => mismaFiesta(definicion.categorySlug, themeFor(event.themeKey).categorySlug)), event.themeKey, t)}
+                locale={event.locale}
+              />
+            </div>
+          </details>
         ) : (
           // El diseño se elige mirándolo, primero el tipo de fiesta y luego sus modelos.
           <ThemePicker defaultValue="" definitions={opcionesDeDiseno(themeDefinitions(), undefined, t)} locale={locale} />
@@ -160,7 +187,7 @@ export function EventForm({
             <p className="text-[13px] text-ink">
               {event ? t(`${event.retentionDays} días tras el evento`, `${event.retentionDays} days after the event`) : t('Lo que diga el plan', 'Whatever the plan says')}
             </p>
-            <p className="text-[11px] text-ink-mute">{t('Lo fija el plan. Pasado ese tiempo, los datos de los invitados se anonimizan.', 'The plan sets it. After that time, guests’ data is anonymized.')}</p>
+            <p className="text-[12px] text-ink-mute">{t('Lo fija el plan. Pasado ese tiempo, los datos de los invitados se anonimizan.', 'The plan sets it. After that time, guests’ data is anonymized.')}</p>
           </div>
         </div>
 
@@ -227,7 +254,7 @@ function Campo({ etiqueta, htmlFor, ayuda, children }: { etiqueta: string; htmlF
         {etiqueta}
       </label>
       {children}
-      {ayuda ? <p className="text-[11px] leading-[1.5] text-ink-mute">{ayuda}</p> : null}
+      {ayuda ? <p className="text-[12px] leading-[1.5] text-ink-mute">{ayuda}</p> : null}
     </div>
   )
 }
@@ -266,4 +293,16 @@ function opcionesDeDiseno(definiciones: readonly ThemeDefinition[], actual: stri
             },
     })),
   ]
+}
+
+/** «Boda de Ana & Luis» → «boda-de-ana-luis»: lo que acepta el enlace del evento. */
+function aSlug(titulo: string): string {
+  return titulo
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64)
+    .replace(/-+$/, '')
 }

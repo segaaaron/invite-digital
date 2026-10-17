@@ -27,6 +27,12 @@ describe('registro de fallos', () => {
     expect(esFalloDelServicio(['no se pudo avisar', new Error('x')])).toBe(true)
     expect(esCorteDelCliente(new Error('The destination stream closed early.'))).toBe(true)
     expect(esCorteDelCliente(new Error('relation does not exist'))).toBe(false)
+    // La red del invitado, no el servicio: cada navegador lo dice a su manera.
+    expect(esCorteDelCliente(new TypeError('Load failed'))).toBe(true)
+    expect(esCorteDelCliente(new Error('Load failed'))).toBe(true)
+    expect(esCorteDelCliente(new TypeError('Failed to fetch'))).toBe(true)
+    expect(esCorteDelCliente(new TypeError('NetworkError when attempting to fetch resource.'))).toBe(true)
+    expect(esCorteDelCliente(new Error('Load failed for the module foo'))).toBe(false)
   })
 
   it('guarda qué pasó (con los %s rellenados) y por qué (la pila y la causa), y el admin lo lee agrupado', async () => {

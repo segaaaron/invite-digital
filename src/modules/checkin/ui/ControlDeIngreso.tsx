@@ -348,7 +348,7 @@ export function ControlDeIngreso({
                 ))}
               </ul>
             )}
-            <Link className="pt-1 text-[14px] font-medium text-gold-deep no-underline hover:underline" href={recepcion.gestionarHref}>
+            <Link className="inline-flex min-h-11 items-center text-[14px] font-medium text-gold-deep no-underline hover:underline" href={recepcion.gestionarHref}>
               {recepcion.personas.length === 0 ? t('Sumar personal de recepción', 'Add reception staff') : t('Sumar o quitar personal', 'Add or remove staff')}
             </Link>
           </section>
@@ -499,7 +499,8 @@ export function ControlDeIngreso({
         </section>
 
         <section aria-label={t('Invitados', 'Guests')} className="flex flex-col gap-3 max-[1099px]:order-3">
-          <div className="flex gap-6 border-b border-line-panel max-[767px]:gap-2 max-[767px]:border-none" role="tablist">
+          {/* En el celular las cuatro no caben en una fila: bajan a la siguiente («Todos» quedaba fuera de la pantalla). */}
+          <div className="flex gap-6 border-b border-line-panel max-[767px]:flex-wrap max-[767px]:gap-2 max-[767px]:border-none" role="tablist">
             {filtros(t).map((f) => {
               const activa = buscado === '' && filtro === f.clave
               return (
@@ -600,11 +601,12 @@ export function ControlDeIngreso({
                                 {f.vip ? <span className="shrink-0 rounded-full bg-pill-laton px-2 py-0.5 text-[12px] font-medium text-pill-laton-ink">VIP</span> : null}
                               </span>
                               <span className="text-[14px] text-ink-mute min-[860px]:hidden">
-                                {[familia ? null : (f.invitacion ?? null), f.mesa ? f.mesa.toLowerCase() : null].filter(Boolean).join(', ')}
+                                {/* La invitación solo si dice algo más que el nombre («Carlos / Carlos» se repetía). */}
+                                {[familia || f.invitacion === f.nombre ? null : (f.invitacion ?? null), f.mesa ? f.mesa.toLowerCase() : null].filter(Boolean).join(', ')}
                               </span>
                             </span>
                             <span className="min-w-0 truncate text-[14.5px] text-ink-mute max-[859px]:hidden" role="cell">
-                              {familia ? '' : (f.invitacion ?? t('Invitación propia', 'Own invitation'))}
+                              {familia ? '' : f.invitacion === null || f.invitacion === f.nombre ? t('Invitación propia', 'Own invitation') : f.invitacion}
                             </span>
                             <span className="text-[14.5px] max-[859px]:hidden" role="cell">
                               {f.mesa ? f.mesa.replace(/^mesa\s*0*/i, '') : '—'}

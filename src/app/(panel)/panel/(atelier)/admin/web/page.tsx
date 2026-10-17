@@ -49,7 +49,7 @@ export default async function AdminWebPage() {
           </PanelButton>
         }
         pestanas={<PestanasDeAdmin />}
-        title={t('Ajustes', 'Settings')} tituloEnCelular={t('La web', 'The website')}
+        title={t('La web', 'The website')}
       />
 
       {isErr(ajustes) ? (

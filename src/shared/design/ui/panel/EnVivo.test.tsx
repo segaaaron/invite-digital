@@ -61,7 +61,9 @@ describe('EnVivo', () => {
     expect(screen.getByText('En vivo')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '2 novedades · Ver' }))
     expect(refresh).toHaveBeenCalledTimes(1)
-    expect(screen.getByRole('button', { name: 'Actualizar' })).toBeInTheDocument()
+    // Sin novedades no queda nada pintado: la píldora en reposo tapaba contenido (16 oct).
+    expect(screen.queryByRole('button', { name: 'Actualizar' })).toBeNull()
+    expect(document.querySelector('[data-en-vivo="en-vivo"]')).not.toBeNull()
   })
 
   it('ignora los tipos que no le importan a la pantalla, pero no el «ponte al día»', () => {

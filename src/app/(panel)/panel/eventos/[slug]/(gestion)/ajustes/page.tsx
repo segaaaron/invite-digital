@@ -21,7 +21,7 @@ import { tr } from '@/shared/i18n/idioma-servidor'
 
 export async function generateMetadata() {
   const t = await tr()
-  return { title: t('Configuración', 'Settings') }
+  return { title: t('Datos y estilo', 'Details and style') }
 }
 export const dynamic = 'force-dynamic'
 
@@ -59,7 +59,8 @@ export default async function AjustesDelEventoPage({ params }: { params: Promise
   const muestra = renderMessage({
     template: event.value.messageTemplate ?? null,
     locale: event.value.locale,
-    groupLabel: '{nombre}',
+    // Con un nombre de ejemplo, no «{nombre}»: es una vista de cómo se lee (16 oct).
+    groupLabel: 'María Fernanda',
     url: '…',
     seats: 2,
     fecha: DIA.format(new Date(`${event.value.eventDate}T12:00:00Z`)),
@@ -68,7 +69,7 @@ export default async function AjustesDelEventoPage({ params }: { params: Promise
 
   return (
     <>
-      <PanelHeader meta={t('Los datos del evento y lo que acompaña a tu invitación.', 'The event details and what goes with your invitation.')} title={t('Configuración', 'Settings')} />
+      <PanelHeader meta={t('Los datos del evento y lo que acompaña a tu invitación.', 'The event details and what goes with your invitation.')} title={t('Datos y estilo', 'Details and style')} />
       <div className="grid items-start gap-6 min-[1100px]:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-6">
           <PanelCard title={t('Datos del evento', 'Event details')}>
@@ -80,6 +81,7 @@ export default async function AjustesDelEventoPage({ params }: { params: Promise
 
           <PanelCard title={t('Mensaje de las invitaciones', 'Invitation message')}>
             {/* Así sale por WhatsApp; el nombre de cada invitado y su enlace se ponen solos. */}
+            <p className="mb-2.5 text-[13.5px] text-ink-mute">{t('Así le llega a una invitada de ejemplo. A cada uno le sale su nombre y su enlace.', 'This is how an example guest receives it. Each one gets their own name and link.')}</p>
             <blockquote className="m-0 rounded-[12px] bg-bg px-4.5 py-4 font-display text-[16px] leading-relaxed whitespace-pre-line italic" data-cita>
               «{muestra.replace('…', '').trim()}»
             </blockquote>

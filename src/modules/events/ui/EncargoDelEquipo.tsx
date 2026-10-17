@@ -100,7 +100,7 @@ export function EncargoDelEquipo({
         <dl className="grid gap-2 rounded-[12px] border border-line-panel p-3 text-[13px]">
           {Object.entries(encargo.brief).map(([pregunta, respuesta]) => (
             <div key={pregunta}>
-              <dt className="text-[11px] text-ink-mute">{respuestaDe(t)[pregunta] ?? pregunta}</dt>
+              <dt className="text-[12px] text-ink-mute">{respuestaDe(t)[pregunta] ?? pregunta}</dt>
               <dd className="whitespace-pre-line text-ink">{respuesta}</dd>
             </div>
           ))}
@@ -124,7 +124,7 @@ export function EncargoDelEquipo({
         <ul className="flex flex-col gap-2 border-t border-line-panel pt-3">
           {rondas.map((r, i) => (
             <li className="flex flex-col gap-1.5 rounded-[12px] border border-line-panel p-3" key={r.id}>
-              <span className="text-[11px] text-ink-mute">
+              <span className="text-[12px] text-ink-mute">
                 {t(`Ronda ${i + 1}`, `Round ${i + 1}`)} · {fechaHora(r.createdAt, t('es', 'en') === 'es' ? 'es' : 'en')}
                 {r.counts ? '' : t(' · no contó (error nuestro)', ' · didn’t count (our mistake)')}
               </span>

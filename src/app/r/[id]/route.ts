@@ -1,3 +1,4 @@
+import { esUuid } from '@/shared/uuid'
 import { NextResponse } from 'next/server'
 import { qr } from '@/app/composition/container'
 import { env } from '@/shared/config/env'
@@ -19,6 +20,8 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
+  // Sin forma de UUID no existe: la base lo rechazaba con un error y se anotaba como fallo (16 oct, `/r/no-existe`).
+  if (!esUuid(id)) return new NextResponse('Este código ya no está disponible', { status: 404 })
 
   const resuelto = await qr.resolve(id)
   if (isErr(resuelto)) {
