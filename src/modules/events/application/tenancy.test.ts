@@ -43,6 +43,7 @@ const repo = (): EventRepository => ({
   update: async () => {},
   listAll: async () => FILAS,
   listByUser: async (userId) => FILAS.filter((f) => f.userId === userId),
+  listDemos: async () => [],
   listByIds: async (ids) => FILAS.filter((f) => ids.includes(f.id)),
   setOwner: async () => {},
   findBySlug: async (slug) => FILAS.find((f) => f.slug === slug) ?? null,

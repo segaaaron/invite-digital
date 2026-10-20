@@ -13,7 +13,7 @@ const evento = (slug: string, title: string): Event => ({
   locale: 'es',
   themeKey: 'clasico',
   status: 'live',
-  retentionDays: 90, currency: 'BOB' as const, messageTemplate: null, venue: null,
+  retentionDays: 90, currency: 'BOB' as const, messageTemplate: null, venue: null, demoUntil: null,
 })
 
 describe('EventList', () => {

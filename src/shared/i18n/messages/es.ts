@@ -716,6 +716,16 @@ export const es = {
     signBook: 'ENVIAR MIS DESEOS',
     signAfterRsvp: 'Confirma tu asistencia y podrás dejar tus deseos en el libro.',
     madeBy: 'Hecho por {marca}',
+    demo: {
+      titulo: 'Demostración de {marca}',
+      aviso: 'Esta invitación es una muestra y abre solo durante un día. La tuya no caduca y lleva tus nombres, tus fotos y tu música.',
+      accion: 'Quiero la mía',
+    },
+    demoCaducada: {
+      titulo: 'Esta demostración ya caducó',
+      texto: 'Las demostraciones abren un día. Si quieres verla otra vez, pídenos otra; y si ya te convenció, tu invitación no caduca nunca.',
+      accion: 'Ver planes y precios',
+    },
     signTheBook: 'FIRMAR EL LIBRO',
     submit: 'ENVIAR',
     sending: 'Enviando…',
@@ -757,6 +767,7 @@ export const es = {
     errors: {
       invitation_not_found: 'Esta invitación no existe.',
       invitation_revoked: 'Esta invitación ya no está activa.',
+      demo_expired: 'Esta demostración ya caducó. Duran un día.',
       rsvp_closed: 'El plazo para confirmar ya cerró.',
       already_answered: 'Esta invitación ya se confirmó. Si hay que cambiar algo, escríbele a quien te invitó.',
       too_many_seats: 'Son más personas que los cupos reservados para tu grupo.',

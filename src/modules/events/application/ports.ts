@@ -11,7 +11,10 @@ export interface EventRepository {
   anonymize(eventId: string, at: Date): Promise<void>
   insert(event: Event): Promise<void>
   update(event: Event): Promise<void>
+  /** La cartera: **sin demos**, que no son eventos vendidos (`domain/demo.ts`). */
   listAll(): Promise<EventInput[]>
+  /** Solo las demos, la viva y la que acaba de vencer, de la que menos le queda a la que más. */
+  listDemos(): Promise<EventInput[]>
   /** Los eventos de un atelier. El admin usa `listAll`. */
   listByUser(userId: string): Promise<EventInput[]>
   /** Los eventos donde alguien es personal de puerta. */

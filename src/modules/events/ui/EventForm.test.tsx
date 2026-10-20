@@ -19,6 +19,7 @@ const evento: Event = {
   currency: 'BOB',
   messageTemplate: null,
   venue: null,
+  demoUntil: null,
 }
 
 describe('EventForm y el cambio de modelo', () => {

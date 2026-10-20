@@ -1,9 +1,13 @@
-import { attempt, ok, type Result } from '@/shared/result'
+import { attempt, isErr, ok, type Result } from '@/shared/result'
+import { createEvent } from '../domain/event'
+import { demoVencida } from '../domain/demo'
 import { eventError, type EventError } from '../domain/errors'
 import type { EventRepository } from './ports'
 
 export type MaintenanceReport = {
   readonly eventsAnonymized: readonly string[]
+  /** Las demos que vencieron y se borraron enteras en este pase. */
+  readonly demosBorradas: readonly string[]
   readonly sessionsDeleted: number
   readonly viewsDeleted: number
   readonly mediaDeleted: number
@@ -38,6 +42,12 @@ export const anonymizeExpiredEvents =
      */
     purgeMediaForEvent: (eventId: string) => Promise<number>
     clock: () => Date
+    /**
+     * Dónde se cuenta lo que se rompió sin parar el pase. El mantenimiento corre fuera de una petición,
+     * así que esto acaba en el registro de fallos que el admin lee en Ajustes, no solo en el log del
+     * contenedor, que es donde se quedaba todo hasta ahora.
+     */
+    avisar: (mensaje: string, ...datos: unknown[]) => void
   }) =>
   async (): Promise<Result<MaintenanceReport, EventError>> =>
     attempt<MaintenanceReport, EventError>(
@@ -56,8 +66,38 @@ export const anonymizeExpiredEvents =
           anonymized.push(event.slug)
         }
 
+        /**
+         * **La demo vencida se borra entera**, no se anonimiza: nació para durar un día y no hay agregado
+         * que conservar. Las fotos primero —son lo único que vive fuera de la base—, y la fila después,
+         * que se lleva en cascada invitados, contenido, mesas y mensajes.
+         *
+         * Cada una va por su cuenta, de verdad: lo que falle con una se cuenta en el registro y las demás
+         * siguen. El pase entero solo se cae si se cae la lectura de la lista.
+         */
+        const demosBorradas: string[] = []
+        for (const fila of await deps.events.listDemos()) {
+          const demo = createEvent(fila)
+          if (isErr(demo)) {
+            // Una fila que no se puede construir no se puede borrar, y callar la dejaba en la base para
+            // siempre con sus fotos. Se dice y se sigue: las demás sí se van.
+            deps.avisar('no se pudo leer una demo para borrarla', demo.error.kind, demo.error.detail)
+            continue
+          }
+          if (!demoVencida(demo.value, now)) continue
+          try {
+            mediaDeleted += await deps.purgeMediaForEvent(demo.value.id)
+            await deps.events.remove(demo.value.id)
+            demosBorradas.push(demo.value.slug)
+          } catch (causa) {
+            // **Una demo atascada no puede tumbar el pase.** Sin esto, un disco lleno o un bloqueo en una
+            // sola fila se llevaba por delante el informe de lo ya anonimizado y el barrido de sesiones.
+            deps.avisar('no se pudo borrar la demo vencida', 'storage_failure', demo.value.slug, causa)
+          }
+        }
+
         return ok({
           eventsAnonymized: anonymized,
+          demosBorradas,
           sessionsDeleted: await deps.deleteExpiredSessions(now),
           viewsDeleted,
           mediaDeleted,

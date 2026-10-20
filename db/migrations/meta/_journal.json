@@ -687,6 +687,13 @@
       "when": 1792113200000,
       "tag": "0098_codigo_atado_al_correo_nuevo",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1792116800000,
+      "tag": "0099_demo_de_un_dia",
+      "breakpoints": true
     }
   ]
 }

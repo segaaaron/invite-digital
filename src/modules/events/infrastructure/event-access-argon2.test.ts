@@ -32,6 +32,7 @@ const events: EventRepository = {
   anonymize: async () => {},
   insert: async () => {},
   update: async () => {},
+  listDemos: async () => [],
   listByIds: async () => [],
   listByUser: async () => [],
   setOwner: async () => {},

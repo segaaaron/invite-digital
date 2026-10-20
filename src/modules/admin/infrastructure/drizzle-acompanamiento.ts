@@ -35,6 +35,8 @@ export const createDrizzleAcompanamiento = (database: DbExecutor): Acompanamient
              (select array_agg(n.kind) from event_notices n where n.event_id = e.id) as enviados_ya
         from events e
        where e.anonymized_at is null
+         -- Una demo de un día (0099) no se acompaña: no es una boda que haya que sacar adelante.
+         and e.demo_until is null
          and e.event_date between ${hoy}::date - 372 and ${hoy}::date + 80
     `)
     return [...filas].map(

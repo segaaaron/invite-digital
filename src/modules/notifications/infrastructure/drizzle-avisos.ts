@@ -139,7 +139,8 @@ export const createDrizzleAvisos = (database: DbExecutor) => {
       const d = (n: number) => sql`(${hoy}::date + ${n}::integer)`
       const filas = (await database.execute(sql`
         select e.id from events e
-        where e.status <> 'closed' and e.event_date >= ${hoy}::date and (
+        -- Una demo (0099) no manda recordatorios: nació para que alguien la mire hoy, no para organizarse.
+        where e.demo_until is null and e.status <> 'closed' and e.event_date >= ${hoy}::date and (
           e.event_date in (${d(0)}, ${d(1)}, ${d(7)}, ${d(30)})
           or e.rsvp_deadline in (${d(0)}, ${d(1)})
           or exists (select 1 from planner_tasks t where t.event_id = e.id and t.done_at is null and t.due_date between ${d(-1)} and ${d(1)})

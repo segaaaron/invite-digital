@@ -17,6 +17,7 @@ export const eventoDePrueba = (over: Partial<Event> = {}): Event => ({
   currency: 'BOB',
   messageTemplate: null,
   venue: null,
+  demoUntil: null,
   ...over,
 })
 

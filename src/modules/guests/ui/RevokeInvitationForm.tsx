@@ -14,6 +14,9 @@ const mensajes = (t: T): Record<GuestErrorKind, string> => ({
   invalid_seats: t('No pudimos revocar la invitación: los datos no son válidos.', 'We couldn’t revoke the invitation: the data is not valid.'),
   not_found: t('Esa invitación ya no existe. Vuelve a cargar la página.', 'That invitation no longer exists. Reload the page.'),
   revoked: t('Esa invitación ya estaba revocada.', 'That invitation was already revoked.'),
+  // Inalcanzable desde el panel —revocar no resuelve tokens— pero el tipo obliga a decidirlo, que es lo
+  // que impide que un caso nuevo llegue a pantalla como una cadena vacía.
+  demo_expired: t('Esa demostración ya caducó.', 'That demo has expired.'),
   plan_limit_reached: t('No pudimos revocar la invitación. Inténtalo en un momento.', 'We couldn’t revoke the invitation. Try again in a moment.'),
   storage_failure: t('No pudimos revocar la invitación. El enlace sigue activo; inténtalo en un momento.', 'We couldn’t revoke the invitation. The link is still active; try again in a moment.'),
 })

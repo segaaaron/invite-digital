@@ -12,6 +12,7 @@ const repo = (pending: AnonymizationCandidate[]) => {
     anonymize: async (id, at) => void anonymized.push({ id, at }),
     insert: async () => {},
     update: async () => {},
+    listDemos: async () => [],
     listByIds: async () => [],
     listByUser: async () => [],
     setOwner: async () => {},
@@ -32,7 +33,7 @@ describe('anonymizeExpiredEvents', () => {
 
     const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 0, deleteViewsForEvent: async () => 0,
       clearContentForEvent: async () => {},
-      purgeMediaForEvent: async () => 0, clock: () => NOW })()
+      purgeMediaForEvent: async () => 0, clock: () => NOW, avisar: () => {} })()
 
     expect(isOk(result) && result.value.eventsAnonymized).toEqual(['boda-vieja', 'xv-vieja'])
     expect(anonymized.map((a) => a.id)).toEqual(['e1', 'e2'])
@@ -42,7 +43,7 @@ describe('anonymizeExpiredEvents', () => {
     const { events, anonymized } = repo([])
     const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 0, deleteViewsForEvent: async () => 0,
       clearContentForEvent: async () => {},
-      purgeMediaForEvent: async () => 0, clock: () => NOW })()
+      purgeMediaForEvent: async () => 0, clock: () => NOW, avisar: () => {} })()
 
     expect(isOk(result) && result.value.eventsAnonymized).toEqual([])
     expect(anonymized).toHaveLength(0)
@@ -52,7 +53,7 @@ describe('anonymizeExpiredEvents', () => {
     const { events } = repo([])
     const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 7, deleteViewsForEvent: async () => 0,
       clearContentForEvent: async () => {},
-      purgeMediaForEvent: async () => 0, clock: () => NOW })()
+      purgeMediaForEvent: async () => 0, clock: () => NOW, avisar: () => {} })()
     expect(isOk(result) && result.value.sessionsDeleted).toBe(7)
   })
 
@@ -71,6 +72,7 @@ describe('anonymizeExpiredEvents', () => {
       clearContentForEvent: async () => {},
       purgeMediaForEvent: async () => 0,
       clock: () => NOW,
+      avisar: () => {},
     })()
 
     expect(borrados).toEqual(['e1'])
@@ -88,6 +90,7 @@ describe('anonymizeExpiredEvents', () => {
       clearContentForEvent: async () => {},
       purgeMediaForEvent: async () => 0,
       clock: () => NOW,
+      avisar: () => {},
     })()
     expect(isErr(result) && result.error.kind).toBe('storage_failure')
   })
@@ -117,6 +120,7 @@ describe('la retención de contenido e imágenes', () => {
         return 3
       },
       clock: () => NOW,
+      avisar: () => {},
     })()
 
     expect(vaciados).toEqual(['e1', 'e2'])
@@ -137,8 +141,140 @@ describe('la retención de contenido e imágenes', () => {
       },
       purgeMediaForEvent: async () => 0,
       clock: () => NOW,
+      avisar: () => {},
     })()
 
     expect(vaciados).toEqual([])
+  })
+})
+
+/**
+ * Las demos de un día (0099) no se anonimizan: se **borran** enteras, con sus fotos. Si se quedaran, la
+ * cartera acabaría llena de bodas fantasma de «Grupo 1» que nadie vendió.
+ */
+describe('las demos vencidas', () => {
+  const demo = (slug: string, demoUntil: Date) => ({
+    id: slug,
+    userId: null,
+    slug,
+    title: 'Demo',
+    eventDate: '2026-12-05',
+    rsvpDeadline: '2026-11-20',
+    locale: 'es',
+    themeKey: 'clasico',
+    status: 'live',
+    retentionDays: 90,
+    currency: 'BOB',
+    messageTemplate: null,
+    venue: null,
+    demoUntil,
+  })
+
+  const conDemos = (demos: ReturnType<typeof demo>[]) => {
+    const borrados: string[] = []
+    const { events } = repo([])
+    return {
+      borrados,
+      events: { ...events, listDemos: async () => demos, remove: async (id: string) => void borrados.push(id) } as EventRepository,
+    }
+  }
+
+  it('se borran enteras, con sus fotos, y la viva se queda', async () => {
+    const { events, borrados } = conDemos([demo('demo-ayer', new Date('2026-08-18T12:00:00Z')), demo('demo-hoy', new Date('2026-08-20T12:00:00Z'))])
+    let fotos = 0
+
+    const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 0, deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async () => {},
+      purgeMediaForEvent: async () => { fotos += 1; return 3 }, clock: () => NOW, avisar: () => {} })()
+
+    expect(isOk(result) && result.value.demosBorradas).toEqual(['demo-ayer'])
+    expect(borrados).toEqual(['demo-ayer'])
+    expect(fotos).toBe(1)
+    expect(isOk(result) && result.value.mediaDeleted).toBe(3)
+  })
+
+  it('sin demos vencidas no borra nada', async () => {
+    const { events, borrados } = conDemos([demo('demo-hoy', new Date('2026-08-20T12:00:00Z'))])
+
+    const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 0, deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async () => {},
+      purgeMediaForEvent: async () => 0, clock: () => NOW, avisar: () => {} })()
+
+    expect(isOk(result) && result.value.demosBorradas).toEqual([])
+    expect(borrados).toEqual([])
+  })
+})
+
+/**
+ * Lo que el comentario promete tiene que ser verdad: una demo atascada no puede llevarse por delante el
+ * resto del pase. Antes no había `try/catch` y un disco lleno dejaba sin barrer las sesiones caducadas,
+ * sin informe de lo ya anonimizado, y sin una sola fila en el registro de fallos.
+ */
+describe('una demo que no se deja borrar', () => {
+  const demoVieja = (slug: string) => ({
+    id: slug,
+    userId: null,
+    slug,
+    title: 'Demo',
+    eventDate: '2026-12-05',
+    rsvpDeadline: '2026-11-20',
+    locale: 'es',
+    themeKey: 'clasico',
+    status: 'live',
+    retentionDays: 90,
+    currency: 'BOB',
+    messageTemplate: null,
+    venue: null,
+    demoUntil: new Date('2026-08-18T12:00:00Z'),
+  })
+
+  it('no tumba el pase: la siguiente sí se borra, y el fallo se cuenta', async () => {
+    const { events } = repo([])
+    const borrados: string[] = []
+    const avisos: string[] = []
+    const conDemos: EventRepository = {
+      ...events,
+      listDemos: async () => [demoVieja('demo-atascada'), demoVieja('demo-buena')],
+      remove: async (id: string) => {
+        if (id === 'demo-atascada') throw new Error('disco lleno')
+        borrados.push(id)
+      },
+    }
+
+    const result = await anonymizeExpiredEvents({
+      events: conDemos,
+      deleteExpiredSessions: async () => 7,
+      deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async () => {},
+      purgeMediaForEvent: async () => 0,
+      clock: () => NOW,
+      avisar: (mensaje) => void avisos.push(mensaje),
+    })()
+
+    expect(isOk(result)).toBe(true)
+    expect(borrados).toEqual(['demo-buena'])
+    expect(isOk(result) && result.value.demosBorradas).toEqual(['demo-buena'])
+    // Y el barrido de sesiones, que iba después, sigue ocurriendo.
+    expect(isOk(result) && result.value.sessionsDeleted).toBe(7)
+    expect(avisos).toEqual(['no se pudo borrar la demo vencida'])
+  })
+
+  it('una fila que no se puede leer se cuenta y no se queda callada', async () => {
+    const { events } = repo([])
+    const avisos: string[] = []
+    const conRota: EventRepository = { ...events, listDemos: async () => [{ ...demoVieja('demo-rota'), slug: 'MAYÚSCULAS INVÁLIDAS' }] }
+
+    const result = await anonymizeExpiredEvents({
+      events: conRota,
+      deleteExpiredSessions: async () => 0,
+      deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async () => {},
+      purgeMediaForEvent: async () => 0,
+      clock: () => NOW,
+      avisar: (mensaje) => void avisos.push(mensaje),
+    })()
+
+    expect(isOk(result) && result.value.demosBorradas).toEqual([])
+    expect(avisos).toEqual(['no se pudo leer una demo para borrarla'])
   })
 })

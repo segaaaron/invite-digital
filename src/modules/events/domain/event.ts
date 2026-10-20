@@ -32,6 +32,11 @@ export type Event = {
   readonly messageTemplate: string | null
   /** Dónde es. Lo enseña la vista previa del enlace y la propia invitación. */
   readonly venue: string | null
+  /**
+   * Hasta cuándo abre, si es una **demo** (`domain/demo.ts`). Nulo en todo lo vendido, que no caduca.
+   * El tipo lo lleva para que ninguna pantalla pueda tratar una demo como una boda sin verlo.
+   */
+  readonly demoUntil: Date | null
 }
 
 export type EventInput = {
@@ -48,6 +53,7 @@ export type EventInput = {
   currency?: string | undefined
   messageTemplate?: string | null | undefined
   venue?: string | null | undefined
+  demoUntil?: Date | null | undefined
 }
 
 export function createEvent(input: EventInput): Result<Event, EventError> {
@@ -110,6 +116,7 @@ export function createEvent(input: EventInput): Result<Event, EventError> {
     retentionDays: input.retentionDays,
     currency: currency as Currency,
     messageTemplate: input.messageTemplate?.trim() === '' ? null : (input.messageTemplate ?? null),
+    demoUntil: input.demoUntil ?? null,
   })
 }
 

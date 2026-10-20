@@ -29,6 +29,10 @@ export const getInvitation =
           // El fallo de almacenamiento se distingue de los otros dos: uno es 503 y los
           // otros 404.
           if (group.error.kind === 'storage_failure') return err(rsvpError('storage_failure', group.error.detail))
+          // La demo de un día vencida (0099) no es un 404: el enlace fue bueno y quien lo abre tarde es
+          // un posible cliente. Quien la corta es `resolveByToken`, que es por donde pasan también las
+          // acciones autorizadas por token.
+          if (group.error.kind === 'demo_expired') return err(rsvpError('demo_expired', group.error.detail))
           return err(
             group.error.kind === 'revoked'
               ? rsvpError('invitation_revoked', group.error.detail)

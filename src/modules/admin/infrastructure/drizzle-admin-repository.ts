@@ -121,6 +121,8 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         saldoPendiente: sql<boolean>`exists (select 1 from orders o where o.event_id = events.id and o.status = 'approved' and o.deposit_cents is not null and o.balance_paid_at is null and o.addon_slug is null)`,
       })
       .from(events)
+      // Las demos de un día (0099) no son eventos vendidos: no salen en la cartera, ni en sus cifras.
+      .where(isNull(events.demoUntil))
       // `leftJoin` en los dos: un evento sin dueño o sin plan tiene que salir igual en la
       // lista del admin. Son justo los que hay que arreglar. Y en los conteos: un evento sin
       // grupos también sale, con cero.

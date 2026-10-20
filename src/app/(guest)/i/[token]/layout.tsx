@@ -14,6 +14,7 @@ import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormular
 import { PortadasQueEsperan } from '@/modules/events/ui/themes/kit/PortadasQueEsperan'
 import { SinVerCodigo } from '@/modules/events/ui/themes/kit/SinVerCodigo'
 import { IdiomaProvider } from '@/shared/i18n/idioma-navegador'
+import { idiomaDeLaPeticion } from '@/shared/i18n/idioma-servidor'
 
 export const viewport = VIEWPORT
 
@@ -38,6 +39,20 @@ export default async function InvitationLayout({
   // la lanza para que el límite de error responda 503.
   if (isErr(invitation)) {
     if (invitation.error.kind === 'storage_failure') throw new Error(invitation.error.detail)
+    /**
+     * La demo de un día que venció (0099) **no es un 404**: el enlace fue bueno y quien lo abre tarde es
+     * un posible cliente. Como este layout es la raíz de la rama —es quien emite `<html>`—, un `notFound()`
+     * aquí se comía la pantalla que la página sabe pintar. Se le da la carcasa mínima, sin las tipografías
+     * del diseño, que ya no hay diseño que pintar, y la página dice el resto.
+     */
+    if (invitation.error.kind === 'demo_expired') {
+      const idioma = await idiomaDeLaPeticion()
+      return (
+        <html className={sans.variable} lang={idioma} suppressHydrationWarning>
+          <body className="antialiased">{children}</body>
+        </html>
+      )
+    }
     notFound()
   }
 

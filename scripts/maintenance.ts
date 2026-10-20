@@ -16,12 +16,13 @@ async function runMaintenance(): Promise<number> {
     return 1
   }
 
-  const { eventsAnonymized, sessionsDeleted, viewsDeleted, mediaDeleted } = result.value
+  const { eventsAnonymized, demosBorradas, sessionsDeleted, viewsDeleted, mediaDeleted } = result.value
   console.log(
     `Mantenimiento listo: ${eventsAnonymized.length} evento(s) anonimizado(s)${
       eventsAnonymized.length > 0 ? ` (${eventsAnonymized.join(', ')})` : ''
     }, ${sessionsDeleted} sesión(es) caducada(s) borrada(s), ${viewsDeleted} visita(s) borrada(s), ${mediaDeleted} archivo(s) borrado(s)`,
   )
+  console.log(`Demos de un día: ${demosBorradas.length} vencida(s) borrada(s)${demosBorradas.length > 0 ? ` (${demosBorradas.join(', ')})` : ''}`)
 
   // Las consultas de la web van aparte: no son de ningún evento. Un fallo aquí no deshace
   // lo de arriba, pero sí deja el pase en rojo para que se vea en el registro.

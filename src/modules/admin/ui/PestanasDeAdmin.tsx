@@ -24,6 +24,7 @@ export const SECCIONES_DEL_ADMIN: readonly Seccion[] = [
   { nombre: 'Ventas', pestanas: [{ href: '/panel/admin/ventas', label: 'Ventas' }] },
   { nombre: 'Clientes', pestanas: [{ href: '/panel/admin/clientes', label: 'Clientes' }] },
   { nombre: 'Ingresos', pestanas: [{ href: '/panel/admin/ingresos', label: 'Ingresos' }] },
+  { nombre: 'Demos', pestanas: [{ href: '/panel/admin/demos', label: 'Demos' }] },
   {
     nombre: 'Eventos',
     pestanas: [

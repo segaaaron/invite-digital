@@ -68,7 +68,7 @@ describe('panelNav', () => {
     const secciones = panelNav(null, {}, true)
     expect(secciones.map((seccion) => seccion.label)).toEqual(['Principal', 'Vender', 'Organizar', 'Configurar'])
     const entradas = secciones.flatMap((seccion) => seccion.items)
-    expect(entradas.map((item) => item.label)).toEqual(['Hoy', 'Ventas', 'Clientes', 'Ingresos', 'Eventos', 'Catálogo', 'Ajustes'])
+    expect(entradas.map((item) => item.label)).toEqual(['Hoy', 'Ventas', 'Clientes', 'Ingresos', 'Demos', 'Eventos', 'Catálogo', 'Ajustes'])
     const hrefs = entradas.map((item) => item.href)
     expect(hrefs).not.toContain('/panel')
     expect(hrefs).not.toContain('/panel/ayuda')

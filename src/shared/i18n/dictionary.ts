@@ -349,6 +349,8 @@ export interface LegalDictionary {
 export type RsvpMessageKey =
   | 'invitation_not_found'
   | 'invitation_revoked'
+  /** La demo de un día que el admin mandó ya venció (0099). */
+  | 'demo_expired'
   | 'rsvp_closed'
   | 'already_answered'
   | 'too_many_seats'
@@ -630,6 +632,10 @@ export interface InvitationDictionary {
   signAfterRsvp: string
   /** «Hecho por {marca}», el pie de cada invitación. */
   madeBy: string
+  /** La cinta de una demo de un día (0099): la firma de la casa y el botón de venta. */
+  demo: { titulo: string; aviso: string; accion: string }
+  /** La pantalla de la demo que ya venció, con su salida a precios. */
+  demoCaducada: { titulo: string; texto: string; accion: string }
   /** «FIRMAR EL LIBRO», el botón del libro de firmas de los XV (V4). */
   signTheBook: string
   submit: string

@@ -24,7 +24,7 @@ import { checkEventPassword, setEventPassword } from '@/modules/events/applicati
 import { clearContent, contentFor, contentForPreview, saveContentBlock, seedEmptyContent } from '@/modules/events/application/content-use-cases'
 import { listGuestPhotos, listMedia, purgeMedia, readMedia, removeMedia, saveGuestPhoto, saveMedia } from '@/modules/events/application/media-use-cases'
 import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
-import { listEvents } from '@/modules/events/application/list-events'
+import { listDemos, listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
 import { renombrarEvento } from '@/modules/events/application/rename-event'
 import { drizzleSaveTheDate } from '@/modules/events/infrastructure/drizzle-save-the-date'
@@ -48,6 +48,7 @@ import { env } from '@/shared/config/env'
 import { listDueReminders, markReminderSent } from '@/modules/reminders/application/reminder-use-cases'
 import { drizzleReminderRepository } from '@/modules/reminders/infrastructure/drizzle-reminder-repository'
 import { err, isErr } from '@/shared/result'
+import { registrarFallo } from '@/shared/observability/fallos'
 import { addGuest } from '@/modules/guests/application/add-guest'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
@@ -71,7 +72,7 @@ import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 import { drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
 import { createDrizzleUserRepository } from '@/modules/identity/infrastructure/drizzle-user-repository'
 import { clock, minter } from './base'
-import { yaSeCelebro } from '@/modules/events'
+import { demoVencida, yaSeCelebro } from '@/modules/events'
 import { guestError } from '@/modules/guests/domain/errors'
 // Solo dentro de funciones: una referencia ansiosa entre ficheros de composición revienta al cargar.
 import { plans } from './negocio'
@@ -219,6 +220,8 @@ export const events = {
    * pregunta no compila.
    */
   listAll: listEvents({ events: drizzleEventRepository }),
+  /** Las demos de un día, que `listAll` ya no trae (0099). Solo las lee la pantalla del admin. */
+  listDemos: listDemos({ events: drizzleEventRepository, avisar: (mensaje, ...datos) => registrarFallo('events/listDemos', mensaje, ...datos) }),
   getFor: getEventFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   getByIdFor: getEventByIdFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   listFor: listEventsFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
@@ -362,6 +365,7 @@ export const events = {
     // Las fotografías y los documentos privados del planner: los dos son ficheros del evento.
     purgeMediaForEvent: async (eventId) => (await purgeMedia(mediaDeps)(eventId)) + (await planner.dia.purgeDocuments(eventId)),
     clock,
+    avisar: (mensaje, ...datos) => registrarFallo('mantenimiento', mensaje, ...datos),
   }),
 } as const
 
@@ -447,8 +451,18 @@ export const guests = {
    */
   resolveByToken: async (token: string) => {
     const grupo = await resolverInvitado(token)
-    if (isErr(grupo) || !(await eventoTerminado(grupo.value.eventId))) return grupo
-    return err(guestError('not_found', `Evento ya celebrado: ${grupo.value.eventId}`))
+    if (isErr(grupo)) return grupo
+    // El evento, una vez: aquí se deciden las dos muertes de un enlace público. Un fallo de lectura
+    // **no** apaga invitaciones vivas, como en `eventoTerminado`.
+    const evento = await events.getByIdUnscoped(grupo.value.eventId)
+    if (isErr(evento)) return grupo
+    // La demo de un día (0099), pasada su hora. Va aquí y no solo en la página porque por este punto
+    // pasan también las acciones autorizadas por token —confirmar, firmar el libro, subir una foto,
+    // reservar un regalo, contar la visita—: sin esto, un POST con el enlace viejo seguía escribiendo
+    // en una demo que ya «no abre».
+    if (demoVencida(evento.value, clock())) return err(guestError('demo_expired', `Demo caducada: ${grupo.value.eventId}`))
+    if (yaSeCelebro(evento.value.eventDate, clock())) return err(guestError('not_found', `Evento ya celebrado: ${grupo.value.eventId}`))
+    return grupo
   },
   listPeople: listPeopleByEvent({ people: drizzleGuestPersonRepository }),
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),

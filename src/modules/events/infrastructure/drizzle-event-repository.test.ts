@@ -25,7 +25,7 @@ const evento = (slug: string) => ({
   locale: 'es' as const,
   themeKey: 'clasico',
   status: 'draft' as const,
-  retentionDays: 90, currency: 'BOB' as const, messageTemplate: null, venue: null,
+  retentionDays: 90, currency: 'BOB' as const, messageTemplate: null, venue: null, demoUntil: null,
 })
 
 describe('repositorio de eventos', () => {
@@ -81,6 +81,44 @@ describe('repositorio de eventos', () => {
 
       expect((await repo.findById(borrador.id))?.status).toBe('live')
       expect((await repo.findById(cerrado.id))?.status).toBe('closed')
+    })
+  })
+})
+
+/**
+ * **Las demos no son eventos** (0099). El filtro vive en la consulta —`listAll` y `listByUser`— y no en las
+ * pantallas: una demo colada en la cartera acaba en un informe de ingresos, y ahí ya no se ve que era
+ * de mentira.
+ */
+describe('las demos de un día, aparte de la cartera', () => {
+  const demo = (slug: string, demoUntil: Date) => ({ ...evento(slug), demoUntil, userId: null })
+
+  it('no salen en la cartera, ni en la del atelier, y sí en su propia lista', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const boda = evento('boda-vendida')
+      await repo.insert(boda)
+      await repo.insert(demo('demo-de-prueba', new Date('2026-10-21T18:00:00Z')))
+
+      const cartera = await repo.listAll()
+      expect(cartera.map((e) => e.slug)).toContain('boda-vendida')
+      expect(cartera.map((e) => e.slug)).not.toContain('demo-de-prueba')
+
+      const demos = await repo.listDemos()
+      expect(demos.map((e) => e.slug)).toEqual(['demo-de-prueba'])
+      expect(demos[0]?.demoUntil).toBeInstanceOf(Date)
+    })
+  })
+
+  it('la retención no las toca: se borran enteras, no se anonimizan', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      // Fecha pasada y retención cumplida: una boda así sí entraría a anonimizarse.
+      const vieja = { ...evento('demo-vieja'), eventDate: '2020-01-01', rsvpDeadline: '2019-12-01', demoUntil: new Date('2020-01-02T00:00:00Z') }
+      await repo.insert(vieja)
+
+      const pendientes = await repo.listPendingAnonymization(new Date('2026-10-20T12:00:00Z'))
+      expect(pendientes.map((e) => e.slug)).not.toContain('demo-vieja')
     })
   })
 })

@@ -175,6 +175,13 @@ export const NAV_ICONS = {
     </Trazo>
   ),
   enviar: <SendIcon />,
+  /** Demos: una invitación dentro de un teléfono, que es justo lo que se le manda al cliente. */
+  demos: (
+    <Trazo>
+      <rect height="19" rx="3" width="13" x="5.5" y="2.5" />
+      <path d="M10 7h4M9 11h6M9 14.5h6M10.5 18.5h3" />
+    </Trazo>
+  ),
 } as const satisfies Record<string, ReactNode>
 
 export type NavIcon = keyof typeof NAV_ICONS

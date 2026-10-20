@@ -25,6 +25,7 @@ function repo() {
     anonymize: async () => {},
     insert: async () => {},
     update: async () => {},
+    listDemos: async () => [],
     listByIds: async () => [],
     listByUser: async () => [],
     setOwner: async () => {},

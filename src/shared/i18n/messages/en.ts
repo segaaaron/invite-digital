@@ -716,6 +716,16 @@ export const en = {
     signBook: 'SEND MY WISHES',
     signAfterRsvp: 'Confirm your attendance and you can leave your wishes in the book.',
     madeBy: 'Made by {marca}',
+    demo: {
+      titulo: 'A {marca} demo',
+      aviso: 'This invitation is a sample and opens for one day only. Yours never expires, and it carries your names, your photos and your music.',
+      accion: 'I want mine',
+    },
+    demoCaducada: {
+      titulo: 'This demo has expired',
+      texto: 'Demos open for one day. Ask us for another one if you want to see it again; and if it already convinced you, your invitation never expires.',
+      accion: 'See plans and prices',
+    },
     signTheBook: 'SIGN THE BOOK',
     submit: 'SEND',
     sending: 'Sending…',
@@ -757,6 +767,7 @@ export const en = {
     errors: {
       invitation_not_found: 'This invitation does not exist.',
       invitation_revoked: 'This invitation is no longer active.',
+      demo_expired: 'This demo has expired. They last one day.',
       rsvp_closed: 'The confirmation window has closed.',
       already_answered: 'This invitation was already confirmed. To change anything, message whoever invited you.',
       too_many_seats: 'That is more people than the seats held for your group.',

@@ -17,6 +17,7 @@ import { RsvpForm } from '@/modules/rsvp/ui/RsvpForm'
 import { RsvpPareja } from '@/modules/rsvp/ui/RsvpPareja'
 import { env } from '@/shared/config/env'
 import { getDictionary } from '@/shared/i18n/dictionaries'
+import { idiomaDeLaPeticion } from '@/shared/i18n/idioma-servidor'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
 import { eventoDeLaInvitacion } from './calendario'
@@ -28,6 +29,9 @@ import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 import { fechaEnBolivia } from '@/shared/format/fecha'
 import { HechoPorLuxury } from '@/modules/events/ui/HechoPorLuxury'
+import { CintaDeDemo } from '@/modules/events/ui/CintaDeDemo'
+import { DemoCaducada } from '@/modules/events/ui/DemoCaducada'
+import { esDemo } from '@/modules/events'
 
 // El estado del RSVP cambia con cada respuesta: esta página no se cachea.
 export const dynamic = 'force-dynamic'
@@ -65,6 +69,12 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
   if (isErr(invitation)) {
     if (invitation.error.kind === 'storage_failure') throw new Error(invitation.error.detail)
+    // La demo de un día que venció **no es un 404**: el enlace fue bueno y quien lo abre tarde es justo a
+    // quien se le quiere vender. Se le enseña por qué no abre y a dónde ir.
+    if (invitation.error.kind === 'demo_expired') {
+      const locale = (await idiomaDeLaPeticion()) === 'en' ? 'en' : 'es'
+      return <DemoCaducada href={`/${locale}#precios`} textos={getDictionary(locale).invitation.demoCaducada} />
+    }
     notFound()
   }
 
@@ -298,6 +308,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
             }}
           />
           </EstiloDeLaInvitacion>
+          {esDemo(event) ? <CintaDeDemo href={`/${event.locale}#precios`} textos={dictionary.demo} /> : null}
           <HechoPorLuxury href={env.SITE_URL} texto={dictionary.madeBy} />
         </div>
       </div>

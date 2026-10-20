@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { events } from '@/shared/db/schema'
 import type { EventRepository } from '../application/ports'
@@ -17,6 +17,7 @@ const COLUMNS = {
   currency: events.currency,
   messageTemplate: events.messageTemplate,
   venue: events.venue,
+  demoUntil: events.demoUntil,
 } as const
 
 export const createDrizzleEventRepository = (database: DbExecutor): EventRepository => ({
@@ -34,7 +35,9 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
       .where(
         // La fecha viaja como texto ISO con casteo explícito: postgres.js no acepta un
         // Date como parámetro suelto dentro de un fragmento SQL.
-        sql`${events.anonymizedAt} is null and (${events.eventDate}::date + ${events.retentionDays} * interval '1 day') < ${now.toISOString()}::timestamptz`,
+        // La demo no se anonimiza: se borra entera al vencer (el pase de mantenimiento). Anonimizarla dejaría
+        // una boda fantasma de «Grupo 1» en la cartera para siempre.
+        sql`${events.anonymizedAt} is null and ${events.demoUntil} is null and (${events.eventDate}::date + ${events.retentionDays} * interval '1 day') < ${now.toISOString()}::timestamptz`,
       )
       .orderBy(asc(events.eventDate))
   },
@@ -171,11 +174,18 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
   },
 
   async listAll() {
-    return database.select(COLUMNS).from(events).orderBy(asc(events.eventDate))
+    // **Las demos no son eventos.** El filtro va aquí, en la consulta por la que pasan la bandeja del admin
+    // y la del atelier, y no en cada pantalla: una demo colada en la cartera acaba en un informe de ingresos.
+    return database.select(COLUMNS).from(events).where(isNull(events.demoUntil)).orderBy(asc(events.eventDate))
+  },
+
+  async listDemos() {
+    // Las vivas y las vencidas: el admin ve que caducó antes de que el barrido se la lleve.
+    return database.select(COLUMNS).from(events).where(isNotNull(events.demoUntil)).orderBy(asc(events.demoUntil))
   },
 
   async listByUser(userId) {
-    return database.select(COLUMNS).from(events).where(eq(events.userId, userId)).orderBy(asc(events.eventDate))
+    return database.select(COLUMNS).from(events).where(and(eq(events.userId, userId), isNull(events.demoUntil))).orderBy(asc(events.eventDate))
   },
 
   async listByIds(ids) {

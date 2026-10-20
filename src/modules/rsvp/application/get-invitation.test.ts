@@ -19,7 +19,7 @@ const evento: Event = {
   locale: 'es',
   themeKey: 'clasico',
   status: 'live',
-  retentionDays: 90, currency: 'BOB' as const, messageTemplate: null, venue: null,
+  retentionDays: 90, currency: 'BOB' as const, messageTemplate: null, venue: null, demoUntil: null,
 }
 
 const rsvp: RsvpRepository = {
@@ -35,6 +35,7 @@ const deps = (overrides: Partial<Parameters<typeof getInvitation>[0]> = {}) => (
   resolveGroup: async () => ok(grupo),
   findEventById: async () => ok(evento),
   rsvp,
+  clock: () => new Date('2026-10-20T12:00:00Z'),
   ...overrides,
 })
 
@@ -48,6 +49,19 @@ describe('getInvitation', () => {
   it('un evento en borrador no tiene invitación todavía', async () => {
     const result = await getInvitation(deps({ findEventById: async () => ok({ ...evento, status: 'draft' }) }))('tok')
     expect(isErr(result) && result.error.kind).toBe('invitation_not_found')
+  })
+
+  // La demo de un día (0099): mientras vive abre como cualquier invitación, y pasada su hora la corta
+  // quien resuelve el token —por donde pasan también las acciones—, que la distingue del 404 para que la
+  // pantalla le ofrezca la suya a quien la abre tarde.
+  it('una demo viva abre como una invitación cualquiera', async () => {
+    const result = await getInvitation(deps({ findEventById: async () => ok({ ...evento, demoUntil: new Date('2026-10-20T18:00:00Z') }) }))('tok')
+    expect(isOk(result)).toBe(true)
+  })
+
+  it('una demo vencida no abre, y no se confunde con una invitación que no existe', async () => {
+    const result = await getInvitation(deps({ resolveGroup: async () => err(guestError('demo_expired', 'Demo caducada: e1')) }))('tok')
+    expect(isErr(result) && result.error.kind).toBe('demo_expired')
   })
 
   it('un evento cerrado sí se muestra: los enlaces siguen valiendo', async () => {

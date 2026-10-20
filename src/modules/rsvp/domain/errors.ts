@@ -1,6 +1,8 @@
 export type RsvpErrorKind =
   | 'invitation_not_found'
   | 'invitation_revoked'
+  /** La demo de un día venció: existió, caducó, y al cliente se le ofrece la suya (0099). */
+  | 'demo_expired'
   | 'rsvp_closed'
   /** Ese grupo ya contestó: se responde una sola vez, y corregir lo reabre el atelier. */
   | 'already_answered'

@@ -145,6 +145,7 @@ export default async function ModelPreviewPage({
     currency: 'BOB',
     messageTemplate: null,
     venue: null,
+    demoUntil: null,
   }
 
   // Las migas (Inicio › Bodas › Clásica - Floral) para Google: dicen de qué fiesta es el modelo.

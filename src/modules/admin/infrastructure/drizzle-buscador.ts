@@ -1,4 +1,4 @@
-import { desc, or, sql, type SQL, type AnyColumn } from 'drizzle-orm'
+import { desc, or, sql, type SQL, type AnyColumn, and, isNull } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { consultationRequests, events, orders, users } from '@/shared/db/schema'
 import { patronDeBusqueda, SIN_RESULTADOS, type ResultadosDeBusqueda } from '../domain/busqueda'
@@ -22,7 +22,9 @@ export const createDrizzleBuscador = (database: DbExecutor) => async (texto: str
     database
       .select({ slug: events.slug, title: events.title, eventDate: events.eventDate })
       .from(events)
-      .where(or(parecido(events.title, p), parecido(events.slug, p)))
+      // Sin demos (0099): buscar «Valentina» tiene que dar la boda de Valentina, no la muestra que se
+      // le mandó a alguien ayer. Las demos se ven en su pantalla, que son cinco filas.
+      .where(and(isNull(events.demoUntil), or(parecido(events.title, p), parecido(events.slug, p))))
       .orderBy(desc(events.eventDate))
       .limit(TOPE),
     database

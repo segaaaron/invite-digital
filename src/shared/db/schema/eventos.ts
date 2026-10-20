@@ -109,6 +109,14 @@ export const events = pgTable('events', {
    * las bodas que lo contrataron.
    */
   planId: uuid('plan_id').references(() => plans.id, { onDelete: 'set null' }),
+  /**
+   * Hasta cuándo abre esta **demo**: la invitación que el admin manda a un cliente para que vea cómo
+   * funciona (0099). Nula en todo lo demás, que es lo vendido.
+   *
+   * Con fecha, el evento no es una boda: no sale en la bandeja ni en los ingresos, no se anonimiza por
+   * retención —se **borra** entera cuando vence— y la invitación lleva la cinta de la casa.
+   */
+  demoUntil: timestamp('demo_until', { withTimezone: true }),
   ...timestamps,
 })
 

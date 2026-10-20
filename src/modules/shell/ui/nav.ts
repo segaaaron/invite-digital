@@ -122,6 +122,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
             // La persona entera: sus consultas, pedidos, eventos, acceso y notas.
             { href: '/panel/admin/clientes', label: t('Clientes', 'Clients'), icon: 'usuarios', activo: ['/panel/admin/clientes'] },
             { href: '/panel/admin/ingresos', label: t('Ingresos', 'Revenue'), icon: 'ingresos', activo: ['/panel/admin/ingresos'] },
+            // La invitación de muestra que se le manda a un posible cliente para que compre (0099).
+            { href: '/panel/admin/demos', label: t('Demos', 'Demos'), icon: 'demos', activo: ['/panel/admin/demos'] },
           ],
         },
         {

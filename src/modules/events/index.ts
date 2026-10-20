@@ -1,5 +1,7 @@
 export type { Event, EventStatus } from './domain/event'
 export { acceptsResponses } from './domain/event'
+/** La demo de un día (0099): qué es, cuándo vence y cuánto le queda. */
+export { caducidadDeUnaDemo, demoVencida, DURACION_DE_LA_DEMO_MS, esDemo, horasQueLeQuedan } from './domain/demo'
 export { enOrdenParaElCliente, yaSeCelebro } from './domain/celebrado'
 export { fechasDeMuestra } from './domain/fechas-de-muestra'
 export { leerBrief, preguntasDelEncargo, MAX_RESPUESTA_DEL_ENCARGO, PREGUNTAS_DEL_ENCARGO, type BriefDelEncargo, type Diseno, type EstadoDeDiseno, type PreguntaDelEncargo } from './domain/diseno'
