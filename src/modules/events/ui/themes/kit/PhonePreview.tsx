@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { CloseIcon } from '@/shared/design/ui/icons'
+import { EnlaceDeVuelta } from '@/shared/design/ui/EnlaceDeVuelta'
 
 /**
  * La invitación dentro de un teléfono, centrada y sin nada a los lados.
@@ -24,7 +25,13 @@ export function PhonePreview({
   action,
 }: {
   readonly children: ReactNode
-  /** A dónde se sale, y cómo se llama esa salida para quien no ve el dibujo. */
+  /**
+   * A dónde se sale, y cómo se llama esa salida para quien no ve el dibujo.
+   *
+   * El `href` es el destino **de reserva**: si se vino de otra página del sitio, la cruz
+   * vuelve ahí (`EnlaceDeVuelta`). Un modelo se abre desde Bodas, XV Años, Colecciones, el
+   * inicio y el panel, y salir siempre a Colecciones dejaba a casi todos en otra página.
+   */
   readonly exit?: { readonly href: string; readonly label: string }
   /**
    * La llamada a la acción del escaparate: «elegir este diseño».
@@ -38,9 +45,9 @@ export function PhonePreview({
   return (
     <div className="theme-phone-stage">
       {exit === undefined ? null : (
-        <Link aria-label={exit.label} className="theme-phone-exit" href={exit.href} title={exit.label}>
+        <EnlaceDeVuelta aria-label={exit.label} className="theme-phone-exit" href={exit.href} title={exit.label}>
           <CloseIcon />
-        </Link>
+        </EnlaceDeVuelta>
       )}
       <div className="theme-phone-frame">{children}</div>
       {action === undefined ? null : (

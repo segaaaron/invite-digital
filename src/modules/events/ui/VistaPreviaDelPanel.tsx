@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { EnlaceDeVuelta } from '@/shared/design/ui/EnlaceDeVuelta'
 import { useRef, useState, type ReactNode } from 'react'
 import { ArrowLeftIcon, MusicIcon } from '@/shared/design/ui/icons'
 import { useT } from '@/shared/i18n/idioma-navegador'
@@ -32,18 +32,10 @@ export function VistaPreviaDelPanel({ children, volver, fuentes }: { children: R
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-ink text-shell-ink">
       <header className="flex items-center gap-3 px-5 py-3.5 max-[767px]:px-3">
-        <Link className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-shell-ink/25 px-4 text-[14.5px] font-medium text-shell-ink no-underline hover:border-gold"
-          href={volver}
-          onClick={(e) => {
-            // Vuelve de donde se vino (13 oct): se abre desde el ojo de cualquier pantalla, no solo de Mi invitación.
-            if (document.referrer.startsWith(`${window.location.origin}/panel`)) {
-              e.preventDefault()
-              window.history.back()
-            }
-          }}
-        >
+        {/* Vuelve de donde se vino (13 oct): se abre desde el ojo de cualquier pantalla, no solo de Mi invitación. */}
+        <EnlaceDeVuelta className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-shell-ink/25 px-4 text-[14.5px] font-medium text-shell-ink no-underline hover:border-gold" href={volver}>
           <ArrowLeftIcon className="size-4" /> <span className="max-[559px]:sr-only">{t('Volver al panel', 'Back to the panel')}</span>
-        </Link>
+        </EnlaceDeVuelta>
         <p className="min-w-0 flex-1 truncate text-center text-[14.5px] text-shell-ink/75">{t('Así la verá tu invitado', 'How your guest will see it')}</p>
         {/* Contrapeso del botón de volver: el texto queda centrado en la pantalla. */}
         <span aria-hidden className="w-[150px] max-[559px]:w-11" />

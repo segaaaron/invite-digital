@@ -305,6 +305,17 @@ test.describe('el catálogo público', () => {
     await primera.click()
     await expect(page.locator('article')).toBeVisible()
   })
+
+  test('y la cruz devuelve a la página desde la que se abrió, no a Colecciones', async ({ page }) => {
+    // El modelo se abre desde XV Años, Bodas, el inicio y el catálogo: una salida fija
+    // dejaba a casi todos en una página que no habían pedido (20 oct).
+    await page.goto('/es/xv-anos')
+    await page.getByRole('link', { name: /abrir/i }).first().click()
+    await expect(page).toHaveURL(/\/es\/modelos\//)
+
+    await page.getByRole('link', { name: /cerrar y volver/i }).click()
+    await expect(page).toHaveURL(/\/es\/xv-anos$/)
+  })
 })
 
 // Con «reducir movimiento» (accesibilidad del iPhone), `Reveal` dejaba bloques en opacidad 0:
