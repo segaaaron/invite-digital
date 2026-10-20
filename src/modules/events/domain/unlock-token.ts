@@ -10,12 +10,17 @@ export const UNLOCK_MS = 12 * 60 * 60 * 1000
  * valor. Antes el valor era constante para el evento y la caducidad la ponía el
  * navegador con `maxAge`: quien copiara la cookie entraba indefinidamente.
  *
- * La clave del HMAC es el hash de la propia contraseña: cambiarla invalida por sí sola
- * todos los desbloqueos repartidos, sin inventar otro secreto que administrar.
+ * La clave del HMAC es un **secreto del servidor** —`LINK_KEY` y, sin ella, `DATABASE_URL`,
+ * la misma pareja que sella los enlaces de los invitados y firma la sesión de puerta—, y el
+ * hash de la contraseña viaja **dentro** del mensaje. Así cambiar la contraseña sigue
+ * invalidando por sí sola todos los desbloqueos repartidos, y en cambio conocer el hash ya no
+ * basta para fabricar la cookie: antes la clave **era** ese hash, así que un volcado de la base
+ * abría todos los eventos protegidos y sus fotos y música, y el argon2 no servía de nada
+ * (F18 del escaneo del 19 oct).
  */
-export function unlockValue(input: { eventId: string; passwordHash: string; issuedAt: number }): string {
-  const firma = createHmac('sha256', input.passwordHash)
-    .update(`${input.eventId}.${input.issuedAt}`)
+export function unlockValue(input: { eventId: string; passwordHash: string; issuedAt: number; secreto: string }): string {
+  const firma = createHmac('sha256', input.secreto)
+    .update(`desbloqueo.${input.eventId}.${input.issuedAt}.${input.passwordHash}`)
     .digest('base64url')
   return `${input.issuedAt}.${firma}`
 }
@@ -32,6 +37,7 @@ export function isUnlockValid(input: {
   eventId: string
   passwordHash: string
   now: number
+  secreto: string
 }): boolean {
   const [marca, firma] = input.value.split('.')
   if (marca === undefined || firma === undefined) return false
@@ -40,5 +46,5 @@ export function isUnlockValid(input: {
   if (!Number.isFinite(issuedAt)) return false
   if (input.now - issuedAt > UNLOCK_MS || issuedAt > input.now) return false
 
-  return iguales(input.value, unlockValue({ eventId: input.eventId, passwordHash: input.passwordHash, issuedAt }))
+  return iguales(input.value, unlockValue({ eventId: input.eventId, passwordHash: input.passwordHash, issuedAt, secreto: input.secreto }))
 }

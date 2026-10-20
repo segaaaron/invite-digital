@@ -148,7 +148,7 @@ export async function requireEventAccess(
 ): Promise<string> {
   const evento = await events.tocar(actor, ref)
   if (evento === null) {
-    registrarFallo('sesion', 'acceso denegado a evento ajeno', actor.email, ref.eventSlug ?? ref.eventId ?? '(sin referencia)')
+    registrarFallo('sesion', 'acceso denegado a evento ajeno', 'tenancy_failure', actor.email, ref.eventSlug ?? ref.eventId ?? '(sin referencia)')
     throw new Error('Evento no encontrado')
   }
   // **Lo celebrado queda para mirar** (8 de octubre; sin excepciones desde el 13): nadie del equipo

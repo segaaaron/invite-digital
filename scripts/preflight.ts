@@ -63,8 +63,35 @@ async function runPreflight(): Promise<number> {
     blockers.push('No se pudo leer el catálogo de plantillas para comprobar sus diseños')
   }
 
+  /**
+   * **Sin remitente de correo no hay recuperación de contraseña.**
+   *
+   * Bloquea, no avisa: el remitente del proyecto solo manda tres cosas —credenciales nuevas,
+   * recuperar contraseña y el código de la cuenta— y las tres son la única puerta de vuelta
+   * para quien se queda fuera. Sin la clave, el remitente devuelve `false` en silencio, la
+   * pantalla dice «si ese correo tiene cuenta, le acabamos de enviar un código», y la cuenta
+   * gasta su cupo de cinco códigos de la hora en correos que no salieron.
+   */
+  if ((process.env.RESEND_API_KEY ?? '') === '') {
+    blockers.push('RESEND_API_KEY no está: no saldrían las credenciales nuevas, ni la recuperación de contraseña, ni el código de la cuenta')
+  }
+
+  // Avisos: no detienen el despliegue, pero hay que saberlos **antes** de pulsar.
+  const avisos: string[] = []
+  if ((process.env.LINK_KEY ?? '') === '') {
+    avisos.push(
+      'LINK_KEY no está definida: los enlaces de invitado, la cookie de desbloqueo y la sesión de puerta se firman con DATABASE_URL. ' +
+        'Si cambia esa cadena (redespliegue con otra contraseña, otro host del pooler), las sesiones de puerta vivas dejan de verificar y el panel ya no puede volver a enseñar los enlaces guardados. ' +
+        'Ojo al revés también: definirla AHORA tiene el mismo efecto sobre lo ya guardado, así que se decide a conciencia, no de paso.',
+    )
+  }
+  if ((process.env.VAPID_PUBLIC_KEY ?? '') === '' || (process.env.VAPID_PRIVATE_KEY ?? '') === '') {
+    avisos.push('VAPID_PUBLIC_KEY o VAPID_PRIVATE_KEY no están: las notificaciones push no salen, y los avisos del panel no se mandan por correo. El admin no se enteraría de nada en el celular.')
+  }
+  for (const aviso of avisos) console.warn(`  ! ${aviso}`)
+
   if (blockers.length === 0) {
-    console.log('Comprobación previa superada: no queda ningún marcador de relleno.')
+    console.log(`Comprobación previa superada: no queda ningún marcador de relleno.${avisos.length > 0 ? ` Con ${avisos.length} aviso(s) arriba.` : ''}`)
     return 0
   }
 

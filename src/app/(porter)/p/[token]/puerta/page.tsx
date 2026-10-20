@@ -4,7 +4,7 @@ import { checkin, plans, porters } from '@/app/composition/container'
 import {
   adjustArrivalAsPorterAction,
   checkInByGroupAsPorterAction,
-  porterAccessOkAction,
+  porterAccessAction,
   recordScansAsPorterAction,
   voidArrivalAsPorterAction,
 } from '@/app/_acciones/checkin/porter-actions'
@@ -22,10 +22,13 @@ export const dynamic = 'force-dynamic'
  */
 export default async function PorterDoorPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
-  const guardado = (await cookies()).get('door_porter')?.value
-  if (guardado !== token) redirect(`/p/${token}`)
+  // La cookie es la sesión que el servidor firma tras el PIN, atada a este enlace. El token de
+  // la URL no autoriza nada por sí solo: antes la cookie **era** ese token, así que reenviar el
+  // enlace daba la lista de invitados y la puerta sin escribir nunca el PIN.
+  const sesion = (await cookies()).get('door_porter')?.value
+  if (sesion === undefined) redirect(`/p/${token}`)
 
-  const portero = await porters.resolve(token)
+  const portero = await porters.resolveDelEnlace({ cookie: sesion, token })
   if (isErr(portero)) redirect(`/p/${token}`)
 
   const puerta = await plans.requireFeature(portero.value.eventId, 'checkin')
@@ -39,18 +42,20 @@ export default async function PorterDoorPage({ params }: { params: Promise<{ tok
       <p className="sr-only">
         {portero.value.eventTitle} · {portero.value.gate ?? 'Puerta'} · {portero.value.name}
       </p>
-      {/* Lo que registran las otras puertas entra solo, en vivo. */}
-      <EnVivo modo="auto" oculto tipos={['ingreso']} url={`/p/${token}/en-vivo`} />
+      {/* Lo que registran las otras puertas entra solo, en vivo. Y `invitado`: si el anfitrión revoca o
+          devuelve una invitación, la lista de esta puerta se pone al día sin que nadie recargue. */}
+      <EnVivo modo="auto" oculto tipos={['ingreso', 'invitado']} url={`/p/${token}/en-vivo`} />
       <DoorMode
         acciones={{
           recordScans: recordScansAsPorterAction,
           checkInByGroup: checkInByGroupAsPorterAction,
           adjust: adjustArrivalAsPorterAction,
           void: voidArrivalAsPorterAction,
-          comprobarAcceso: porterAccessOkAction,
+          comprobarAcceso: porterAccessAction,
         }}
         cabecera={`${portero.value.eventTitle} · ${portero.value.gate ?? 'Puerta'} · ${portero.value.name}`}
         eventId={portero.value.eventId}
+        enlaceDelPin={`/p/${token}`}
         eventSlug={portero.value.eventSlug}
         manifest={manifest.value}
       />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
-import { cabeUnoMas, generarPin, leerPortero, ventanaAbierta } from './porter'
+import { HORAS_ANTES_POR_DEFECTO, HORAS_DESPUES_POR_DEFECTO, cabeUnoMas, generarPin, leerPortero, ventanaAbierta } from './porter'
 
 describe('leerPortero', () => {
   it('recorta y deja vacío como nulo', () => {
@@ -54,5 +54,23 @@ describe('ventanaAbierta', () => {
   it('cierra 4 horas después del fin del día en Bolivia', () => {
     expect(ventanaAbierta({ ...base, ahora: new Date('2026-10-18T08:00:00Z') })).toBe(true)
     expect(ventanaAbierta({ ...base, ahora: new Date('2026-10-18T08:01:00Z') })).toBe(false)
+  })
+
+  // Los valores por defecto son los que de verdad se usan: ninguna pantalla los edita todavía,
+  // así que lo que no cubran deja al portero fuera en mitad de la fiesta, sin salida.
+  const porDefecto = { eventDate: '2026-10-17', horasAntes: HORAS_ANTES_POR_DEFECTO, horasDespues: HORAS_DESPUES_POR_DEFECTO }
+
+  it('por defecto sigue abierta a las 5 de la mañana siguiente: aquí las fiestas no acaban a medianoche', () => {
+    // 2026-10-18T09:00Z son las 05:00 del día siguiente en Bolivia.
+    expect(ventanaAbierta({ ...porDefecto, ahora: new Date('2026-10-18T09:00:00Z') })).toBe(true)
+  })
+
+  it('por defecto ya está abierta la tarde anterior: el montaje y la prueba del PIN no se hacen a las seis de la mañana', () => {
+    // 2026-10-16T20:00Z son las 16:00 del día anterior en Bolivia.
+    expect(ventanaAbierta({ ...porDefecto, ahora: new Date('2026-10-16T20:00:00Z') })).toBe(true)
+  })
+
+  it('pero no queda abierta para siempre: dos días después, cerrada', () => {
+    expect(ventanaAbierta({ ...porDefecto, ahora: new Date('2026-10-19T12:00:00Z') })).toBe(false)
   })
 })

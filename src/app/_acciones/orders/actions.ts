@@ -9,7 +9,7 @@ import { themeFor } from '@/modules/events/ui/themes/registry'
 import { type Actor, createCredential, parseRole } from '@/modules/identity'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { eventSlugFor, rsvpDeadlineFor } from '@/modules/orders/domain/provisioning'
-import { clientIpFrom } from '@/shared/http/client-ip'
+import { cuboDeLaPeticion } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { isErr } from '@/shared/result'
 import { MAX_PROOF_BYTES } from '@/modules/orders/domain/proof'
@@ -37,7 +37,9 @@ const limiteSubida = createRateLimiter({ windowMs: 60_000, max: 5 })
 
 async function ipDeLaPeticion(): Promise<string> {
   const bolsa = await headers()
-  return clientIpFrom({ realIp: bolsa.get('x-real-ip'), forwardedFor: bolsa.get('x-forwarded-for') })
+  // El cubo, no la dirección: con IPv6, a cualquiera le dan una /64 entera y rotarla es gratis,
+  // así que «tres por minuto y por IP» era «tres por minuto y por intento» (F7).
+  return cuboDeLaPeticion({ realIp: bolsa.get('x-real-ip'), forwardedFor: bolsa.get('x-forwarded-for') })
 }
 
 /**
@@ -113,6 +115,7 @@ const MOTIVO: Record<string, OrderErrorCode> = {
   vacio: 'proofEmpty',
   demasiado_grande: 'proofTooBig',
   tipo_no_admitido: 'proofType',
+  demasiados: 'proofTooMany',
 }
 
 export async function uploadProofAction(_previous: UploadProofState, formData: FormData): Promise<UploadProofState> {

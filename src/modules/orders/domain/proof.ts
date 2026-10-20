@@ -7,6 +7,17 @@
  */
 
 /** Ocho megas. Una foto de un comprobante desde un celular no llega a dos. */
+/**
+ * Cuántos comprobantes admite un pedido.
+ *
+ * Subir es **público** —quien paga no tiene cuenta— y cada fichero son hasta 8 MB que se quedan en
+ * el disco del servidor. Sin un techo, un pedido cualquiera llenaba el volumen de producción: el
+ * límite por IP no basta, porque se piden pedidos nuevos y se rotan direcciones. Ocho sobra para
+ * quien se equivoca de archivo dos o tres veces, y el noveno manda a escribir por WhatsApp, que es
+ * una salida de verdad y no un muro.
+ */
+export const MAX_PROOFS_PER_ORDER = 8
+
 export const MAX_PROOF_BYTES = 8 * 1024 * 1024
 
 export const ACCEPTED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'] as const

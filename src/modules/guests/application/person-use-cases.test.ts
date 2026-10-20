@@ -22,6 +22,7 @@ function base(grupos: GuestGroupRow[], gente: GuestPerson[]) {
     markOpened: async () => null,
     findById: async (eventId, id) => deEvento(eventId, id) ?? null,
     revoke: async () => {},
+    restore: async () => {},
     markSent: async () => {},
     replaceToken: async () => {},
     adoptToken: async () => {},

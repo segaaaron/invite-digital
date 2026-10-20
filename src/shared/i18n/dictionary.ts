@@ -813,6 +813,7 @@ export type OrderErrorCode =
   | 'proofTooBig'
   | 'proofType'
   | 'proofRejected'
+  | 'proofTooMany'
   | 'proofApproved'
   | 'proofFailed'
 

@@ -26,17 +26,36 @@ export interface UserRepository {
  * propio ciclo de vida: nace al pedir el código, se gasta al usarlo y la caduca el reloj.
  */
 export interface PasswordResetRepository {
-  /** Invalida los anteriores del usuario y guarda el nuevo. Del código solo el SHA-256. */
-  issue(input: { userId: string; codeHash: Buffer; expiresAt: Date }): Promise<void>
-  /** El último código vivo de ese usuario, con lo que hace falta para juzgarlo. */
-  findLive(userId: string): Promise<{ id: string; codeHash: Buffer; expiresAt: Date; consumedAt: Date | null; attempts: number } | null>
-  /** Un intento fallido más. Es lo que corta la fuerza bruta sobre seis dígitos. */
-  countAttempt(id: string): Promise<void>
+  /**
+   * Emite el código de esa cuenta: invalida el anterior y guarda el nuevo (del código, solo el
+   * SHA-256). Una fila por cuenta, para que los contadores de la ventana **no** mueran con el
+   * código viejo. `'demasiados'` si la cuenta ya gastó su cupo de códigos de la hora.
+   */
+  issue(input: { userId: string; codeHash: Buffer; expiresAt: Date; now: Date; pendingEmail?: string | null }): Promise<'emitido' | 'demasiados'>
+  /**
+   * Cobra un intento y devuelve el código vivo **en la misma sentencia**: cuenta primero y
+   * compara después, así dos intentos a la vez no se cuelan por el hueco entre leer y sumar.
+   */
+  cobrarIntento(userId: string, now: Date): Promise<IntentoDeCodigo>
   /** Lo gasta: un código vale una vez. */
   consume(id: string, at: Date): Promise<void>
   /** Barrido de los caducados, como el de sesiones. */
   deleteExpired(now: Date): Promise<number>
 }
+
+/**
+ * Lo que sale de cobrar un intento.
+ *
+ * **`sin_intentos` no es lo mismo que `sin_codigo`, y antes sí lo era**: los dos volvían como
+ * `null`, las tres pantallas decían «pide uno nuevo» y con el cupo de fallos de la cuenta agotado
+ * (quince en una hora, `0097`) pedir otro código no arregla nada —el contador sobrevive a emitir—,
+ * así que la cuenta se quedaba hasta una hora sin poder recuperar la contraseña, cerrar sesiones ni
+ * cambiar el correo, leyendo el único consejo que no sirve. `hasta` es cuándo se abre, para decirlo.
+ */
+export type IntentoDeCodigo =
+  | { readonly estado: 'cobrado'; readonly id: string; readonly codeHash: Buffer; readonly pendingEmail: string | null }
+  | { readonly estado: 'sin_intentos'; readonly hasta: Date }
+  | { readonly estado: 'sin_codigo' }
 
 export interface SessionRepository {
   create(session: { userId: string; tokenHash: Buffer; expiresAt: Date; device?: string | null }): Promise<void>

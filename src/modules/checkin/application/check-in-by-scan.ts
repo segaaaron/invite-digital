@@ -42,6 +42,8 @@ export type ScanOutcome =
       readonly arrivedAt: Date
       readonly arrivedCount: number
     } & Personas)
+  /** La invitación está revocada: la puerta la pinta roja y no se registra nada. */
+  | { readonly scanId: string; readonly kind: 'revoked'; readonly group: ScanGroupView }
   | { readonly scanId: string; readonly kind: 'unknown' }
 
 type Deps = { groups: DoorGroupReader; arrivals: ArrivalRepository; minter: Minter }

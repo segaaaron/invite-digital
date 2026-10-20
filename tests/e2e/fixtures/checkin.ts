@@ -43,6 +43,11 @@ export async function seedDoorEvent(slug: string, seats = 4, attending: number |
   return { eventSlug: slug, token, groupId: group!.id, eventId: event!.id }
 }
 
+/** Revoca la invitación, como hace el anfitrión desde Invitados. */
+export async function revokeGroup(groupId: string): Promise<void> {
+  await sql`update guest_groups set revoked_at = now() where id = ${groupId}`
+}
+
 /** Llegadas vivas del grupo, leídas de la base: la pantalla puede mentir, la tabla no. */
 export async function liveArrivals(groupId: string): Promise<{ arrivedCount: number }[]> {
   return sql<{ arrivedCount: number }[]>`

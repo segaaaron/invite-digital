@@ -89,4 +89,15 @@ describe('ManualPassDialog', () => {
 
     await waitFor(() => expect(screen.getByText('Familia Ruiz')).toBeInTheDocument())
   })
+
+  it('el código de una invitación anulada avisa y no ofrece registrarla', async () => {
+    const revocados = (await grupos()).map((g) => ({ ...g, revoked: true }))
+    render(<ManualPassDialog arrivedIds={new Set()} groups={revocados} onClose={vi.fn()} onConfirm={vi.fn()} onConfirmGrupo={porGrupo} />)
+
+    fireEvent.change(screen.getByPlaceholderText(/código del pase/i), { target: { value: 'K7P3X' } })
+    fireEvent.click(screen.getByRole('button', { name: /buscar/i }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/se anuló/i)
+    expect(screen.queryByRole('button', { name: /registrar/i })).not.toBeInTheDocument()
+  })
 })

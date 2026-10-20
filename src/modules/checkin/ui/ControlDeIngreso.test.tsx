@@ -129,4 +129,14 @@ describe('ControlDeIngreso · alguien ya lo registró', () => {
 
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Luis Rojas ya estaba dentro desde las 19:40'))
   })
+
+  it('si el servidor dice que la invitación está anulada, lo dice y no la marca dentro', async () => {
+    registrar.mockResolvedValueOnce({ kind: 'revoked', group: { id: 'fam', label: 'Familia Rojas', seats: 3, leadName: null, tableLabel: 'Mesa 3', people: [] } })
+    pinta()
+    desplegar()
+    fireEvent.click(within(screen.getByRole('row', { name: 'Luis Rojas' })).getByRole('button', { name: /registrar/i }))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/se anuló/i))
+    expect(screen.getByRole('row', { name: 'Luis Rojas' })).not.toHaveTextContent(/dentro/i)
+  })
 })

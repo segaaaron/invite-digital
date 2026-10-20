@@ -1,5 +1,6 @@
 'use server'
 
+import { esEndpointDePush } from '@/modules/notifications'
 import { headers } from 'next/headers'
 import { avisos } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -7,6 +8,7 @@ import { TIPOS_DE_AVISO } from '@/modules/notifications'
 import { describirDispositivo } from '@/modules/identity'
 import { traducir } from '@/shared/i18n/en-ingles'
 import { tr } from '@/shared/i18n/idioma-servidor'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // Los avisos del propio actor de la sesión: su campana, sus aparatos y lo que silencia. Ninguna toca un
 // evento ni lo que es de otra persona (todas filtran por `actor.userId`).
@@ -25,16 +27,38 @@ export async function abrirCampanaAction(): Promise<AvisoDeLaCampana[]> {
 
 export type SuscripcionDelNavegador = { endpoint?: string; keys?: { p256dh?: string; auth?: string } }
 
+/**
+ * Por qué no se pudo activar. **Cada motivo lleva a un consejo distinto** y por eso se distinguen:
+ * «vuelve a intentarlo» no sirve de nada si el navegador usa un servicio de push que no admitimos,
+ * y antes los tres casos devolvían el mismo `{ ok: false }` y la pantalla decía «vuelve a intentarlo».
+ */
+export type ActivarAparato = { ok: true } | { ok: false; motivo: 'destino_desconocido' | 'datos_incompletos' | 'no_se_pudo_guardar' }
+
 /** Activa las notificaciones push en este aparato. Lo que llega es lo que devuelve `PushSubscription.toJSON()`. */
-export async function activarAparatoAction(sub: SuscripcionDelNavegador): Promise<{ ok: boolean }> {
+export async function activarAparatoAction(sub: SuscripcionDelNavegador): Promise<ActivarAparato> {
   const actor = await requireSession()
   const endpoint = sub.endpoint ?? ''
   const p256dh = sub.keys?.p256dh ?? ''
   const auth = sub.keys?.auth ?? ''
   // Solo servicios de push de verdad, por https: el servidor va a hacer peticiones a esa dirección.
-  if (!/^https:\/\/[^\s]+$/.test(endpoint) || endpoint.length > 1000 || p256dh === '' || auth === '' || p256dh.length > 200 || auth.length > 100) return { ok: false }
+  // El destino tiene que ser de un servicio de push de navegador: cualquier `https://` convertía
+  // el aviso de prueba en un sondeo de hosts internos con la firma del servidor (F20).
+  if (!esEndpointDePush(endpoint)) {
+    // La única pista de que la lista de `SERVICIOS` se quedó corta: sin esta línea, un navegador
+    // legítimo con un servicio de push nuevo se queda sin avisos y nadie se entera nunca.
+    registrarFallo('notifications/avisos-actions', 'no se pudo activar el aparato: el destino no es de un servicio de push conocido', 'push_endpoint_failure', endpoint.slice(0, 120))
+    return { ok: false, motivo: 'destino_desconocido' }
+  }
+  if (p256dh === '' || auth === '' || p256dh.length > 200 || auth.length > 100) return { ok: false, motivo: 'datos_incompletos' }
   const agente = (await headers()).get('user-agent') ?? ''
-  await avisos.suscribir(actor.userId, { endpoint, p256dh, auth }, describirDispositivo(agente).slice(0, 80))
+  try {
+    await avisos.suscribir(actor.userId, { endpoint, p256dh, auth }, describirDispositivo(agente).slice(0, 80))
+  } catch (causa) {
+    // Sin esto la acción lanzaba, el `catch` de la tarjeta lo tomaba por un rechazo del navegador
+    // y decía «este navegador no dejó activar los avisos», que no era verdad.
+    registrarFallo('notifications/avisos-actions', 'no se pudo guardar el aparato de avisos', 'storage_failure', causa)
+    return { ok: false, motivo: 'no_se_pudo_guardar' }
+  }
   return { ok: true }
 }
 

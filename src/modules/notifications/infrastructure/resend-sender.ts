@@ -35,7 +35,7 @@ export function createResendSender(config: { apiKey: string | undefined; from: s
         // Resend devuelve el fallo en el cuerpo, no lanzando: sin mirarlo, un rechazo del
         // proveedor pasaría por envío correcto.
         if (error) {
-          registrarFallo('notifications/resend-sender', 'Resend rechazó el correo a %s: %s', input.to, error.message)
+          registrarFallo('notifications/resend-sender', 'no se pudo enviar el correo a %s: Resend lo rechazó: %s', input.to, error.message)
           return false
         }
 

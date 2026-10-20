@@ -83,7 +83,7 @@ export const conversar = (deps: { modelo: ModeloDeLenguaje; herramientas: readon
           else {
             yield { tipo: 'consultando', herramienta: llamada.nombre }
             resultado = await deps.ejecutar(interpretada.llamada).catch((causa: unknown) => {
-              registrarFallo('asistente/conversar', 'herramienta del asistente %s:', llamada.nombre, causa)
+              registrarFallo('asistente/conversar', 'no se pudo ejecutar la herramienta del asistente %s:', llamada.nombre, causa)
               return { error: 'No se pudo hacer ahora. Vuelve a intentarlo en un momento.' }
             })
             if (esConTarjeta(resultado)) {

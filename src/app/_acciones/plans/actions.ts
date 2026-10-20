@@ -18,11 +18,13 @@ export async function requestPlanChangeAction(_previous: PlanChangeState, formDa
   const actor = await requireSession()
 
   const eventSlug = campo(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventSlug, section: 'ficha' })
+  // El evento es **el que devuelve la guardia**. Con el `eventId` del formulario se podían plantar
+  // solicitudes en el evento de otro atelier: la guardia miraba el slug y la escritura, otro campo (F15).
+  const eventId = await requireEventAccess(actor, { eventSlug, section: 'ficha' })
   const nota = campo(formData, 'note').trim()
 
   const result = await plans.requestChange({
-    eventId: campo(formData, 'eventId'),
+    eventId,
     requestedPlanId: campo(formData, 'planId'),
     note: nota === '' ? null : nota,
   })
@@ -53,8 +55,8 @@ export async function applyPlanChangeAction(
   const actor = await requireSession()
 
   const eventSlug = campo(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventSlug, section: 'ficha' })
-  const result = await plans.applyChange(campo(formData, 'requestId'))
+  const eventId = await requireEventAccess(actor, { eventSlug, section: 'ficha' })
+  const result = await plans.applyChange({ requestId: campo(formData, 'requestId'), eventId })
   if (isErr(result)) {
     registrarFallo('plans/actions', 'cambio de plan no aplicado', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }
@@ -72,8 +74,8 @@ export async function rejectPlanChangeAction(
   const actor = await requireSession()
 
   const eventSlug = campo(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventSlug, section: 'ficha' })
-  const result = await plans.rejectChange(campo(formData, 'requestId'))
+  const eventId = await requireEventAccess(actor, { eventSlug, section: 'ficha' })
+  const result = await plans.rejectChange({ requestId: campo(formData, 'requestId'), eventId })
   if (isErr(result)) {
     registrarFallo('plans/actions', 'solicitud no rechazada', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }

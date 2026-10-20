@@ -1,6 +1,6 @@
 import { DEFAULT_SITE_SETTINGS, formatoWhatsapp } from '@/modules/admin/domain/site-settings'
 import { cache } from 'react'
-import { clientAccessEmail, passwordResetEmail, teamAccessEmail } from '@/modules/notifications'
+import { clientAccessEmail, emailChangedNotice, passwordResetEmail, teamAccessEmail } from '@/modules/notifications'
 import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
 import { env } from '@/shared/config/env'
 import { listCategories } from '@/modules/catalog/application/list-categories'
@@ -98,6 +98,17 @@ export const notifications = {
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
         siteUrl: sitioPublicoUrl,
         // Quien pide el código está en esta petición: su aparato, si la cuenta aún no lo guardó.
+        locale: await idiomaDelCorreo(input.to, idiomaDeLaPeticion),
+      }),
+    }),
+  /** Al correo **anterior**, cuando la cuenta cambia de dirección: quien la tenía tiene que enterarse. */
+  sendEmailChanged: async (input: { to: string; nuevo: string }) =>
+    emailSender.send({
+      to: input.to,
+      ...emailChangedNotice({
+        nuevo: input.nuevo,
+        whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
+        siteUrl: sitioPublicoUrl,
         locale: await idiomaDelCorreo(input.to, idiomaDeLaPeticion),
       }),
     }),

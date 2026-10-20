@@ -5,6 +5,7 @@ import type { ArrivalRepository, DoorGroupReader } from './ports'
 
 const TOKEN = 'AbCdEfGhIjKlMnOpQrStUv'
 const OTRO = 'ZzYyXxWwVvUuTtSsRrQqPp'
+const REVOCADO = 'RrEeVvOoCcAaDdOo112233'
 
 const minter = { mint: () => ({ token: '', hash: Buffer.alloc(0) }), hashOf: (t: string) => Buffer.from(`h:${t}`) }
 
@@ -27,6 +28,7 @@ const fakes = () => {
     async findByTokenHash(hash) {
       if (hash.equals(Buffer.from(`h:${TOKEN}`))) return groupRow
       if (hash.equals(Buffer.from(`h:${OTRO}`))) return { ...groupRow, id: 'g9', eventId: 'OTRO-EVENTO' }
+      if (hash.equals(Buffer.from(`h:${REVOCADO}`))) return { ...groupRow, id: 'g7', revoked: true }
       return null
     },
     async findGroupById(id) {
@@ -219,5 +221,12 @@ describe('checkInByScan · por persona', () => {
 
     expect(isOk(r) && r.value[0]).toMatchObject({ kind: 'welcome', arrivedCount: 2 })
     expect(rows[1]?.personIds).toEqual(['luis'])
+  })
+
+  it('una invitación revocada no entra: tarjeta roja y nada escrito', async () => {
+    const { groups, arrivals, rows } = fakes()
+    const r = await checkInByScan({ groups, arrivals, minter })({ eventId: 'e1', scans: [scan('s1', REVOCADO)] })
+    expect(isOk(r) && r.value[0]?.kind).toBe('revoked')
+    expect(rows).toHaveLength(0)
   })
 })

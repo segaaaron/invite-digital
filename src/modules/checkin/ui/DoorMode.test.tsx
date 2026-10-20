@@ -2,25 +2,23 @@ import 'fake-indexeddb/auto'
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { DoorMode } from './DoorMode'
+import type { ScanOutcome } from '../application/check-in-by-scan'
 
 vi.mock('@/app/_acciones/checkin/actions', () => ({
-  recordScansAction: vi.fn(async ({ scans }: { scans: { scanId: string }[] }) => [
-    {
-      scanId: scans[0]!.scanId,
-      kind: 'welcome',
-      group: { id: 'g1', label: 'Familia Rojas Peña', seats: 4 },
-      arrivedCount: 4,
-    },
-  ]),
-  checkInByGroupAction: vi.fn(async ({ scanId }: { scanId: string }) => ({
-    scanId,
-    kind: 'welcome',
-    group: { id: 'g1', label: 'Familia Rojas Peña', seats: 4 },
-    arrivedCount: 4,
-  })),
+  recordScansAction: (...args: Parameters<typeof recordScansAction>) => recordScansAction(...args),
+  checkInByGroupAction: (...args: Parameters<typeof checkInByGroupAction>) => checkInByGroupAction(...args),
   adjustArrivalAction: vi.fn(async () => ({ status: 'success' as const })),
   voidArrivalAction: (...args: unknown[]) => voidArrivalAction(...(args as [])),
 }))
+
+const grupoVisto = { id: 'g1', label: 'Familia Rojas Peña', seats: 4, leadName: null, tableLabel: 'Mesa 03', people: [] }
+const recordScansAction = vi.fn(
+  async ({ scans }: { scans: { scanId: string }[] }): Promise<ScanOutcome[]> =>
+    scans.map((s) => ({ scanId: s.scanId, kind: 'welcome', group: grupoVisto, arrivedCount: 4, personas: {} })),
+)
+const checkInByGroupAction = vi.fn(
+  async ({ scanId }: { scanId: string }): Promise<ScanOutcome> => ({ scanId, kind: 'welcome', group: grupoVisto, arrivedCount: 4, personas: {} }),
+)
 
 const voidArrivalAction = vi.fn<() => Promise<{ status: 'success' } | { status: 'error'; kind: string }>>(async () => ({
   status: 'success',
@@ -115,7 +113,7 @@ describe('DoorMode', () => {
       }),
       adjust: vi.fn(),
       void: vi.fn(),
-      comprobarAcceso: vi.fn(async () => false),
+      comprobarAcceso: vi.fn(async () => ({ ok: false as const, motivo: 'quitado' as const })),
     }
     render(<DoorMode acciones={acciones} eventId="e1" eventSlug="boda" manifest={manifest} />)
 
@@ -200,5 +198,45 @@ describe('DoorMode · por persona', () => {
     escanear()
     expect(await screen.findByText(/Ya entraron todos/)).toBeInTheDocument()
     expect(recordScans).not.toHaveBeenCalled()
+  })
+
+  it('una invitación revocada no entra por la cámara: roja y sin contarla', async () => {
+    const revocado = { ...manifest, groups: [{ ...manifest.groups[0]!, revoked: true }] }
+    render(<DoorMode eventId="e1" eventSlug="boda" manifest={revocado} />)
+
+    for (const ch of 'AbCdEfGhIjKlMnOpQrStUv') fireEvent.keyDown(document, { key: ch })
+    fireEvent.keyDown(document, { key: 'Enter' })
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/anulada/i))
+    expect(screen.getByLabelText('Invitaciones que han llegado')).toHaveTextContent('0')
+  })
+
+  it('una invitación revocada tampoco entra por el buscador por nombre', async () => {
+    const revocado = { ...manifest, groups: [{ ...manifest.groups[0]!, revoked: true }] }
+    render(<DoorMode eventId="e1" eventSlug="boda" manifest={revocado} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /lista de invitados/i }))
+    // Una revocada no sale en «por llegar»; se la encuentra buscándola por nombre.
+    fireEvent.change(screen.getByPlaceholderText(/nombre del invitado/i), { target: { value: 'Rojas' } })
+    fireEvent.click(await screen.findByRole('button', { name: /Familia Rojas Peña/i }))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/anulada/i))
+  })
+
+  it('por el buscador y con nombres: si el servidor dice que se anuló, roja y sin contarla', async () => {
+    // El camino que quedaba sin mirar la respuesta del servidor: registrar a una persona
+    // concreta desde el buscador descartaba el resultado y solo miraba si la promesa fallaba.
+    const conPersonas = {
+      ...manifest,
+      groups: [{ ...manifest.groups[0]!, people: [{ id: 'per1', fullName: 'Ana Rojas' }] }],
+    }
+    checkInByGroupAction.mockImplementationOnce(async ({ scanId }: { scanId: string }) => ({ scanId, kind: 'revoked', group: grupoVisto }))
+    render(<DoorMode eventId="e1" eventSlug="boda" manifest={conPersonas} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /lista de invitados/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Familia Rojas Peña/i }))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/anulada/i))
+    expect(screen.getByLabelText('Invitaciones que han llegado')).toHaveTextContent('0')
   })
 })

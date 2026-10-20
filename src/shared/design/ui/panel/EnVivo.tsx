@@ -5,8 +5,22 @@ import { useEffect, useState, useTransition } from 'react'
 import { RefreshIcon } from '../icons'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
-type Tipo = 'rsvp' | 'ingreso' | 'visita'
+// Los tipos que el cliente puede pedir. Copia a mano del `TipoDeCambio` del servidor, que vive
+// junto al cliente de Postgres y no puede cruzar a un componente de cliente.
+type Tipo = 'rsvp' | 'ingreso' | 'visita' | 'invitado'
 type Estado = 'conectando' | 'en-vivo' | 'sin-conexion'
+
+/**
+ * Cuánto se le da a una reconexión antes de decirlo.
+ *
+ * `CLOSED` —el estado que ya se contaba— es el caso **raro**: un 404 o la sesión caducada. Lo normal
+ * cuando se cae el servidor o se corta la red es `CONNECTING`, con el navegador reintentando solo, y
+ * eso pintaba lo mismo que el arranque: nada. La pantalla se quedaba muda en el caso frecuente.
+ *
+ * No es un temporizador que pida nada —no toca la API ni recarga datos, solo deja de callarse—, y se
+ * cancela en cuanto la conexión abre.
+ */
+const ESPERA_ANTES_DE_DECIRLO_MS = 8000
 
 /**
  * Los cambios del evento en vivo, sin sondeo: una conexión SSE (`EventSource`) que el servidor
@@ -41,7 +55,10 @@ export function escucharEnVivo(
       try {
         al.alCambiar((JSON.parse((evento as MessageEvent<string>).data) as { tipo?: string }).tipo ?? '')
       } catch {
-        // Un aviso que no se entiende no cambia nada.
+        // Un aviso que no se entiende **sigue siendo un aviso**: algo cambió en el evento, solo que
+        // no sabemos qué. Tirarlo era quedarse con la pantalla vieja sin una sola señal; tratarlo
+        // como `resync` es lo que ya se hace cuando la página vuelve de la caché de ida y vuelta.
+        al.alCambiar('resync')
       }
     })
     fuente = f
@@ -76,15 +93,36 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
 
   useEffect(() => {
     const importan = new Set(clave.split(','))
-    return escucharEnVivo(url, {
-      alAbrir: () => setEstado('en-vivo'),
-      alFallar: (cerrada) => setEstado(cerrada ? 'sin-conexion' : 'conectando'),
+    let tarde: ReturnType<typeof setTimeout> | null = null
+    const olvidarLaEspera = () => {
+      if (tarde !== null) clearTimeout(tarde)
+      tarde = null
+    }
+    const baja = escucharEnVivo(url, {
+      alAbrir: () => {
+        olvidarLaEspera()
+        setEstado('en-vivo')
+      },
+      alFallar: (cerrada) => {
+        if (cerrada) {
+          olvidarLaEspera()
+          setEstado('sin-conexion')
+          return
+        }
+        // Reconectando. Se le da un rato —el navegador suele volver en uno o dos segundos— y, si no
+        // vuelve, se dice: callar para siempre era dejar la pantalla pareciendo al día sin estarlo.
+        if (tarde === null) tarde = setTimeout(() => setEstado('sin-conexion'), ESPERA_ANTES_DE_DECIRLO_MS)
+      },
       alCambiar: (tipo) => {
         if (tipo !== 'resync' && !importan.has(tipo)) return
         if (modo === 'auto') empezar(() => router.refresh())
         else setNovedades((n) => n + 1)
       },
     })
+    return () => {
+      olvidarLaEspera()
+      baja()
+    }
   }, [url, clave, modo, router])
 
   const actualizar = () =>
@@ -93,7 +131,13 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
       router.refresh()
     })
 
-  if (oculto) return null
+  /**
+   * `oculto` no pinta nada… **salvo cuando el canal se cayó**. La puerta a pantalla completa lo lleva
+   * oculto a propósito, pero sin canal deja de ver lo que registran las otras puertas y de enterarse
+   * de una invitación revocada o devuelta, y antes eso pasaba sin una sola señal: la pantalla seguía
+   * tan tranquila como si todo llegara. Ahora sale la misma chapa de abajo, con «Actualizar».
+   */
+  if (oculto && estado !== 'sin-conexion') return <span data-en-vivo={estado} hidden />
 
   // **Solo aparece cuando hay algo que decir** (novedades o sin conexión), en todos los anchos: en reposo «En vivo ·
   // Actualizar» flotaba encima del gráfico del Resumen y de los títulos (16 oct). Centrada abajo, como un aviso.

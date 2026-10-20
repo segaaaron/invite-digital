@@ -13,6 +13,10 @@ import { PATHNAME_HEADER } from '@/shared/config/headers'
  * un fallo no puede provocar otro—. En las pruebas no escribe en la base.
  */
 export function registrarFallo(servicio: string, mensaje: unknown, ...datos: unknown[]): void {
+  // El servicio como argumento suelto, no pegado al mensaje: así se puede leer en las pruebas y es
+  // como lo esperan cinco de ellas. La consola deja el `%s` sin rellenar —`console.error` solo
+  // sustituye los del primer argumento—; la frase entera, con sus `%s` puestos, la guarda
+  // `guardarFallo`, que es lo que el admin lee en Ajustes › Registro de fallos.
   console.error(`[${servicio}]`, mensaje, ...datos)
   if (process.env.VITEST !== undefined || !esFalloDelServicio([mensaje, ...datos])) return
   void guardarFallo({ servicio, partes: [mensaje, ...datos] }).catch((causa: unknown) => console.error('[fallos] no se pudo guardar el fallo:', causa))

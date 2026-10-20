@@ -17,6 +17,23 @@ function claveComoBytes(base64url: string): Uint8Array<ArrayBuffer> {
   return bytes
 }
 
+/**
+ * Lo que se le dice por cada motivo. **Ninguno dice «vuelve a intentarlo» si eso no arregla nada**:
+ * con un servicio de push que no admitimos, reintentar da el mismo resultado para siempre.
+ */
+function motivoEnPalabras(motivo: 'destino_desconocido' | 'datos_incompletos' | 'no_se_pudo_guardar', t: (es: string, en: string) => string): string {
+  if (motivo === 'destino_desconocido') {
+    return t(
+      'Este navegador usa un servicio de avisos que todavía no admitimos. Queda anotado para revisarlo; entretanto, la campana del panel sigue avisándote.',
+      'This browser uses a notification service we don’t support yet. We logged it to review; meanwhile, the panel bell still notifies you.',
+    )
+  }
+  if (motivo === 'datos_incompletos') {
+    return t('No pudimos leer la suscripción de este navegador. Desactiva y vuelve a activar los avisos.', 'We could not read this browser’s subscription. Turn notifications off and on again.')
+  }
+  return t('No pudimos guardar este aparato. Vuelve a intentarlo en un momento.', 'We could not save this device. Try again in a moment.')
+}
+
 const esIphone = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 const instalado = () => window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
 
@@ -42,12 +59,24 @@ export function ActivarAvisos({ clavePublica }: { clavePublica: string | null })
       const sub = registro ? await registro.pushManager.getSubscription() : null
       if (sub !== null && Notification.permission === 'granted') {
         // Se vuelve a guardar en cada visita: si el servidor la olvidó (410) o cambió la cuenta, se cura sola.
-        await activarAparatoAction(sub.toJSON())
-        return setEstado('activas')
+        //
+        // **Y se mira la respuesta.** Tirarla y decir «Activados» era mentir justo cuando importa: el
+        // navegador tiene su suscripción, el servidor no la guardó y los avisos no llegan nunca. Si no
+        // se guardó, la tarjeta vuelve a «Activar avisos» —el permiso ya está dado, así que es un toque—
+        // y dice por qué.
+        const r = await activarAparatoAction(sub.toJSON())
+        if (r.ok) return setEstado('activas')
+        setNota(motivoEnPalabras(r.motivo, t))
+        return setEstado('inactivas')
       }
       setEstado('inactivas')
-    })()
-  }, [clavePublica])
+    })().catch(() => {
+      // Ni la comprobación puede quedarse muda: sin esto, un fallo aquí dejaba el estado en
+      // «mirando», la tarjeta no se pintaba y los avisos desaparecían de Mi cuenta sin más.
+      setNota(t('No pudimos comprobar los avisos de este aparato. Vuelve a cargar la página.', 'We could not check notifications on this device. Reload the page.'))
+      setEstado('inactivas')
+    })
+  }, [clavePublica, t])
 
   const activar = () =>
     empezar(async () => {
@@ -63,7 +92,7 @@ export function ActivarAvisos({ clavePublica }: { clavePublica: string | null })
         const sub = (await registro.pushManager.getSubscription()) ?? (await registro.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: claveComoBytes(clavePublica) }))
         const r = await activarAparatoAction(sub.toJSON())
         setEstado(r.ok ? 'activas' : 'inactivas')
-        if (!r.ok) setNota(t('No pudimos guardar este aparato. Vuelve a intentarlo.', 'We could not save this device. Please try again.'))
+        if (!r.ok) setNota(motivoEnPalabras(r.motivo, t))
       } catch {
         setNota(t('Este navegador no dejó activar los avisos. Prueba de nuevo o con otro navegador.', 'This browser did not allow notifications. Try again or use another browser.'))
       }

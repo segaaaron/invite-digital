@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
 import { createTokenMinter } from '@/shared/security/tokens'
 import { MAX_INTENTOS_PIN } from '../domain/porter'
-import { addPorter, enterWithPin, listPorters, resolvePorter, revokePorter } from './porter-use-cases'
+import { addPorter, enterWithPin, listPorters, resolvePorter, resolvePorterDelEnlace, revokePorter } from './porter-use-cases'
 import type { PorterRow, PorterStore } from './ports'
 
 const EVENTO = { eventId: 'e1', eventSlug: 'xv-valeria', eventTitle: 'XV de Valeria', eventDate: '2026-10-17' }
@@ -52,6 +52,7 @@ function dobles(ahora = DENTRO) {
     minter: createTokenMinter(),
     clock: () => reloj,
     random: (n: number) => new Uint8Array(n).fill(9),
+    secreto: 'secreto-del-servidor-de-pruebas',
   }
   return { deps, filas, mover: (t: Date) => (reloj = t) }
 }
@@ -114,7 +115,15 @@ describe('entrar con PIN', () => {
   it('con el PIN correcto dentro de la ventana entra a su evento', async () => {
     const { deps, token, pin, id } = await conPortero()
     const r = await enterWithPin(deps)({ token, pin })
-    expect(isOk(r) && r.value).toMatchObject({ porterId: id, eventId: 'e1' })
+    expect(isOk(r) && r.value.session).toMatchObject({ porterId: id, eventId: 'e1' })
+  })
+
+  it('entrar emite una sesión firmada, que no es el enlace', async () => {
+    const { deps, token, pin } = await conPortero()
+    const r = await enterWithPin(deps)({ token, pin })
+    if (!isOk(r)) throw new Error('entrar')
+    expect(r.value.cookie).not.toContain(token)
+    expect(isOk(await resolvePorter(deps)(r.value.cookie))).toBe(true)
   })
 
   it('un PIN incorrecto responde «invalido», igual que un enlace desconocido', async () => {
@@ -157,30 +166,81 @@ describe('entrar con PIN', () => {
 })
 
 describe('resolvePorter', () => {
-  it('con la sesión de la puerta abierta devuelve su evento, su nombre y su puerta', async () => {
-    const { deps } = dobles()
-    const r = await addPorter(deps)(alta)
+  /** Un portero que ya escribió su PIN: devuelve su enlace y su sesión. */
+  async function dentro(ahora = DENTRO) {
+    const d = dobles(ahora)
+    const r = await addPorter(d.deps)(alta)
     if (!isOk(r)) throw new Error('alta')
-    const quien = await resolvePorter(deps)(r.value.token)
+    const entrada = await enterWithPin(d.deps)({ token: r.value.token, pin: r.value.pin })
+    if (!isOk(entrada)) throw new Error('entrar')
+    return { ...d, id: r.value.id, token: r.value.token, cookie: entrada.value.cookie }
+  }
+
+  it('con la sesión de la puerta abierta devuelve su evento, su nombre y su puerta', async () => {
+    const { deps, cookie } = await dentro()
+    const quien = await resolvePorter(deps)(cookie)
     expect(isOk(quien) && quien.value).toMatchObject({ eventId: 'e1', eventSlug: 'xv-valeria', name: 'Carlos', gate: 'Puerta 1' })
   })
 
+  it('el enlace del portero NO abre la puerta: sin PIN no hay sesión', async () => {
+    // F3/F4/F6: la cookie era el token del enlace, así que reenviarlo por WhatsApp daba
+    // la lista de invitados con sus códigos y permitía registrar, corregir y anular ingresos.
+    const { deps, token } = await dentro()
+    const quien = await resolvePorter(deps)(token)
+    expect(isErr(quien) && quien.error).toBe('invalido')
+  })
+
+  it('la sesión de otro servidor (otro secreto) no vale', async () => {
+    const { deps, cookie } = await dentro()
+    const otro = await resolvePorter({ ...deps, secreto: 'otro-secreto' })(cookie)
+    expect(isErr(otro) && otro.error).toBe('invalido')
+  })
+
   it('quitarlo corta también a quien ya estaba dentro', async () => {
-    const { deps } = dobles()
-    const r = await addPorter(deps)(alta)
-    if (!isOk(r)) throw new Error('alta')
-    await revokePorter(deps)('e1', r.value.id)
-    const quien = await resolvePorter(deps)(r.value.token)
+    const { deps, cookie, id } = await dentro()
+    await revokePorter(deps)('e1', id)
+    const quien = await resolvePorter(deps)(cookie)
     expect(isErr(quien) && quien.error).toBe('quitado')
   })
 
   it('pasada la ventana, quien estaba dentro sale', async () => {
-    const d = dobles()
-    const r = await addPorter(d.deps)(alta)
-    if (!isOk(r)) throw new Error('alta')
-    d.mover(new Date('2026-10-19T12:00:00Z'))
-    const quien = await resolvePorter(d.deps)(r.value.token)
+    const d = await dentro()
+    // La ventana del 17 cierra a las 04:00Z del 18 más doce horas (`HORAS_DESPUES_POR_DEFECTO`);
+    // la sesión aún no caduca —se emitió a las 20:00Z del 17 y dura 24 h—, así que lo que lo
+    // saca es el horario, no la firma.
+    d.mover(new Date('2026-10-18T17:00:00Z'))
+    const quien = await resolvePorter(d.deps)(d.cookie)
     expect(isErr(quien) && quien.error).toBe('fuera_de_horario')
+  })
+
+  it('a las veinticuatro horas la sesión caduca aunque el evento siga abierto', async () => {
+    const d = await dentro()
+    d.mover(new Date(DENTRO.getTime() + 25 * 60 * 60 * 1000))
+    const quien = await resolvePorter(d.deps)(d.cookie)
+    expect(isErr(quien) && quien.error).toBe('invalido')
+  })
+})
+
+describe('resolvePorterDelEnlace', () => {
+  async function dosPorteros() {
+    const d = dobles()
+    const uno = await addPorter(d.deps)(alta)
+    const otro = await addPorter(d.deps)({ ...alta, name: 'Marta' })
+    if (!isOk(uno) || !isOk(otro)) throw new Error('alta')
+    const entrada = await enterWithPin(d.deps)({ token: uno.value.token, pin: uno.value.pin })
+    if (!isOk(entrada)) throw new Error('entrar')
+    return { ...d, cookie: entrada.value.cookie, suyo: uno.value.token, ajeno: otro.value.token }
+  }
+
+  it('abre la puerta de su propio enlace', async () => {
+    const { deps, cookie, suyo } = await dosPorteros()
+    expect(isOk(await resolvePorterDelEnlace(deps)({ cookie, token: suyo }))).toBe(true)
+  })
+
+  it('con el enlace de otro portero no abre: la sesión es de un enlace, no de la plataforma', async () => {
+    const { deps, cookie, ajeno } = await dosPorteros()
+    const r = await resolvePorterDelEnlace(deps)({ cookie, token: ajeno })
+    expect(isErr(r) && r.error).toBe('invalido')
   })
 })
 

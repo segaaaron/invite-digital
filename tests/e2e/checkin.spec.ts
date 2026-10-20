@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import QRCode from 'qrcode'
 import { AUTH_STATE } from './fixtures/atelier'
-import { closeCheckinDb, deleteEvent, liveArrivals, seedDoorEvent } from './fixtures/checkin'
+import { closeCheckinDb, deleteEvent, liveArrivals, revokeGroup, seedDoorEvent } from './fixtures/checkin'
 
 test.use({ storageState: AUTH_STATE })
 
@@ -95,6 +95,22 @@ test('el pase de otra boda no abre esta puerta', async ({ page }) => {
   expect(await liveArrivals(ajeno.groupId)).toEqual([])
 
   await deleteEvent('boda-ajena-e2e')
+})
+
+test('el pase de una invitación revocada no entra, y no se registra nada', async ({ page }) => {
+  // Revocar solo sirve si la puerta lo mira: antes el revocado recibía tarjeta verde con su
+  // mesa y contaba como llegado (F5 del escaneo del 19 oct).
+  const { token, groupId } = await seedDoorEvent(SLUG)
+  await revokeGroup(groupId)
+
+  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await page.keyboard.type(token)
+  await page.keyboard.press('Enter')
+
+  await expect(page.getByText(/invitación anulada/i)).toBeVisible()
+  await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('0')
+  await expect(page.getByLabel('Escaneos por subir')).toHaveText(/^0/)
+  expect(await liveArrivals(groupId)).toEqual([])
 })
 
 test('sin red la puerta sigue registrando, y sube al volver', async ({ page, context }) => {

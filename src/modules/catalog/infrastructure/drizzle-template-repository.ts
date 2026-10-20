@@ -26,7 +26,7 @@ const selectTemplate = {
 const logMissingTranslations = (locale: Locale, slugs: readonly string[]): void => {
   if (slugs.length === 0) return
   registrarFallo('catalog/drizzle-template-repository', 
-    `Traducción faltante en "${locale}" para las plantillas: ${slugs.join(', ')}. No se muestran en ese idioma.`,
+    `No se pudo mostrar en "${locale}" por falta de traducción: las plantillas ${slugs.join(', ')}.`,
   )
 }
 

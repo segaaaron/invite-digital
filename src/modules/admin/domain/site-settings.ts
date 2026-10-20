@@ -1,5 +1,6 @@
 import { err, ok, type Result } from '@/shared/result'
 import { formatoWhatsapp, normalizarWhatsapp } from '@/shared/whatsapp'
+import { esCorreo } from '@/shared/correo'
 
 /**
  * «La web»: los datos del negocio que el admin cambia sin desplegar.
@@ -245,7 +246,7 @@ export function leerSiteSettings(entrada: SiteSettings): Result<SiteSettings, Si
     tiktok: entrada.redes.tiktok.trim(),
     correo: entrada.redes.correo.trim().toLowerCase(),
   }
-  if (redes.correo !== '' && (redes.correo.length > 160 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(redes.correo))) {
+  if (redes.correo !== '' && (redes.correo.length > 160 || !esCorreo(redes.correo))) {
     return fallo('redes.correo', 'Escribe un correo válido, por ejemplo hola@tudominio.com.')
   }
   for (const red of ['instagram', 'facebook', 'tiktok'] as const) {

@@ -1,17 +1,15 @@
 import { err, ok, type Result } from '@/shared/result'
 import { identityError, type IdentityError } from './errors'
+import { esCorreo } from '@/shared/correo'
 
 export type Credential = { readonly email: string; readonly password: string }
 
 const MIN_PASSWORD_LENGTH = 12
-const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-/** Si tiene forma de correo (la misma regla que el alta). */
-export const esCorreo = (email: string): boolean => EMAIL_SHAPE.test(email)
+export { esCorreo }
 
 export function createCredential(input: { email: string; password: string }): Result<Credential, IdentityError> {
   const email = input.email.trim().toLowerCase()
-  if (!EMAIL_SHAPE.test(email)) {
+  if (!esCorreo(email)) {
     return err(identityError('invalid_email', `Correo inválido: ${input.email}`))
   }
 

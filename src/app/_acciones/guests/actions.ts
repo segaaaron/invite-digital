@@ -45,6 +45,9 @@ export async function revokeInvitationAction(
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}`)
+  // Y la lista de invitados, que es donde se ve y donde vive el botón de devolverla: sin esto
+  // quedaba enseñando la invitación como activa hasta la siguiente navegación.
+  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
   return { status: 'success' }
 }
 
@@ -54,7 +57,7 @@ export async function revokeInvitationAction(
 // El invitado no toca estas: su enlace confirma cupos, no edita la lista de nombres.
 // ============================================================================
 
-export type PersonActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
+export type PersonActionState = { status: 'idle' } | { status: 'success'; message?: string } | { status: 'error'; message: string }
 
 /**
  * Devuelven estado, no `void`. El tope del cupo se rechaza en el servidor y quien lo
@@ -87,7 +90,7 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
   if (isErr(capacidad) || isErr(grupos)) {
     // Tratar un fallo de lectura como «sin límite» convertiría un error pasajero en un
     // salto del tope del plan.
-    registrarFallo('guests/actions', 'alta de invitado sin capacidad legible')
+    registrarFallo('guests/actions', 'no se pudo leer la capacidad del plan al dar de alta a un invitado', 'storage_failure', 'allowanceFor o list devolvieron error')
     return { status: 'error', message: t('No pudimos comprobar el plan del evento. Inténtalo en un momento.', 'We couldn’t check the event plan. Try again in a moment.') }
   }
 
@@ -178,6 +181,33 @@ export async function removePersonAction(input: { eventSlug: string; id: string 
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
   return { status: 'success' }
+}
+
+/**
+ * Devuelve una invitación revocada. Revocar corta el paso por la puerta, así que esta es la
+ * salida que convierte el corte en un control y no en una puerta de un solo sentido: se decide
+ * en el panel, a la vista, y nunca en la puerta.
+ */
+export async function restoreInvitationAction(input: { eventSlug: string; id: string }): Promise<PersonActionState> {
+  const actor = await requireSession()
+  const t = await tr()
+  const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
+
+  const result = await guests.restore({ eventId, id: input.id })
+  if (isErr(result)) {
+    // «Sigue revocada» era mentira cuando la invitación ya no existe —la borró otra pestaña— y
+    // mandaba a reintentar contra una fila que no está. Se traduce el motivo, como las hermanas.
+    // Y el registro no dice «no se pudo»: un clic sobre una pantalla vieja no es un fallo del
+    // servicio y llenaba Admin › Registro de fallos tapando lo que sí hay que arreglar.
+    registrarFallo('guests/actions', 'devolución de invitación rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: traducir(result.error.detail, t) }
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  // Si otra pestaña se adelantó, la pantalla lo dice en vez de cantar una devolución que no hizo.
+  return result.value === 'ya_estaba'
+    ? { status: 'success', message: t('Esta invitación ya no estaba revocada.', 'This invitation was no longer revoked.') }
+    : { status: 'success' }
 }
 
 /**

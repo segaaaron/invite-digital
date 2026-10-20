@@ -1,4 +1,5 @@
 import type { Membership } from '@/modules/identity'
+import { esCorreo } from '@/shared/correo'
 
 export type TeamDeps = {
   staff: {
@@ -17,7 +18,6 @@ export type TeamDeps = {
 
 export type TipoDeEquipo = 'coanfitrion' | 'planner'
 
-const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const NOMBRE: Record<TipoDeEquipo, string> = { coanfitrion: 'co-anfitriones', planner: 'planners' }
 
 /**
@@ -35,7 +35,7 @@ export const addTeamMember =
     limite: number | null
   }): Promise<{ ok: true; email: string; password: string | null } | { ok: false; mensaje: string }> => {
     const email = input.email.trim().toLowerCase()
-    if (!CORREO.test(email)) return { ok: false, mensaje: 'Escribe un correo válido.' }
+    if (!esCorreo(email)) return { ok: false, mensaje: 'Escribe un correo válido.' }
 
     if (input.limite !== null && (await deps.staff.countOf(input.eventId, input.kind)) >= input.limite) {
       return {

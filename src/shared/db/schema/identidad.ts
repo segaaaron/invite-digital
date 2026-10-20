@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { boolean, char, index, integer, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, char, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
 import { events } from './eventos'
 import { bytea, citext } from './base'
 
@@ -48,10 +48,22 @@ export const passwordResets = pgTable(
     codeHash: bytea('code_hash').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    /** Intentos contra **este** código. Pedir otro lo pone a cero; lo que no se reinicia es `failedCount`. */
     attempts: integer('attempts').notNull().default(0),
+    /** Códigos emitidos en la ventana de una hora: pedirlos sin fin era media toma de cuenta (`0097`). */
+    issuedCount: integer('issued_count').notNull().default(0),
+    /** Intentos fallidos de la **cuenta** en la ventana, que sobreviven a pedir otro código. */
+    failedCount: integer('failed_count').notNull().default(0),
+    windowAt: timestamp('window_at', { withTimezone: true }).notNull().defaultNow(),
+    /**
+     * La dirección **para la que** se emitió el código, cuando es un cambio de correo (`0098`).
+     * Nulo en los códigos normales, que no sirven para cambiar el correo.
+     */
+    pendingEmail: citext('pending_email'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('password_resets_user_idx').on(t.userId), index('password_resets_expires_idx').on(t.expiresAt)],
+  // Una fila por cuenta (`0097`): es lo que permite que los contadores sobrevivan a un código nuevo.
+  (t) => [uniqueIndex('password_resets_user_unique').on(t.userId), index('password_resets_expires_idx').on(t.expiresAt)],
 )
 
 /**

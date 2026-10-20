@@ -87,4 +87,28 @@ describe('DoorMode sin conexi\u00f3n', () => {
     await waitFor(() => expect(screen.getByText(/no es de tu evento/i)).toBeInTheDocument())
     expect(recordScansAction).not.toHaveBeenCalled()
   })
+
+  it('si al subir el servidor dice que la invitación se anuló, la puerta se entera y descuenta', async () => {
+    // La revocación llegó mientras la puerta estaba sin red: el manifiesto del aparato ya no
+    // manda. Antes se descartaba el escaneo en silencio y el contador se quedaba mintiendo.
+    recordScansAction.mockRejectedValue(new Error('offline'))
+    render(<DoorMode eventId="e1" eventSlug="boda" manifest={manifest} />)
+    escanear(TOKEN)
+    await waitFor(() => expect(screen.getByLabelText('Invitaciones que han llegado')).toHaveTextContent('1'))
+
+    recordScansAction.mockImplementation(async ({ scans }: { scans: { scanId: string }[] }) =>
+      scans.map((s) => ({ scanId: s.scanId, kind: 'revoked' as const, group: { id: 'g1', label: 'Familia Rojas Peña', seats: 4, leadName: null, tableLabel: 'Mesa 03', people: [] } })),
+    )
+    fireEvent(window, new Event('online'))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/anul/i))
+    expect(screen.getByRole('alert')).toHaveTextContent('Familia Rojas Peña')
+    // Los dos contadores se corrigen **después** de la tarjeta: la chapa de «por subir» la
+    // escribe el `finally` del vaciado. Comprobarlos sin esperar hacía fallar esta prueba 1 de
+    // 3 veces con la suite entera en marcha (y solo entonces), que es lo peor de diagnosticar.
+    await waitFor(() => {
+      expect(screen.getByLabelText('Invitaciones que han llegado')).toHaveTextContent('0')
+      expect(screen.getByLabelText('Escaneos por subir')).toHaveTextContent('0')
+    })
+  })
 })

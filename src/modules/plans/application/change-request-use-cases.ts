@@ -57,11 +57,14 @@ export const requestPlanChange =
 /** Aplica la solicitud: cambia el plan del evento y la marca, en la misma transacción. */
 export const applyPlanChange =
   (deps: Deps) =>
-  async (requestId: string): Promise<Result<{ eventId: string; planId: string }, PlansError>> =>
+  async (input: { requestId: string; eventId: string }): Promise<Result<{ eventId: string; planId: string }, PlansError>> =>
     attempt<{ eventId: string; planId: string }, PlansError>(
       async () => {
+        const { requestId } = input
         const solicitud = await deps.plans.findRequest(requestId)
-        if (!solicitud) return err(plansError('not_found', 'Esa solicitud no existe.'))
+        // La solicitud tiene que ser **de este evento**, el que la guardia comprobó. Una de otro
+        // responde «no existe», nunca «no puedes»: lo ajeno no se confirma (F15).
+        if (!solicitud || solicitud.eventId !== input.eventId) return err(plansError('not_found', 'Esa solicitud no existe.'))
         if (solicitud.status !== 'pending') {
           return err(plansError('already_resolved', `Esa solicitud ya está ${solicitud.status}.`))
         }
@@ -78,11 +81,12 @@ export const applyPlanChange =
 /** Rechaza la solicitud sin tocar el plan del evento. */
 export const rejectPlanChange =
   (deps: Deps) =>
-  async (requestId: string): Promise<Result<null, PlansError>> =>
+  async (input: { requestId: string; eventId: string }): Promise<Result<null, PlansError>> =>
     attempt<null, PlansError>(
       async () => {
+        const { requestId } = input
         const solicitud = await deps.plans.findRequest(requestId)
-        if (!solicitud) return err(plansError('not_found', 'Esa solicitud no existe.'))
+        if (!solicitud || solicitud.eventId !== input.eventId) return err(plansError('not_found', 'Esa solicitud no existe.'))
 
         const rechazada = await deps.plans.rejectRequest(requestId, deps.clock())
         if (!rechazada) return err(plansError('already_resolved', 'Esa solicitud ya estaba resuelta.'))

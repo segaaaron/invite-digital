@@ -3,7 +3,7 @@ import type { DoorManifestGroup } from '../application/get-door-manifest'
 import { parsePass } from '../domain/parse-pass'
 
 export type LocalOutcome = {
-  readonly kind: 'welcome' | 'already' | 'unknown'
+  readonly kind: 'welcome' | 'already' | 'revoked' | 'unknown'
   readonly group?: DoorManifestGroup
   readonly arrivedCount?: number
 }
@@ -39,6 +39,8 @@ export async function resolveLocally(
   const group = groups.find((g) => g.tokenHashHex === hash || g.tokenHashPrevHex === hash)
   if (!group) return { kind: 'unknown' }
 
+  // El manifiesto ya trae `revoked`: la puerta sin red lo pinta rojo igual que el servidor.
+  if (group.revoked) return { kind: 'revoked', group }
   if (arrivedIds.has(group.id)) return { kind: 'already', group, arrivedCount: group.attending ?? 1 }
   return { kind: 'welcome', group, arrivedCount: group.attending ?? 1 }
 }

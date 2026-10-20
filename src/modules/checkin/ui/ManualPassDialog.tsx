@@ -46,12 +46,18 @@ export function ManualPassDialog({
     setError(null)
     // Primero el código corto que va impreso bajo el QR; si no, el enlace entero.
     const corto = codigo.replace(/[\s-]/g, '').toUpperCase()
+    const anulada = () => {
+      setError(t('Esa invitación se anuló: no entra. Si tiene que entrar, el anfitrión la devuelve desde el panel.', 'That invitation was revoked: they don’t come in. If they must, the host restores it from the panel.'))
+      setCandidato(null)
+    }
     const porCodigo = groups.find((g) => g.passCode !== undefined && g.passCode !== null && g.passCode === corto)
     if (porCodigo !== undefined) {
+      if (porCodigo.revoked) return anulada()
       setCandidato({ scanned: null, group: porCodigo, yaDentro: arrivedIds.has(porCodigo.id) })
       return
     }
     const local = await resolveLocally(codigo.trim(), groups, arrivedIds)
+    if (local.kind === 'revoked') return anulada()
     if (local.kind === 'unknown' || !local.group) {
       setError(t('Ese código no es de este evento. Revísalo o busca por nombre.', 'That code isn’t from this event. Check it or search by name.'))
       setCandidato(null)

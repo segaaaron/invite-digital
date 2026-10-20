@@ -40,8 +40,9 @@ export default async function DoorPage({ params }: { params: Promise<{ slug: str
 
   return (
     <>
-      {/* Lo que registran las otras puertas entra solo, en vivo. */}
-      <EnVivo modo="auto" oculto tipos={['ingreso']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
+      {/* Lo que registran las otras puertas entra solo, en vivo. Y `invitado`: si el anfitrión revoca o
+          devuelve una invitación, la lista de esta puerta se pone al día sin que nadie recargue. */}
+      <EnVivo modo="auto" oculto tipos={['ingreso', 'invitado']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
       <DoorMode eventId={event.value.id} eventSlug={event.value.slug} manifest={manifest.value} />
     </>
   )

@@ -14,8 +14,15 @@ export type FalloPortero = { readonly campo: 'name' | 'phone' | 'gate'; readonly
 /** Intentos de PIN antes de bloquear: seis dígitos se adivinan solos si nadie los cuenta. */
 export const MAX_INTENTOS_PIN = 5
 export const MINUTOS_BLOQUEO = 15
-export const HORAS_ANTES_POR_DEFECTO = 6
-export const HORAS_DESPUES_POR_DEFECTO = 4
+/**
+ * Lo que abarca el acceso del portero alrededor del día del evento. Ninguna pantalla los
+ * edita todavía, así que son los que valen de verdad: con 6 y 4 la puerta cerraba a las
+ * 04:00 y una fiesta que acaba a las cinco de la mañana se quedaba sin puerta en lo último,
+ * sin forma de ampliarlo desde el panel. Doce y doce cubren el montaje de la tarde anterior
+ * y el amanecer siguiente, y siguen cerrando: no es un acceso permanente.
+ */
+export const HORAS_ANTES_POR_DEFECTO = 12
+export const HORAS_DESPUES_POR_DEFECTO = 12
 
 /** Bolivia no tiene horario de verano: UTC−4 todo el año. */
 const DESFASE_BOLIVIA_MS = 4 * 60 * 60 * 1000

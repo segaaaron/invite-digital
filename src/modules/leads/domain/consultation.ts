@@ -1,6 +1,7 @@
 import type { Locale } from '@/shared/i18n/locales'
 import { err, ok, type Result } from '@/shared/result'
 import { leadError, type LeadError } from './errors'
+import { esCorreo } from '@/shared/correo'
 
 export type ConsultationInput = {
   name: string
@@ -23,7 +24,6 @@ export type Consultation = {
 }
 
 const MIN_NAME_LENGTH = 2
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 /** Keeps digits and a leading plus so `+591 700 11223` stores as `+59170011223`. */
@@ -41,7 +41,7 @@ export function createConsultation(input: ConsultationInput, now: Date): Result<
   if (email.length === 0 && phone.length === 0) {
     return err(leadError('missing_contact', 'Se requiere email o teléfono'))
   }
-  if (email.length > 0 && !EMAIL_PATTERN.test(email)) {
+  if (email.length > 0 && !esCorreo(email)) {
     return err(leadError('invalid_email', `Email inválido: ${email}`))
   }
 

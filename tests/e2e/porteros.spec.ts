@@ -99,6 +99,27 @@ test('un portero entra con su PIN, registra una llegada, no sale de la puerta y 
   await expect(portero.getByRole('alert').filter({ hasText: 'ya no está disponible' })).toBeVisible()
 })
 
+test('el enlace sin PIN no abre la puerta: la cookie tiene que venir firmada por el servidor', async ({ browser }) => {
+  // F3/F4/F6 del escaneo del 19 oct: la cookie `door_porter` era el propio token del enlace,
+  // así que quien lo recibiera reenviado se la ponía a mano y entraba a la lista de invitados
+  // con sus códigos de pase, y a registrar, corregir y anular ingresos, sin escribir el PIN.
+  const gestor = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
+  const { ruta } = await sumarPortero(gestor, HOY, 'Intruso')
+  const token = ruta.split('/').pop()!
+
+  const contexto = await browser.newContext()
+  await contexto.addCookies([{ name: 'door_porter', value: token, domain: 'localhost', path: '/p' }])
+  const intruso = await contexto.newPage()
+
+  await intruso.goto(`${ruta}/puerta`)
+  await expect(intruso).toHaveURL(new RegExp(`${ruta}$`), { timeout: 20_000 })
+  await expect(intruso.getByLabel('PIN de 6 dígitos')).toBeVisible()
+  await expect(intruso.getByText('XV de Valeria')).toHaveCount(0)
+
+  const envivo = await intruso.request.get(`${ruta}/en-vivo`, { headers: { cookie: `door_porter=${token}` } })
+  expect(envivo.status()).toBe(404)
+})
+
 test('fuera del día del evento el acceso no abre, ni con el PIN correcto', async ({ browser }) => {
   const gestor = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
   const { ruta, pin } = await sumarPortero(gestor, MANANA, 'Ana')

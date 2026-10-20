@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { changePassword } from '@/modules/identity/application/change-password'
-import { changeEmail, closeOtherSessions, confirmPasswordReset, requestAccountCode, requestPasswordReset } from '@/modules/identity/application/password-reset-use-cases'
+import { changeEmail, closeOtherSessions, confirmPasswordReset, requestAccountCode, requestEmailChange, requestPasswordReset } from '@/modules/identity/application/password-reset-use-cases'
 import { drizzlePasswordResetRepository } from '@/modules/identity/infrastructure/drizzle-password-reset-repository'
 import { authenticateSession } from '@/modules/identity/application/authenticate-session'
 import { signIn } from '@/modules/identity/application/sign-in'
@@ -14,9 +14,17 @@ import { drizzleUserRepository, setProvisionalPassword } from '@/modules/identit
 import { resetClientAccess } from '@/modules/identity/application/reset-client-access'
 import { eq } from 'drizzle-orm'
 import { db } from '@/shared/db/client'
-import { users } from '@/shared/db/schema'
+import { passwordResets, users } from '@/shared/db/schema'
 import { clock, minter } from './base'
 import { isLocale, type Locale } from '@/shared/i18n/locales'
+
+/** Leer y escribir el correo de una cuenta: lo que necesitan los dos pasos del cambio de correo. */
+const correosDeLaCuenta = {
+  findIdByEmail: (email: string) => drizzleUserRepository.findIdByEmail(email),
+  updateEmail: async (userId: string, email: string) => {
+    await db.update(users).set({ email }).where(eq(users.id, userId))
+  },
+}
 
 export const identity = {
   signIn: signIn({ users: drizzleUserRepository, sessions: drizzleSessionRepository, hasher: argon2Hasher, minter, clock }),
@@ -43,6 +51,25 @@ export const identity = {
   guardarMisDatos: async (userId: string, datos: { nombre: string | null; telefono: string | null }): Promise<void> => {
     await db.update(users).set({ fullName: datos.nombre, phone: datos.telefono }).where(eq(users.id, userId))
   },
+  /**
+   * El correo nuevo que está esperando su código (`0098`), si lo hay y todavía vale.
+   *
+   * Recargar «Mi cuenta» borraba el paso dos del cambio de correo: la dirección y el «ya te lo
+   * mandamos» vivían solo en React, y el código seguía siendo válido diez minutos sin ninguna
+   * pantalla donde escribirlo. Al venir de la base, la pantalla vuelve sola donde estaba.
+   * Nunca lanza: sin esto la página entera caería por un dato de adorno.
+   */
+  correoPendiente: async (userId: string): Promise<string | null> =>
+    db
+      .select({ email: passwordResets.pendingEmail, expira: passwordResets.expiresAt, gastado: passwordResets.consumedAt })
+      .from(passwordResets)
+      .where(eq(passwordResets.userId, userId))
+      .then((filas) => {
+        const fila = filas[0]
+        if (fila === undefined || fila.email === null || fila.gastado !== null) return null
+        return fila.expira.getTime() > Date.now() ? fila.email : null
+      })
+      .catch(() => null),
   /** El idioma del último aparato con que entró (`0094`): el de sus correos. Nulo si no ha entrado desde el 14 oct. Nunca lanza. */
   idiomaDe: async (userId: string): Promise<Locale | null> =>
     db
@@ -112,16 +139,12 @@ export const identity = {
     return token
   },
   closeOtherSessions: closeOtherSessions({ resets: drizzlePasswordResetRepository, sessions: drizzleSessionRepository, minter, clock }),
-  /** Cambia el correo de la cuenta con el código que llegó al actual (Mi cuenta). */
-  cambiarCorreo: changeEmail({
-    resets: drizzlePasswordResetRepository,
-    minter,
-    clock,
-    emails: {
-      findIdByEmail: (email: string) => drizzleUserRepository.findIdByEmail(email),
-      updateEmail: async (userId: string, email: string) => {
-        await db.update(users).set({ email }).where(eq(users.id, userId))
-      },
-    },
-  }),
+  /**
+   * El cambio de correo, en dos pasos (`0098`): el código se emite **para** la dirección nueva y
+   * viaja a ella, así que aplicarlo prueba que esa dirección es tuya. Antes bastaba el código del
+   * correo actual, y con eso una cuenta podía ponerse el correo de alguien que estaba por comprar
+   * y heredar su acceso cuando el admin lo diera de alta (F12).
+   */
+  pedirCodigoDeCorreoNuevo: requestEmailChange({ resets: drizzlePasswordResetRepository, minter, clock, emails: correosDeLaCuenta }),
+  cambiarCorreo: changeEmail({ resets: drizzlePasswordResetRepository, minter, clock, emails: correosDeLaCuenta }),
 } as const

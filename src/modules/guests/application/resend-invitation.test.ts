@@ -15,6 +15,7 @@ function repo(row: GuestGroupRow | null, guardados: ReadonlyMap<string, string> 
     findByTokenHash: async () => null,
     findById: async (eventId, id) => (row !== null && row.eventId === eventId && row.id === id ? row : null),
     revoke: async () => {},
+    restore: async () => {},
     markOpened: async () => null,
     remove: async () => {},
     markSent: async (_e, _id, at) => void enviados.push(at),

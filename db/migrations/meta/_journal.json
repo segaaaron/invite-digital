@@ -659,6 +659,34 @@
       "when": 1792016000000,
       "tag": "0094_idioma_de_la_cuenta",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1792102400000,
+      "tag": "0095_puerta_hasta_el_amanecer",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1792106000000,
+      "tag": "0096_invitado_avisa_en_vivo",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1792109600000,
+      "tag": "0097_tope_por_cuenta_en_recuperacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1792113200000,
+      "tag": "0098_codigo_atado_al_correo_nuevo",
+      "breakpoints": true
     }
   ]
 }

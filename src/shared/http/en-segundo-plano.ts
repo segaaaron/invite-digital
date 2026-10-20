@@ -7,7 +7,7 @@ import { registrarFallo } from '@/shared/observability/fallos'
  * Nunca deja escapar un error: un aviso que falla no puede tumbar lo que el usuario acaba de hacer.
  */
 export function enSegundoPlano(tarea: () => Promise<unknown>): void {
-  const segura = () => tarea().catch((causa: unknown) => registrarFallo('shared/http/en-segundo-plano', 'tarea en segundo plano fallida:', causa))
+  const segura = () => tarea().catch((causa: unknown) => registrarFallo('shared/http/en-segundo-plano', 'no se pudo terminar la tarea en segundo plano:', causa))
   try {
     after(segura)
   } catch {

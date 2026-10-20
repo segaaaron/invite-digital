@@ -19,7 +19,7 @@ export async function crearLlaveDeSiriAction(): Promise<LlaveDeSiriState> {
   try {
     return { status: 'success', llave: await identity.llaveDeSiri(actor.userId) }
   } catch (causa) {
-    registrarFallo('asistente/siri-actions', 'crearLlaveDeSiriAction', causa)
+    registrarFallo('asistente/siri-actions', 'no se pudo crear la llave de Siri:', causa)
     return { status: 'error', message: t('No pudimos crear la llave. Vuelve a intentarlo en un momento.', 'We couldn’t create the key. Try again in a moment.') }
   }
 }

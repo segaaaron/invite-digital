@@ -110,6 +110,10 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
     await database.update(guestGroups).set({ revokedAt: at }).where(delEvento(eventId, id))
   },
 
+  async restore(eventId, id) {
+    await database.update(guestGroups).set({ revokedAt: null }).where(delEvento(eventId, id))
+  },
+
   async markOpened(id, at) {
     // `isNull` en el where: una segunda apertura no debe reescribir la marca, y así la
     // condición vive en la base y no en una lectura previa que otra petición podría

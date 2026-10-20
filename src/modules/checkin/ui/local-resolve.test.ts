@@ -43,4 +43,11 @@ describe('resolveLocally', () => {
     const r = await resolveLocally(TOKEN, sinConfirmar, new Set())
     expect(r.arrivedCount).toBe(1)
   })
+
+  it('una invitación revocada sale roja también sin red', async () => {
+    const revocados = [{ ...groups[0]!, revoked: true }]
+    const r = await resolveLocally(TOKEN, revocados, new Set())
+    expect(r.kind).toBe('revoked')
+    expect(r.group?.label).toBe('Familia Rojas Peña')
+  })
 })

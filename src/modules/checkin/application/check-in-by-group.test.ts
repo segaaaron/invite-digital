@@ -17,6 +17,7 @@ const groupRow = {
 }
 
 const ajeno = { ...groupRow, id: 'g9', eventId: 'OTRO-EVENTO' }
+const revocado = { ...groupRow, id: 'g7', revoked: true }
 
 const fakes = () => {
   const rows: Parameters<ArrivalRepository['insertIfAbsent']>[0][] = []
@@ -27,6 +28,7 @@ const fakes = () => {
     async findGroupById(id) {
       if (id === groupRow.id) return groupRow
       if (id === ajeno.id) return ajeno
+      if (id === revocado.id) return revocado
       return null
     },
     async listByEvent() {
@@ -106,6 +108,16 @@ describe('checkInByGroup', () => {
     const { groups, arrivals, rows } = fakes()
     const r = await checkInByGroup({ groups, arrivals })({ eventId: 'e1', scan: scan('g1', 400) })
     expect(isOk(r) && r.value.kind).toBe('unknown')
+    expect(rows).toHaveLength(0)
+  })
+
+  it('una invitación revocada no entra por el buscador tampoco', async () => {
+    const { groups, arrivals, rows } = fakes()
+    const r = await checkInByGroup({ groups, arrivals })({
+      eventId: 'e1',
+      scan: { scanId: 's1', groupId: revocado.id, arrivedCount: 2, scannedAt: new Date('2026-10-18T21:00:00Z') },
+    })
+    expect(isOk(r) && r.value.kind).toBe('revoked')
     expect(rows).toHaveLength(0)
   })
 })

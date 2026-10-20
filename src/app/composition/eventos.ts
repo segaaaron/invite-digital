@@ -56,7 +56,7 @@ import { asegurarEnlace, enviarInvitacion, resendInvitation } from '@/modules/gu
 import { addPerson, listPeopleByEvent, removePerson, updatePerson } from '@/modules/guests/application/person-use-cases'
 import { countPeopleByEvent, createDrizzleGuestPersonRepository, drizzleGuestPersonRepository } from '@/modules/guests/infrastructure/drizzle-guest-person-repository'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
-import { reopenRsvp, revokeInvitation } from '@/modules/guests/application/revoke-invitation'
+import { reopenRsvp, restoreInvitation, revokeInvitation } from '@/modules/guests/application/revoke-invitation'
 import { countGroupsByEvent, createDrizzleGuestGroupRepository, drizzleGuestGroupRepository } from '@/modules/guests/infrastructure/drizzle-guest-group-repository'
 import { getInvitation } from '@/modules/rsvp/application/get-invitation'
 import { getEventStats } from '@/modules/rsvp/application/get-event-stats'
@@ -452,6 +452,7 @@ export const guests = {
   },
   listPeople: listPeopleByEvent({ people: drizzleGuestPersonRepository }),
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
+  restore: restoreInvitation({ groups: drizzleGuestGroupRepository, clock }),
   reopenRsvp: reopenRsvp({ groups: drizzleGuestGroupRepository, clock }),
   resend: resendInvitation({ groups: drizzleGuestGroupRepository, minter, clock }),
   enviar: enviarInvitacion({ groups: drizzleGuestGroupRepository, minter, clock }),

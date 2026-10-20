@@ -26,6 +26,22 @@ export const OTP_TTL_MS = 10 * 60 * 1000
 export const MAX_OTP_ATTEMPTS = 5
 
 /**
+ * Y el tope **de la cuenta**, que es el que de verdad protege (F2/F7/F8 del escaneo del 19 oct).
+ *
+ * Cinco intentos por código no son nada si pedir otro código los devuelve a cero: probando unas
+ * combinaciones, pidiendo otro y repitiendo, la probabilidad de acertar seis dígitos crece sin
+ * límite, y los limitadores por IP no lo frenan porque con IPv6 se rotan direcciones gratis.
+ *
+ * Así que en una hora: cinco códigos y quince fallos **por cuenta**, contados en la base, que
+ * sobreviven a pedir un código nuevo. Quince fallos dejan la probabilidad en una entre sesenta y
+ * seis mil por hora; al año, por debajo del dos por mil. Y sobra para quien de verdad se equivoca:
+ * son tres códigos completos mal teclados.
+ */
+export const VENTANA_DE_CUENTA_MS = 60 * 60 * 1000
+export const MAX_CODIGOS_POR_VENTANA = 5
+export const MAX_FALLOS_POR_VENTANA = 15
+
+/**
  * Un código nuevo, con ceros a la izquierda incluidos.
  *
  * `randomInt` de `node:crypto` y no `Math.random`: esto protege una cuenta, y el

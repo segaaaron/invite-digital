@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from 'node:fs'
+import { join, relative } from 'node:path'
 import { eq } from 'drizzle-orm'
 import { afterAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
@@ -48,5 +50,116 @@ describe('registro de fallos', () => {
 
     expect(await borrarTipoDeFallo(tipo!.huella)).toBe(2)
     expect((await tiposDeFallo(1, null)).some((t) => t.servicio === SERVICIO)).toBe(false)
+  })
+})
+
+/**
+ * **La guarda del registro** (20 de octubre).
+ *
+ * `esFalloDelServicio` decide por el **texto**, así que una llamada perfectamente escrita pero mal
+ * redactada —«el código de recuperación no salió»— se queda en la consola del contenedor y no llega
+ * nunca al panel. Pasó con los tres avisos del correo, con la push a un destino desconocido, con la
+ * sesión de puerta que no verifica y con las traducciones faltantes del catálogo: la línea existía,
+ * el comentario de al lado prometía que se vería, y no se guardaba nada.
+ *
+ * Esto recorre las llamadas cuyos argumentos son **todos literales** —las únicas que se pueden
+ * juzgar sin ejecutar nada— y exige que el filtro las deje pasar. Las que llevan una variable
+ * (`causa`, `e`) no se juzgan aquí: casi siempre traen el `Error`, que entra por su propia regla.
+ */
+describe('ningún registrarFallo escrito para no guardarse', () => {
+  const RAIZ = join(process.cwd(), 'src')
+
+  const ficheros = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entrada) => {
+      const ruta = join(dir, entrada.name)
+      if (entrada.isDirectory()) return ficheros(ruta)
+      if (!/\.tsx?$/.test(entrada.name) || /\.test\.tsx?$/.test(entrada.name)) return []
+      return [ruta]
+    })
+
+  /** Los argumentos de la llamada que empieza en `desde`, partidos por las comas de su nivel. */
+  const argumentosDe = (fuente: string, desde: number): string[] => {
+    const partes: string[] = []
+    let actual = ''
+    let profundidad = 0
+    let comilla: string | null = null
+
+    for (let i = desde; i < fuente.length; i++) {
+      const c = fuente[i] as string
+      if (comilla !== null) {
+        actual += c
+        if (c === '\\') {
+          actual += fuente[i + 1] ?? ''
+          i++
+        } else if (c === comilla) comilla = null
+        continue
+      }
+      if (c === "'" || c === '"' || c === '`') {
+        comilla = c
+        actual += c
+        continue
+      }
+      if (c === '(' || c === '[' || c === '{') profundidad++
+      if (c === ')' || c === ']' || c === '}') {
+        profundidad--
+        if (profundidad === 0) {
+          partes.push(actual)
+          return partes.map((p) => p.trim()).filter((p) => p !== '')
+        }
+      }
+      if (c === ',' && profundidad === 1) {
+        partes.push(actual)
+        actual = ''
+        continue
+      }
+      if (profundidad >= 1) actual += c
+    }
+    return []
+  }
+
+  /** El texto de un argumento literal, o `null` si lleva algo que solo se sabe ejecutando. */
+  const textoLiteral = (argumento: string): string | null => {
+    if (/^'(?:[^'\\]|\\.)*'$/.test(argumento) || /^"(?:[^"\\]|\\.)*"$/.test(argumento)) return argumento.slice(1, -1)
+    // Una plantilla cuenta por su parte fija: `${...}` puede ser cualquier cosa.
+    if (argumento.startsWith('`') && argumento.endsWith('`')) return argumento.slice(1, -1).replace(/\$\{[^}]*\}/g, ' ')
+    return null
+  }
+
+  it('toda llamada de argumentos literales pasa el filtro y acaba en el panel', () => {
+    const mudas: string[] = []
+    const ilegibles: string[] = []
+    let revisadas = 0
+
+    for (const ruta of ficheros(RAIZ)) {
+      if (ruta.endsWith(join('shared', 'observability', 'fallos.ts'))) continue
+      const fuente = readFileSync(ruta, 'utf8')
+
+      for (const coincidencia of fuente.matchAll(/registrarFallo\(/g)) {
+        const abre = coincidencia.index + 'registrarFallo'.length
+        const linea = fuente.slice(0, coincidencia.index).split('\n').length
+        const [, ...resto] = argumentosDe(fuente, abre)
+        // Una llamada que no se sabe leer es una llamada sin vigilar: eso no se deja pasar.
+        if (resto.length === 0) {
+          ilegibles.push(`${relative(process.cwd(), ruta)}:${linea}`)
+          continue
+        }
+        const textos: string[] = []
+        for (const argumento of resto) {
+          const texto = textoLiteral(argumento)
+          if (texto === null) break
+          textos.push(texto)
+        }
+        // Con una variable por medio no se puede juzgar desde aquí.
+        if (textos.length !== resto.length) continue
+        revisadas += 1
+        if (esFalloDelServicio(textos)) continue
+        mudas.push(`${relative(process.cwd(), ruta)}:${linea} → ${textos.join(' | ')}`)
+      }
+    }
+
+    expect(mudas, 'estas llamadas no llegan al registro: redáctalas con «no se pudo…» o pasa un kind `*_failure`').toEqual([])
+    // Y que el lector siga leyendo: si deja de reconocer llamadas, lo de arriba pasa en vacío.
+    expect(ilegibles, 'no se pudieron leer los argumentos de estas llamadas').toEqual([])
+    expect(revisadas).toBeGreaterThan(5)
   })
 })

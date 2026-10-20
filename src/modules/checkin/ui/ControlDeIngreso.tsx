@@ -152,6 +152,19 @@ export function ControlDeIngreso({
       personIds: conNombres ? quienes.map((q) => q.personaId as string) : null,
     })
       .then((resultado) => {
+        // El servidor manda, y a veces dice que no: la invitación se anuló (quizá hace un
+        // minuto, desde Invitados) o el grupo no es de este evento. Entonces no se registró
+        // nada, y marcarlo dentro aquí sería mentirle a quien está en la puerta.
+        if (resultado.kind === 'revoked' || resultado.kind === 'unknown') {
+          const quien = quienes.length === 1 ? primero.nombre : (primero.invitacion ?? primero.nombre)
+          setAviso(
+            resultado.kind === 'revoked'
+              ? t(`La invitación de ${quien} se anuló: no se registró el ingreso. Si tiene que entrar, devuélvela en Invitados.`, `${quien}’s invitation was revoked: the check-in was not recorded. If they must come in, restore it under Guests.`)
+              : t(`No se pudo registrar a ${quien}: esa invitación ya no está en este evento. Vuelve a cargar la página.`, `${quien} couldn’t be checked in: that invitation is no longer on this event. Reload the page.`),
+          )
+          return
+        }
+
         // El servidor es quien sabe: si otra puerta ya lo registró, dice `already` y desde cuándo.
         // Registrar de nuevo no duplica —los escaneos se unen—, pero la pantalla no puede fingir
         // que acaba de entrar alguien que ya estaba dentro.

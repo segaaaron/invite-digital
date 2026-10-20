@@ -1,3 +1,5 @@
+import { canAccessEvent } from '@/modules/identity/domain/access'
+import type { AbreSeccion } from '@/app/composition/asistente'
 import { asistente, events, plans } from '@/app/composition/container'
 import type { Actor } from '@/modules/identity'
 import { gestionaElEvento } from '@/modules/identity'
@@ -38,12 +40,22 @@ export async function accesoAlAsistente(actor: Actor, slug: string) {
   if (isErr(evento)) return null
   const [capacidad, config] = await Promise.all([plans.allowanceFor(evento.value.id), asistente.config()])
   if (isErr(capacidad) || !tieneLuxury(capacidad.value, config)) return null
-  const rol = gestionaElEvento(actor, evento.value)
+  const lleva = gestionaElEvento(actor, evento.value)
+  const pertenencias = lleva ? [] : await events.staff.de(actor, evento.value.id)
+  const rol = lleva
     ? 'organizador (el atelier que lleva el evento)'
-    : (await events.staff.de(actor, evento.value.id)).includes('planner')
+    : pertenencias.includes('planner')
       ? 'planner contratado'
-      : 'anfitrión (quien celebra)'
-  return { evento: evento.value, capacidad: capacidad.value as Allowance, config, rol, nombreDelPlan: await nombreDePlan(capacidad.value.planSlug) }
+      : pertenencias.includes('coanfitrion')
+        ? 'co-anfitrión (acompaña a quien celebra)'
+        : 'anfitrión (quien celebra)'
+  /**
+   * Qué secciones abre quien pregunta. Luxury entra con `cliente`, que también abre el
+   * co-anfitrión, pero sus herramientas leen lo de otras secciones: sin esto le contaba la
+   * recepción y los proveedores, que sus páginas le niegan con un 404 (F19).
+   */
+  const abre: AbreSeccion = (section) => canAccessEvent(actor, evento.value, { section, memberships: pertenencias })
+  return { evento: evento.value, capacidad: capacidad.value as Allowance, config, rol, abre, nombreDelPlan: await nombreDePlan(capacidad.value.planSlug) }
 }
 
 /** Cuántos eventos se miran buscando a Luxury: los que vienen primero; los de más atrás no se hablan por voz. */

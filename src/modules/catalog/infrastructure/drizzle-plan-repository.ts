@@ -9,7 +9,7 @@ import { registrarFallo } from '@/shared/observability/fallos'
 const logMissingTranslations = (locale: Locale, slugs: readonly string[]): void => {
   if (slugs.length === 0) return
   registrarFallo('catalog/drizzle-plan-repository', 
-    `Traducción faltante en "${locale}" para los planes: ${slugs.join(', ')}. No se muestran en ese idioma.`,
+    `No se pudo mostrar en "${locale}" por falta de traducción: los planes ${slugs.join(', ')}.`,
   )
 }
 

@@ -10,6 +10,8 @@
 export { clientAccessEmail, type AccesoDeCliente, type CorreoCompuesto } from './domain/client-access-email'
 export { teamAccessEmail, type AccesoDelEquipo } from './domain/team-access-email'
 export { passwordResetEmail } from './domain/password-reset-email'
+export { esEndpointDePush } from './domain/push-endpoint'
+export { emailChangedNotice } from './domain/email-changed-notice'
 export type { EmailSender } from './application/ports'
 export {
   avisoDeAgenda,

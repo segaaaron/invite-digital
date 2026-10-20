@@ -1,20 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { reopenRsvp, revokeInvitation } from './revoke-invitation'
+import { reopenRsvp, restoreInvitation, revokeInvitation } from './revoke-invitation'
 import type { GuestGroupRepository } from './ports'
 import { isErr, isOk } from '@/shared/result'
 
 const NOW = new Date('2026-09-16T12:00:00Z')
 
-function repo() {
+function repo(revokedAt: Date | null = null) {
   const revocadas: Array<{ eventId: string; id: string }> = []
+  const restauradas: Array<{ eventId: string; id: string }> = []
   const reabiertas: string[] = []
   const groups: GuestGroupRepository = {
     insert: async () => {},
     listByEvent: async () => [],
     findByTokenHash: async () => null,
     findById: async (eventId, id) =>
-      eventId === 'e1' && id === 'g1' ? { id, eventId, label: 'Ana', seats: 1, revokedAt: null, openedAt: null } : null,
+      eventId === 'e1' && id === 'g1' ? { id, eventId, label: 'Ana', seats: 1, revokedAt, openedAt: null } : null,
     revoke: async (eventId, id) => void revocadas.push({ eventId, id }),
+    restore: async (eventId, id) => void restauradas.push({ eventId, id }),
     markOpened: async () => null,
     remove: async () => {},
     markSent: async () => {},
@@ -26,7 +28,7 @@ function repo() {
     setSeats: async () => {},
     setLabel: async () => {},
   }
-  return { groups, revocadas, reabiertas }
+  return { groups, revocadas, restauradas, reabiertas }
 }
 
 describe('revokeInvitation', () => {
@@ -59,5 +61,33 @@ describe('reopenRsvp', () => {
     const r = await reopenRsvp({ groups, clock: () => NOW })({ eventId: 'e2', id: 'g1' })
     expect(isErr(r) && r.error.kind).toBe('not_found')
     expect(reabiertas).toHaveLength(0)
+  })
+})
+
+describe('restoreInvitation', () => {
+  const REVOCADA = new Date('2026-09-16T10:00:00Z')
+
+  it('devuelve el acceso a una invitación revocada: su enlace y su pase vuelven a abrir', async () => {
+    const { groups, restauradas } = repo(REVOCADA)
+    const r = await restoreInvitation({ groups, clock: () => NOW })({ eventId: 'e1', id: 'g1' })
+
+    expect(isOk(r) && r.value).toBe('devuelta')
+    expect(restauradas).toEqual([{ eventId: 'e1', id: 'g1' }])
+  })
+
+  it('una invitación de otro evento es not_found, no un «hecho» sin efecto', async () => {
+    const { groups, restauradas } = repo(REVOCADA)
+    const r = await restoreInvitation({ groups, clock: () => NOW })({ eventId: 'e2', id: 'g1' })
+
+    expect(isErr(r) && r.error.kind).toBe('not_found')
+    expect(restauradas).toEqual([])
+  })
+
+  it('una invitación que no estaba revocada no toca la base, y lo dice en vez de fingir que la devolvió', async () => {
+    const { groups, restauradas } = repo(null)
+    const r = await restoreInvitation({ groups, clock: () => NOW })({ eventId: 'e1', id: 'g1' })
+
+    expect(isOk(r) && r.value).toBe('ya_estaba')
+    expect(restauradas).toEqual([])
   })
 })

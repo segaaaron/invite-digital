@@ -27,7 +27,7 @@ export const createDrizzleCategoryRepository = (database: DbExecutor): CategoryR
     const missing = rows.filter((row) => row.name === null).map((row) => row.slug)
     if (missing.length > 0) {
       registrarFallo('catalog/drizzle-category-repository', 
-        `Traducción faltante en "${locale}" para las categorías: ${missing.join(', ')}. No se muestran en ese idioma.`,
+        `No se pudo mostrar en "${locale}" por falta de traducción: las categorías ${missing.join(', ')}.`,
       )
     }
 

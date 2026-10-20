@@ -63,6 +63,10 @@ test('retirar un modelo desde el admin lo quita de la colección en la siguiente
     await admin.context().close()
   }
 
-  await page.goto('/es/colecciones')
-  await expect(tarjeta().first()).toBeVisible()
+  // La misma carrera que arriba, al revés: una recarga en segundo plano que empezó antes de
+  // publicar puede devolver la lista sin el modelo después. Se vuelve a cargar hasta que aparece.
+  await expect(async () => {
+    await page.goto('/es/colecciones')
+    await expect(tarjeta().first()).toBeVisible({ timeout: 1_000 })
+  }).toPass({ timeout: 15_000 })
 })

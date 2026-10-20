@@ -652,6 +652,13 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
     case 'qr_de_transferencia': {
       const foto = await events.media.read(llamada.foto_id)
       if (foto === null || foto.eventId !== evento.id || !foto.contentType.startsWith('image/')) return { error: 'Esa imagen no está en este evento. Adjúntala otra vez.' }
+      // **Solo una imagen del anfitrión.** El id de una foto no lo teclea nadie, así que el modelo
+      // puede sacarlo del texto de un invitado: con una foto subida en `/i/<token>/fotos` y un
+      // nombre de acompañante que pida ponerla, el QR de cobro del evento acababa siendo el del
+      // atacante, a la vista de todos los invitados. Lo sube el anfitrión o no se pone.
+      if (foto.uploadedByGroupId !== null) {
+        return { error: 'Esa imagen la subió un invitado desde su invitación, así que no puede ser el QR del banco. Súbela tú y la pongo.' }
+      }
       const hoy = await registry.formas(evento.id)
       const fd = formulario({ ...base, sobres: hoy.sobres ? 'on' : undefined, sobresTexto: hoy.sobresTexto ?? '', transferencia: 'on', banco: hoy.banco ?? '', titular: hoy.titular ?? '', cuenta: hoy.cuenta ?? '', nota: hoy.nota ?? '' })
       fd.set('qr', new File([foto.bytes.slice()], 'qr-del-banco', { type: foto.contentType }))

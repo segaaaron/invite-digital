@@ -1,14 +1,15 @@
 'use server'
 
+import { createHash } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { checkin, events, plans, porters } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
-import { clientIpFrom } from '@/shared/http/client-ip'
+import { cuboDeLaPeticion } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { env } from '@/shared/config/env'
-import { isErr } from '@/shared/result'
+import { err, isErr, ok, type Result } from '@/shared/result'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
 import type { DoorActionState, ScanInput } from '@/app/_acciones/checkin/actions'
 import type { ScanOutcome } from '@/modules/checkin/application/check-in-by-scan'
@@ -101,8 +102,28 @@ export async function removePorterAction(_previous: PorterActionState, formData:
 
 const PORTER_COOKIE = 'door_porter'
 
-/** Cinco PIN por minuto y por IP, además de los cinco intentos por portero que cuenta la base. */
+/**
+ * Cinco PIN por minuto **por enlace y por IP**, además de los cinco intentos por portero que
+ * cuenta la base y bloquean 15 minutos.
+ *
+ * Por IP a secas castigaba a los inocentes: en una fiesta todos los porteros salen por el wifi
+ * del salón, así que el cuarto en llegar a su puerta leía «espera un minuto» sin haber fallado
+ * un PIN. Partir el cupo por enlace no afloja la defensa —adivinar seis dígitos sigue costando
+ * cinco intentos por minuto contra **ese** portero, y la base lo bloquea a los cinco fallos—,
+ * solo deja de contar juntos a quienes no tienen nada que ver.
+ *
+ * La clave lleva el hash del token, no el token: ni en memoria hace falta tenerlo en claro.
+ */
 const limitePin = createRateLimiter({ windowMs: 60_000, max: 5 })
+const cuboDelPin = (ip: string, token: string): string => `pin:${ip}:${createHash('sha256').update(token).digest('hex').slice(0, 16)}`
+
+/**
+ * Y un techo de la IP, holgado, que ninguna puerta de verdad roza: contar **solo** por enlace
+ * dejaba a cada token inventado estrenando cubo, así que `/p/<cualquier-cosa>` admitía POST sin
+ * freno y cada uno es una consulta a Postgres. Treinta por minuto son seis porteros escribiendo
+ * su PIN cinco veces cada uno.
+ */
+const topeDeLaIp = createRateLimiter({ windowMs: 60_000, max: 30 })
 
 const mensajeDe = (t: T): Record<PorterAccessError, string> => ({
   invalido: t('Ese PIN no es correcto.', 'That PIN is not correct.'),
@@ -117,15 +138,17 @@ export async function enterAsPorterAction(_previous: PinState, formData: FormDat
   const t = await tr()
   const token = texto(formData, 'token')
   const cabeceras = await headers()
-  const ip = clientIpFrom({ realIp: cabeceras.get('x-real-ip'), forwardedFor: cabeceras.get('x-forwarded-for') })
-  if (limitePin.isLimited(`pin:${ip}`, Date.now())) return { status: 'error', message: t('Demasiados intentos. Espera un minuto.', 'Too many attempts. Wait a minute.') }
+  const ip = cuboDeLaPeticion({ realIp: cabeceras.get('x-real-ip'), forwardedFor: cabeceras.get('x-forwarded-for') })
+  const ahora = Date.now()
+  if (limitePin.isLimited(cuboDelPin(ip, token), ahora) || topeDeLaIp.isLimited(`pin-ip:${ip}`, ahora)) return { status: 'error', message: t('Demasiados intentos. Espera un minuto.', 'Too many attempts. Wait a minute.') }
 
   const entrada = await porters.enter({ token, pin: texto(formData, 'pin') })
   if (isErr(entrada)) return { status: 'error', message: mensajeDe(t)[entrada.error] }
 
   const jar = await cookies()
-  // La ventana la corta el servidor en cada petición; la cookie solo evita pedir el PIN otra vez.
-  jar.set(PORTER_COOKIE, token, {
+  // La cookie es una sesión firmada por el servidor —la única prueba de que se escribió el
+  // PIN—, nunca el token del enlace: ese lo tiene cualquiera a quien se lo reenvíen.
+  jar.set(PORTER_COOKIE, entrada.value.cookie, {
     httpOnly: true,
     sameSite: 'lax',
     secure: env.SITE_URL.startsWith('https://'),
@@ -137,20 +160,42 @@ export async function enterAsPorterAction(_previous: PinState, formData: FormDat
   redirect(`/p/${token}/puerta`)
 }
 
-/** El portero de esta petición, o `null`. Nunca lanza por un acceso caducado: responde. */
-async function porteroActual(): Promise<PorterSession | null> {
-  const token = (await cookies()).get(PORTER_COOKIE)?.value
-  if (!token) return null
-  const quien = await porters.resolve(token)
-  if (isErr(quien)) return null
+/**
+ * El acceso del portero en esta petición, **con el motivo** cuando no lo tiene: una sesión
+ * caducada se arregla escribiendo otra vez el PIN y un acceso quitado no, así que aplanarlos
+ * a «null» hacía que la puerta diera el consejo equivocado.
+ */
+async function accesoActual(): Promise<Result<PorterSession, PorterAccessError>> {
+  const sesion = (await cookies()).get(PORTER_COOKIE)?.value
+  if (sesion === undefined || sesion === '') return err('invalido')
+
+  const quien = await porters.resolve(sesion)
+  if (isErr(quien)) {
+    // Una cookie que no verifica con cookie presente: o caducó, o alguien puso el token del
+    // enlace a mano (lo que F3/F4/F6 cierran), o cambió el secreto del servidor y están
+    // cayéndose todos los porteros a la vez. Sin esta línea, nada de eso se ve en el panel.
+    if (quien.error === 'invalido') registrarFallo('checkin/porter-actions', 'no se pudo verificar la sesión de puerta', 'invalido', 'cookie presente que no verifica')
+    return quien
+  }
+
   // Si el plan dejó de traer la puerta, el portero tampoco entra.
   const puerta = await plans.requireFeature(quien.value.eventId, 'checkin')
-  return isErr(puerta) ? null : quien.value
+  return isErr(puerta) ? err('quitado') : ok(quien.value)
 }
 
-/** Si el acceso del portero sigue abierto. La puerta lo pregunta cuando el servidor rechaza. */
-export async function porterAccessOkAction(): Promise<boolean> {
-  return (await porteroActual()) !== null
+/** El portero de esta petición, o `null`. Nunca lanza por un acceso caducado: responde. */
+async function porteroActual(): Promise<PorterSession | null> {
+  const acceso = await accesoActual()
+  return isErr(acceso) ? null : acceso.value
+}
+
+/**
+ * Si el acceso del portero sigue abierto y, si no, por qué. La puerta lo pregunta cuando el
+ * servidor rechaza, para decirle qué hacer en vez de un «se cerró» que no siempre es verdad.
+ */
+export async function porterAccessAction(): Promise<{ ok: true } | { ok: false; motivo: PorterAccessError }> {
+  const acceso = await accesoActual()
+  return isErr(acceso) ? { ok: false, motivo: acceso.error } : { ok: true }
 }
 
 export async function recordScansAsPorterAction(input: { scans: ScanInput[] }): Promise<ScanOutcome[]> {

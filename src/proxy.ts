@@ -5,7 +5,18 @@ import { negotiateLocale } from '@/shared/i18n/negotiate'
 import { rutaInterna, rutaPublica } from '@/shared/i18n/rutas'
 import { buildContentSecurityPolicy, createNonce } from '@/shared/security/csp'
 
-const PUBLIC_FILE = /\.[^/]+$/
+/**
+ * Un fichero público: el último trozo de la ruta lleva un punto con algo detrás (`/logo.svg`).
+ * Sin regex a propósito: `/\.[^/]+$/` volvía atrás en cada punto y una ruta de miles de `.`
+ * con `/` al final colgaba el único contenedor.
+ */
+const esFicheroPublico = (pathname: string): boolean => {
+  const ultimo = pathname.slice(pathname.lastIndexOf('/') + 1)
+  const punto = ultimo.lastIndexOf('.')
+  // Un punto con algo detrás. Recortar el último carácter en vez de esto se dejaba fuera
+  // una extensión de una sola letra (`/mapa.c`), y era una trampa para quien lo leyera.
+  return punto !== -1 && punto < ultimo.length - 1
+}
 
 /**
  * Descargas privadas que se sirven con su propia política, `sandbox`. El proxy no les pone
@@ -51,7 +62,7 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
-    PUBLIC_FILE.test(pathname) ||
+    esFicheroPublico(pathname) ||
     DESCARGA_PRIVADA.test(pathname) ||
     // Next pone la imagen al compartir con su carpeta interna (`/en/bodas/opengraph-image-…`): se sirve ahí, sin
     // mudarla, para que WhatsApp y Facebook no tengan que seguir un 308.

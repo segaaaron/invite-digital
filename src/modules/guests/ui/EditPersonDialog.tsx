@@ -4,10 +4,11 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
-import { addPersonAction, ensureInvitationLinkAction, reopenRsvpAction, setGroupPhoneAction, updatePersonAction } from '@/app/_acciones/guests/actions'
+import { addPersonAction, ensureInvitationLinkAction, reopenRsvpAction, restoreInvitationAction, setGroupPhoneAction, updatePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
 import { conCanal } from '../domain/invitation-url'
+import { esSaltoDeNext } from '@/shared/design/ui/sin-caerse'
 import { CloseIcon, CopyIcon, QrIcon, ArrowLeftIcon } from '@/shared/design/ui/icons'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
@@ -127,7 +128,7 @@ export function EditPersonDialog({
         dietaryNote: oNulo(dietaryNote),
         email: oNulo(email),
         vip,
-      })
+      }).catch(siNoResponde)
       if (r.status === 'error') {
         setError(r.message ?? t('No se pudo guardar el cambio.', 'The change couldn’t be saved.'))
         return
@@ -138,7 +139,7 @@ export function EditPersonDialog({
           eventSlug,
           id: groupId,
           phone: phone.trim(),
-        })
+        }).catch(siNoResponde)
         if (tel.status === 'error') {
           setError(tel.message ?? t('Se guardó el invitado, pero no su teléfono.', 'The guest was saved, but not their phone.'))
           return
@@ -157,23 +158,46 @@ export function EditPersonDialog({
   useEffect(() => {
     if (invitacion.enlace || invitacion.revocada) return
     let vigente = true
-    void ensureInvitationLinkAction({ eventSlug, groupId: invitacion.id }).then((r) => {
-      if (!vigente) return
-      if (r.status === 'success') setEnlaceNuevo(r.url)
-      else setError(r.message)
-    })
+    void ensureInvitationLinkAction({ eventSlug, groupId: invitacion.id })
+      .then((r) => {
+        if (!vigente) return
+        if (r.status === 'success') setEnlaceNuevo(r.url)
+        else setError(r.message)
+      })
+      // Sin esto, un servidor que no responde dejaba el hueco del enlace vacío y sin explicación.
+      .catch((error: unknown) => {
+        if (esSaltoDeNext(error)) throw error
+        if (vigente) setError(t('No pudimos preparar el enlace. Vuelve a abrir esta ficha.', 'We couldn’t prepare the link. Open this card again.'))
+      })
     return () => {
       vigente = false
     }
-  }, [eventSlug, invitacion.enlace, invitacion.id, invitacion.revocada])
+  }, [eventSlug, invitacion.enlace, invitacion.id, invitacion.revocada, t])
+
+  /**
+   * Una Server Action no solo responde «error»: también puede **no responder** —red caída, 500,
+   * un despliegue a mitad del clic—. Sin el `catch`, ese rechazo se escapaba del `useTransition`
+   * y el diálogo se iba sin decir nada, con el cambio sin hacer. Lo que el servidor conteste en
+   * el éxito manda sobre el texto de aquí: hay respuestas que no son la que se pidió («ya no
+   * estaba revocada»).
+   */
+  /**
+   * Lo que se responde cuando la acción **no** responde. El salto de Next se vuelve a lanzar: si
+   * la sesión caducó, `requireSession()` redirige, y tragárselo dejaría a quien pulsa mirando un
+   * «no pudimos hablar con el servidor» en vez de llevarlo a entrar otra vez.
+   */
+  const siNoResponde = (error: unknown): { status: 'error'; message: string } => {
+    if (esSaltoDeNext(error)) throw error
+    return { status: 'error', message: t('No pudimos hablar con el servidor. El cambio no se hizo: inténtalo otra vez.', 'We couldn’t reach the server. The change was not made: try again.') }
+  }
 
   const enInvitacion = (hacer: () => Promise<{ status: string; message?: string }>, hecho: string) => {
     setError(null)
     setAviso(null)
     empezar(async () => {
-      const r = await hacer()
+      const r = await hacer().catch(siNoResponde)
       if (r.status === 'error') setError(r.message ?? t('No se pudo guardar el cambio.', 'The change couldn’t be saved.'))
-      else setAviso(hecho)
+      else setAviso(r.message ?? hecho)
     })
   }
 
@@ -382,7 +406,23 @@ export function EditPersonDialog({
             <span />
           )}
           {invitacion.revocada ? (
-            <span className="text-[12px] text-ink-mute">{t('Enlace revocado: ya no abre.', 'Link revoked: it no longer opens.')}</span>
+            // Revocar corta también el paso por la puerta, así que la vuelta atrás vive aquí, a la
+            // vista: en la puerta no hay «dejar pasar a mano», y sin este botón un clic de más
+            // dejaba a esa familia fuera del evento para siempre.
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[12px] text-ink-mute">{t('Enlace revocado: ya no abre, y su pase no entra por la puerta.', 'Link revoked: it no longer opens, and their pass does not enter at the door.')}</span>
+              <PanelButton
+                disabled={pendiente}
+                onClick={() =>
+                  enInvitacion(
+                    () => restoreInvitationAction({ eventSlug, id: invitacion.id }),
+                    t('Invitación devuelta: su enlace y su pase vuelven a abrir.', 'Invitation restored: their link and pass open again.'),
+                  )
+                }
+              >
+                {t('Devolver la invitación', 'Restore invitation')}
+              </PanelButton>
+            </div>
           ) : (
             <RevokeInvitationForm eventSlug={eventSlug} groupId={invitacion.id} />
           )}

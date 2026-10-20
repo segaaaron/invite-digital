@@ -6,6 +6,7 @@ const updatePersonAction = vi.fn(async () => ({ status: 'success' as const }))
 const setGroupPhoneAction = vi.fn(async () => ({ status: 'success' as const }))
 const addPersonAction = vi.fn(async () => ({ status: 'success' as const }))
 const reopenRsvpAction = vi.fn(async () => ({ status: 'success' as const }))
+const restoreInvitationAction = vi.fn(async () => ({ status: 'success' as const }))
 const ensureInvitationLinkAction = vi.fn(async () => ({ status: 'success' as const, url: 'https://luxuryatelier.net/i/token-guardado' }))
 const replace = vi.fn()
 
@@ -14,6 +15,7 @@ vi.mock('@/app/_acciones/guests/actions', () => ({
   setGroupPhoneAction: (...args: unknown[]) => setGroupPhoneAction(...(args as [])),
   addPersonAction: (...args: unknown[]) => addPersonAction(...(args as [])),
   reopenRsvpAction: (...args: unknown[]) => reopenRsvpAction(...(args as [])),
+  restoreInvitationAction: (...args: unknown[]) => restoreInvitationAction(...(args as [])),
   revokeInvitationAction: vi.fn(async () => ({ status: 'success' })),
   ensureInvitationLinkAction: (...args: unknown[]) => ensureInvitationLinkAction(...(args as [])),
 }))
@@ -45,6 +47,7 @@ beforeEach(() => {
   updatePersonAction.mockClear()
   addPersonAction.mockClear()
   reopenRsvpAction.mockClear()
+  restoreInvitationAction.mockClear()
   setGroupPhoneAction.mockClear()
   ensureInvitationLinkAction.mockClear()
   replace.mockClear()
@@ -176,6 +179,37 @@ describe('EditPersonDialog', () => {
     render(<EditPersonDialog {...props} invitacion={{ ...invitacion, revocada: true }} />)
     expect(screen.queryByRole('button', { name: 'Revocar enlace' })).toBeNull()
     expect(screen.getByText(/enlace revocado/i)).toBeInTheDocument()
+  })
+
+  // Revocar corta el paso por la puerta: sin esta vuelta atrás, un clic de más dejaba a esa
+  // familia fuera del evento para siempre y sin poder reenviarle nada.
+  it('una revocada se puede devolver desde aquí, y lo confirma', async () => {
+    render(<EditPersonDialog {...props} invitacion={{ ...invitacion, revocada: true }} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Devolver la invitación' }))
+
+    await waitFor(() => expect(restoreInvitationAction).toHaveBeenCalledWith({ eventSlug: 'boda', id: 'g1' }))
+    expect(await screen.findByText(/vuelven a abrir/i)).toBeInTheDocument()
+  })
+
+  // Una Server Action que no responde (red caída, 500, despliegue a mitad del clic) rechazaba la
+  // promesa y el diálogo se iba sin una palabra, con la invitación todavía revocada.
+  it('si el servidor no responde al devolverla, lo dice en vez de callar', async () => {
+    restoreInvitationAction.mockRejectedValueOnce(new Error('sin red') as never)
+    render(<EditPersonDialog {...props} invitacion={{ ...invitacion, revocada: true }} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Devolver la invitación' }))
+
+    expect(await screen.findByText(/no pudimos hablar con el servidor/i)).toBeInTheDocument()
+  })
+
+  it('si devolverla falla, lo dice y no finge que volvió', async () => {
+    restoreInvitationAction.mockResolvedValueOnce({ status: 'error', message: 'No se pudo devolver la invitación.' } as never)
+    render(<EditPersonDialog {...props} invitacion={{ ...invitacion, revocada: true }} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Devolver la invitación' }))
+
+    expect(await screen.findByText('No se pudo devolver la invitación.')).toBeInTheDocument()
   })
 })
 

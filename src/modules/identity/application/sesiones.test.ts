@@ -6,7 +6,7 @@ import type { PasswordResetRepository, SessionRepository, TokenMinter } from './
 const NOW = new Date('2026-09-16T20:00:00Z')
 const minter: TokenMinter = { mint: () => ({ token: 't', hash: Buffer.alloc(0) }), hashOf: (t) => Buffer.from(`h:${t}`) }
 
-function dobles(codigo: string) {
+function dobles(codigo: string, paraElCorreo: string | null = null) {
   const vivas = new Set(['actual', 'tia', 'prima'])
   const intentos: string[] = []
   const sessions = {
@@ -15,9 +15,12 @@ function dobles(codigo: string) {
     },
   } as unknown as SessionRepository
   const resets: PasswordResetRepository = {
-    issue: async () => {},
-    findLive: async () => ({ id: 'r1', codeHash: Buffer.from(`h:${codigo}`), expiresAt: new Date(NOW.getTime() + 60_000), consumedAt: null, attempts: 0 }),
-    countAttempt: async (id) => void intentos.push(id),
+    issue: async () => 'emitido',
+    // Cobrar el intento y devolver el código es una sola sentencia (`0097`): el doble cuenta igual.
+    cobrarIntento: async () => {
+      intentos.push('r1')
+      return { estado: 'cobrado', id: 'r1', codeHash: Buffer.from(`h:${codigo}`), pendingEmail: paraElCorreo }
+    },
     consume: async () => {},
     deleteExpired: async () => 0,
   }
@@ -46,13 +49,13 @@ describe('closeOtherSessions', () => {
 })
 
 /**
- * Cambiar el correo de la cuenta (16 oct): como cerrar las demás sesiones, lo autoriza el código que llega al correo
- * **actual** —con la contraseña compartida, cualquiera que entra podría quedarse con la cuenta—, y el nuevo no puede
- * ser el de otra cuenta.
+ * Cambiar el correo de la cuenta (16 oct; en dos pasos desde el 20, F12): lo autoriza el código emitido **para la
+ * dirección nueva**, que es lo que prueba que esa dirección es de quien la pide, y el nuevo no puede ser el de otra
+ * cuenta. Que un código del correo actual **no** sirva está en `password-reset-use-cases.test.ts`.
  */
 describe('changeEmail', () => {
-  const deps = (codigo: string, ocupados: Record<string, string> = {}) => {
-    const d = dobles(codigo)
+  const deps = (codigo: string, ocupados: Record<string, string> = {}, paraElCorreo = 'nuevo@ejemplo.bo') => {
+    const d = dobles(codigo, paraElCorreo)
     const cambios: { userId: string; email: string }[] = []
     const consumidos: string[] = []
     return {
@@ -84,7 +87,7 @@ describe('changeEmail', () => {
   })
 
   it('el correo de otra cuenta no se toma', async () => {
-    const d = deps('123456', { 'otra@ejemplo.bo': 'u2' })
+    const d = deps('123456', { 'otra@ejemplo.bo': 'u2' }, 'otra@ejemplo.bo')
     const r = await changeEmail({ ...d, minter, clock: () => NOW })({ userId: 'u1', email: 'otra@ejemplo.bo', code: '123456' })
     expect(isErr(r) && r.error.kind).toBe('email_taken')
     expect(d.cambios).toEqual([])

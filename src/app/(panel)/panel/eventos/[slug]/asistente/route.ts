@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   const ahora = new Date()
   const permiso = puedeConversar(acceso.config, acceso.capacidad.planSlug, await asistente.usoDe(acceso.evento.id, ahora), acceso.capacidad.asistente === true)
   const salidas: AsyncIterable<Salida> = permiso.ok
-    ? asistente.responder({ evento: acceso.evento, capacidad: acceso.capacidad, nombreDelPlan: acceso.nombreDelPlan, rol: acceso.rol, mensajes, ahora, idioma: idiomaDe(cuerpo?.idioma), porVoz: cuerpo?.porVoz === true, ...(destinos ? { destinos } : {}), escribir, recortada: Array.isArray(cuerpo?.mensajes) && cuerpo.mensajes.length > TURNOS_QUE_SE_MANDAN })
+    ? asistente.responder({ evento: acceso.evento, capacidad: acceso.capacidad, nombreDelPlan: acceso.nombreDelPlan, rol: acceso.rol, abre: acceso.abre, mensajes, ahora, idioma: idiomaDe(cuerpo?.idioma), porVoz: cuerpo?.porVoz === true, ...(destinos ? { destinos } : {}), escribir, recortada: Array.isArray(cuerpo?.mensajes) && cuerpo.mensajes.length > TURNOS_QUE_SE_MANDAN })
     : (async function* () {
         yield { tipo: 'texto', delta: permiso.motivo === 'fuera_del_plan' ? MENSAJE_DE_CIERRE.presupuesto : MENSAJE_DE_CIERRE[permiso.motivo] }
         yield { tipo: 'fin' }

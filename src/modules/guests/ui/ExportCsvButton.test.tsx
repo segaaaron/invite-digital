@@ -50,9 +50,11 @@ describe('personasToCsv', () => {
       },
     ])
 
-    expect(csv).toContain('"Tal vez"')
-    expect(csv).toContain('"Pendiente"')
-    expect(csv).toContain('"Sin mesa"')
+    // `celdaCsv` entrecomilla solo cuando hace falta (separador, comilla o salto): un texto
+    // llano sale tal cual, y el punto y coma de la cabecera sigue separando las columnas.
+    expect(csv).toContain(';Tal vez;')
+    expect(csv).toContain(';Pendiente;')
+    expect(csv).toContain('Sin mesa')
     expect(csv.trim().split('\n')).toHaveLength(3)
   })
 })
@@ -74,13 +76,18 @@ describe('escape de fórmulas', () => {
     ])
 
     expect(csv).not.toContain('"=HYPERLINK')
+    // Con comillas dentro, la celda va entrecomillada; el apóstrofo delante es lo que impide que
+    // la hoja la evalúe. Y el espacio de delante ya no la salva: ` =1+1` se evaluaba igual.
     expect(csv).toContain(`"'=HYPERLINK`)
-    expect(csv).toContain(`"'+1234"`)
+    expect(csv).toContain(`;'+1234;`)
+    expect(personasToCsv([{ fullName: ' =1+1', groupLabel: 'F', attending: 'yes', isCompanion: false, dietaryNote: null, vip: false, tableLabel: null }])).toContain(`' =1+1`)
   })
 
   it('el texto normal no se toca', () => {
     const csv = filasToCsv([{ label: 'Familia Rojas Peña', seats: 4, confirmed: 4, revokedAt: null }])
-    expect(csv).toContain('"Familia Rojas Peña"')
+    expect(csv).toContain('Familia Rojas Peña;4;4;Confirmada')
+    // Y una etiqueta con el separador dentro sí se entrecomilla: si no, parte la fila.
+    expect(filasToCsv([{ label: 'Ana; la tia', seats: 1, confirmed: null, revokedAt: null }])).toContain('"Ana; la tia"')
   })
 })
 

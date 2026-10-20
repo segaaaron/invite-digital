@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { guests, plans, rsvp } from '@/app/composition/container'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
-import { clientIpFrom } from '@/shared/http/client-ip'
+import { cuboDeLaPeticion } from '@/shared/http/client-ip'
 import { isErr } from '@/shared/result'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { guardedRespond, type RsvpOutcome } from '@/modules/rsvp/application/guarded-respond'
@@ -49,7 +49,7 @@ const MAX_FIRMA = 500
  */
 export async function firmarLibroAction(_previous: FirmaState, formData: FormData): Promise<FirmaState> {
   const headerBag = await headers()
-  const ip = clientIpFrom({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
+  const ip = cuboDeLaPeticion({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
   if (limiteDelLibro.isLimited(ip, Date.now())) return { status: 'error', message: 'rate_limited' }
 
   const token = campo(formData, 'token')
@@ -71,7 +71,7 @@ const limitePorPersona = createRateLimiter({ windowMs: 60_000, max: 10 })
 
 export async function respondAction(_previous: RsvpActionState, formData: FormData): Promise<RsvpActionState> {
   const headerBag = await headers()
-  const ip = clientIpFrom({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
+  const ip = cuboDeLaPeticion({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
   const token = campo(formData, 'token')
 
   // El candado del evento protegido cierra también **las escrituras**. La página del
@@ -106,7 +106,7 @@ export async function respondAction(_previous: RsvpActionState, formData: FormDa
  */
 export async function respondByPersonAction(_previous: RsvpActionState, formData: FormData): Promise<RsvpActionState> {
   const headerBag = await headers()
-  const ip = clientIpFrom({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
+  const ip = cuboDeLaPeticion({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
   if (limitePorPersona.isLimited(ip, Date.now())) return { status: 'error', message: 'rate_limited' }
 
   const token = campo(formData, 'token')

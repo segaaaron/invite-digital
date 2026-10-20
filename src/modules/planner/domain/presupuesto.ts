@@ -1,4 +1,5 @@
 import type { Fiesta } from '@/modules/events'
+import { celdaCsv } from '@/shared/csv/celda'
 import { sumarDias } from './tareas'
 
 /** Quién pone el dinero de una partida. Los nombres cambian con la fiesta; la clave no. */
@@ -126,8 +127,8 @@ export function pagosQueVencen(partidas: readonly Partida[], hoy: string) {
 }
 
 const decimal = (cents: number) => `${Math.trunc(cents / 100)}.${String(Math.abs(cents % 100)).padStart(2, '0')}`
-/** Comillas dobladas y lo que una hoja tomaría por fórmula, con apóstrofo delante. */
-const celda = (valor: string) => `"${(/^[=+\-@\t\r]/.test(valor) ? `'${valor}` : valor).replace(/"/g, '""')}"`
+/** La celda común del proyecto: su copia de aquí no miraba los espacios de delante (F16). */
+const celda = celdaCsv
 
 export function presupuestoACsv(partidas: readonly Partida[], fiesta: Fiesta): string {
   const cabecera = ['Categoría', 'Concepto', 'Quién paga', 'Previsto', 'Contratado', 'Pagado', 'Falta'].map(celda).join(';')

@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import { leads } from '@/app/composition/container'
 import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
-import { clientIpFrom } from '@/shared/http/client-ip'
+import { cuboDeLaPeticion } from '@/shared/http/client-ip'
 import { guardedSubmit, type ConsultationOutcome } from '@/modules/leads/application/guarded-submit'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { registrarFallo } from '@/shared/observability/fallos'
@@ -26,7 +26,7 @@ export async function submitConsultationAction(
   formData: FormData,
 ): Promise<ConsultationActionState> {
   const headerBag = await headers()
-  const ip = clientIpFrom({
+  const ip = cuboDeLaPeticion({
     realIp: headerBag.get('x-real-ip'),
     forwardedFor: headerBag.get('x-forwarded-for'),
   })

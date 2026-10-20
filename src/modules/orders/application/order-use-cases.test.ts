@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
+import { MAX_PROOFS_PER_ORDER } from '../domain/proof'
 import { FakeFileStorage, FakeOrderRepository } from './fake-order-repository'
 import { attachProof, decideOrder, findOrderByRef, listOrdersPage, placeAddonOrder, placeOrder, readProof } from './order-use-cases'
 
@@ -168,6 +169,28 @@ describe('attachProof', () => {
     expect(isErr(subido) && subido.error.kind).toBe('proof_rejected')
     expect(storage.files.size).toBe(0)
     expect(orders.proofs).toEqual([])
+  })
+
+  /**
+   * Subir es público —quien paga no tiene cuenta— y cada fichero son hasta 8 MB en el disco del
+   * servidor. El límite por IP no basta: se piden pedidos nuevos y, con IPv6, las direcciones se
+   * rotan gratis. El techo va por **pedido**, aquí, que es por donde pasan todos.
+   */
+  it('un pedido no acumula comprobantes sin fin: pasado su techo, dice que no y manda a WhatsApp', async () => {
+    const { orders, order } = await conPedido()
+    const storage = new FakeFileStorage()
+
+    for (let i = 0; i < MAX_PROOFS_PER_ORDER; i += 1) {
+      const subido = await subir(orders, storage, `clave-${i}`)({ rawRef: order.publicRef, bytes: png(), declaredName: 'c.png', declaredType: 'image/png' })
+      expect(isOk(subido)).toBe(true)
+    }
+
+    const unoMas = await subir(orders, storage, 'clave-de-mas')({ rawRef: order.publicRef, bytes: png(), declaredName: 'c.png', declaredType: 'image/png' })
+
+    expect(isErr(unoMas) && unoMas.error.kind).toBe('proof_rejected')
+    expect(isErr(unoMas) && unoMas.error.detail).toBe('demasiados')
+    // Y nada más llegó al disco: el tope se aplica antes de escribir.
+    expect(storage.files.size).toBe(MAX_PROOFS_PER_ORDER)
   })
 
   it('un pedido aprobado no admite más comprobantes', async () => {

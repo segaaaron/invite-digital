@@ -2,16 +2,15 @@ import { attempt, err, ok, type Result } from '@/shared/result'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
 import { ordersError, type OrdersError } from '../domain/errors'
 import { canCancel, canDecide, canReceiveProof, canRemind, newPublicRef, normalizeRef, saldoPendiente, type Order, type OrderStatus, type QuoteExtra } from '../domain/order'
-import { checkProof } from '../domain/proof'
+import { checkProof, MAX_PROOFS_PER_ORDER } from '../domain/proof'
 import type { FileStorage, OrderRepository, ProofRow } from './ports'
+import { esCorreo } from '@/shared/correo'
 
 type Deps = { orders: OrderRepository; clock: () => Date }
 type WithStorage = Deps & { storage: FileStorage; newKey: () => string }
 
 const MAX_NAME = 160
 const MAX_NOTES = 1000
-/** La misma forma que pide el formulario de consultas (`leads`). */
-const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 /**
  * Alta de pedido desde la web pública.
@@ -58,7 +57,7 @@ export const placeOrder =
     if (contacto === null || contacto === '') {
       return err(ordersError('invalid_input', 'contact'))
     }
-    if (correo.length > MAX_NAME || !CORREO.test(correo)) return err(ordersError('invalid_input', 'email'))
+    if (correo.length > MAX_NAME || !esCorreo(correo)) return err(ordersError('invalid_input', 'email'))
     if (input.eventDate === null || !/^\d{4}-\d{2}-\d{2}$/.test(input.eventDate)) return err(ordersError('invalid_input', 'eventDate'))
     if (input.planSlug.trim() === '') return err(ordersError('invalid_input', 'plan'))
 
@@ -177,6 +176,11 @@ export const attachProof =
         const esSaldo = saldoPendiente(order)
         if (!canReceiveProof(order.status) && !esSaldo) {
           return err(ordersError('wrong_status', 'Este pedido ya está aprobado: no admite más comprobantes.'))
+        }
+
+        // El techo del pedido, aquí y no en la pantalla: por aquí pasan todos los que suben.
+        if ((await deps.orders.listProofs(order.id)).length >= MAX_PROOFS_PER_ORDER) {
+          return err(ordersError('proof_rejected', 'demasiados'))
         }
 
         const storageKey = deps.newKey()

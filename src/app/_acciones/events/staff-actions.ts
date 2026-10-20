@@ -45,7 +45,7 @@ async function adminSobre(formData: FormData) {
   // El rol **antes** de tocar la base: a quien no puede gestionar accesos no se le confirma
   // siquiera si ese evento existe.
   if (!canManageStaff(actor)) {
-    registrarFallo('events/staff-actions', 'alta de acceso denegada', actor.email, eventSlug)
+    registrarFallo('events/staff-actions', 'alta de acceso denegada', 'permission_failure', actor.email, eventSlug)
     return { error: t('Solo el administrador da de alta accesos.', 'Only the administrator grants access.') }
   }
 

@@ -28,6 +28,8 @@ export interface GuestGroupRepository {
   markOpened(id: string, at: Date): Promise<{ eventId: string; label: string } | null>
   findById(eventId: string, id: string): Promise<GuestGroupRow | null>
   revoke(eventId: string, id: string, at: Date): Promise<void>
+  /** Deshace la revocación: su enlace y su pase vuelven a abrir. Revocar no es una puerta de un solo sentido. */
+  restore(eventId: string, id: string): Promise<void>
   /** Marca el reparto de la invitación. */
   markSent(eventId: string, id: string, at: Date): Promise<void>
   /** Cambia el hash del token: el enlace anterior deja de abrir nada. */

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { adjustArrivalAction, checkInByGroupAction, recordScansAction, voidArrivalAction, type DoorActionState, type ScanInput } from '@/app/_acciones/checkin/actions'
 import type { ScanOutcome } from '../application/check-in-by-scan'
 import type { DoorManifest, DoorManifestGroup } from '../application/get-door-manifest'
+import type { PorterAccessError } from '../application/porter-use-cases'
 import { unirLlegadas, type ResolvedArrival } from '../domain/conflict'
 import { doorTally } from '../domain/door-tally'
 import { ManualPassDialog } from './ManualPassDialog'
@@ -42,8 +43,12 @@ export type DoorActions = {
   }) => Promise<ScanOutcome>
   adjust: (input: { eventId: string; scanId: string; arrivedCount: number; eventSlug: string }) => Promise<DoorActionState>
   void: (input: { eventId: string; scanId: string; eventSlug: string }) => Promise<DoorActionState>
-  /** Solo el portero: si su acceso sigue abierto. Se pregunta cuando el servidor rechaza. */
-  comprobarAcceso?: () => Promise<boolean>
+  /**
+   * Solo el portero: si su acceso sigue abierto y, si no, por qué. Se pregunta cuando el
+   * servidor rechaza. El motivo importa: una sesión caducada se arregla escribiendo otra vez
+   * el PIN, y un acceso quitado no se arregla sin un enlace nuevo.
+   */
+  comprobarAcceso?: () => Promise<{ ok: true } | { ok: false; motivo: PorterAccessError }>
 }
 
 const ACCIONES_DEL_PANEL: DoorActions = {
@@ -54,6 +59,12 @@ const ACCIONES_DEL_PANEL: DoorActions = {
 }
 
 /** Lo que la tarjeta del escaneo necesita de un grupo del manifiesto. */
+/**
+ * Si el aparato se da por conectado. En duda —`navigator` sin `onLine`, un render en el
+ * servidor— se responde que sí: lo que decide de verdad es el servidor cuando contesta.
+ */
+const enLinea = (): boolean => typeof navigator === 'undefined' || navigator.onLine !== false
+
 const vistaDe = (group: DoorManifestGroup) => ({
   id: group.id,
   label: group.label,
@@ -65,6 +76,21 @@ const vistaDe = (group: DoorManifestGroup) => ({
 
 const accesoCerrado = (t: T) => t('Tu acceso a esta puerta se cerró. Pide a quien te sumó un enlace nuevo.', 'Your access to this door was closed. Ask whoever added you for a new link.')
 
+/** Qué decirle al portero según por qué el servidor no le deja, y qué puede hacer él. */
+const mensajeDeAcceso = (motivo: PorterAccessError, t: T): string => {
+  if (motivo === 'invalido') {
+    // Lo normal tras un turno largo: la sesión de puerta dura un día. El enlace sigue valiendo.
+    return t('Tu sesión de puerta caducó. Vuelve a escribir tu PIN en el mismo enlace y sigue donde estabas.', 'Your door session expired. Enter your PIN again on the same link and carry on where you left off.')
+  }
+  if (motivo === 'fuera_de_horario') {
+    return t('Tu acceso a la puerta está fuera del horario del evento.', 'Your door access is outside the event’s hours.')
+  }
+  if (motivo === 'bloqueado') {
+    return t('Demasiados intentos con el PIN. Vuelve a intentarlo en quince minutos.', 'Too many PIN attempts. Try again in fifteen minutes.')
+  }
+  return accesoCerrado(t)
+}
+
 type Props = {
   eventId: string
   eventSlug: string
@@ -72,9 +98,14 @@ type Props = {
   acciones?: DoorActions
   /** Quién y dónde, para la puerta del portero: «XV de Valeria · Puerta 1 · Carlos». */
   cabecera?: string
+  /**
+   * Dónde vuelve el portero a escribir su PIN (`/p/<token>`). Sin esto, una sesión caducada
+   * dejaba la pantalla de la cámara sin ninguna salida más que teclear la dirección a mano.
+   */
+  enlaceDelPin?: string
 }
 
-export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL_PANEL, cabecera }: Props) {
+export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL_PANEL, cabecera, enlaceDelPin }: Props) {
   const t = useT()
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -147,9 +178,58 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
   }, [])
 
   /** Quién de esta invitación está ya dentro, según lo que sabe el dispositivo. */
+  // Las llegadas de este instante, para devolver el contador a donde estaba cuando el
+  // servidor rechaza algo que la pantalla ya había dado por bueno.
+  const arrivalsRef = useRef(arrivals)
+  useEffect(() => {
+    arrivalsRef.current = arrivals
+  }, [arrivals])
+
   const dentroDe = useCallback(
     (groupId: string): Readonly<Record<string, Date>> => arrivals.find((a) => a.guestGroupId === groupId)?.personas ?? {},
     [arrivals],
+  )
+
+  /**
+   * La respuesta del servidor cuando la pantalla ya se adelantó: se pinta tal cual y, si no
+   * fue bienvenida, el contador vuelve a donde estaba. Descartarla era la vía por la que una
+   * invitación anulada se quedaba en verde y contada.
+   */
+  const trasRegistrar = useCallback(
+    (groupId: string, anterior: ResolvedArrival | null) => (resultado: ScanOutcome) => {
+      apply(resultado)
+      if (resultado.kind === 'welcome') return
+      setArrivals((prev) => [...prev.filter((a) => a.guestGroupId !== groupId), ...(anterior === null ? [] : [anterior])])
+    },
+    [apply],
+  )
+
+  /**
+   * Cuando ni se pudo preguntar. Si el portero perdió su sesión se dice **eso** —y qué hacer—,
+   * y si no, que no se registró. `comprobarAcceso` puede fallar también (la red suele ser el
+   * motivo de estar aquí): entonces se cae al mensaje general en vez de quedarse muda.
+   */
+  const alNoPoder = useCallback(
+    async (general: string) => {
+      if (acciones.comprobarAcceso) {
+        try {
+          const acceso = await acciones.comprobarAcceso()
+          if (!acceso.ok) {
+            setDesajuste(mensajeDeAcceso(acceso.motivo, t))
+            return
+          }
+        } catch {
+          // Ni eso se pudo preguntar: se dice lo general en vez de quedarse muda.
+        }
+      }
+      setDesajuste(general)
+    },
+    [acciones, t],
+  )
+
+  const alNoPoderRegistrar = useCallback(
+    () => alNoPoder(t('No se pudo registrar la llegada. Vuelve a intentarlo.', 'The arrival couldn’t be recorded. Try again.')),
+    [alNoPoder, t],
   )
 
   /**
@@ -196,12 +276,51 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
         })),
       })
       await box.drop(outcomes.map((o) => o.scanId))
+
+      // El servidor puede rechazar lo que la puerta ya dio por bueno: la invitación se anuló
+      // mientras el aparato estaba sin red, o el manifiesto guardado ya no vale. Descartarlo
+      // en silencio dejaba el contador mintiendo y a nadie enterado, que es lo peor que puede
+      // pasar en una puerta: se descuenta y se dice, con el nombre, para poder resolverlo ahí.
+      const anuladas = outcomes.filter((o): o is Extract<ScanOutcome, { kind: 'revoked' }> => o.kind === 'revoked')
+      const ajenos = outcomes.filter((o) => o.kind === 'unknown')
+      // Los dos motivos se cantan juntos: en un lote puede venir uno de cada, y con un
+      // `else if` el segundo desaparecía sin una palabra después de borrarse de la bandeja.
+      const avisos: string[] = []
+      if (anuladas.length > 0) {
+        const ids = new Set(anuladas.map((o) => o.group.id))
+        setArrivals((prev) => prev.filter((a) => !ids.has(a.guestGroupId)))
+        const nombres = [...new Set(anuladas.map((o) => o.group.label))].join(', ')
+        avisos.push(
+          t(
+            `${nombres}: la invitación se anuló, así que su ingreso no quedó registrado. Si tiene que entrar, el anfitrión la devuelve desde Invitados.`,
+            `${nombres}: the invitation was revoked, so their check-in was not recorded. If they must come in, the host restores it under Guests.`,
+          ),
+        )
+      }
+      if (ajenos.length > 0) {
+        // Aquí no se puede descontar: un `unknown` no dice de qué invitación era. Por eso se
+        // pide recargar, que es lo que vuelve a poner el contador en lo que dice el servidor.
+        avisos.push(
+          t(
+            `${ajenos.length === 1 ? 'Un escaneo' : `${ajenos.length} escaneos`} no quedaron registrados: ese pase ya no está en este evento. Vuelve a cargar la puerta.`,
+            `${ajenos.length === 1 ? 'One scan' : `${ajenos.length} scans`} were not recorded: that pass is no longer on this event. Reload the door.`,
+          ),
+        )
+      }
+      if (avisos.length > 0) setDesajuste(avisos.join(' '))
     } catch {
       await box.bumpTries(batch.map((s) => s.scanId))
-      if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(accesoCerrado(t))
+      // Sin red, esperar es lo correcto y la chapa «N por subir» ya lo dice. Con red, que el
+      // servidor rechace el lote hay que cantarlo: callarlo lo volvía indistinguible de un
+      // salón sin cobertura, y los escaneos se quedaban en la bandeja para siempre.
+      if (enLinea()) {
+        await alNoPoder(t('No se pudo subir lo registrado. Sigue en este aparato, sin llegar al servidor.', 'What was recorded couldn’t be uploaded. It is still on this device, not on the server.'))
+      }
+    } finally {
+      // Siempre: si algo de arriba falla, la chapa se quedaría diciendo menos de lo que falta.
+      setPending(await box.count())
     }
-    setPending(await box.count())
-  }, [acciones, eventId, eventSlug, getOutbox, t])
+  }, [acciones, eventId, eventSlug, getOutbox, t, alNoPoder])
 
   useEffect(() => {
     const onOnline = () => void flush()
@@ -230,6 +349,18 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
 
       if (local.kind === 'unknown' || !local.group) {
         setOutcome({ scanId, kind: 'unknown' })
+        return
+      }
+
+      // Revocada: roja, y nada de encolarla. El servidor la rechaza igual, pero la puerta no
+      // puede cantar «bienvenidos» y descubrirlo cuando vuelva la red.
+      //
+      // Este «revocada» sale del manifiesto del último render, así que la lista tiene que llegar
+      // al día: lo hace el canal en vivo (`invitado`, `0096`), que avisa cuando el anfitrión
+      // revoca o devuelve. Recargar aquí mismo al escanear se probó y se descartó: la recarga
+      // borraba la tarjeta roja antes de que el portero pudiera leerla.
+      if (local.kind === 'revoked') {
+        setOutcome({ scanId, kind: 'revoked', group: vistaDe(local.group) })
         return
       }
 
@@ -268,12 +399,25 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       if (box) {
         await box.push({ scanId, scanned, arrivedCount, scannedAtMs: Date.now(), tries: 0 })
         setPending(await box.count())
+        void flush()
+      } else {
+        // Sin bandeja —navegación privada, almacenamiento bloqueado— no hay cola que vacíe
+        // después: va ahora y su respuesta se pinta. Antes el escaneo se quedaba en la
+        // pantalla y no llegaba a nadie, con la tarjeta en verde.
+        const groupId = group.id
+        const anterior = arrivalsRef.current.find((a) => a.guestGroupId === groupId) ?? null
+        void acciones
+          .recordScans({ eventId, eventSlug, scans: [{ scanId, scanned, arrivedCount, scannedAtMs: Date.now() }] })
+          .then((outcomes) => {
+            const suyo = outcomes.find((o) => o.scanId === scanId)
+            if (suyo) trasRegistrar(groupId, anterior)(suyo)
+          })
+          .catch(() => void alNoPoderRegistrar())
       }
-      void flush()
     },
     // `registrarPersonas` se declara debajo y se usa por referencia estable: no cambia entre pintados.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [manifest.groups, arrivedIds, apply, flush, getOutbox, dentroDe],
+    [manifest.groups, arrivedIds, apply, flush, getOutbox, dentroDe, acciones, eventId, eventSlug, trasRegistrar, alNoPoderRegistrar],
   )
 
   /**
@@ -288,15 +432,14 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
     const personas = { ...dentroDe(group.id) }
     for (const id of personIds) personas[id] ??= ahora
     ultimoPorPersona.current = { scanId, groupId: group.id, personIds }
+    const anterior = arrivalsRef.current.find((a) => a.guestGroupId === group.id) ?? null
     apply({ scanId, kind: 'welcome', group: vistaDe(group), arrivedCount: Object.keys(personas).length, personas })
 
     if (scanned === null) {
       void acciones
         .checkInByGroup({ eventId, eventSlug, groupId: group.id, scanId, arrivedCount: null, scannedAtMs: ahora.getTime(), personIds })
-        .catch(async () => {
-          if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(accesoCerrado(t))
-          else setDesajuste(t('No se pudo registrar la llegada. Vuelve a intentarlo.', 'The arrival couldn’t be recorded. Try again.'))
-        })
+        .then(trasRegistrar(group.id, anterior))
+        .catch(() => void alNoPoderRegistrar())
       return
     }
 
@@ -306,11 +449,17 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       setPending(await box.count())
       void flush()
     } else {
-      void acciones.recordScans({
-        eventId,
-        eventSlug,
-        scans: [{ scanId, scanned, arrivedCount: personIds.length, scannedAtMs: ahora.getTime(), personIds }],
-      })
+      void acciones
+        .recordScans({
+          eventId,
+          eventSlug,
+          scans: [{ scanId, scanned, arrivedCount: personIds.length, scannedAtMs: ahora.getTime(), personIds }],
+        })
+        .then((outcomes) => {
+          const suyo = outcomes.find((o) => o.scanId === scanId)
+          if (suyo) trasRegistrar(group.id, anterior)(suyo)
+        })
+        .catch(() => void alNoPoderRegistrar())
     }
   }
 
@@ -417,6 +566,12 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
   /** Registrar a una invitación elegida sin escanear: por nombre o por el código corto del pase. */
   function elegirGrupo(groupId: string) {
           const elegido = manifest.groups.find((g) => g.id === groupId)
+          // Por aquí entran el buscador por nombre, el código corto del pase y el diálogo manual:
+          // una sola guarda cubre los tres.
+          if (elegido !== undefined && elegido.revoked) {
+            setOutcome({ scanId: crypto.randomUUID(), kind: 'revoked', group: vistaDe(elegido) })
+            return
+          }
           if (elegido !== undefined && elegido.people.length > 0) {
             const dentro = dentroDe(elegido.id)
             const porLlegar = elegido.people.filter((p) => dentro[p.id] === undefined)
@@ -438,11 +593,8 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
               arrivedCount: null,
               scannedAtMs: Date.now(),
             })
-            .then(apply)
-            .catch(async () => {
-              if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(accesoCerrado(t))
-              else setDesajuste(t('No se pudo registrar la llegada. Vuelve a intentarlo.', 'The arrival couldn’t be recorded. Try again.'))
-            })
+            .then(trasRegistrar(groupId, arrivalsRef.current.find((a) => a.guestGroupId === groupId) ?? null))
+            .catch(() => void alNoPoderRegistrar())
           }
 
   return (
@@ -482,6 +634,13 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
         <div className="relative z-10 px-4">
           <p className="rounded-[14px] bg-danger px-4 py-3 font-mono text-[12px] text-white" role="alert">
             {desajuste}{' '}
+            {enlaceDelPin === undefined ? null : (
+              <>
+                <a className="underline" href={enlaceDelPin}>
+                  {t('Escribir tu PIN', 'Enter your PIN')}
+                </a>{' '}
+              </>
+            )}
             <button className="underline" onClick={() => setDesajuste(null)} type="button">
               {t('Entendido', 'Got it')}
             </button>
@@ -549,9 +708,13 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
                 outcome.kind !== 'unknown' && a.guestGroupId === outcome.group.id ? { ...a, arrivedCount } : a,
               ),
             )
-            void acciones.adjust({ eventId, scanId, arrivedCount, eventSlug }).then((r) => {
-              if (r.status === 'error') setDesajuste(t('No se pudo corregir la cantidad. El contador de arriba no es el del servidor.', 'The amount couldn’t be corrected. The counter above isn’t the server’s.'))
-            })
+            const noCorrigio = t('No se pudo corregir la cantidad. El contador de arriba no es el del servidor.', 'The amount couldn’t be corrected. The counter above isn’t the server’s.')
+            void acciones
+              .adjust({ eventId, scanId, arrivedCount, eventSlug })
+              .then((r) => {
+                if (r.status === 'error') void alNoPoder(noCorrigio)
+              })
+              .catch(() => void alNoPoder(noCorrigio))
           }}
           onUndo={(scanId) => {
             // Deshacer retira al grupo del contador, no reinicia la lista entera: en la
@@ -574,9 +737,13 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
               }
             }
             setOutcome(null)
-            void acciones.void({ eventId, scanId, eventSlug }).then((r) => {
-              if (r.status === 'error') setDesajuste(t('No se pudo deshacer la llegada. Sigue registrada en el servidor.', 'The arrival couldn’t be undone. It is still recorded on the server.'))
-            })
+            const noDeshizo = t('No se pudo deshacer la llegada. Sigue registrada en el servidor.', 'The arrival couldn’t be undone. It is still recorded on the server.')
+            void acciones
+              .void({ eventId, scanId, eventSlug })
+              .then((r) => {
+                if (r.status === 'error') void alNoPoder(noDeshizo)
+              })
+              .catch(() => void alNoPoder(noDeshizo))
           }}
           onDismiss={() => {
             lastRef.current = { code: lastRef.current.code, at: Date.now() }

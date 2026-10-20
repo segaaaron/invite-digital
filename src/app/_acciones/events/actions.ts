@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { admin, events as eventUseCases, guests, plans } from '@/app/composition/container'
-import { clientIpFrom } from '@/shared/http/client-ip'
+import { cuboDeLaPeticion } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { guardedUnlock } from '@/modules/events/application/guarded-unlock'
 import { isUnlockValid, unlockValue, UNLOCK_MS } from '@/modules/events/domain/unlock-token'
@@ -26,6 +26,14 @@ import { esquemaDeTextos } from '@/modules/asistente/domain/herramientas'
 import { bloquesDeTextos, coloresDesconocidos } from './textos-del-asistente'
 import { tr } from '@/shared/i18n/idioma-servidor'
 import { traducir } from '@/shared/i18n/en-ingles'
+
+/**
+ * La clave con la que se firma la cookie de desbloqueo: `LINK_KEY` y, sin ella, `DATABASE_URL`.
+ * La misma pareja que sella los enlaces de los invitados y firma la sesión de puerta, y ninguna de
+ * las dos vive en la base: antes la clave era el hash de la contraseña del evento, así que un
+ * volcado de la base abría todos los eventos protegidos (F18).
+ */
+const secretoDeDesbloqueo = env.LINK_KEY ?? env.DATABASE_URL
 
 export type EventActionState = { status: 'idle' | 'error' | 'success'; message: EventErrorKind | '' }
 
@@ -231,7 +239,7 @@ export async function unlockEventAction(_previous: UnlockState, formData: FormDa
   if (isErr(group)) return { status: 'error', message: t('No pudimos abrir la invitación con esos datos.', 'We couldn’t open the invitation with those details.') }
 
   const cabeceras = await headers()
-  const ip = clientIpFrom({
+  const ip = cuboDeLaPeticion({
     realIp: cabeceras.get('x-real-ip'),
     forwardedFor: cabeceras.get('x-forwarded-for'),
   })
@@ -249,7 +257,7 @@ export async function unlockEventAction(_previous: UnlockState, formData: FormDa
   const jar = await cookies()
   jar.set(
     unlockCookieName(group.value.eventId),
-    unlockValue({ eventId: group.value.eventId, passwordHash: hash ?? '', issuedAt: Date.now() }),
+    unlockValue({ eventId: group.value.eventId, passwordHash: hash ?? '', issuedAt: Date.now(), secreto: secretoDeDesbloqueo }),
     {
       httpOnly: true,
       sameSite: 'lax',
@@ -280,7 +288,7 @@ export async function eventUnlocked(eventId: string): Promise<boolean> {
 
   const jar = await cookies()
   const valor = jar.get(unlockCookieName(eventId))?.value
-  return valor !== undefined && isUnlockValid({ value: valor, eventId, passwordHash: hash, now: Date.now() })
+  return valor !== undefined && isUnlockValid({ value: valor, eventId, passwordHash: hash, now: Date.now(), secreto: secretoDeDesbloqueo })
 }
 
 export type PrivacyState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
@@ -516,6 +524,15 @@ export async function ponerFotoDelAsistenteAction(input: {
   if (isErr(evento)) return { status: 'error', message: t('No se pudo leer el evento.', 'The event couldn’t be read.') }
   const foto = medios.find((m) => m.id === input.fotoId)
   if (foto === undefined || !foto.contentType.startsWith('image/')) return { status: 'error', message: t('Esa foto no está en este evento. Adjúntala otra vez.', 'That photo is not in this event. Attach it again.') }
+  // Subida por el anfitrión, no por un invitado: el id de una foto llega del texto de la
+  // conversación, y en la conversación entran los nombres y las firmas que escriben los invitados.
+  // Lo que se pone en la invitación lo ven todos, así que no lo elige quien escribió ese texto.
+  if (foto.uploadedByGroupId !== null) {
+    return {
+      status: 'error',
+      message: t('Esa foto la subió un invitado desde su invitación. Adjúntala tú en el chat y la pongo.', 'That photo was uploaded by a guest from their invitation. Attach it yourself in the chat and I’ll place it.'),
+    }
+  }
   const fotos = themeFor(evento.value.themeKey).pinta.fotos
 
   let section: SectionKey
@@ -683,7 +700,7 @@ export async function uploadGuestPhotoAction(_previo: GuestPhotoState, formData:
   if (isErr(await plans.requireFeature(grupo.value.eventId, 'guestPhotos'))) return { status: 'error', message: 'not_included' }
 
   const cabeceras = await headers()
-  const ip = clientIpFrom({
+  const ip = cuboDeLaPeticion({
     realIp: cabeceras.get('x-real-ip'),
     forwardedFor: cabeceras.get('x-forwarded-for'),
   })

@@ -33,6 +33,7 @@ type Props = {
 const skin = {
   welcome: 'bg-ok',
   already: 'bg-warn',
+  revoked: 'bg-danger',
   unknown: 'bg-danger',
 } as const
 
@@ -47,21 +48,31 @@ const hora = horaBolivia
  */
 export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) {
   const t = useT()
+  // La revocada y el pase ajeno no registran nada: ni contador, ni lista de personas, ni deshacer.
+  const sinRegistro = outcome.kind === 'unknown' || outcome.kind === 'revoked'
   // Con personas cargadas, la puerta cuenta nombres, no un número: la lista sustituye al contador.
-  const conPersonas = outcome.kind !== 'unknown' && outcome.group.people.length > 0
-  const todosDentro =
-    outcome.kind !== 'unknown' && outcome.group.people.every((persona) => outcome.personas[persona.id] !== undefined)
+  const conPersonas = !sinRegistro && outcome.group.people.length > 0
+  const todosDentro = !sinRegistro && outcome.group.people.every((persona) => outcome.personas[persona.id] !== undefined)
   return (
     <div
-      role="status"
-      aria-live="polite"
+      // Un rechazo se anuncia como alerta: el personal está mirando una cara, no la pantalla.
+      role={sinRegistro ? 'alert' : 'status'}
+      aria-live={sinRegistro ? 'assertive' : 'polite'}
       className={`${skin[outcome.kind]} fixed inset-x-0 bottom-0 z-30 rounded-t-3xl p-6 text-white shadow-float motion-safe:animate-slide-up md:bottom-5 md:mx-auto md:w-[min(560px,92vw)] md:rounded-3xl`}
     >
-      {outcome.kind === 'unknown' ? (
+      {sinRegistro ? (
         <>
-          <p className="font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] opacity-85">{t('✕ Pase no válido', '✕ Invalid pass')}</p>
-          <p className="mt-2 font-display text-[30px] italic leading-tight">{t('Este código no es de tu evento', 'This code isn’t from your event')}</p>
-          <p className="mt-1.5 text-[13px] opacity-80">{t('Puede ser el pase de otra fiesta, o un QR cualquiera.', 'It may be another party’s pass, or just any QR.')}</p>
+          <p className="font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] opacity-85">
+            {outcome.kind === 'revoked' ? t('✕ Invitación anulada', '✕ Invitation revoked') : t('✕ Pase no válido', '✕ Invalid pass')}
+          </p>
+          <p className="mt-2 font-display text-[30px] italic leading-tight">
+            {outcome.kind === 'revoked' ? titular(outcome.group, t) : t('Este código no es de tu evento', 'This code isn’t from your event')}
+          </p>
+          <p className="mt-1.5 text-[13px] opacity-80">
+            {outcome.kind === 'revoked'
+              ? t('Esta invitación se anuló: no se registra el ingreso. Si tiene que entrar, el anfitrión la devuelve desde el panel y se vuelve a escanear.', 'This invitation was revoked: no check-in is recorded. If they must come in, the host restores it from the panel and you scan again.')
+              : t('Puede ser el pase de otra fiesta, o un QR cualquiera.', 'It may be another party’s pass, or just any QR.')}
+          </p>
         </>
       ) : (
         <>

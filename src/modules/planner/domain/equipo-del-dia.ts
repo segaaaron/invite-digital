@@ -1,5 +1,6 @@
 import type { Fiesta } from '@/modules/events'
 import { horaValida } from './cronograma'
+import { esCorreo } from '@/shared/correo'
 
 export type EstadoDeProveedor = 'cotizando' | 'reservado' | 'contratado' | 'confirmado'
 export const ESTADOS_DE_PROVEEDOR: readonly EstadoDeProveedor[] = ['cotizando', 'reservado', 'contratado', 'confirmado']
@@ -33,7 +34,7 @@ export function leerProveedor(input: ProveedorInput): { ok: true; valor: Proveed
   const service = input.service.trim()
   if (service.length === 0 || service.length > 80) return { ok: false, mensaje: 'Di qué servicio da: DJ, fotógrafo, catering…' }
   const email = input.email.trim().toLowerCase()
-  if (email !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, mensaje: 'Revisa el correo.' }
+  if (email !== '' && !esCorreo(email)) return { ok: false, mensaje: 'Revisa el correo.' }
   if (input.arrivalTime !== '' && !horaValida(input.arrivalTime)) return { ok: false, mensaje: 'La hora de llegada va como 17:30.' }
   if (!ESTADOS_DE_PROVEEDOR.includes(input.status as EstadoDeProveedor)) return { ok: false, mensaje: 'Elige el estado.' }
   const whatsapp = input.whatsapp.replace(/[^\d+]/g, '').slice(0, 20) || null

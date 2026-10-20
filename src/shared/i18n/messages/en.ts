@@ -994,6 +994,7 @@ export const en = {
         proofTooBig: 'The file is larger than {mb} MB.',
         proofType: 'We only accept a photo (JPG, PNG or WEBP) or a PDF.',
         proofRejected: 'We could not accept that file.',
+        proofTooMany: 'This order already has all the receipts it accepts. Message us on WhatsApp and we’ll review it with you.',
         proofApproved: 'This order is already approved: no other receipt is needed.',
         proofFailed: 'We could not save the receipt. Please try again shortly.',
       },

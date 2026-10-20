@@ -24,7 +24,7 @@ export async function guardarAsistenteAction(_previo: AsistenteState, formData: 
   try {
     await asistente.guardarConfig(config)
   } catch (causa) {
-    registrarFallo('admin/asistente-actions', 'guardarAsistenteAction', causa)
+    registrarFallo('admin/asistente-actions', 'no se pudo guardar la configuración del asistente:', causa)
     return { status: 'error', message: t('No pudimos guardar. Vuelve a intentarlo en un momento.', 'We couldn’t save. Try again in a moment.') }
   }
   await admin.record(actor, { action: 'asistente.ajustes', subject: 'asistente', detail: `${config.planes.join(', ') || 'ningún plan'} · ${config.mensajesPorMes} mensajes · ${config.presupuestoUsd} USD` })

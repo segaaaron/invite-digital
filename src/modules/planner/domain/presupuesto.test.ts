@@ -73,7 +73,10 @@ describe('presupuestoACsv', () => {
     const csv = presupuestoACsv([partida({ concept: '=HYPERLINK("x")', estimatedCents: 1_234_50 })], 'boda')
     expect(csv.startsWith('﻿')).toBe(true)
     expect(csv).toContain('"\'=HYPERLINK(""x"")"')
-    expect(csv).toContain('"1234.50"')
+    // El importe entra como **número**, sin apóstrofo ni comillas: con ellos, la hoja lo leía como
+    // texto y la columna de dinero dejaba de sumarse.
+    expect(csv).toContain(';1234.50;')
+    expect(presupuestoACsv([partida({ concept: 'Pagado de mas', estimatedCents: 0, contractedCents: -5000 })], 'boda')).toContain(';-50.00;')
   })
 })
 

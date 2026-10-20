@@ -136,7 +136,7 @@ describe('applyPlanChange', () => {
     const { repository, planDe } = conEvento('plan-atelier')
     await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-gala', note: null })
 
-    const result = await applyPlanChange(deps(repository))('sol-1')
+    const result = await applyPlanChange(deps(repository))({ requestId: 'sol-1', eventId: 'evento-1' })
 
     expect(isOk(result)).toBe(true)
     expect(planDe('evento-1')).toBe('plan-gala')
@@ -146,9 +146,9 @@ describe('applyPlanChange', () => {
   it('aplicar una ya resuelta da already_resolved', async () => {
     const { repository } = conEvento('plan-atelier')
     await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-gala', note: null })
-    await applyPlanChange(deps(repository))('sol-1')
+    await applyPlanChange(deps(repository))({ requestId: 'sol-1', eventId: 'evento-1' })
 
-    const segunda = await applyPlanChange(deps(repository))('sol-1')
+    const segunda = await applyPlanChange(deps(repository))({ requestId: 'sol-1', eventId: 'evento-1' })
 
     expect(isErr(segunda) && segunda.error.kind).toBe('already_resolved')
   })
@@ -156,9 +156,22 @@ describe('applyPlanChange', () => {
   it('una solicitud que no existe da not_found', async () => {
     const { repository } = conEvento('plan-atelier')
 
-    const result = await applyPlanChange(deps(repository))('sol-fantasma')
+    const result = await applyPlanChange(deps(repository))({ requestId: 'sol-fantasma', eventId: 'evento-1' })
 
     expect(isErr(result) && result.error.kind).toBe('not_found')
+  })
+
+  // F15 del escaneo: la guardia comprobaba un evento y la escritura usaba otro campo, así que se
+  // podían plantar y resolver solicitudes en el evento de otro atelier.
+  it('la solicitud de otro evento no se aplica desde este, y responde «no existe»', async () => {
+    const { repository, planDe } = conEvento('plan-atelier')
+    await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-gala', note: null })
+
+    const result = await applyPlanChange(deps(repository))({ requestId: 'sol-1', eventId: 'evento-ajeno' })
+
+    expect(isErr(result) && result.error.kind).toBe('not_found')
+    expect(planDe('evento-1')).toBe('plan-atelier')
+    expect((await repository.findRequest('sol-1'))?.status).toBe('pending')
   })
 })
 

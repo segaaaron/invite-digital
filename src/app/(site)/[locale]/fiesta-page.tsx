@@ -47,7 +47,7 @@ export async function metadataDeFiesta(raw: string, fiesta: FiestaPublica): Prom
  */
 export async function comparativaDePlanes(planes: readonly Plan[], dictionary: Dictionary, locale: Locale) {
   const leidas = await webPublica.planesActivos().catch((cause: unknown) => {
-    registrarFallo('[locale]/fiesta-page', 'Precios sin tabla comparativa:', cause)
+    registrarFallo('[locale]/fiesta-page', 'no se pudo armar la tabla comparativa de precios:', cause)
     return null
   })
   const filas = leidas === null || !leidas.ok ? [] : leidas.value

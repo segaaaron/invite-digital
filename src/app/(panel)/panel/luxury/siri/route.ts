@@ -55,6 +55,8 @@ export async function POST(request: Request) {
       capacidad: acceso.capacidad,
       nombreDelPlan: acceso.nombreDelPlan,
       rol: acceso.rol,
+      // Por voz valen las mismas secciones que en el panel: quien no abre la recepción, tampoco la oye.
+      abre: acceso.abre,
       mensajes,
       ahora,
       idioma: idiomaDe(cuerpo?.idioma ?? request.headers.get('accept-language')),

@@ -994,6 +994,7 @@ export const es = {
         proofTooBig: 'El archivo pasa de {mb} MB.',
         proofType: 'Solo aceptamos una foto (JPG, PNG o WEBP) o un PDF.',
         proofRejected: 'No pudimos aceptar ese archivo.',
+        proofTooMany: 'Este pedido ya tiene todos los comprobantes que admite. Escríbenos por WhatsApp y lo revisamos contigo.',
         proofApproved: 'Este pedido ya está aprobado: no hace falta otro comprobante.',
         proofFailed: 'No pudimos guardar el comprobante. Inténtalo en un momento.',
       },

@@ -8,7 +8,8 @@ export const CANAL_DE_CAMBIOS = 'cambio_de_evento'
 export const CAMBIOS_DEL_ADMIN = 'admin'
 
 /** `resync`: la escucha se reconectó y pudo perderse algo; quien lo reciba, que se ponga al día. */
-export type TipoDeCambio = 'rsvp' | 'ingreso' | 'visita' | 'consulta' | 'pedido' | 'aviso' | 'resync'
+/** `invitado`: una invitación se revocó o se devolvió (`0096`); la puerta tiene que releer su lista. */
+export type TipoDeCambio = 'rsvp' | 'ingreso' | 'visita' | 'invitado' | 'consulta' | 'pedido' | 'aviso' | 'resync'
 
 type Oyente = (tipo: TipoDeCambio, version: number) => void
 
@@ -23,7 +24,7 @@ type Bus = {
 const global = globalThis as unknown as { __busDeCambios?: Bus }
 const bus: Bus = (global.__busDeCambios ??= { oyentes: new Map(), versiones: new Map(), escuchando: null })
 
-const TIPOS = new Set<TipoDeCambio>(['rsvp', 'ingreso', 'visita', 'consulta', 'pedido', 'aviso'])
+const TIPOS = new Set<TipoDeCambio>(['rsvp', 'ingreso', 'visita', 'invitado', 'consulta', 'pedido', 'aviso'])
 
 /** El aviso de Postgres, `{"e": "<evento>", "t": "<tipo>"}`. Cualquier otra cosa se ignora. */
 export function leerAviso(texto: string): { eventId: string; tipo: TipoDeCambio } | null {

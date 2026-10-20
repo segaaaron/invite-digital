@@ -10,7 +10,7 @@ import { invitationUrl } from '@/modules/guests'
 import { env } from '@/shared/config/env'
 import { campo } from '@/shared/forms/campo'
 import { fechaEnBolivia } from '@/shared/format/fecha'
-import { clientIpFrom } from '@/shared/http/client-ip'
+import { cuboDeLaPeticion } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { registrarFallo } from '@/shared/observability/fallos'
 import { isErr } from '@/shared/result'
@@ -58,7 +58,7 @@ export type AltaGeneralState = { status: 'idle' } | { status: 'error'; code: 'ce
 
 export async function altaConEnlaceGeneralAction(_previo: AltaGeneralState, formData: FormData): Promise<AltaGeneralState> {
   const bolsa = await headers()
-  if (limite.isLimited(clientIpFrom({ realIp: bolsa.get('x-real-ip'), forwardedFor: bolsa.get('x-forwarded-for') }), Date.now())) {
+  if (limite.isLimited(cuboDeLaPeticion({ realIp: bolsa.get('x-real-ip'), forwardedFor: bolsa.get('x-forwarded-for') }), Date.now())) {
     return { status: 'error', code: 'limite' }
   }
 

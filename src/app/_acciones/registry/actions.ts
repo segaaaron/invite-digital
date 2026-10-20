@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import { enSegundoPlano } from '@/shared/http/en-segundo-plano'
 import { avisos, guests, plans, registry } from '@/app/composition/container'
 import { avisoDeRegalo } from '@/modules/notifications'
-import { clientIpFrom } from '@/shared/http/client-ip'
+import { cuboDeLaPeticion } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
@@ -289,7 +289,7 @@ const limiter = createRateLimiter({ windowMs: 60_000, max: 20 })
 
 const ipDeLaPeticion = async (): Promise<string> => {
   const headerBag = await headers()
-  return clientIpFrom({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
+  return cuboDeLaPeticion({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
 }
 
 export async function claimGiftAction(input: { token: string; giftId: string }): Promise<RegistryActionResult> {

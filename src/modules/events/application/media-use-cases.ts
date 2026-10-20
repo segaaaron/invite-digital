@@ -129,12 +129,14 @@ export const saveMedia =
 /** Lee una imagen por su identificador. Devuelve también a qué evento pertenece. */
 export const readMedia =
   ({ media, storage }: Deps) =>
-  async (id: string): Promise<{ eventId: string; contentType: MediaType; bytes: Uint8Array } | null> => {
+  async (id: string): Promise<{ eventId: string; contentType: MediaType; bytes: Uint8Array; uploadedByGroupId: string | null } | null> => {
     const fila = await media.find(id)
     if (fila === null) return null
     const bytes = await storage.get(storageKeyFor(fila.id, fila.contentType as MediaType))
     if (bytes === null) return null
-    return { eventId: fila.eventId, contentType: fila.contentType as MediaType, bytes }
+    // `uploadedByGroupId` sale también: quien lo use para decidir algo que ven todos los invitados
+    // —el QR del banco— necesita saber si la imagen la subió el anfitrión o un invitado cualquiera.
+    return { eventId: fila.eventId, contentType: fila.contentType as MediaType, bytes, uploadedByGroupId: fila.uploadedByGroupId }
   }
 
 /** Las imágenes de un evento, para la pantalla del panel. */

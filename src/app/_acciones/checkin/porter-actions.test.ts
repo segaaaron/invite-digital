@@ -14,12 +14,14 @@ const recordGroup = vi.fn()
 const adjust = vi.fn()
 const voidArrival = vi.fn()
 const getById = vi.fn()
+const registrarFallo = vi.fn()
 const cookieSet = vi.fn()
 const cookieGet = vi.fn()
 const redirect = vi.fn((url: string) => {
   throw new Error(`REDIRECT:${url}`)
 })
 
+vi.mock('@/shared/observability/fallos', () => ({ registrarFallo: (...a: unknown[]) => registrarFallo(...a) }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: (url: string) => redirect(url) }))
 vi.mock('next/headers', () => ({
@@ -44,7 +46,10 @@ vi.mock('@/app/composition/container', () => ({
 }))
 
 const capacidad = (maxDoorPorters: number) => ok({ planSlug: 'gala', maxGuestGroups: 80, seating: true, registry: true, checkin: true, maxDoorPorters })
-const sesion = ok({ porterId: 'p1', eventId: 'e1', eventSlug: 'xv-valeria', eventTitle: 'XV de Valeria', name: 'Carlos', gate: null })
+const portero = { porterId: 'p1', tokenHashHex: 'a'.repeat(64), eventId: 'e1', eventSlug: 'xv-valeria', eventTitle: 'XV de Valeria', name: 'Carlos', gate: null }
+const sesion = ok(portero)
+/** Lo que devuelve `enterWithPin`: la sesión y el valor firmado que va a la cookie. */
+const entrada = ok({ session: portero, cookie: 'p1.sesion.firmada' })
 
 const formulario = (datos: Record<string, string>) => {
   const f = new FormData()
@@ -59,7 +64,7 @@ beforeEach(() => {
   requireFeature.mockResolvedValue(capacidad(3))
   allowanceFor.mockResolvedValue(capacidad(3))
   getById.mockResolvedValue(ok({ id: 'e1', title: 'XV de Valeria' }))
-  cookieGet.mockReturnValue({ value: 'TOKEN' })
+  cookieGet.mockReturnValue({ value: 'p1.sesion.firmada' })
   resolve.mockResolvedValue(sesion)
 })
 
@@ -123,11 +128,14 @@ describe('removePorterAction', () => {
 
 describe('enterAsPorterAction', () => {
   it('con el PIN bueno deja la cookie y lleva a la puerta', async () => {
-    enter.mockResolvedValue(sesion)
+    enter.mockResolvedValue(entrada)
     const { enterAsPorterAction } = await import('@/app/_acciones/checkin/porter-actions')
 
     await expect(enterAsPorterAction({ status: 'idle' }, formulario({ token: 'TOKEN', pin: '123456' }))).rejects.toThrow('REDIRECT:/p/TOKEN/puerta')
-    expect(cookieSet).toHaveBeenCalledWith('door_porter', 'TOKEN', expect.objectContaining({ httpOnly: true, path: '/p' }))
+    // La cookie es la sesión que firma el servidor, **nunca** el token del enlace: con el
+    // token bastaba el enlace reenviado para entrar sin PIN (F3/F4/F6).
+    expect(cookieSet).toHaveBeenCalledWith('door_porter', 'p1.sesion.firmada', expect.objectContaining({ httpOnly: true, path: '/p' }))
+    expect(cookieSet.mock.calls[0]![1]).not.toBe('TOKEN')
   })
 
   it('cada motivo de rechazo tiene su mensaje y no deja cookie', async () => {
@@ -144,6 +152,45 @@ describe('enterAsPorterAction', () => {
       expect(r.status === 'error' && r.message).toMatch(mensaje)
     }
     expect(cookieSet).not.toHaveBeenCalled()
+  })
+
+  // En una fiesta todos los porteros salen por la misma IP (el wifi del salón o un celular
+  // compartiendo datos). Con el cupo contado solo por IP, el cuarto que llegaba a su puerta
+  // leía «espera un minuto» sin haber fallado ningún PIN.
+  it('el cupo por minuto es de cada enlace, así que un portero no gasta el de los demás', async () => {
+    const { enterAsPorterAction } = await import('@/app/_acciones/checkin/porter-actions')
+    enter.mockResolvedValue(err('invalido'))
+
+    const intentar = (token: string) => enterAsPorterAction({ status: 'idle' }, formulario({ token, pin: '000000' }))
+
+    // El portero A agota su cupo: cinco intentos y el sexto espera.
+    for (let i = 0; i < 5; i += 1) await intentar('TOKEN-A')
+    const sexto = await intentar('TOKEN-A')
+    expect(sexto.status === 'error' && sexto.message).toMatch(/espera un minuto/i)
+
+    // El portero B, con su propio enlace y detrás del mismo wifi, sigue entrando.
+    const b = await intentar('TOKEN-B')
+    expect(b.status === 'error' && b.message).toMatch(/no es correcto/)
+  })
+
+  // Contar solo por enlace dejaba a la IP sin techo: cada token inventado estrenaba cubo, así
+  // que `/p/<cualquier-cosa>` admitía POST sin freno, y cada uno es una consulta a Postgres.
+  it('la IP tiene además su propio techo, aunque cada intento venga con un enlace distinto', async () => {
+    // Los limitadores viven en el módulo: sin resetearlo, el cupo de la IP llega gastado por las
+    // pruebas de arriba y el número de rechazos depende del orden.
+    vi.resetModules()
+    const { enterAsPorterAction } = await import('@/app/_acciones/checkin/porter-actions')
+    enter.mockResolvedValue(err('invalido'))
+
+    const respuestas: string[] = []
+    for (let i = 0; i < 40; i += 1) {
+      const r = await enterAsPorterAction({ status: 'idle' }, formulario({ token: `INVENTADO-${i}`, pin: '000000' }))
+      respuestas.push(r.status === 'error' ? r.message : 'ok')
+    }
+
+    // Treinta pasan y el resto espera: el techo existe y es holgado.
+    expect(respuestas.filter((m) => /no es correcto/.test(m))).toHaveLength(30)
+    expect(respuestas.filter((m) => /espera un minuto/i.test(m))).toHaveLength(10)
   })
 })
 
@@ -185,11 +232,31 @@ describe('acciones del portero en la puerta', () => {
   })
 })
 
-describe('porterAccessOkAction', () => {
-  it('dice si el acceso del portero sigue abierto', async () => {
-    const { porterAccessOkAction } = await import('@/app/_acciones/checkin/porter-actions')
-    expect(await porterAccessOkAction()).toBe(true)
+describe('porterAccessAction', () => {
+  it('dice si el acceso sigue abierto y, si no, por qué: el consejo depende del motivo', async () => {
+    const { porterAccessAction } = await import('@/app/_acciones/checkin/porter-actions')
+    expect(await porterAccessAction()).toEqual({ ok: true })
+
     resolve.mockResolvedValue(err('fuera_de_horario'))
-    expect(await porterAccessOkAction()).toBe(false)
+    expect(await porterAccessAction()).toEqual({ ok: false, motivo: 'fuera_de_horario' })
+
+    resolve.mockResolvedValue(err('quitado'))
+    expect(await porterAccessAction()).toEqual({ ok: false, motivo: 'quitado' })
+  })
+
+  it('sin cookie no hay sesión, y no se registra nada: es el caso normal del primer acceso', async () => {
+    const { porterAccessAction } = await import('@/app/_acciones/checkin/porter-actions')
+    cookieGet.mockReturnValue(undefined)
+    expect(await porterAccessAction()).toEqual({ ok: false, motivo: 'invalido' })
+    expect(registrarFallo).not.toHaveBeenCalled()
+  })
+
+  it('una cookie que no verifica deja rastro en el registro de fallos', async () => {
+    // Es la señal de que alguien pegó el token del enlace como cookie, o de que cambió el
+    // secreto del servidor y se están cayendo todos los porteros a la vez.
+    const { porterAccessAction } = await import('@/app/_acciones/checkin/porter-actions')
+    resolve.mockResolvedValue(err('invalido'))
+    expect(await porterAccessAction()).toEqual({ ok: false, motivo: 'invalido' })
+    expect(registrarFallo).toHaveBeenCalledWith('checkin/porter-actions', 'no se pudo verificar la sesión de puerta', 'invalido', expect.stringContaining('cookie'))
   })
 })

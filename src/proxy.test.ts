@@ -100,6 +100,21 @@ describe('política de seguridad de contenido', () => {
   it('no añade política a un archivo con extensión', () => {
     expect(csp(proxy(pedir('/imagenes/plantilla.png')))).toBeNull()
   })
+
+  it('una extensión de una sola letra sigue siendo archivo', () => {
+    expect(csp(proxy(pedir('/mapa.c')))).toBeNull()
+  })
+
+  it('un punto en una carpeta o al final no la vuelve archivo', () => {
+    expect(csp(proxy(pedir('/es/v1.2/boda')))).not.toBeNull()
+    expect(csp(proxy(pedir('/es/boda.')))).not.toBeNull()
+  })
+
+  it('una ruta de miles de puntos no cuelga el proxy', () => {
+    const inicio = performance.now()
+    proxy(pedir(`/${'.'.repeat(20_000)}/`))
+    expect(performance.now() - inicio).toBeLessThan(50)
+  })
 })
 
 describe('las descargas privadas llevan su propia política', () => {

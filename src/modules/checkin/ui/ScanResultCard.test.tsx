@@ -139,4 +139,14 @@ describe('ScanResultCard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Deshacer' }))
     expect(onUndo).toHaveBeenCalledWith('s1')
   })
+
+  it('la invitación revocada sale roja, sin contador y sin deshacer', () => {
+    render(
+      <ScanResultCard outcome={{ scanId: 's1', kind: 'revoked', group }} onAdjust={noop} onUndo={noop} onDismiss={noop} />,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent(/anulada/i)
+    expect(screen.getByRole('alert')).toHaveTextContent('Familia Rojas Peña')
+    expect(screen.queryByLabelText('Personas que entraron')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /deshacer/i })).not.toBeInTheDocument()
+  })
 })

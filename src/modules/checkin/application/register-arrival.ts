@@ -34,6 +34,11 @@ export async function registerArrival(
   scan: { scanId: string; arrivedCount: number | null; scannedAt: Date; personIds?: readonly string[] | null },
   recordedBy: string | null = null,
 ): Promise<ScanOutcome> {
+  // Revocar una invitación solo sirve si la puerta lo mira, y la puerta es esto: el tramo por
+  // el que pasan el pase escaneado, el buscador por nombre y el código escrito a mano. Para
+  // dejar entrar a alguien revocado hay que devolverle la invitación en el panel, a la vista.
+  if (group.revoked) return { scanId: scan.scanId, kind: 'revoked', group: groupView(group) }
+
   const previous = (await arrivals.listByEvent(eventId)).filter((a) => a.guestGroupId === group.id)
   const antes = resolveArrival(previous)
 

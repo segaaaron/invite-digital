@@ -54,6 +54,8 @@ export default async function CuentaPage() {
   const conLuxury = (actor.role === 'cliente' || actor.role === 'atelier') && (await primerEventoConLuxury(actor)) !== null
 
   const datos = await identity.misDatos(actor.userId)
+  // El paso dos del cambio de correo sobrevive a recargar porque sale de la base, no de React.
+  const correoPendiente = await identity.correoPendiente(actor.userId)
   const TARJETA = 'flex flex-col gap-4 rounded-[16px] border border-line-panel bg-tarjeta p-6'
 
   return (
@@ -68,6 +70,7 @@ export default async function CuentaPage() {
           <MisDatos
             ayudaCorreo={t('Con él entras al panel y te llegan los códigos.', 'You sign in with it and your codes arrive there.')}
             correo={actor.email}
+            correoPendiente={correoPendiente}
             nombre={datos.nombre}
             telefono={datos.telefono}
           />

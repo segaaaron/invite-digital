@@ -1,5 +1,6 @@
 'use client'
 
+import { celdaCsv } from '@/shared/csv/celda'
 import { DownloadIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { useT } from '@/shared/i18n/idioma-navegador'
@@ -29,23 +30,13 @@ const estado = (fila: CsvRow, t: T): string => {
 }
 
 /**
- * Una celda entre comillas, con las comillas internas dobladas.
+ * La celda la escribe `celdaCsv`, la misma de todo el proyecto.
  *
- * Sin esto, una etiqueta con `;` o con comillas —«Ana "La Tía" Vega»— parte la fila y
- * corre las columnas de todas las siguientes. La hoja abre igual y los datos están mal.
+ * Esta pantalla tenía su propia copia, y la copia se quedó atrás: su regla de fórmulas no mira los
+ * espacios de delante (` =HYPERLINK(...)`, que Excel evalúa igual porque los ignora), y aquí van las
+ * **restricciones alimentarias que escriben los invitados**, que es justo el texto de fuera (F16).
  */
-const celda = (valor: string): string => `"${neutralizarFormula(valor).replace(/"/g, '""')}"`
-
-/**
- * Antepone un apóstrofo a lo que una hoja de cálculo tomaría por fórmula.
- *
- * Un invitado escribe `=HYPERLINK("http://malo","gracias")` en su restricción alimentaria
- * y Excel lo ejecuta al abrir el archivo que el atelier acaba de exportar. El texto se
- * sigue leyendo igual; lo que se pierde es la ejecución.
- */
-function neutralizarFormula(valor: string): string {
-  return /^[=+\-@\t\r]/.test(valor) ? `'${valor}` : valor
-}
+const celda = celdaCsv
 
 export function filasToCsv(rows: readonly CsvRow[], t: T = traductor('es')): string {
   const cabecera = [t('Invitación', 'Invitation'), t('Cupos', 'Seats'), t('Confirmados', 'Confirmed'), t('Estado', 'Status')].map(celda).join(';')

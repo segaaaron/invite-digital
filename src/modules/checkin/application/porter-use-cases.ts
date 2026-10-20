@@ -11,9 +11,17 @@ import {
   MINUTOS_BLOQUEO,
   ventanaAbierta,
 } from '../domain/porter'
+import { leerSesionDePuerta, valorDeSesionDePuerta } from '../domain/porter-session'
 import type { PorterRow, PorterStore } from './ports'
 
-type Deps = { porters: PorterStore; minter: Minter; clock: () => Date; random: (n: number) => Uint8Array }
+type Deps = {
+  porters: PorterStore
+  minter: Minter
+  clock: () => Date
+  random: (n: number) => Uint8Array
+  /** La clave del servidor con la que se firma la sesión de puerta. Nunca sale de aquí. */
+  secreto: string
+}
 
 export type AddPorterError =
   | { readonly kind: 'invalid_field'; readonly campo: 'name' | 'phone' | 'gate'; readonly detail: string }
@@ -24,6 +32,8 @@ export type PorterAccessError = 'invalido' | 'bloqueado' | 'fuera_de_horario' | 
 
 export type PorterSession = {
   readonly porterId: string
+  /** El SHA-256 de su enlace, en hexadecimal: con qué enlace entró. Nunca el token. */
+  readonly tokenHashHex: string
   readonly eventId: string
   readonly eventSlug: string
   readonly eventTitle: string
@@ -108,6 +118,7 @@ const comprobarAcceso = (deps: Pick<Deps, 'clock'>, fila: PorterRow | null): Res
 
 const sesionDe = (fila: PorterRow): PorterSession => ({
   porterId: fila.id,
+  tokenHashHex: fila.tokenHash.toString('hex'),
   eventId: fila.eventId,
   eventSlug: fila.eventSlug,
   eventTitle: fila.eventTitle,
@@ -119,10 +130,14 @@ const sesionDe = (fila: PorterRow): PorterSession => ({
  * Entrar con el PIN. El fallo **se cuenta antes de responder**, en la base, y al quinto se
  * bloquea quince minutos: seis dígitos se prueban solos si nadie los cuenta. La
  * comparación es en tiempo constante.
+ *
+ * Devuelve también el valor de la cookie: la **única** prueba de que se escribió el PIN.
+ * Antes la cookie era el token del enlace, que el portero recibe por WhatsApp, así que el
+ * PIN no protegía nada (F3, F4 y F6 del escaneo del 19 oct).
  */
 export const enterWithPin =
   (deps: Deps) =>
-  async (input: { token: string; pin: string }): Promise<Result<PorterSession, PorterAccessError>> => {
+  async (input: { token: string; pin: string }): Promise<Result<{ session: PorterSession; cookie: string }, PorterAccessError>> => {
     const fila = await deps.porters.findByTokenHash(deps.minter.hashOf(input.token))
     const acceso = comprobarAcceso(deps, fila)
     if (!acceso.ok) return acceso
@@ -137,16 +152,47 @@ export const enterWithPin =
     }
 
     if (acceso.value.failedAttempts > 0) await deps.porters.resetFailures(acceso.value.id)
+    return ok({
+      session: sesionDe(acceso.value),
+      cookie: valorDeSesionDePuerta({
+        secreto: deps.secreto,
+        porterId: acceso.value.id,
+        tokenHashHex: deps.minter.hashOf(input.token).toString('hex'),
+        issuedAt: deps.clock().getTime(),
+      }),
+    })
+  }
+
+/**
+ * El portero que ya entró, en cada petición, a partir del valor de su cookie. Se vuelve a
+ * comprobar todo salvo el PIN —quitarlo o que acabe su ventana lo saca aunque tenga la
+ * pantalla abierta— y, antes de tocar la base, que la sesión la firmó este servidor.
+ *
+ * El enlace solo **no** abre nada: sin la firma no hay sesión.
+ */
+export const resolvePorter =
+  (deps: Pick<Deps, 'porters' | 'clock' | 'secreto'>) =>
+  async (cookie: string): Promise<Result<PorterSession, PorterAccessError>> => {
+    const sesion = leerSesionDePuerta({ secreto: deps.secreto, value: cookie, now: deps.clock().getTime() })
+    if (sesion === null) return err('invalido')
+
+    const fila = await deps.porters.findByTokenHash(Buffer.from(sesion.tokenHashHex, 'hex'))
+    const acceso = comprobarAcceso(deps, fila)
+    if (!acceso.ok) return acceso
+    // El enlace se reemitió y ahora es de otro portero: esta sesión ya no es de nadie.
+    if (acceso.value.id !== sesion.porterId) return err('invalido')
     return ok(sesionDe(acceso.value))
   }
 
 /**
- * El portero que ya entró, en cada petición. Se vuelve a comprobar todo salvo el PIN:
- * quitarlo o que acabe su ventana lo saca aunque tenga la pantalla abierta.
+ * Lo que piden la pantalla de la puerta y su canal en vivo: la sesión **y** que sea la del
+ * enlace que se está abriendo. Con el enlace de otro portero no se abre nada: la sesión es
+ * de un enlace concreto, no un pase libre por la plataforma.
  */
-export const resolvePorter =
-  (deps: Pick<Deps, 'porters' | 'minter' | 'clock'>) =>
-  async (token: string): Promise<Result<PorterSession, PorterAccessError>> => {
-    const acceso = comprobarAcceso(deps, await deps.porters.findByTokenHash(deps.minter.hashOf(token)))
-    return acceso.ok ? ok(sesionDe(acceso.value)) : acceso
+export const resolvePorterDelEnlace =
+  (deps: Pick<Deps, 'porters' | 'clock' | 'secreto' | 'minter'>) =>
+  async (input: { cookie: string; token: string }): Promise<Result<PorterSession, PorterAccessError>> => {
+    const quien = await resolvePorter(deps)(input.cookie)
+    if (!quien.ok) return quien
+    return quien.value.tokenHashHex === deps.minter.hashOf(input.token).toString('hex') ? quien : err('invalido')
   }

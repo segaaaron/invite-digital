@@ -30,6 +30,10 @@ class FuenteFalsa {
   avisar(tipo: string) {
     for (const o of this.oyentes) o(new MessageEvent('cambio', { data: JSON.stringify({ tipo }) }))
   }
+  /** Un aviso tal cual, para probar lo que no es JSON. */
+  avisarCrudo(data: string) {
+    for (const o of this.oyentes) o(new MessageEvent('cambio', { data }))
+  }
 }
 
 beforeEach(() => {
@@ -82,6 +86,69 @@ describe('EnVivo', () => {
     })
     expect(screen.getByText('Sin actualización automática')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }))
+    expect(refresh).toHaveBeenCalledTimes(1)
+  })
+
+  // La puerta lleva `oculto`: no pinta nada para no estorbar en pantalla completa. Pero si el canal
+  // se cae, deja de ver lo de las otras puertas y de enterarse de las invitaciones devueltas o
+  // revocadas, y antes no había ni una señal de eso (decisión abierta del 19 oct).
+  it('aun oculta, una conexión caída se canta: es la única señal de que la puerta se quedó sorda', () => {
+    render(<EnVivo modo="auto" oculto tipos={['ingreso', 'invitado']} url="/p/tok/en-vivo" />)
+    expect(screen.queryByText('Sin actualización automática')).toBeNull()
+
+    act(() => {
+      FuenteFalsa.ultima!.readyState = FuenteFalsa.CLOSED
+      FuenteFalsa.ultima!.onerror?.()
+    })
+
+    expect(screen.getByText('Sin actualización automática')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }))
+    expect(refresh).toHaveBeenCalled()
+  })
+
+  /**
+   * `CLOSED` es el caso **raro**. Lo que pasa cuando se cae el servidor o se corta la red es
+   * `CONNECTING`, con el navegador reintentando él solo, y eso pintaba lo mismo que el arranque:
+   * nada. La pantalla se quedaba pareciendo al día en el caso frecuente.
+   */
+  it('una reconexión que no vuelve también se canta, pasado el rato', () => {
+    vi.useFakeTimers()
+    try {
+      render(<EnVivo modo="aviso" tipos={['rsvp']} url="/x" />)
+      act(() => {
+        // Reconectando (`readyState` sigue en 0, no en CLOSED).
+        FuenteFalsa.ultima!.onerror?.()
+      })
+      // Al principio se calla: el navegador suele volver en uno o dos segundos y una chapa que
+      // aparece en cada bache sería peor que no tenerla.
+      expect(screen.queryByText('Sin actualización automática')).toBeNull()
+
+      act(() => void vi.advanceTimersByTime(9000))
+      expect(screen.getByText('Sin actualización automática')).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('y si vuelve antes, no se canta nada', () => {
+    vi.useFakeTimers()
+    try {
+      render(<EnVivo modo="aviso" tipos={['rsvp']} url="/x" />)
+      act(() => {
+        FuenteFalsa.ultima!.onerror?.()
+      })
+      act(() => FuenteFalsa.ultima!.onopen?.())
+      act(() => void vi.advanceTimersByTime(30_000))
+      expect(screen.queryByText('Sin actualización automática')).toBeNull()
+      expect(document.querySelector('[data-en-vivo="en-vivo"]')).not.toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('un aviso ilegible no se tira: algo cambió, así que se pone al día', () => {
+    render(<EnVivo modo="auto" oculto tipos={['ingreso']} url="/x" />)
+    act(() => FuenteFalsa.ultima!.avisarCrudo('{no es json'))
     expect(refresh).toHaveBeenCalledTimes(1)
   })
 

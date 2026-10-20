@@ -1,9 +1,10 @@
+import { env } from '@/shared/config/env'
 import { enExclusiva } from '@/shared/db/candado'
 import { adjustArrival } from '@/modules/checkin/application/adjust-arrival'
 import { checkInByGroup } from '@/modules/checkin/application/check-in-by-group'
 import { checkInByScan } from '@/modules/checkin/application/check-in-by-scan'
 import { getDoorManifest } from '@/modules/checkin/application/get-door-manifest'
-import { addPorter, enterWithPin, listPorters, porterActivity, resolvePorter, revokePorter } from '@/modules/checkin/application/porter-use-cases'
+import { addPorter, enterWithPin, listPorters, porterActivity, resolvePorter, resolvePorterDelEnlace, revokePorter } from '@/modules/checkin/application/porter-use-cases'
 import { createDrizzlePorterStore, drizzlePorterStore } from '@/modules/checkin/infrastructure/drizzle-porter-store'
 import { getDoorState } from '@/modules/checkin/application/get-door-state'
 import { deshacerIngreso, voidArrival } from '@/modules/checkin/application/void-arrival'
@@ -43,15 +44,26 @@ export const checkin = {
  */
 const aleatorio = (n: number) => crypto.getRandomValues(new Uint8Array(n))
 
+/**
+ * La clave con la que se firma la sesión de puerta: la misma pareja que sella los enlaces
+ * de los invitados (`crearSello`). No vive en la base, así que un volcado robado no permite
+ * fabricar sesiones de portero.
+ */
+const secretoDePuerta = env.LINK_KEY ?? env.DATABASE_URL
+
 export const porters = {
   // Contar y sumar con candado por evento: dos altas a la vez no se pasan del cupo del plan.
   add: (input: Parameters<ReturnType<typeof addPorter>>[0]) =>
-    enExclusiva(`porteros:${input.eventId}`, (tx) => addPorter({ porters: createDrizzlePorterStore(tx), minter, clock, random: aleatorio })(input)),
+    enExclusiva(`porteros:${input.eventId}`, (tx) =>
+      addPorter({ porters: createDrizzlePorterStore(tx), minter, clock, random: aleatorio, secreto: secretoDePuerta })(input),
+    ),
   list: listPorters({ porters: drizzlePorterStore }),
   activity: porterActivity({ porters: drizzlePorterStore }),
   revoke: revokePorter({ porters: drizzlePorterStore, clock }),
-  enter: enterWithPin({ porters: drizzlePorterStore, minter, clock, random: aleatorio }),
-  resolve: resolvePorter({ porters: drizzlePorterStore, minter, clock }),
+  enter: enterWithPin({ porters: drizzlePorterStore, minter, clock, random: aleatorio, secreto: secretoDePuerta }),
+  resolve: resolvePorter({ porters: drizzlePorterStore, clock, secreto: secretoDePuerta }),
+  // La puerta y su canal en vivo: además de la sesión, que sea la del enlace que se abre.
+  resolveDelEnlace: resolvePorterDelEnlace({ porters: drizzlePorterStore, clock, secreto: secretoDePuerta, minter }),
 } as const
 
 export const venue = {

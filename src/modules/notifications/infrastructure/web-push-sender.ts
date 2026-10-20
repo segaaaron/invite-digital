@@ -1,5 +1,6 @@
 import webpush, { WebPushError } from 'web-push'
 import type { CargaPush } from '../domain/avisos'
+import { esEndpointDePush } from '../domain/push-endpoint'
 import type { AparatoPush, EmisorPush } from '../application/avisos'
 import { registrarFallo } from '@/shared/observability/fallos'
 
@@ -20,6 +21,18 @@ export function createWebPushSender(config: { publicKey: string | undefined; pri
     disponible,
     async enviar(aparato: AparatoPush, carga: CargaPush) {
       if (detalles === null) return 'error'
+      // La guarda también aquí, que es por donde sale el POST: una fila guardada antes de la lista
+      // de servicios no se usa.
+      //
+      // `error`, **no** `caducada`: `caducada` borra la fila del aparato, y si lo que falla es
+      // nuestra lista —un servicio de push nuevo que todavía no está en `SERVICIOS`— eso le
+      // quitaría las notificaciones al dueño sin que él haya hecho nada y sin poder deshacerlo.
+      // Dejando la fila, el aparato sigue en «Mi cuenta» y el registro de fallos dice qué destino
+      // hay que añadir a la lista.
+      if (!esEndpointDePush(aparato.endpoint)) {
+        registrarFallo('notifications/web-push-sender', 'no se pudo enviar la push: el destino no es de un servicio de push conocido', 'push_endpoint_failure', aparato.endpoint.slice(0, 120))
+        return 'error'
+      }
       try {
         await webpush.sendNotification(
           { endpoint: aparato.endpoint, keys: { p256dh: aparato.p256dh, auth: aparato.auth } },
@@ -32,7 +45,7 @@ export function createWebPushSender(config: { publicKey: string | undefined; pri
       } catch (causa) {
         // 404 y 410: el aparato se dio de baja o caducó. Hay que olvidarlo, o cada aviso lo reintenta.
         if (causa instanceof WebPushError && (causa.statusCode === 404 || causa.statusCode === 410)) return 'caducada'
-        registrarFallo('notifications/web-push-sender', 'push no entregada a %s:', new URL(aparato.endpoint).host, causa instanceof WebPushError ? causa.statusCode : causa)
+        registrarFallo('notifications/web-push-sender', 'no se pudo entregar la push a %s:', new URL(aparato.endpoint).host, causa instanceof WebPushError ? causa.statusCode : causa)
         return 'error'
       }
     },
