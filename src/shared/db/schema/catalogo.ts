@@ -28,6 +28,8 @@ export const plans = pgTable('plans', {
   // Precio anual, para el conmutador de la maqueta. Nulo mientras el plan se cobre una
   // sola vez por evento, que es como se vende hoy.
   priceAnnualCents: integer('price_annual_cents'),
+  /** El precio **de lista**, tachado al lado del de ahora. Nulo: sin promoción (0100). */
+  priceBeforeCents: integer('price_before_cents'),
   currency: char('currency', { length: 3 }).notNull().default('BOB'),
   highlighted: boolean('highlighted').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),

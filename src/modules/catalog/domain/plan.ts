@@ -8,6 +8,8 @@ export type Plan = {
   readonly price: Money
   /** El precio en dólares que fijó el admin, en centavos. `null`: solo bolivianos. */
   readonly priceUsdCents: number | null
+  /** El precio de lista, para tacharlo al lado del de ahora. Nulo: sin promoción. */
+  readonly priceBeforeCents: number | null
   readonly highlighted: boolean
   readonly sortOrder: number
   readonly name: string
@@ -21,6 +23,7 @@ export type PlanInput = {
   slug: string
   priceCents: number
   priceUsdCents?: number | null
+  priceBeforeCents?: number | null
   highlighted: boolean
   sortOrder: number
   name: string
@@ -46,6 +49,7 @@ export function createPlan(input: PlanInput): Result<Plan, CatalogError> {
     slug,
     price: price.value,
     priceUsdCents: input.priceUsdCents ?? null,
+    priceBeforeCents: input.priceBeforeCents ?? null,
     highlighted: input.highlighted,
     sortOrder: input.sortOrder,
     name: input.name,

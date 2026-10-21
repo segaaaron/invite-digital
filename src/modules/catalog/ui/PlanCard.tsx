@@ -41,6 +41,8 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
   // El plan más elegido es una tarjeta oscura y elevada, como en la maqueta: es lo que
   // separa «recomendado» de «uno más de la fila». Un borde dorado no se ve a un metro.
   const destacado = plan.highlighted
+  // Cuánto se ahorra hoy. Solo si el de lista es mayor: un «antes» más barato sería una rebaja al revés.
+  const ahorro = plan.priceBeforeCents !== null && plan.priceBeforeCents > plan.price.cents ? plan.priceBeforeCents - plan.price.cents : null
   const frame = destacado
     ? 'border-transparent bg-ink text-bg-raised shadow-[0_40px_90px_-40px_rgb(60_44_14/0.75)] md:-translate-y-5'
     : 'border-[var(--color-line)] bg-bg-raised'
@@ -71,8 +73,22 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
         {plan.tagline}
       </p>
 
+      {/**
+        * **El precio de lanzamiento** (20 oct, maqueta del usuario): el de lista tachado encima y cuánto se
+        * ahorra. Sale de la base (`price_before_cents`), no del código: subir o quitar la promoción es una
+        * decisión comercial. Sin él, la tarjeta se pinta como siempre.
+        */}
+      {ahorro === null ? null : (
+        <p className="mt-7 flex flex-wrap items-center gap-2">
+          <span className={`text-[16px] line-through ${destacado ? 'text-bg-sunken/60' : 'text-ink-mute'}`}>{formatMoney({ cents: plan.priceBeforeCents!, currency: plan.price.currency }, locale)}</span>
+          <span className={`rounded-[var(--radius-pill)] px-2.5 py-0.5 font-mono text-[9px] tracking-[var(--tracking-luxe)] uppercase ${destacado ? 'bg-gold/25 text-gold-light' : 'bg-pill-pending text-gold-deep'}`}>
+            {dictionary.pricing.launchSave.replace('{monto}', formatMoney({ cents: ahorro, currency: plan.price.currency }, locale))}
+          </span>
+        </p>
+      )}
+
       {/* El precio en bolivianos, y en dólares cuando el selector de la sección lo pide (V4). */}
-      <p className="mt-7 flex items-baseline gap-2">
+      <p className={`${ahorro === null ? 'mt-7' : 'mt-1'} flex items-baseline gap-2`}>
         <span
           className={`font-display text-[46px] leading-none font-light [font-variant-numeric:lining-nums] ${destacado ? 'text-gold-light' : 'text-gold-deep'} ${
             plan.priceUsdCents === null ? '' : 'group-data-[moneda=usd]/precios:hidden'

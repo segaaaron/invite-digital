@@ -14,6 +14,8 @@ type Columna = {
   encargo?: EncargoDePlan
   /** El precio bajo el nombre, ya formateado por quien conoce la moneda. */
   precio?: ReactNode
+  /** El de lista, tachado encima del de ahora, si el plan está de lanzamiento (0100). */
+  precioAntes?: ReactNode
   /** El plan más elegido: su columna va resaltada de arriba abajo, como en la maqueta. */
   destacado?: boolean
 }
@@ -137,7 +139,8 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
                   scope="col"
                 >
                   <span className="block font-display text-[21px] leading-none font-light text-ink">{p.nombre}</span>
-                  {p.precio === undefined ? null : <span className="mt-1 block font-mono text-[11px] text-gold-deep [font-variant-numeric:lining-nums]">{p.precio}</span>}
+                  {p.precioAntes === undefined ? null : <span className="mt-1 block font-mono text-[10px] text-ink-mute line-through [font-variant-numeric:lining-nums]">{p.precioAntes}</span>}
+                  {p.precio === undefined ? null : <span className="block font-mono text-[11px] text-gold-deep [font-variant-numeric:lining-nums]">{p.precio}</span>}
                 </th>
               ))}
             </tr>

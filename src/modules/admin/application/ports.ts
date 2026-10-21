@@ -153,6 +153,7 @@ export type PlanAdminRow = {
   /** La reserva fija en centavos; si está, manda sobre el porcentaje. */
   readonly depositFixedCents: number | null
   readonly priceUsdCents: number | null
+  readonly priceBeforeCents: number | null
   readonly includesGuestbook: boolean
   readonly includesGiftWays: boolean
   readonly includesStyle: boolean

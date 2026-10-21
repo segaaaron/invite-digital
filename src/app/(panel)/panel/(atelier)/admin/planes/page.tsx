@@ -86,6 +86,7 @@ export default async function AdminPlanesPage({ searchParams }: { searchParams: 
                   slug: elegido.slug,
                   price: aCampo(elegido.priceCents),
                   priceLabel: formatAmount(elegido.priceCents, elegido.currency),
+                  priceBefore: elegido.priceBeforeCents == null ? '' : aCampo(elegido.priceBeforeCents),
                   maxGuestGroups: elegido.maxGuestGroups,
                   maxDoorPorters: elegido.maxDoorPorters,
                   maxCohosts: elegido.maxCohosts,

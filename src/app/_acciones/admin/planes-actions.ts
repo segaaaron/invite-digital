@@ -32,6 +32,9 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
   const reservaTexto = texto(formData, 'depositFixed').trim()
   const reserva = reservaTexto === '' ? null : parseAmount(reservaTexto)
   if (reserva !== null && isErr(reserva)) return { status: 'error', message: t(`Reserva fija: ${reserva.error.detail}`, `Fixed deposit: ${traducir(reserva.error.detail, t)}`), valores }
+  const antesTexto = texto(formData, 'priceBefore').trim()
+  const antes = antesTexto === '' ? null : parseAmount(antesTexto)
+  if (antes !== null && isErr(antes)) return { status: 'error', message: t(`Precio de lanzamiento: ${antes.error.detail}`, `Launch price: ${traducir(antes.error.detail, t)}`), valores }
   const usdTexto = texto(formData, 'priceUsd').trim()
   const usd = usdTexto === '' ? null : parseAmount(usdTexto)
   if (usd !== null && isErr(usd)) return { status: 'error', message: t(`Precio en dólares: ${usd.error.detail}`, `Price in dollars: ${traducir(usd.error.detail, t)}`), valores }
@@ -46,6 +49,7 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
 
   const guardado = await admin.savePlan(actor, slug, {
     priceCents: precio.value,
+    priceBeforeCents: antes === null ? null : antes.value,
     maxGuestGroups: texto(formData, 'maxGuestGroups'),
     maxDoorPorters: texto(formData, 'maxDoorPorters'),
     maxCohosts: texto(formData, 'maxCohosts'),

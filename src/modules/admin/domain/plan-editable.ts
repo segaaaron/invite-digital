@@ -35,6 +35,8 @@ export type PlanCrudo = {
   depositFixedCents?: number | null
   /** El precio en dólares, en centavos (lo parsea la acción). `null`: la web enseña solo bolivianos. */
   priceUsdCents?: number | null
+  /** El precio de lista, el que se tacha en la web. Nulo o cero: sin promoción (0100). */
+  priceBeforeCents?: number | null
   /** Diseño por encargo: rondas de corrección y días de entrega, como texto. Vacíos: autoservicio. */
   correctionRounds?: string
   deliveryDays?: string
@@ -53,10 +55,11 @@ export type PlanCrudo = {
 
 export type TextoPlanLimpio = { name: string; tagline: string; description: string; features: string[] }
 
-export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxCohosts' | 'maxHiredPlanners' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'plannerSuite' | 'depositPct' | 'depositFixedCents' | 'priceUsdCents' | 'correctionRounds' | 'deliveryDays' | 'es' | 'en'> & {
+export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxCohosts' | 'maxHiredPlanners' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'plannerSuite' | 'depositPct' | 'depositFixedCents' | 'priceUsdCents' | 'priceBeforeCents' | 'correctionRounds' | 'deliveryDays' | 'es' | 'en'> & {
   depositPct: number
   depositFixedCents: number | null
   priceUsdCents: number | null
+  priceBeforeCents: number | null
   correctionRounds: number | null
   deliveryDays: number | null
   maxGuestGroups: number | null
@@ -185,6 +188,7 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     depositPct: anticipo === '' ? 0 : Number(anticipo),
     depositFixedCents: reserva,
     priceUsdCents: crudo.priceUsdCents != null && crudo.priceUsdCents > 0 ? crudo.priceUsdCents : null,
+    priceBeforeCents: crudo.priceBeforeCents != null && crudo.priceBeforeCents > 0 ? crudo.priceBeforeCents : null,
     correctionRounds: rondas === '' ? null : Number(rondas),
     deliveryDays: diasEntrega === '' ? null : Number(diasEntrega),
     es: es.value,

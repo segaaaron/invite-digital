@@ -11,6 +11,7 @@ const plan: Plan = {
   slug: 'gala',
   price: { cents: 145000, currency: 'BOB' },
   priceUsdCents: null,
+  priceBeforeCents: null,
   highlighted: true,
   sortOrder: 2,
   name: 'Firma 3D',
@@ -60,6 +61,20 @@ describe('PlanCard', () => {
   it('lista todas las características', () => {
     render(<PlanCard plan={plan} locale="es" dictionary={es} ctaHref="#contacto" />)
     expect(screen.getAllByRole('listitem')).toHaveLength(plan.features.length)
+  })
+
+  /**
+   * El precio de lanzamiento: el de lista tachado y cuánto se ahorra. Sale de la base, no del código
+   * (0100): subir o quitar la promoción es una decisión comercial.
+   */
+  it('con precio de lanzamiento enseña el de antes tachado y cuánto se ahorra', () => {
+    const { rerender } = render(<PlanCard plan={{ ...plan, priceBeforeCents: 159000 }} locale="es" dictionary={es} ctaHref="#contacto" />)
+    expect(screen.getByText('Bs 1.590')).toBeDefined()
+    expect(screen.getByText(/ahorras Bs 140/i)).toBeDefined()
+
+    // Sin promoción, nada tachado; y un «antes» más barato sería una rebaja al revés: tampoco.
+    rerender(<PlanCard plan={{ ...plan, priceBeforeCents: 100000 }} locale="es" dictionary={es} ctaHref="#contacto" />)
+    expect(screen.queryByText(/ahorras/i)).toBeNull()
   })
 
   /**

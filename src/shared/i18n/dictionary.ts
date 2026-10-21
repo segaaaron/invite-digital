@@ -169,6 +169,10 @@ export interface PricingDictionary {
   eyebrow: string
   title: string
   mostChosen: string
+  /** Promoción de lanzamiento (0100): la píldora de la tarjeta y el aviso bajo el título. */
+  launchSave: string
+  launchBadge: string
+  launchNote: string
   /** «Elegir Atelier →». El nombre del plan entra donde dice {plan}. */
   choose: string
   /** «Reserva con {monto} · el resto cuando tu invitación esté lista». */

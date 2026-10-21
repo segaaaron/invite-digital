@@ -694,6 +694,13 @@
       "when": 1792116800000,
       "tag": "0099_demo_de_un_dia",
       "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1792120400000,
+      "tag": "0100_precio_de_lanzamiento",
+      "breakpoints": true
     }
   ]
 }

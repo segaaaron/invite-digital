@@ -39,6 +39,8 @@ export type PlanEditorView = {
   /** La reserva fija en Bs como texto del campo; vacía, no hay. */
   readonly depositFixed: string
   readonly priceUsd: string
+  /** El precio de lista, el que se tacha. Vacío: sin promoción. */
+  readonly priceBefore: string
   readonly correctionRounds: string
   readonly deliveryDays: string
   readonly highlighted: boolean
@@ -101,6 +103,16 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
       <SettingsSection description={t('Lo que paga el cliente y si el plan aparece en la web.', 'What the client pays and whether the plan appears on the website.')} title={t('Precio y venta', 'Price and sale')}>
         <div className="grid max-w-[540px] gap-4 min-[560px]:grid-cols-2">
           <UnitField decimal defaultValue={txt('price', plan.price)} id={`${id}-precio`} label={t('Precio', 'Price')} name="price" prefix="Bs" required />
+          <UnitField
+            decimal
+            defaultValue={txt('priceBefore', plan.priceBefore)}
+            hint={t('El precio de antes, tachado al lado del de ahora. Vacío: sin promoción.', 'The old price, struck through next to the current one. Empty: no promotion.')}
+            id={`${id}-antes`}
+            label={t('Precio de lanzamiento: antes costaba', 'Launch price: it used to cost')}
+            name="priceBefore"
+            placeholder={t('Sin promoción', 'No promotion')}
+            prefix="Bs"
+          />
           <UnitField
             decimal
             defaultValue={txt('priceUsd', plan.priceUsd)}

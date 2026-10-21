@@ -45,6 +45,16 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
         {/* **Sin selector de moneda** (20 oct, decisión del usuario): los precios se enseñan en bolivianos,
             que es lo que se cobra. El precio en dólares sigue guardado en cada plan por si vuelve; lo que
             se quitó es el conmutador, no el dato. */}
+
+        {/* El aviso de la promoción, solo si algún plan la tiene puesta en la base (0100). */}
+        {plans.some((p) => p.priceBeforeCents !== null && p.priceBeforeCents > p.price.cents) ? (
+          <div className="mt-6 flex flex-col items-center gap-2 text-center">
+            <span className="rounded-[var(--radius-pill)] border border-gold/45 bg-pill-pending px-4 py-1.5 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">
+              {pricing.launchBadge}
+            </span>
+            <p className="text-[13.5px] text-ink-soft">{pricing.launchNote}</p>
+          </div>
+        ) : null}
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {plans.map((plan, index) => {
             // Todos se reservan igual (documento de cambios del 30 sep): el pedido guarda la referencia

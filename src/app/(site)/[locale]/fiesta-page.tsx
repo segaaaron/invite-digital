@@ -80,6 +80,9 @@ export async function comparativaDePlanes(planes: readonly Plan[], dictionary: D
         encargo,
         // El precio bajo el nombre y la columna del más elegido resaltada, como en la maqueta (20 oct).
         precio: <Monto cents={plan.price.cents} locale={locale} />,
+        ...(plan.priceBeforeCents !== null && plan.priceBeforeCents > plan.price.cents
+          ? { precioAntes: <Monto cents={plan.priceBeforeCents} locale={locale} /> }
+          : {}),
         destacado: plan.highlighted,
       },
     ]

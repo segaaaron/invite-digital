@@ -7,6 +7,7 @@ const plan: PlanLimpio = {
   priceCents: 100,
   depositFixedCents: null,
   priceUsdCents: null,
+  priceBeforeCents: null,
   correctionRounds: null,
   deliveryDays: null,
   maxGuestGroups: null,
