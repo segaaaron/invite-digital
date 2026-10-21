@@ -3,55 +3,22 @@
 import { useActionState, useId } from 'react'
 import { crearDemoAction, type DemoActionState } from '@/app/_acciones/admin/demos-actions'
 import { CATALOG_LISTOS, nombreDelCatalogo, seAsigna } from '@/shared/design/theme-catalog'
-import { CopyLinkButton } from '@/shared/design/ui/CopyLinkButton'
-import { Field, FIELD_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { Field, FIELD_CLASS, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { SubmitButton } from '@/shared/design/ui/panel/SubmitButton'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
  * **Armar una demo**: el diseño que al cliente le llamó la atención, a nombre de quién va, y listo.
  *
- * Nace con el contenido de muestra del propio diseño, así que ya se puede mandar tal cual; si el admin
- * quiere cambiarle los nombres, la fecha, las fotos o la música, entra al editor de siempre con
- * «Editarla», que es la misma pantalla de cualquier evento.
+ * Al crearla **se entra derecho a escribirla**: nombres, fotos y música, en el editor de siempre. El
+ * enlace para mandarla espera en su fila de Demos, con WhatsApp y correo, para cuando ya haya algo que
+ * enseñar.
  */
 export function NuevaDemo() {
   const t = useT()
   const id = useId()
   const [estado, enviar] = useActionState<DemoActionState, FormData>(crearDemoAction, { status: 'idle' })
 
-  if (estado.status === 'success' && estado.url !== undefined) {
-    // El mensaje ya escrito: el admin solo elige a quién. Dice lo del día dentro del propio WhatsApp,
-    // que es donde el cliente lo va a leer.
-    const mensaje = t(
-      `Mira cómo quedaría tu invitación: ${estado.url}\n\nEs una demostración y solo abre durante un día.`,
-      `See how your invitation would look: ${estado.url}\n\nIt’s a demo and it only opens for one day.`,
-    )
-    return (
-      <div className="flex flex-col gap-5">
-        {/* El aviso que el usuario pidió: el admin tiene que poder decírselo al cliente al pasarle el enlace. */}
-        <PanelAlert tone="info">{estado.message}</PanelAlert>
-        <CopyLinkButton label={t('Enlace de la demo', 'Demo link')} url={estado.url} />
-        <div className="flex flex-wrap gap-2">
-          <PanelButton external href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`}>
-            {t('Mandar por WhatsApp', 'Send on WhatsApp')}
-          </PanelButton>
-          {/* Por correo, desde el tuyo: `mailto:`, como el reparto de invitados. El remitente del sistema
-              solo manda credenciales, recuperación y códigos; una demo no va por ahí. */}
-          <PanelButton external href={`mailto:?subject=${encodeURIComponent(t('Mira cómo quedaría tu invitación', 'See how your invitation would look'))}&body=${encodeURIComponent(mensaje)}`}>
-            {t('Mandar por correo', 'Send by email')}
-          </PanelButton>
-          {/* Primero escribirla: la demo nace con la muestra del diseño, y lo que se le enseña al cliente son
-              sus nombres y su música. El enlace de arriba ya está copiado si lo quiere mandar tal cual. */}
-          {estado.slug === undefined ? null : (
-            <PanelButton href={`/panel/eventos/${estado.slug}/configuracion?vista=invitacion`} variant="primary">
-              {t('Escribir la invitación', 'Write the invitation')}
-            </PanelButton>
-          )}
-        </div>
-      </div>
-    )
-  }
 
   return (
     <form action={enviar} className="flex flex-col gap-5">
@@ -85,7 +52,10 @@ export function NuevaDemo() {
       </Field>
 
       <p className="text-[13px] text-ink-mute">
-        {t('La demo abre durante 24 horas y después se borra sola, con todo lo que el cliente haya escrito.', 'The demo opens for 24 hours and then deletes itself, along with anything the client wrote.')}
+        {t(
+          'Al crearla entras a escribirla: nombres, fotos y música. La demo abre durante 24 horas y después se borra sola.',
+          'Creating it takes you straight to writing it: names, photos and music. The demo opens for 24 hours and then deletes itself.',
+        )}
       </p>
 
       <SubmitButton>{t('Crear la demo', 'Create the demo')}</SubmitButton>

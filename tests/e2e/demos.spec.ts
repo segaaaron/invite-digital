@@ -19,27 +19,34 @@ test.afterAll(async () => {
   await sql.end()
 })
 
-/** Arma una demo desde la pantalla del admin, como lo haría él, y devuelve el enlace que le sale. */
+/**
+ * Arma una demo desde la pantalla del admin, como lo haría él. Crear **lleva derecho al editor**, así que
+ * el enlace se recoge después de su fila, que es donde vive para mandarlo.
+ */
 async function armarDemo(page: Page, titulo: string): Promise<string> {
   await page.goto('/panel/admin/demos')
   await page.getByRole('link', { name: /nueva demo/i }).first().click()
-  // El enlace sale dos veces en cuanto se crea —en el panel y ya en su fila—, así que se acota al panel.
   const panel = page.getByRole('dialog', { name: 'Nueva demo' })
   await panel.getByLabel('Nombre de la fiesta').fill(titulo)
   await panel.getByLabel('A nombre de').fill('Familia Rojas')
   await panel.getByRole('button', { name: /crear la demo/i }).click()
-  await expect(panel.getByText(/caduca en 24 horas/i)).toBeVisible()
-  return panel.getByLabel('Enlace de la demo').inputValue()
+
+  // Lo primero que se ve es el editor, con su música.
+  await expect(page.getByRole('heading', { name: 'Escribir la invitación' })).toBeVisible()
+
+  // Su fila, por el título: en la lista hay más demos de otras pruebas y la primera no es la de esta.
+  await page.goto('/panel/admin/demos')
+  return page.getByRole('listitem').filter({ hasText: titulo }).getByLabel('Enlace de la demo').inputValue()
 }
 
 test('el admin arma una demo y su enlace abre como una invitación, con la cinta de la casa', async ({ page }) => {
   const enlace = await armarDemo(page, 'Demo e2e Valentina')
   expect(enlace).toContain('/i/')
 
-  // Las dos formas de mandarla que pidió el usuario: WhatsApp y correo.
-  const panel = page.getByRole('dialog', { name: 'Nueva demo' })
-  await expect(panel.getByRole('link', { name: /mandar por whatsapp/i })).toHaveAttribute('href', /^https:\/\/wa\.me\//)
-  await expect(panel.getByRole('link', { name: /mandar por correo/i })).toHaveAttribute('href', /^mailto:/)
+  // Las dos formas de mandarla que pidió el usuario: WhatsApp y correo, en su fila.
+  const fila = page.getByRole('listitem').filter({ hasText: 'Demo e2e Valentina' })
+  await expect(fila.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', /^https:\/\/wa\.me\//)
+  await expect(fila.getByRole('link', { name: 'Correo' })).toHaveAttribute('href', /^mailto:/)
 
   // La marca de agua, **en la primera pantalla**: estos diseños abren en un sobre y siguen con pantallas
   // enteras, así que una cinta al final no la ve nadie (20 oct, el usuario abrió la suya y no vio nada).
@@ -54,10 +61,14 @@ test('se edita como una invitación de verdad: textos, fotos y música, sin plan
   // Lo que el usuario pidió y no tenía (20 oct): «Editarla» llevaba a la ficha administrativa del evento,
   // donde no hay ni música ni textos, y la demo nacía sin plan, así que media pantalla salía con «tu plan
   // no la incluye». Una demo enseña lo que vendemos: va con el plan más completo.
-  await armarDemo(page, 'Demo e2e editable')
-  // Nada más crearla, la acción principal es escribirla: es lo que se le enseña al cliente.
-  await page.getByRole('dialog', { name: 'Nueva demo' }).getByRole('link', { name: /escribir la invitación/i }).click()
+  await page.goto('/panel/admin/demos')
+  await page.getByRole('link', { name: /nueva demo/i }).first().click()
+  const panel = page.getByRole('dialog', { name: 'Nueva demo' })
+  await panel.getByLabel('Nombre de la fiesta').fill('Demo e2e editable')
+  await panel.getByLabel('A nombre de').fill('Familia Rojas')
+  await panel.getByRole('button', { name: /crear la demo/i }).click()
 
+  // **Crear lleva derecho a escribirla**: no hay segundo botón que encontrar.
   await expect(page.getByRole('heading', { name: 'Escribir la invitación' })).toBeVisible()
   await expect(page.getByText(/tu plan no la incluye/i)).toHaveCount(0)
   // Y dice dónde está la música, que es lo que no se encontraba (20 oct).

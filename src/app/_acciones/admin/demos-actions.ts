@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { admin, events, guests, plans } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { caducidadDeUnaDemo, esDemo } from '@/modules/events'
@@ -20,7 +21,7 @@ import { enlaceDeLaDemo } from './enlace-de-demo'
 // no es de nadie—. `verify-tenancy.ts` las exime por eso, por llevar `requireAdmin()` en el cuerpo.
 // ============================================================================
 
-export type DemoActionState = { status: 'idle' } | { status: 'success'; message: string; url?: string; slug?: string } | { status: 'error'; message: string }
+export type DemoActionState = { status: 'idle' } | { status: 'success'; message: string } | { status: 'error'; message: string }
 
 /** Cuánto por delante cae la fiesta de muestra: lo justo para que la cuenta atrás tenga algo que contar. */
 const DIAS_HASTA_LA_FIESTA = 45
@@ -153,12 +154,13 @@ export async function crearDemoAction(_previo: DemoActionState, formData: FormDa
   }
 
   revalidatePath('/panel/admin/demos')
-  return {
-    status: 'success',
-    slug: evento.value.slug,
-    url: enlace.url,
-    message: t('Demo lista. Caduca en 24 horas: dile al cliente que la mire hoy.', 'Demo ready. It expires in 24 hours: tell the client to look at it today.'),
-  }
+  /**
+   * **Y directo a escribirla.** Una pantalla intermedia con el enlace dejaba la edición escondida detrás de
+   * un segundo botón, y lo primero que se hace con una demo es ponerle los nombres y la música del cliente
+   * (20 oct, el usuario la buscó cuatro veces y no la encontró). El enlace no se pierde: está en su fila de
+   * Demos, con WhatsApp y correo, cuando ya tenga algo que mandar.
+   */
+  redirect(`/panel/eventos/${evento.value.slug}/configuracion?vista=invitacion`)
 }
 
 
