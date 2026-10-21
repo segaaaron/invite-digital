@@ -81,10 +81,10 @@ export const es = {
   },
   hero: {
     eyebrow: 'Lujo sereno · Atelier digital',
-    envelopeLabel: 'Alta costura',
+    envelopeLabel: 'Hecha a medida',
     titleLine1: 'INVITACIONES',
-    titleLine2: 'DIGITALES DE',
-    titleAccent: 'alta costura',
+    titleLine2: 'DIGITALES',
+    titleAccent: 'hechas a medida',
     body: 'Portadas animadas, música de fondo y un diseño que se mira antes de elegir. Tú escribes tu invitación, la repartes por WhatsApp y sigues cada confirmación en vivo.',
     bodyEncargo: 'Portadas animadas, música de fondo y un diseño que se mira antes de elegir. Nosotros la diseñamos con tus datos, tú la repartes por WhatsApp y sigues cada confirmación en vivo.',
     ctaPrimary: 'Crear invitación',
@@ -720,6 +720,7 @@ export const es = {
       titulo: 'Demostración de {marca}',
       aviso: 'Esta invitación es una muestra y abre solo durante un día. La tuya no caduca y lleva tus nombres, tus fotos y tu música.',
       accion: 'Quiero la mía',
+      sello: 'Demostración',
     },
     demoCaducada: {
       titulo: 'Esta demostración ya caducó',

@@ -81,10 +81,10 @@ export const en = {
   },
   hero: {
     eyebrow: 'Quiet luxury · Digital atelier',
-    envelopeLabel: 'Couture',
+    envelopeLabel: 'Made to measure',
     titleLine1: 'DIGITAL',
     titleLine2: 'INVITATIONS',
-    titleAccent: 'haute couture',
+    titleAccent: 'made to measure',
     body: 'Animated covers, background music and a design you see before you choose. You write your invitation, share it on WhatsApp and follow every RSVP live.',
     bodyEncargo: 'Animated covers, background music and a design you see before you choose. We design it with your details, you share it on WhatsApp and follow every RSVP live.',
     ctaPrimary: 'Create your invitation',
@@ -720,6 +720,7 @@ export const en = {
       titulo: 'A {marca} demo',
       aviso: 'This invitation is a sample and opens for one day only. Yours never expires, and it carries your names, your photos and your music.',
       accion: 'I want mine',
+      sello: 'Demo',
     },
     demoCaducada: {
       titulo: 'This demo has expired',

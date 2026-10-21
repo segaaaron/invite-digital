@@ -30,6 +30,7 @@ import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 import { fechaEnBolivia } from '@/shared/format/fecha'
 import { HechoPorLuxury } from '@/modules/events/ui/HechoPorLuxury'
 import { CintaDeDemo } from '@/modules/events/ui/CintaDeDemo'
+import { SelloDeDemo } from '@/modules/events/ui/SelloDeDemo'
 import { DemoCaducada } from '@/modules/events/ui/DemoCaducada'
 import { esDemo } from '@/modules/events'
 
@@ -200,6 +201,8 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
   return (
     <>
+      {/* La marca de agua: fija, visible desde el sobre y en cada pantalla. */}
+      {esDemo(event) ? <SelloDeDemo texto={dictionary.demo.sello} /> : null}
       {/* Cuenta la visita. No pinta nada, y se queda **fuera** del tema: un diseño no tiene
           por qué saber que la analítica existe. */}
       <ViewBeacon kind="guest" token={token} />

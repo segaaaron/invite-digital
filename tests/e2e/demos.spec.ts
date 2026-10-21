@@ -41,7 +41,11 @@ test('el admin arma una demo y su enlace abre como una invitación, con la cinta
   await expect(panel.getByRole('link', { name: /mandar por whatsapp/i })).toHaveAttribute('href', /^https:\/\/wa\.me\//)
   await expect(panel.getByRole('link', { name: /mandar por correo/i })).toHaveAttribute('href', /^mailto:/)
 
+  // La marca de agua, **en la primera pantalla**: estos diseños abren en un sobre y siguen con pantallas
+  // enteras, así que una cinta al final no la ve nadie (20 oct, el usuario abrió la suya y no vio nada).
+  await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(enlace)
+  await expect(page.getByText('Demostración', { exact: true })).toBeVisible()
   await expect(page.getByText(/demostración de/i)).toBeVisible()
   await expect(page.getByRole('link', { name: /quiero la mía/i })).toBeVisible()
 })
@@ -51,10 +55,13 @@ test('se edita como una invitación de verdad: textos, fotos y música, sin plan
   // donde no hay ni música ni textos, y la demo nacía sin plan, así que media pantalla salía con «tu plan
   // no la incluye». Una demo enseña lo que vendemos: va con el plan más completo.
   await armarDemo(page, 'Demo e2e editable')
-  await page.getByRole('dialog', { name: 'Nueva demo' }).getByRole('link', { name: /editarla/i }).click()
+  // Nada más crearla, la acción principal es escribirla: es lo que se le enseña al cliente.
+  await page.getByRole('dialog', { name: 'Nueva demo' }).getByRole('link', { name: /escribir la invitación/i }).click()
 
   await expect(page.getByRole('heading', { name: 'Escribir la invitación' })).toBeVisible()
   await expect(page.getByText(/tu plan no la incluye/i)).toHaveCount(0)
+  // Y dice dónde está la música, que es lo que no se encontraba (20 oct).
+  await expect(page.getByText(/la música está en/i)).toBeVisible()
   // La canción vive en el bloque de música del editor de contenido.
   await expect(page.getByText(/m[úu]sica|canci[óo]n/i).first()).toBeVisible()
 })

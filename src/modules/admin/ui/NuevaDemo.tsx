@@ -33,7 +33,7 @@ export function NuevaDemo() {
         <PanelAlert tone="info">{estado.message}</PanelAlert>
         <CopyLinkButton label={t('Enlace de la demo', 'Demo link')} url={estado.url} />
         <div className="flex flex-wrap gap-2">
-          <PanelButton external href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`} variant="primary">
+          <PanelButton external href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`}>
             {t('Mandar por WhatsApp', 'Send on WhatsApp')}
           </PanelButton>
           {/* Por correo, desde el tuyo: `mailto:`, como el reparto de invitados. El remitente del sistema
@@ -41,7 +41,13 @@ export function NuevaDemo() {
           <PanelButton external href={`mailto:?subject=${encodeURIComponent(t('Mira cómo quedaría tu invitación', 'See how your invitation would look'))}&body=${encodeURIComponent(mensaje)}`}>
             {t('Mandar por correo', 'Send by email')}
           </PanelButton>
-          {estado.slug === undefined ? null : <PanelButton href={`/panel/eventos/${estado.slug}/configuracion?vista=invitacion`}>{t('Editarla', 'Edit it')}</PanelButton>}
+          {/* Primero escribirla: la demo nace con la muestra del diseño, y lo que se le enseña al cliente son
+              sus nombres y su música. El enlace de arriba ya está copiado si lo quiere mandar tal cual. */}
+          {estado.slug === undefined ? null : (
+            <PanelButton href={`/panel/eventos/${estado.slug}/configuracion?vista=invitacion`} variant="primary">
+              {t('Escribir la invitación', 'Write the invitation')}
+            </PanelButton>
+          )}
         </div>
       </div>
     )

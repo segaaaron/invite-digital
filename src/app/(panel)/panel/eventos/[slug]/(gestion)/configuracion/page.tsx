@@ -23,6 +23,7 @@ import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
 import { muestraDe, themeFor } from '@/modules/events/ui/themes/registry'
 import { fiestaDeCategoria } from '@/modules/events/domain/fiesta'
 import { canManageStaff, gestionaElEvento, isAdmin, rolEnEquipo } from '@/modules/identity'
+import { esDemo } from '@/modules/events'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
@@ -341,7 +342,13 @@ export default async function ConfiguracionPage({
           </>
         }
         kicker={escribiendo ? t(`Invitación de ${event.value.title}`, `${event.value.title} invitation`) : t('Evento', 'Event')}
-        meta={t('Escríbela en el orden en que se lee. A la derecha la ves como la verá tu invitado.', 'Write it in the order it reads. On the right you see it as your guest will.')}
+        meta={
+          // **Solo en una demo**: quien la arma no la escribe todos los días y el acordeón abre una sección
+          // a la vez, así que la música —que es lo que más se enseña— parecía no existir (20 oct).
+          esDemo(event.value) && escribiendo
+            ? t('Toca cada sección para escribirla. La música está en «Canción».', 'Tap each section to write it. The music is under “Song”.')
+            : t('Escríbela en el orden en que se lee. A la derecha la ves como la verá tu invitado.', 'Write it in the order it reads. On the right you see it as your guest will.')
+        }
         title={escribiendo ? t('Escribir la invitación', 'Write the invitation') : !esDelAtelier ? t('Mi invitación', 'My invitation') : t('Configuración del evento', 'Event settings')}
       />
 

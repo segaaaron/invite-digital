@@ -65,11 +65,14 @@ export function SiteHeader({ locale, dictionary }: Props) {
           </Button>
         </nav>
 
-        {/* En pantallas estrechas no caben logotipo, botón y menú: el botón pasa al menú. */}
-        <Button href={`${inicio}#precios`} className="ml-auto px-4! whitespace-nowrap max-[439px]:hidden! md:hidden!">
+        {/* En pantallas estrechas no caben logotipo, botón y menú: el botón pasa al menú.
+            El corte estaba en 440 px y un iPhone 17 Pro Max mide **exactamente 440**: el botón aparecía y se
+            comía «LUXURY ATELIER», que no se parte nunca (20 oct, captura del usuario). Hasta 560 px el
+            botón vive solo dentro del menú, donde sigue siendo la primera opción. */}
+        <Button href={`${inicio}#precios`} className="ml-auto px-4! whitespace-nowrap max-[559px]:hidden! md:hidden!">
           {dictionary.nav.contact}
         </Button>
-        <div className="ml-auto min-[440px]:ml-0 md:hidden">
+        <div className="ml-auto min-[560px]:ml-0 md:hidden">
           <MenuMovil
             abrir={dictionary.nav.menu}
             accion={{ href: `${inicio}#precios`, label: dictionary.nav.contact }}

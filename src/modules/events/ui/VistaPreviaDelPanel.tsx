@@ -4,6 +4,7 @@ import { EnlaceDeVuelta } from '@/shared/design/ui/EnlaceDeVuelta'
 import { useRef, useState, type ReactNode } from 'react'
 import { ArrowLeftIcon, MusicIcon } from '@/shared/design/ui/icons'
 import { CintaDeDemo } from './CintaDeDemo'
+import { SelloDeDemo } from './SelloDeDemo'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
@@ -21,7 +22,7 @@ export function VistaPreviaDelPanel({
   volver: string
   fuentes: string
   /** Si es una demo de un día (0099), su cinta: lo mismo que verá el cliente al abrir el enlace. */
-  demo?: { textos: { titulo: string; aviso: string; accion: string }; href: string } | null
+  demo?: { textos: { titulo: string; aviso: string; accion: string; sello: string }; href: string } | null
 }) {
   const t = useT()
   const [sonando, setSonando] = useState(false)
@@ -56,6 +57,7 @@ export function VistaPreviaDelPanel({
       <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-2 max-[559px]:px-2">
         <div className={`con-mono ${fuentes} theme-phone-frame`} ref={marco}>
           {children}
+          {demo === null ? null : <SelloDeDemo texto={demo.textos.sello} />}
           {demo === null ? null : <CintaDeDemo href={demo.href} textos={demo.textos} />}
         </div>
       </div>
