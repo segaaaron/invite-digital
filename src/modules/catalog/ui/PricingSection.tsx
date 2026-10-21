@@ -63,6 +63,8 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
             return (
             <Reveal key={plan.id} delay={index * 0.08}>
               <PlanCard
+                // El último de la escalera lleva su insignia, como el más elegido lleva la suya.
+                masCompleto={!plan.highlighted && index === plans.length - 1}
                 ctaHref={rutaDe(locale, 'pedido', `/${plan.slug}${consulta === '' ? '' : `?${consulta}`}`)}
                 ctaLabel={pricing.choose.replace('{plan}', plan.name)}
                 reserva={reserva === undefined ? null : conMonto(pricing.reserve, <Monto cents={reserva} locale={locale} />)}

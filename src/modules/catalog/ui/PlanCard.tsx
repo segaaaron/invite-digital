@@ -18,6 +18,8 @@ type Props = {
   reserva?: ReactNode | null
   /** El plan de abajo, para «Todo lo de Atelier, más:» (V4). El primero no lleva. */
   anterior?: string | null
+  /** El más completo de la escalera: lleva su propia insignia («La experiencia completa»). */
+  masCompleto?: boolean
 }
 
 type Linea = { texto: string; exclusivo: boolean }
@@ -73,7 +75,7 @@ function Check({ gold = false }: { gold?: boolean }) {
   )
 }
 
-export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = false, ctaLabel, reserva = null, anterior = null }: Props) {
+export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = false, ctaLabel, reserva = null, anterior = null, masCompleto = false }: Props) {
   const cta = ctaLabel ?? dictionary.pricing.choose.replace('{plan}', plan.name)
   // El plan más elegido es una tarjeta oscura y elevada, como en la maqueta: es lo que
   // separa «recomendado» de «uno más de la fila». Un borde dorado no se ve a un metro.
@@ -87,11 +89,11 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
 
   return (
     <article className={`relative flex flex-col rounded-[var(--radius-card)] border p-8 backdrop-blur-md ${frame}`}>
-      {plan.highlighted ? (
-        <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-[var(--radius-pill)] bg-linear-to-r from-gold-deep via-gold-light to-gold-deep px-5 py-1.5 font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink uppercase shadow-[var(--shadow-float)]">
-          {dictionary.pricing.mostChosen}
+      {!plan.highlighted && !masCompleto ? null : (
+        <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-[var(--radius-pill)] bg-linear-to-r from-gold-deep via-gold-light to-gold-deep px-5 py-1.5 font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink uppercase shadow-[var(--shadow-float)] whitespace-nowrap">
+          {plan.highlighted ? dictionary.pricing.mostChosen : dictionary.pricing.fullExperience}
         </span>
-      ) : null}
+      )}
 
       {/* El nombre del plan es el encabezado de la tarjeta, como en la maqueta: era un
           párrafo, y una tarjeta de plan sin encabezado no existe para quien navega por
@@ -183,7 +185,15 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
                   className={`rounded-[var(--radius-pill)] border px-3 py-1 text-[12px] ${destacado ? 'border-gold/35 text-bg-sunken' : 'border-[var(--color-line)] text-ink-soft'}`}
                   key={linea.texto}
                 >
-                  {linea.texto}
+                  {linea.texto.split(/\*([^*]+)\*/).map((trozo, i) =>
+                    i % 2 === 1 ? (
+                      <strong className={`font-normal ${destacado ? 'text-gold-light' : 'text-gold-deep'}`} key={trozo}>
+                        {trozo}
+                      </strong>
+                    ) : (
+                      trozo
+                    ),
+                  )}
                 </span>
               ))}
             </li>

@@ -169,6 +169,8 @@ export interface PricingDictionary {
   eyebrow: string
   title: string
   mostChosen: string
+  /** La insignia del plan más completo, el de más arriba de la escalera. */
+  fullExperience: string
   /** Promoción de lanzamiento (0100): la píldora de la tarjeta y el aviso bajo el título. */
   launchSave: string
   launchBadge: string
