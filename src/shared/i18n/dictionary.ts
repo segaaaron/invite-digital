@@ -212,6 +212,10 @@ export interface PlanComparisonDictionary {
   extrasDescripcion: Record<'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio' | 'mas_rondas', string>
   /** Cabecera de la primera columna. */
   feature: string
+  /** El recuadro de lo que traen **todos** los planes, que no se repite fila a fila (maqueta del 20 oct). */
+  todosIncluyen: string
+  /** Los cuatro grupos en que se parte la tabla, para que se lea. */
+  grupos: { invitacion: string; regalos: string; control: string; entrega: string }
   si: string
   no: string
   sinLimite: string

@@ -104,16 +104,31 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
           {dictionary.pricing.inherits.replace('{plan}', anterior)}
         </p>
       )}
+      {/**
+        * **Las características se agrupan solas** (20 oct, maqueta del usuario): una línea que termina en
+        * dos puntos —«Tu evento:», «Entrega:»— se pinta como rótulo del grupo, y las de debajo cuelgan de
+        * ella. Así el atelier ordena su tarjeta desde Admin › Catálogo › Planes, sin despliegue: lo que
+        * incluye un plan y cómo se agrupa es una decisión comercial, como los límites.
+        */}
       <ul className={`${anterior === null ? 'mt-6' : 'mt-4'} flex flex-1 flex-col gap-3`}>
-        {plan.features.map((feature) => (
-          <li
-            key={feature}
-            className={`flex gap-3 text-[13.5px] leading-[1.6] ${destacado ? 'text-bg-sunken' : 'text-ink-soft'}`}
-          >
-            <Check gold={destacado} />
-            {feature}
-          </li>
-        ))}
+        {plan.features.map((feature) =>
+          feature.trimEnd().endsWith(':') ? (
+            <li
+              key={feature}
+              className={`mt-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase first:mt-0 ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}
+            >
+              {feature.trimEnd().slice(0, -1)}
+            </li>
+          ) : (
+            <li
+              key={feature}
+              className={`flex gap-3 text-[13.5px] leading-[1.6] ${destacado ? 'text-bg-sunken' : 'text-ink-soft'}`}
+            >
+              <Check gold={destacado} />
+              {feature}
+            </li>
+          ),
+        )}
       </ul>
 
       {/* Texto a la izquierda y flecha al filo, como la maqueta. */}

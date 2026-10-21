@@ -236,6 +236,13 @@ export const en = {
         mas_rondas: 'More revision rounds for your made-to-order design.',
       },
       feature: 'Includes',
+      todosIncluyen: 'Every plan includes',
+      grupos: {
+        invitacion: 'The invitation',
+        regalos: 'Gifts and keepsakes',
+        control: 'Guests and planning',
+        entrega: 'Delivery',
+      },
       si: '✓',
       no: '–',
       sinLimite: '✓',

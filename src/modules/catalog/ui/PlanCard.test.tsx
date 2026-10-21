@@ -61,4 +61,16 @@ describe('PlanCard', () => {
     render(<PlanCard plan={plan} locale="es" dictionary={es} ctaHref="#contacto" />)
     expect(screen.getAllByRole('listitem')).toHaveLength(plan.features.length)
   })
+
+  /**
+   * Una línea que termina en dos puntos es el rótulo de un grupo, no una característica: así el atelier
+   * ordena la tarjeta desde Admin › Catálogo › Planes, sin despliegue (maqueta del 20 oct).
+   */
+  it('una línea terminada en dos puntos es un rótulo de grupo, sin su check', () => {
+    render(<PlanCard plan={{ ...plan, features: ['Tu evento:', 'Portada y cuenta regresiva'] }} locale="es" dictionary={es} ctaHref="#contacto" />)
+
+    const rotulo = screen.getByText('Tu evento')
+    expect(rotulo.querySelector('svg')).toBeNull()
+    expect(screen.getByText('Portada y cuenta regresiva').querySelector('svg')).not.toBeNull()
+  })
 })

@@ -216,7 +216,7 @@ export const es = {
       example: '«Tu vestido es color esmeralda con mariposas: creamos tu invitación con él.»',
     },
     comparison: {
-      title: 'Compara los planes',
+      title: 'Comparación de planes',
       sub: 'Cada plan incluye todo lo del plan anterior.',
       rondas: 'Rondas de corrección*',
       entrega: 'Tiempo de entrega',
@@ -236,6 +236,13 @@ export const es = {
         mas_rondas: 'Más rondas de corrección para tu diseño por encargo.',
       },
       feature: 'Incluye',
+      todosIncluyen: 'Todos los planes incluyen',
+      grupos: {
+        invitacion: 'La invitación',
+        regalos: 'Regalos y recuerdos',
+        control: 'Control de invitados y organización',
+        entrega: 'Entrega',
+      },
       si: '✓',
       no: '–',
       sinLimite: '✓',

@@ -6,6 +6,8 @@ import { PricingSection } from '@/modules/catalog/ui/PricingSection'
 import type { Plan } from '@/modules/catalog'
 import type { FiestaPublica } from '@/modules/events'
 import { capacidadDePlan } from '@/modules/plans'
+import type { EfectoDeExtra } from '@/modules/plans/domain/extras'
+import type { FilaComparativa } from '@/modules/plans/domain/comparativa'
 import { PlanComparison } from '@/modules/plans/ui/PlanComparison'
 import { Monto } from '@/modules/catalog/ui/Monto'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
@@ -45,6 +47,18 @@ export async function metadataDeFiesta(raw: string, fiesta: FiestaPublica): Prom
  * La tabla que compara los planes, con los límites de la base en el orden de las tarjetas.
  * Si los límites no se leen, no hay tabla: mejor sin ella que con una que invente.
  */
+/** Qué fila de la tabla cubre cada adicional, para enseñar su precio en la celda del plan que no lo trae. */
+const FILA_DE_EXTRA: Partial<Record<EfectoDeExtra, FilaComparativa['clave']>> = {
+  fotos_invitados: 'album',
+  cambio_modelo: 'modelo',
+  mas_dias: 'enLinea',
+  mas_grupos: 'grupos',
+  mas_porteros: 'porteros',
+  sumar_planner: 'planners',
+  dia_d: 'plannerTotal',
+  asistente: 'luxury',
+}
+
 export async function comparativaDePlanes(planes: readonly Plan[], dictionary: Dictionary, locale: Locale) {
   const leidas = await webPublica.planesActivos().catch((cause: unknown) => {
     registrarFallo('[locale]/fiesta-page', 'no se pudo armar la tabla comparativa de precios:', cause)
@@ -59,7 +73,16 @@ export async function comparativaDePlanes(planes: readonly Plan[], dictionary: D
     if (fila === undefined) return []
     const encargo = fila.correctionRounds != null && fila.deliveryDays != null ? { rondas: fila.correctionRounds, dias: fila.deliveryDays } : null
     const limites = capacidadDePlan(fila)
-    return [{ nombre: plan.name, limites: config === null ? limites : { ...limites, asistente: tieneLuxury(limites, config) }, encargo }]
+    return [
+      {
+        nombre: plan.name,
+        limites: config === null ? limites : { ...limites, asistente: tieneLuxury(limites, config) },
+        encargo,
+        // El precio bajo el nombre y la columna del más elegido resaltada, como en la maqueta (20 oct).
+        precio: <Monto cents={plan.price.cents} locale={locale} />,
+        destacado: plan.highlighted,
+      },
+    ]
   })
   const extrasLeidos = await webPublica.extrasActivos().catch(() => null)
   const extras = (extrasLeidos === null || !extrasLeidos.ok ? [] : extrasLeidos.value).filter((x) => config !== null || x.effect !== 'asistente')
@@ -67,7 +90,18 @@ export async function comparativaDePlanes(planes: readonly Plan[], dictionary: D
   const filasVisibles = Object.fromEntries(Object.entries(comparativa.filas).filter(([clave]) => config !== null || clave !== 'luxury')) as Partial<typeof comparativa.filas>
   const textos = { ...comparativa, filas: filasVisibles }
   return columnas.length === 0 ? null : (
-    <PlanComparison extras={extras.map((x) => ({ name: x.name, precio: <Monto cents={x.priceCents} locale={locale} />, descripcion: comparativa.extrasDescripcion[x.effect] }))} planes={columnas} textos={textos} />
+    <PlanComparison
+      extras={extras.map((x) => ({
+        name: x.name,
+        precio: <>+<Monto cents={x.priceCents} locale={locale} /></>,
+        descripcion: comparativa.extrasDescripcion[x.effect],
+        // El adicional se enseña **en la celda del plan que no lo trae**: «+Bs 150» dice a la vez que no
+        // viene incluido y cuánto cuesta sumarlo, que es lo que el cliente pregunta al verlo tachado.
+        fila: FILA_DE_EXTRA[x.effect],
+      }))}
+      planes={columnas}
+      textos={textos}
+    />
   )
 }
 

@@ -65,7 +65,54 @@ type FilasDeComparativa = {
 }
 
 export type CeldaComparativa = { texto: string; incluido: boolean }
-export type FilaComparativa = { clave: keyof FilasDeComparativa; etiqueta: string; valores: CeldaComparativa[] }
+
+/**
+ * **En qué parte de la tabla va cada fila** (20 oct, maqueta del usuario): la invitación, los regalos, el
+ * control de invitados y la entrega. Agrupadas se leen; en una lista de veinticinco filas seguidas, no.
+ *
+ * El grupo es del dominio y no del diccionario porque dice **qué es** cada límite, no cómo se llama: el
+ * texto se traduce, el sitio de la fila no.
+ */
+export type GrupoDeComparativa = 'invitacion' | 'regalos' | 'control' | 'entrega'
+
+const GRUPO: Record<keyof FilasDeComparativa, GrupoDeComparativa> = {
+  basicos: 'invitacion',
+  confirmacion: 'control',
+  lista: 'control',
+  pases: 'control',
+  calendario: 'invitacion',
+  textos: 'invitacion',
+  colores: 'invitacion',
+  tipografias: 'invitacion',
+  secciones: 'invitacion',
+  panel: 'control',
+  mesaQr: 'control',
+  album: 'regalos',
+  detalles: 'invitacion',
+  luxury: 'control',
+  grupos: 'control',
+  fotos: 'invitacion',
+  fotosInvitados: 'regalos',
+  contrasena: 'invitacion',
+  csv: 'control',
+  mesas: 'control',
+  regalos: 'regalos',
+  formas: 'regalos',
+  libro: 'regalos',
+  estilo: 'invitacion',
+  puerta: 'control',
+  porteros: 'control',
+  planners: 'control',
+  tareas: 'control',
+  plannerCompleto: 'control',
+  plannerTotal: 'control',
+  enLinea: 'entrega',
+  modelo: 'invitacion',
+}
+
+export const grupoDeFila = (clave: keyof FilasDeComparativa): GrupoDeComparativa => GRUPO[clave]
+
+export type FilaComparativa = { clave: keyof FilasDeComparativa; etiqueta: string; valores: CeldaComparativa[]; grupo: GrupoDeComparativa }
 
 /** Una fila por límite, con una celda por plan en el orden en que llegan. */
 export function filasComparativas(planes: readonly Allowance[], t: TextosComparativa): FilaComparativa[] {
@@ -118,6 +165,7 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
   return (Object.entries(t.filas) as Array<[keyof FilasDeComparativa, string]>).map(([clave, etiqueta]) => ({
     clave,
     etiqueta,
+    grupo: GRUPO[clave],
     valores: planes.map(celdas[clave]),
   }))
 }
