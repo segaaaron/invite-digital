@@ -7,6 +7,19 @@ import { rutaDe } from '@/shared/i18n/rutas'
 
 type Props = { locale: Locale; dictionary: Dictionary }
 
+/**
+ * **Lo que decide la cabecera de un celular no es el ancho: es que se toca** (20 oct, pedido del usuario).
+ *
+ * Con un corte en píxeles siempre hay un aparato que cae del lado equivocado: un iPhone 17 Pro Max mide
+ * 440 justos, y el mismo teléfono en horizontal mide 932 y pasaba por computadora, con la fila entera
+ * apretada. `hover: none` y `pointer: coarse` es lo que distingue un dedo de un ratón —lo dice el propio
+ * navegador, en cualquier aparato y en cualquier orientación— y no hay que mantener ninguna lista.
+ *
+ * Va en CSS, no en el servidor: leer el `user-agent` haría dinámica toda la web pública y la dejaría sin
+ * caché, y además los `user-agent` mienten.
+ */
+// `dedo:` es la variante declarada en `globals.css`: el aparato se toca, sea cual sea su ancho.
+
 export function SiteHeader({ locale, dictionary }: Props) {
   // Las cinco entradas de la maqueta: dos a la izquierda del logotipo y dos a la derecha,
   // con el botón al final.
@@ -27,7 +40,7 @@ export function SiteHeader({ locale, dictionary }: Props) {
   return (
     <header className="fixed inset-x-0 top-[18px] z-[70] flex justify-center px-4">
       <div className="relative flex w-full max-w-[1180px] items-center gap-3 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-bg-raised/72 px-4 py-3 md:gap-8 md:px-6 shadow-[var(--shadow-float)] backdrop-blur-[18px]">
-        <nav className="hidden flex-1 items-center justify-end gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex">
+        <nav className="hidden flex-1 items-center justify-end gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex dedo:hidden!">
           {izquierda.map((link) => (
             <a key={link.href} className="whitespace-nowrap text-ink-soft transition-colors hover:text-gold-deep" href={link.href}>
               {link.label}
@@ -54,7 +67,7 @@ export function SiteHeader({ locale, dictionary }: Props) {
           </span>
         </Link>
 
-        <nav className="hidden flex-1 items-center gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex">
+        <nav className="hidden flex-1 items-center gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex dedo:hidden!">
           {derecha.map((link) => (
             <a key={link.href} className="whitespace-nowrap text-ink-soft transition-colors hover:text-gold-deep" href={link.href}>
               {link.label}
@@ -69,10 +82,11 @@ export function SiteHeader({ locale, dictionary }: Props) {
             El corte estaba en 440 px y un iPhone 17 Pro Max mide **exactamente 440**: el botón aparecía y se
             comía «LUXURY ATELIER», que no se parte nunca (20 oct, captura del usuario). Hasta 560 px el
             botón vive solo dentro del menú, donde sigue siendo la primera opción. */}
-        <Button href={`${inicio}#precios`} className="ml-auto px-4! whitespace-nowrap max-[559px]:hidden! md:hidden!">
+        <Button href={`${inicio}#precios`} className="ml-auto px-4! whitespace-nowrap max-[559px]:hidden! md:hidden! dedo:hidden!">
           {dictionary.nav.contact}
         </Button>
-        <div className="ml-auto min-[560px]:ml-0 md:hidden">
+        {/* El menú: en pantalla estrecha, y **siempre** en un aparato que se toca. */}
+        <div className="ml-auto min-[560px]:ml-0 md:hidden dedo:ml-auto! dedo:block!">
           <MenuMovil
             abrir={dictionary.nav.menu}
             accion={{ href: `${inicio}#precios`, label: dictionary.nav.contact }}

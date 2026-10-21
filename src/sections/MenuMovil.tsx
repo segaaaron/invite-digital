@@ -31,7 +31,9 @@ export function MenuMovil({ enlaces, accion, abrir, cerrar }: Props) {
   }, [abierto])
 
   return (
-    <div className="md:hidden">
+    // `dedo:` — el aparato se toca, sea cual sea su ancho: el mismo teléfono en horizontal mide 932 px y
+    // por ancho pasaba por computadora. La variante está declarada en `globals.css`.
+    <div className="md:hidden dedo:block!">
       <button
         aria-controls="menu-web"
         aria-expanded={abierto}

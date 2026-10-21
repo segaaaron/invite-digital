@@ -1,6 +1,15 @@
 @import 'tailwindcss';
 @import '../shared/design/tokens.css';
 
+/**
+ * `dedo:` — **el aparato se toca**, sea cual sea su ancho (20 oct, pedido del usuario).
+ *
+ * Lo que distingue un celular de una computadora no es el ancho en píxeles: un iPhone 17 Pro Max mide
+ * 440 justos y el mismo teléfono en horizontal mide 932. `hover: none` y `pointer: coarse` lo dice el
+ * navegador, en cualquier aparato y orientación, y no hay lista que mantener.
+ */
+@custom-variant dedo (@media (hover: none) and (pointer: coarse));
+
 html { scroll-behavior: smooth; }
 
 /*
