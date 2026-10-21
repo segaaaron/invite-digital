@@ -86,6 +86,6 @@ describe('PlanCard', () => {
 
     const rotulo = screen.getByText('Tu evento')
     expect(rotulo.querySelector('svg')).toBeNull()
-    expect(screen.getByText('Portada y cuenta regresiva').querySelector('svg')).not.toBeNull()
+    expect(screen.getByText('Portada y cuenta regresiva').closest('li')?.querySelector('svg')).not.toBeNull()
   })
 })

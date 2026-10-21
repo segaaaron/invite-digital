@@ -173,6 +173,8 @@ export interface PricingDictionary {
   launchSave: string
   launchBadge: string
   launchNote: string
+  /** La etiqueta de una característica escrita con «(exclusivo)» al final. */
+  exclusive: string
   /** «Elegir Atelier →». El nombre del plan entra donde dice {plan}. */
   choose: string
   /** «Reserva con {monto} · el resto cuando tu invitación esté lista». */

@@ -191,6 +191,7 @@ export const es = {
     launchSave: 'Lanzamiento · ahorras {monto}',
     launchBadge: 'Precio de lanzamiento',
     launchNote: 'Válido para reservas hasta el 31 de diciembre de 2026. Reserva con Bs 100 y congela tu precio.',
+    exclusive: 'Exclusivo',
     choose: 'Quiero reservar',
     reserve: 'Reserva con {monto} · el resto cuando tu invitación esté lista',
     usd: 'USD {monto}',

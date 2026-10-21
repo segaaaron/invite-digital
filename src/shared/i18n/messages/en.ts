@@ -191,6 +191,7 @@ export const en = {
     launchSave: 'Launch price · you save {monto}',
     launchBadge: 'Launch price',
     launchNote: 'Valid for bookings until 31 December 2026. Book with Bs 100 and lock in your price.',
+    exclusive: 'Exclusive',
     choose: 'Reserve now',
     reserve: 'Reserve with {monto} · the rest when your invitation is ready',
     usd: 'USD {monto}',

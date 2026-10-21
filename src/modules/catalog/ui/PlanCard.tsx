@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Button } from '@/shared/design/ui/Button'
 import { ArrowRightIcon } from '@/shared/design/ui/icons'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
@@ -18,6 +18,43 @@ type Props = {
   reserva?: ReactNode | null
   /** El plan de abajo, para «Todo lo de Atelier, más:» (V4). El primero no lleva. */
   anterior?: string | null
+}
+
+type Linea = { texto: string; exclusivo: boolean }
+type Bloque = { clave: string; rotulo: string | null; pildoras: boolean; lineas: Linea[] }
+
+/** Sin tildes y en minúsculas, para reconocer «Entrega» lo escriba como lo escriba. */
+const llano = (texto: string) =>
+  texto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+
+const ES_ENTREGA = new Set(['entrega', 'delivery'])
+
+/**
+ * Las características, repartidas en bloques: una línea terminada en dos puntos abre uno nuevo y da su
+ * rótulo. Lo que cuelga de «Entrega» va en píldoras —son plazos— y una línea acabada en «(exclusivo)»
+ * lleva su etiqueta. Todo sale de lo que el atelier escribe en Admin › Catálogo › Planes.
+ */
+function enBloques(features: readonly string[]): Bloque[] {
+  const bloques: Bloque[] = []
+  for (const bruto of features) {
+    const linea = bruto.trim()
+    if (linea === '') continue
+    if (linea.endsWith(':')) {
+      const rotulo = linea.slice(0, -1).trim()
+      bloques.push({ clave: `r-${rotulo}`, rotulo, pildoras: ES_ENTREGA.has(llano(rotulo)), lineas: [] })
+      continue
+    }
+    const exclusivo = /\((exclusivo|exclusive)\)$/i.test(linea)
+    const texto = exclusivo ? linea.replace(/\s*\((exclusivo|exclusive)\)$/i, '') : linea
+    const ultimo = bloques[bloques.length - 1]
+    if (ultimo === undefined) bloques.push({ clave: 'sin-rotulo', rotulo: null, pildoras: false, lineas: [{ texto, exclusivo }] })
+    else ultimo.lineas.push({ texto, exclusivo })
+  }
+  return bloques
 }
 
 /** El check dorado de la maqueta. Un punto no dice «incluido»; una marca sí. */
@@ -43,6 +80,7 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
   const destacado = plan.highlighted
   // Cuánto se ahorra hoy. Solo si el de lista es mayor: un «antes» más barato sería una rebaja al revés.
   const ahorro = plan.priceBeforeCents !== null && plan.priceBeforeCents > plan.price.cents ? plan.priceBeforeCents - plan.price.cents : null
+  const bloques = enBloques(plan.features)
   const frame = destacado
     ? 'border-transparent bg-ink text-bg-raised shadow-[0_40px_90px_-40px_rgb(60_44_14/0.75)] md:-translate-y-5'
     : 'border-[var(--color-line)] bg-bg-raised'
@@ -125,26 +163,50 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
         * dos puntos —«Tu evento:», «Entrega:»— se pinta como rótulo del grupo, y las de debajo cuelgan de
         * ella. Así el atelier ordena su tarjeta desde Admin › Catálogo › Planes, sin despliegue: lo que
         * incluye un plan y cómo se agrupa es una decisión comercial, como los límites.
+        *
+        * Dos cosas más, por el mismo camino y sin tocar código: lo que cuelga de **«Entrega»** se pinta en
+        * píldoras —son plazos, no características, y en fila se leen de un vistazo— y una línea que acaba
+        * en **(exclusivo)** lleva su etiqueta.
         */}
       <ul className={`${anterior === null ? 'mt-6' : 'mt-4'} flex flex-1 flex-col gap-3`}>
-        {plan.features.map((feature) =>
-          feature.trimEnd().endsWith(':') ? (
-            <li
-              key={feature}
-              className={`mt-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase first:mt-0 ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}
-            >
-              {feature.trimEnd().slice(0, -1)}
+        {bloques.map((bloque) => (
+          <Fragment key={bloque.clave}>
+            {bloque.rotulo === null ? null : (
+              <li className={`mt-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase first:mt-0 ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}>
+                {bloque.rotulo}
+              </li>
+            )}
+            {bloque.pildoras ? (
+            <li className="mt-2 flex flex-wrap gap-2 first:mt-0" key={bloque.clave}>
+              {bloque.lineas.map((linea) => (
+                <span
+                  className={`rounded-[var(--radius-pill)] border px-3 py-1 text-[12px] ${destacado ? 'border-gold/35 text-bg-sunken' : 'border-[var(--color-line)] text-ink-soft'}`}
+                  key={linea.texto}
+                >
+                  {linea.texto}
+                </span>
+              ))}
             </li>
           ) : (
-            <li
-              key={feature}
-              className={`flex gap-3 text-[13.5px] leading-[1.6] ${destacado ? 'text-bg-sunken' : 'text-ink-soft'}`}
-            >
-              <Check gold={destacado} />
-              {feature}
-            </li>
-          ),
-        )}
+            bloque.lineas.map((linea) => (
+              <li
+                className={`flex gap-3 text-[13.5px] leading-[1.6] ${destacado ? 'text-bg-sunken' : 'text-ink-soft'}`}
+                key={linea.texto}
+              >
+                <Check gold={destacado} />
+                <span className="flex flex-wrap items-center gap-2">
+                  {linea.texto}
+                  {!linea.exclusivo ? null : (
+                    <span className={`rounded-[var(--radius-pill)] px-2 py-0.5 font-mono text-[8.5px] tracking-[var(--tracking-luxe)] uppercase ${destacado ? 'bg-gold/25 text-gold-light' : 'bg-pill-pending text-gold-deep'}`}>
+                      {dictionary.pricing.exclusive}
+                    </span>
+                  )}
+                </span>
+              </li>
+            ))
+            )}
+          </Fragment>
+        ))}
       </ul>
 
       {/* Texto a la izquierda y flecha al filo, como la maqueta. */}
