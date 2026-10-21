@@ -3,6 +3,7 @@ import type { Locale } from '@/shared/i18n/locales'
 import { ok } from '@/shared/result'
 import { catalog } from './web'
 import { admin, plans } from './negocio'
+import { conContenidoDeLaWeb } from '@/modules/catalog/domain/planes-de-la-web'
 
 /**
  * Lo que enseña la web pública, **cacheado entre visitas** en la caché de datos de Next —memoria
@@ -16,7 +17,18 @@ import { admin, plans } from './negocio'
  * no al cargar el módulo.
  */
 export const webPublica = {
-  planes: lecturaCacheada((locale: Locale) => catalog.listPlans(locale), { clave: 'planes', etiquetas: [ETIQUETAS_WEB.catalogo] }),
+  /**
+   * Los planes como los enseña la web: el nombre, el precio y el orden salen de la base; el precio de
+   * antes —el tachado— y las características agrupadas salen de `planes-de-la-web.ts` (21 oct, pedido del
+   * usuario: «todo este cambio debería ir en la web»). Un plan que no esté en ese mapa se enseña tal cual.
+   */
+  planes: lecturaCacheada(
+    async (locale: Locale) => {
+      const leidos = await catalog.listPlans(locale)
+      return leidos.ok ? ok(leidos.value.map((plan) => conContenidoDeLaWeb(plan, locale))) : leidos
+    },
+    { clave: 'planes', etiquetas: [ETIQUETAS_WEB.catalogo] },
+  ),
   modelos: lecturaCacheada((locale: Locale) => catalog.listTemplates(locale), { clave: 'modelos', etiquetas: [ETIQUETAS_WEB.catalogo] }),
   categorias: lecturaCacheada((locale: Locale) => catalog.listCategories(locale), { clave: 'categorias', etiquetas: [ETIQUETAS_WEB.catalogo] }),
   /** Las filas de los planes activos, para la tabla comparativa. */
