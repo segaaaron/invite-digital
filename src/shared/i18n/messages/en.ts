@@ -241,6 +241,7 @@ export const en = {
       },
       feature: 'Includes',
       todosIncluyen: 'Every plan includes',
+      notaLanzamiento: 'Launch prices valid for bookings until 31 December 2026.',
       grupos: {
         invitacion: 'The invitation',
         regalos: 'Gifts and keepsakes',

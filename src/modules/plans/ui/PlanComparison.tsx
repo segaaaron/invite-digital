@@ -34,6 +34,8 @@ type Props = {
     /** Los rótulos de los cuatro grupos y el del recuadro de lo que traen todos. */
     grupos: Record<GrupoDeComparativa, string>
     todosIncluyen: string
+    /** La línea de la promoción, bajo la tabla. Solo se pinta si alguna columna lleva precio tachado. */
+    notaLanzamiento?: string
     /** V4: el subtítulo, la nota de las rondas y el recuadro del álbum. Sin ellos no se pintan. */
     sub?: string
     nota?: string
@@ -182,7 +184,10 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
         </table>
       </div>
 
-      {textos.nota === undefined ? null : <p className="mt-6 text-[12.5px] text-ink-mute">{textos.nota}</p>}
+      {textos.notaLanzamiento === undefined || !planes.some((p) => p.precioAntes !== undefined) ? null : (
+        <p className="mt-6 text-[12.5px] text-ink-mute">{textos.notaLanzamiento}</p>
+      )}
+      {textos.nota === undefined ? null : <p className="mt-1 text-[12.5px] text-ink-mute">{textos.nota}</p>}
     </div>
   )
 }

@@ -218,6 +218,8 @@ export interface PlanComparisonDictionary {
   extrasDescripcion: Record<'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio' | 'mas_rondas', string>
   /** Cabecera de la primera columna. */
   feature: string
+  /** La línea de la promoción bajo la tabla, cuando hay precios de lanzamiento (0100). */
+  notaLanzamiento: string
   /** El recuadro de lo que traen **todos** los planes, que no se repite fila a fila (maqueta del 20 oct). */
   todosIncluyen: string
   /** Los cuatro grupos en que se parte la tabla, para que se lea. */

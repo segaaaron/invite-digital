@@ -241,6 +241,7 @@ export const es = {
       },
       feature: 'Incluye',
       todosIncluyen: 'Todos los planes incluyen',
+      notaLanzamiento: 'Precios de lanzamiento válidos para reservas hasta el 31 de diciembre de 2026.',
       grupos: {
         invitacion: 'La invitación',
         regalos: 'Regalos y recuerdos',
