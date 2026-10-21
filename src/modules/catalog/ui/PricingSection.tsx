@@ -7,7 +7,6 @@ import type { Plan } from '../domain/plan'
 import { EscaleraDePlanes } from './EscaleraDePlanes'
 import { conMonto, Monto } from './Monto'
 import { PlanCard } from './PlanCard'
-import { SelectorDeMoneda } from './SelectorDeMoneda'
 import { rutaDe } from '@/shared/i18n/rutas'
 
 type Props = {
@@ -43,9 +42,9 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
       <div className="mx-auto max-w-[1180px]">
         <SectionHeading eyebrow={pricing.eyebrow} title={<span id="pricing-title">{pricing.title}</span>} />
 
-        {/* El selector Bs / USD (si algún plan tiene precio en dólares) envuelve todo: tarjetas, reserva,
-            tabla y adicionales cambian a la vez (9 oct: la reserva y los adicionales seguían en Bs). */}
-        <Envoltura conDolares={plans.some((p) => p.priceUsdCents !== null)} inicial={locale === 'en' ? 'usd' : 'bob'} textos={pricing.currency}>
+        {/* **Sin selector de moneda** (20 oct, decisión del usuario): los precios se enseñan en bolivianos,
+            que es lo que se cobra. El precio en dólares sigue guardado en cada plan por si vuelve; lo que
+            se quitó es el conmutador, no el dato. */}
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {plans.map((plan, index) => {
             // Todos se reservan igual (documento de cambios del 30 sep): el pedido guarda la referencia
@@ -96,18 +95,8 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
         {plans.length === 3 ? <EscaleraDePlanes planes={plans.map((p) => p.name)} textos={pricing.ladder} /> : null}
 
         {comparativa}
-        </Envoltura>
       </div>
     </section>
   )
 }
 
-function Envoltura({ conDolares, inicial, textos, children }: { conDolares: boolean; inicial: 'bob' | 'usd'; textos: Dictionary['pricing']['currency']; children: ReactNode }) {
-  return conDolares ? (
-    <SelectorDeMoneda inicial={inicial} textos={textos}>
-      {children}
-    </SelectorDeMoneda>
-  ) : (
-    <>{children}</>
-  )
-}
