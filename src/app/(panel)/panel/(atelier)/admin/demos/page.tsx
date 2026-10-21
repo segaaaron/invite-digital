@@ -143,7 +143,7 @@ export default async function AdminDemosPage({ searchParams }: { searchParams: P
                 )}
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <PanelButton href={`/panel/eventos/${demo.slug}/configuracion`} size="sm">
+                  <PanelButton href={`/panel/eventos/${demo.slug}/configuracion?vista=invitacion`} size="sm">
                     {t('Editarla', 'Edit it')}
                   </PanelButton>
                   {enlace.estado !== 'listo' || horas === 0 ? null : (
@@ -153,6 +153,15 @@ export default async function AdminDemosPage({ searchParams }: { searchParams: P
                       size="sm"
                     >
                       {t('WhatsApp', 'WhatsApp')}
+                    </PanelButton>
+                  )}
+                  {enlace.estado !== 'listo' || horas === 0 ? null : (
+                    <PanelButton
+                      external
+                      href={`mailto:?subject=${encodeURIComponent(t('Mira cómo quedaría tu invitación', 'See how your invitation would look'))}&body=${encodeURIComponent(t(`Mira cómo quedaría tu invitación: ${enlace.url}\n\nEs una demostración y solo abre durante un día.`, `See how your invitation would look: ${enlace.url}\n\nIt’s a demo and it only opens for one day.`))}`}
+                      size="sm"
+                    >
+                      {t('Correo', 'Email')}
                     </PanelButton>
                   )}
                   <Link className="text-[13px] text-ink-mute underline-offset-4 hover:text-ink hover:underline" href={`/panel/eventos/${demo.slug}/vista-previa`}>

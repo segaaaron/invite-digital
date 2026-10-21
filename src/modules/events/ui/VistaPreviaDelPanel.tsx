@@ -3,6 +3,7 @@
 import { EnlaceDeVuelta } from '@/shared/design/ui/EnlaceDeVuelta'
 import { useRef, useState, type ReactNode } from 'react'
 import { ArrowLeftIcon, MusicIcon } from '@/shared/design/ui/icons'
+import { CintaDeDemo } from './CintaDeDemo'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
 /**
@@ -10,7 +11,18 @@ import { useT } from '@/shared/i18n/idioma-navegador'
  * del escaparate (sin bisel negro ni conmutador de aparato: el 16 oct el usuario lo quiso como antes, uno solo);
  * abajo, escucharla con su canción.
  */
-export function VistaPreviaDelPanel({ children, volver, fuentes }: { children: ReactNode; volver: string; fuentes: string }) {
+export function VistaPreviaDelPanel({
+  children,
+  volver,
+  fuentes,
+  demo = null,
+}: {
+  children: ReactNode
+  volver: string
+  fuentes: string
+  /** Si es una demo de un día (0099), su cinta: lo mismo que verá el cliente al abrir el enlace. */
+  demo?: { textos: { titulo: string; aviso: string; accion: string }; href: string } | null
+}) {
   const t = useT()
   const [sonando, setSonando] = useState(false)
   const [sinCancion, setSinCancion] = useState(false)
@@ -44,6 +56,7 @@ export function VistaPreviaDelPanel({ children, volver, fuentes }: { children: R
       <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-2 max-[559px]:px-2">
         <div className={`con-mono ${fuentes} theme-phone-frame`} ref={marco}>
           {children}
+          {demo === null ? null : <CintaDeDemo href={demo.href} textos={demo.textos} />}
         </div>
       </div>
 

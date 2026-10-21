@@ -5,14 +5,31 @@ import { closeCheckinDb, deleteEvent, liveArrivals, revokeGroup, seedDoorEvent }
 
 test.use({ storageState: AUTH_STATE })
 
-const SLUG = 'boda-puerta-e2e'
+/**
+ * **Un slug por prueba, no uno compartido.**
+ *
+ * Con uno solo, cada prueba borraba y volvía a crear el evento con el mismo slug —otro id, otro grupo,
+ * otro token— y visitaba la misma dirección del modo puerta. Esa pantalla la guarda el service worker
+ * para funcionar sin red, que es justo lo que se le pide, así que una prueba podía recibir la pantalla
+ * guardada de la anterior: el manifiesto de un evento que ya no existe, y el pase recién sembrado
+ * leyéndose como «este código no es de tu evento». Pasaba sola y fallaba en la pasada entera.
+ *
+ * En producción el slug no se recicla, así que el caché es correcto; el que mentía era el reciclaje.
+ */
+const creados: string[] = []
+const nuevoSlug = () => {
+  const slug = `boda-puerta-e2e-${creados.length + 1}`
+  creados.push(slug)
+  return slug
+}
 
 test.afterAll(async () => {
-  await deleteEvent(SLUG)
+  for (const slug of creados) await deleteEvent(slug)
   await closeCheckinDb()
 })
 
 test('el lector por teclado registra la llegada sin cámara', async ({ page }) => {
+  const SLUG = nuevoSlug()
   const { token, groupId } = await seedDoorEvent(SLUG)
 
   await page.goto(`/panel/eventos/${SLUG}/puerta`)
@@ -36,6 +53,7 @@ test('el lector por teclado registra la llegada sin cámara', async ({ page }) =
 
 test('un pase escaneado con la cámara registra la llegada del grupo', async ({ page, context }) => {
   await context.grantPermissions(['camera'])
+  const SLUG = nuevoSlug()
   const { token, groupId } = await seedDoorEvent(SLUG)
 
   const url = `http://localhost:${process.env.E2E_PORT ?? '3100'}/i/${token}`
@@ -83,10 +101,12 @@ test('un pase escaneado con la cámara registra la llegada del grupo', async ({ 
 })
 
 test('el pase de otra boda no abre esta puerta', async ({ page }) => {
+  const SLUG = nuevoSlug()
   await seedDoorEvent(SLUG)
   const ajeno = await seedDoorEvent('boda-ajena-e2e')
 
   await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await expect(page.getByLabel('Invitaciones que han llegado')).toBeVisible()
   await page.keyboard.type(ajeno.token)
   await page.keyboard.press('Enter')
 
@@ -100,10 +120,16 @@ test('el pase de otra boda no abre esta puerta', async ({ page }) => {
 test('el pase de una invitación revocada no entra, y no se registra nada', async ({ page }) => {
   // Revocar solo sirve si la puerta lo mira: antes el revocado recibía tarjeta verde con su
   // mesa y contaba como llegado (F5 del escaneo del 19 oct).
+  const SLUG = nuevoSlug()
   const { token, groupId } = await seedDoorEvent(SLUG)
   await revokeGroup(groupId)
 
   await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  // **Esperar a que la puerta esté escuchando antes de teclear.** Un lector por USB teclea de golpe, y
+  // si la pantalla aún no está montada se pierden caracteres: el pase llega partido y se lee como de
+  // otro evento. Es lo que hacía fallar esta prueba solo dentro de la pasada entera. La primera prueba
+  // del fichero nunca lo sufrió porque mira la cifra antes de teclear, que es justo esta espera.
+  await expect(page.getByLabel('Invitaciones que han llegado')).toBeVisible()
   await page.keyboard.type(token)
   await page.keyboard.press('Enter')
 
@@ -114,6 +140,7 @@ test('el pase de una invitación revocada no entra, y no se registra nada', asyn
 })
 
 test('sin red la puerta sigue registrando, y sube al volver', async ({ page, context }) => {
+  const SLUG = nuevoSlug()
   const { token, groupId } = await seedDoorEvent(SLUG)
 
   await page.goto(`/panel/eventos/${SLUG}/puerta`)

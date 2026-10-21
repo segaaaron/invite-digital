@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { events, guests, plans } from '@/app/composition/container'
+import { admin, events, guests, plans } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { caducidadDeUnaDemo, esDemo } from '@/modules/events'
 import { seAsigna } from '@/shared/design/theme-catalog'
@@ -56,15 +56,22 @@ export async function crearDemoAction(_previo: DemoActionState, formData: FormDa
   if (titulo === '') return { status: 'error', message: t('Ponle un nombre a la demo: es lo que verá el cliente.', 'Give the demo a name: it’s what the client will see.') }
   if (para === '') return { status: 'error', message: t('Escribe a nombre de quién va la invitación.', 'Write who the invitation is addressed to.') }
 
-  // Los días de retención salen del plan más barato, y dan igual: la demo muere mañana. Si la lectura se
-  // cae, **no** puede llevarse por delante el alta —`findCheapestActivePlan` lanza, no devuelve `Result`—,
-  // así que se toma el valor de siempre y se deja dicho en el registro.
-  const retentionDays = await plans
-    .cheapestActive()
-    .then((plan) => plan?.onlineDays ?? 90)
+  /**
+   * **La demo lleva el plan más completo, y no por generosidad: es lo que se está enseñando.**
+   *
+   * Sin plan, el panel trata al evento como el más barato y cierra mesas, check-in, planner y el resto:
+   * el admin abría la demo y se encontraba «tu plan no la incluye» donde quería enseñar lo que vendemos.
+   * Una demo no se vende ni se cobra, así que no hay nada que un plan deba limitar aquí.
+   *
+   * Si la lectura se cae no puede llevarse por delante el alta —`listActivePlans` lanza, no devuelve
+   * `Result`—: la demo nace sin plan, que es peor pero no es nada, y queda dicho en el registro.
+   */
+  const plan = await plans
+    .listActive()
+    .then((activos) => [...activos].sort((a, b) => (b.priceCents ?? 0) - (a.priceCents ?? 0))[0] ?? null)
     .catch((causa: unknown) => {
-      registrarFallo('admin/demos-actions', 'no se pudo leer el plan más barato para la demo', 'storage_failure', causa)
-      return 90
+      registrarFallo('admin/demos-actions', 'no se pudo leer el plan más completo para la demo', 'storage_failure', causa)
+      return null
     })
 
   // El evento de la demo: vivo desde el primer momento —nadie va a publicarlo— y con fecha de muerte.
@@ -76,7 +83,7 @@ export async function crearDemoAction(_previo: DemoActionState, formData: FormDa
     locale,
     themeKey,
     status: 'live',
-    retentionDays,
+    retentionDays: plan?.onlineDays ?? 90,
     currency: 'BOB',
     /**
      * **Sin dueño, a propósito.** `events.user_id` es lo que cuenta «cuántos eventos tiene esta persona»
@@ -89,6 +96,14 @@ export async function crearDemoAction(_previo: DemoActionState, formData: FormDa
   if (isErr(evento)) {
     registrarFallo('admin/demos-actions', 'no se pudo crear la demo', evento.error.kind, evento.error.detail)
     return { status: 'error', message: t('No pudimos crear la demo. Inténtalo en un momento.', 'We couldn’t create the demo. Try again in a moment.') }
+  }
+
+  // El plan, ya creada: `events.create` no lo lleva, y sin esta línea el panel la trata como la más
+  // barata y cierra media pantalla. Si falla, la demo sigue siendo usable —se ve y se manda—, solo que
+  // con menos secciones abiertas: no es motivo para tirar el alta.
+  if (plan !== null) {
+    const asignado = await admin.setEventPlan(actor, { eventId: evento.value.id, eventSlug: evento.value.slug, planSlug: plan.slug })
+    if (isErr(asignado)) registrarFallo('admin/demos-actions', 'no se pudo poner el plan completo a la demo', asignado.error.kind, asignado.error.detail)
   }
 
   /**

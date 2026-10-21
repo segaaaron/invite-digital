@@ -36,7 +36,12 @@ export function NuevaDemo() {
           <PanelButton external href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`} variant="primary">
             {t('Mandar por WhatsApp', 'Send on WhatsApp')}
           </PanelButton>
-          {estado.slug === undefined ? null : <PanelButton href={`/panel/eventos/${estado.slug}/configuracion`}>{t('Editarla', 'Edit it')}</PanelButton>}
+          {/* Por correo, desde el tuyo: `mailto:`, como el reparto de invitados. El remitente del sistema
+              solo manda credenciales, recuperación y códigos; una demo no va por ahí. */}
+          <PanelButton external href={`mailto:?subject=${encodeURIComponent(t('Mira cómo quedaría tu invitación', 'See how your invitation would look'))}&body=${encodeURIComponent(mensaje)}`}>
+            {t('Mandar por correo', 'Send by email')}
+          </PanelButton>
+          {estado.slug === undefined ? null : <PanelButton href={`/panel/eventos/${estado.slug}/configuracion?vista=invitacion`}>{t('Editarla', 'Edit it')}</PanelButton>}
         </div>
       </div>
     )

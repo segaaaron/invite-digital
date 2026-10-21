@@ -36,9 +36,38 @@ test('el admin arma una demo y su enlace abre como una invitación, con la cinta
   const enlace = await armarDemo(page, 'Demo e2e Valentina')
   expect(enlace).toContain('/i/')
 
+  // Las dos formas de mandarla que pidió el usuario: WhatsApp y correo.
+  const panel = page.getByRole('dialog', { name: 'Nueva demo' })
+  await expect(panel.getByRole('link', { name: /mandar por whatsapp/i })).toHaveAttribute('href', /^https:\/\/wa\.me\//)
+  await expect(panel.getByRole('link', { name: /mandar por correo/i })).toHaveAttribute('href', /^mailto:/)
+
   await page.goto(enlace)
   await expect(page.getByText(/demostración de/i)).toBeVisible()
   await expect(page.getByRole('link', { name: /quiero la mía/i })).toBeVisible()
+})
+
+test('se edita como una invitación de verdad: textos, fotos y música, sin plan que la corte', async ({ page }) => {
+  // Lo que el usuario pidió y no tenía (20 oct): «Editarla» llevaba a la ficha administrativa del evento,
+  // donde no hay ni música ni textos, y la demo nacía sin plan, así que media pantalla salía con «tu plan
+  // no la incluye». Una demo enseña lo que vendemos: va con el plan más completo.
+  await armarDemo(page, 'Demo e2e editable')
+  await page.getByRole('dialog', { name: 'Nueva demo' }).getByRole('link', { name: /editarla/i }).click()
+
+  await expect(page.getByRole('heading', { name: 'Escribir la invitación' })).toBeVisible()
+  await expect(page.getByText(/tu plan no la incluye/i)).toHaveCount(0)
+  // La canción vive en el bloque de música del editor de contenido.
+  await expect(page.getByText(/m[úu]sica|canci[óo]n/i).first()).toBeVisible()
+})
+
+test('la vista previa del panel enseña la misma cinta que verá el cliente', async ({ page }) => {
+  // El admin no tenía por qué abrir el enlace para ver la marca de agua: antes la cinta solo salía en la
+  // invitación de verdad, y desde el panel parecía que no existía.
+  await armarDemo(page, 'Demo e2e cinta')
+  await page.goto('/panel/admin/demos')
+  await page.getByRole('link', { name: /verla/i }).first().click()
+
+  await expect(page.getByText(/demostraci[óo]n de/i)).toBeVisible()
+  await expect(page.getByRole('link', { name: /quiero la m/i })).toBeVisible()
 })
 
 test('no se cuela en la cartera de eventos, y sí sale en Demos', async ({ page }) => {

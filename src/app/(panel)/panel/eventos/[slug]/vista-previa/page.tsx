@@ -4,6 +4,7 @@ import { VistaPreviaDelPanel } from '@/modules/events/ui/VistaPreviaDelPanel'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
 import { muestraDe, themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/app/_acciones/sesion'
+import { esDemo } from '@/modules/events'
 import { themeFonts } from '@/shared/design/fonts'
 import { EstiloDeLaInvitacion } from '@/modules/events/ui/EstiloDeLaInvitacion'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -59,7 +60,13 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
   const variables = definicion.fonts.map((clave) => themeFonts[clave].variable).join(' ')
 
   return (
-    <VistaPreviaDelPanel fuentes={variables} volver={`/panel/eventos/${event.value.slug}/configuracion`}>
+    <VistaPreviaDelPanel
+      // La cinta de la demo se enseña también aquí: el admin tiene que ver **lo mismo** que le va a
+      // llegar al cliente, y antes solo salía abriendo el enlace de verdad.
+      demo={esDemo(event.value) ? { textos: diccionario.invitation.demo, href: `/${event.value.locale}#precios` } : null}
+      fuentes={variables}
+      volver={`/panel/eventos/${event.value.slug}/configuracion`}
+    >
       <EstiloDeLaInvitacion estilo={await events.estilo.leer(event.value.id)} tema={definicion}>
         <Tema
           content={contenido}
