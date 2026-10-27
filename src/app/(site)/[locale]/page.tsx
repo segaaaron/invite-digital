@@ -2,52 +2,30 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { NONCE_HEADER } from '@/shared/config/headers'
 import { notFound } from 'next/navigation'
-import { site, webPublica } from '@/app/composition/container'
+import { asistente, site, webPublica } from '@/app/composition/container'
 import { sitioPublico } from '@/modules/admin/domain/site-settings'
-import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
-import { ModelsSection } from '@/modules/catalog/ui/ModelsSection'
-import { PricingSection } from '@/modules/catalog/ui/PricingSection'
-import { comparativaDePlanes, hayEncargo, reservasDePlanes } from './fiesta-page'
-import { ComoFunciona } from '@/sections/ComoFunciona'
-import { themeFor } from '@/modules/events/ui/themes/registry'
-import { SectionHeading } from '@/shared/design/ui/SectionHeading'
+import { tieneLuxury } from '@/modules/asistente'
+import { capacidadDePlan } from '@/modules/plans'
+import { formatMoney } from '@/modules/catalog'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { attempt, isOk } from '@/shared/result'
 import { faqJsonLd, jsonLdScript, organizationJsonLd, productJsonLd, websiteJsonLd } from '@/shared/seo/json-ld'
 import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
-import { ComparisonSection } from '@/sections/ComparisonSection'
-import { AboutSection } from '@/sections/AboutSection'
-import { HerramientasDelPanel } from '@/sections/HerramientasDelPanel'
-import { ExperienceSection } from '@/sections/ExperienceSection'
-import { FaqSection } from '@/sections/FaqSection'
-import { FiestaChooser } from '@/sections/FiestaChooser'
-import { HeroSection } from '@/sections/HeroSection'
-import { HeroStack } from '@/sections/HeroStack'
-import { MobileSection } from '@/sections/MobileSection'
-import { TestimonialsSection } from '@/sections/TestimonialsSection'
-import { ContactSection } from '@/modules/leads'
-import { aLaVenta } from '@/modules/catalog'
-import { PrivacyNotice } from '@/sections/LegalPage'
+import { Portada, type DisenoDePortada } from '@/sections/portada/Portada'
+import type { ColumnaDeComparativa } from '@/sections/portada/Comparativa'
 import { registrarFallo } from '@/shared/observability/fallos'
-import { rutaDe } from '@/shared/i18n/rutas'
 
-// Rendered per request, not prerendered: the pages read Postgres and the image is
-// built in CI/Docker where the database is unreachable. The queries are indexed and
-// hit a database in the same compose network, so the cost is a couple of milliseconds.
+// Se pinta por petición, no se prerenderiza: lee Postgres, y la imagen se construye en CI,
+// donde la base no existe. Las consultas van por índice y a una base de la misma red.
 export const dynamic = 'force-dynamic'
 
-/** Las escenas de bodas, XV y despedidas, en el mismo orden que el diccionario. */
-const ESCENAS = [
-  '/site/colecciones/bodas-1.avif',
-  '/site/colecciones/bodas-2.avif',
-  '/site/colecciones/xv-1.avif',
-  '/site/colecciones/xv-2.avif',
-  '/site/colecciones/despedida-ella-1.avif',
-  '/site/colecciones/despedida-ella-2.avif',
-  '/site/colecciones/despedida-el-1.avif',
-  '/site/colecciones/despedida-el-2.avif',
-] as const
+/**
+ * Las nueve portadas del abanico de entrada, alternando los dos mundos. Son preferencias, no
+ * una lista cerrada: lo que no esté a la venta se cae y entra el siguiente del catálogo, así
+ * que retirar un modelo en el admin nunca deja un hueco.
+ */
+const ABANICO = ['xv-isabelle', 'boda-boho', 'xv-mariana', 'boda-cin', 'boda-glamour', 'xv-valeria', 'boda-navy', 'xv-luciana', 'boda-sello'] as const
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: raw } = await params
@@ -66,175 +44,141 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   })
 }
 
-export default async function LandingPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>
-  searchParams: Promise<{ modelo?: string; ref?: string }>
-}) {
+export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params
-  const { modelo, ref } = await searchParams
   const locale = parseLocaleParam(raw)
   if (!locale) notFound()
 
-  // El diseño con el que llega quien viene del escaparate, validado **aquí** contra el
-  // registro: `themeFor` cae al clásico con una clave desconocida, y propagar esa caída
-  // metería en el pedido un modelo que nadie eligió. Lo que no exista, no viaja.
-  const temaElegido = modelo === undefined ? null : themeFor(modelo)
-  const modeloElegido = temaElegido !== null && temaElegido.key === modelo ? temaElegido.key : null
-
   const dictionary = getDictionary(locale)
 
-  // The proxy puts the CSP nonce on the request; without it these inline blocks would
-  // be refused by the policy.
+  // El proxy pone el nonce de la CSP en la petición; sin él, la política rechaza estos bloques.
   const nonce = (await headers()).get(NONCE_HEADER) ?? undefined
 
-  // The repositories throw when Postgres is unreachable, so each read is wrapped:
-  // a database outage degrades the page section by section instead of returning a 500.
-  const asOutage = (cause: unknown) => ({
-    kind: 'not_found' as const,
-    detail: cause instanceof Error ? cause.message : 'error desconocido',
-  })
+  // Los repositorios lanzan si Postgres no responde: cada lectura va envuelta, y una caída de
+  // la base degrada la página sección por sección en vez de devolver un 500.
+  const asOutage = (cause: unknown) => ({ kind: 'not_found' as const, detail: cause instanceof Error ? cause.message : 'error desconocido' })
 
   const ajustes = await site.settings()
   const sitio = sitioPublico(ajustes, locale)
-  // Si algún plan es por encargo: «Cómo funciona» y sus preguntas solo existen entonces.
-  const encargo = await hayEncargo()
 
-  const [plansResult, templatesResult, categoriesResult] = await Promise.all([
+  const [plansResult, templatesResult] = await Promise.all([
     attempt(() => webPublica.planes(locale), asOutage),
     attempt(() => webPublica.modelos(locale), asOutage),
-    attempt(() => webPublica.categorias(locale), asOutage),
   ])
-
-  if (!isOk(plansResult)) {
-    registrarFallo('[locale]/page', 'No se pudieron cargar los planes de precios:', plansResult.error.detail)
-  }
-  if (!isOk(templatesResult)) {
-    registrarFallo('[locale]/page', 'No se pudieron cargar las plantillas del catálogo:', templatesResult.error.detail)
-  }
-  if (!isOk(categoriesResult)) {
-    registrarFallo('[locale]/page', 'No se pudieron cargar las categorías de evento:', categoriesResult.error.detail)
-  }
+  if (!isOk(plansResult)) registrarFallo('[locale]/page', 'No se pudieron cargar los planes de precios:', plansResult.error.detail)
+  if (!isOk(templatesResult)) registrarFallo('[locale]/page', 'No se pudieron cargar las plantillas del catálogo:', templatesResult.error.detail)
 
   const plans = isOk(plansResult) ? plansResult.value : []
   const templates = isOk(templatesResult) ? templatesResult.value : []
-  // El formulario solo ofrece lo que se vende: bodas y XV años.
-  const categories = aLaVenta(isOk(categoriesResult) ? categoriesResult.value : [])
+
+  // La reserva fija de cada plan, tal como la dejó el admin. Sin ella no se inventa ninguna.
+  const activos = await webPublica.planesActivos().catch((cause: unknown) => {
+    registrarFallo('[locale]/page', 'No se pudieron leer los planes activos:', cause)
+    return null
+  })
+  if (activos !== null && !activos.ok) {
+    registrarFallo('[locale]/page', 'Los planes activos llegaron con error:', activos.error)
+  }
+  const filas = activos === null || !activos.ok ? [] : activos.value
+  const reservas = Object.fromEntries(
+    filas.flatMap((f) => (f.depositFixedCents != null && f.priceCents !== undefined && f.depositFixedCents < f.priceCents ? [[f.slug, f.depositFixedCents] as const] : [])),
+  )
+
+  // La comparativa sale de los límites de cada plan en la base, los mismos que corta el
+  // servidor: una tabla escrita a mano acaba prometiendo lo que el plan no trae.
+  const config = asistente.disponible
+    ? await asistente.config().catch((cause: unknown) => {
+        // Sin registro, una caída de la configuración se leía igual que «no hay clave»: la fila de
+        // Luxury desaparecía de la comparativa y nadie se enteraba.
+        registrarFallo('[locale]/page', 'No se pudo leer la configuración del asistente:', cause)
+        return null
+      })
+    : null
+  const columnas: ColumnaDeComparativa[] = plans.flatMap((plan) => {
+    const fila = filas.find((f) => f.slug === plan.slug)
+    if (fila === undefined) {
+      // Un plan publicado que no está entre los activos es un desajuste de datos, no un caso
+      // normal: sin esto desaparecía de la tabla y seguía en los sobres, y nadie lo veía.
+      registrarFallo('[locale]/page', `El plan «${plan.slug}» se vende pero no está entre los planes activos: queda fuera de la comparativa`)
+      return []
+    }
+    const limites = capacidadDePlan(fila)
+    return [
+      {
+        nombre: plan.name,
+        limites: config === null ? limites : { ...limites, asistente: tieneLuxury(limites, config) },
+        destacado: plan.highlighted,
+        precio: formatMoney(plan.price, locale),
+        precioAntes: plan.priceBeforeCents !== null && plan.priceBeforeCents > plan.price.cents ? formatMoney({ cents: plan.priceBeforeCents, currency: plan.price.currency }, locale) : '',
+      },
+    ]
+  })
+  const comparacion = dictionary.pricing.comparison
+  const textosComparativa = {
+    ...comparacion,
+    // Luxury solo se compara si se vende: sin clave de OpenAI, la fila sobra.
+    filas: Object.fromEntries(Object.entries(comparacion.filas).filter(([clave]) => config !== null || clave !== 'luxury')) as typeof comparacion.filas,
+  }
+
+  // Las notas que la portada enseña, con el importe ya escrito: es lo que se marca para Google.
+  const laReserva = Object.values(reservas).length === 0 ? '' : formatMoney({ cents: Math.min(...Object.values(reservas)), currency: plans[0]?.price.currency ?? 'BOB' }, locale)
+  const notasParaGoogle = dictionary.portada.notas.items.map((nota) => ({ question: nota.pregunta, answer: nota.respuesta.replace('{reserva}', laReserva) }))
+
+  // Los modelos del catálogo, en el orden que fijó el admin. La portada enseña los dos mundos.
+  const disenos: DisenoDePortada[] = templates.map((t) => ({
+    clave: t.slug,
+    nombre: t.name,
+    fiesta: t.categorySlug === 'xv-anos' ? 'xv' : 'boda',
+    portada: t.coverImagePath,
+  }))
+  // El anillo **alterna boda y XV**, como la maqueta. Con el orden del admin tal cual salían las
+  // once bodas seguidas y después los nueve XV: media vuelta del cilindro quedaba de un solo tono.
+  // Dentro de cada mundo manda el orden del admin.
+  const bodas = disenos.filter((d) => d.fiesta === 'boda')
+  const quinces = disenos.filter((d) => d.fiesta === 'xv')
+  const alternados: DisenoDePortada[] = []
+  for (let i = 0; i < Math.max(bodas.length, quinces.length); i += 1) {
+    const unaBoda = bodas[i]
+    const unXv = quinces[i]
+    if (unaBoda !== undefined) alternados.push(unaBoda)
+    if (unXv !== undefined) alternados.push(unXv)
+  }
+
+  const preferidos = ABANICO.flatMap((clave) => disenos.filter((d) => d.clave === clave))
+  const abanico = [...preferidos, ...disenos.filter((d) => !preferidos.includes(d))].slice(0, 9)
 
   return (
     <>
       <script
-        dangerouslySetInnerHTML={{ __html: jsonLdScript(
-          organizationJsonLd({
-            whatsapp: sitio.whatsapp,
-            direccion: sitio.direccion,
-            ciudad: sitio.ciudad,
-            pais: sitio.pais,
-            redes: [sitio.redes.instagram, sitio.redes.facebook, sitio.redes.tiktok],
-            correo: sitio.redes.correo ?? '',
-          }),
-        ) }}
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(
+            organizationJsonLd({
+              whatsapp: sitio.whatsapp,
+              direccion: sitio.direccion,
+              ciudad: sitio.ciudad,
+              pais: sitio.pais,
+              redes: [sitio.redes.instagram, sitio.redes.facebook, sitio.redes.tiktok],
+              correo: sitio.redes.correo ?? '',
+            }),
+          ),
+        }}
         nonce={nonce}
         type="application/ld+json"
       />
       <script dangerouslySetInnerHTML={{ __html: jsonLdScript(websiteJsonLd(locale)) }} nonce={nonce} type="application/ld+json" />
-      <script
-        dangerouslySetInnerHTML={{ __html: jsonLdScript(productJsonLd(plans, locale)) }}
-        nonce={nonce}
-        type="application/ld+json"
-      />
-      <script
-        dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd(dictionary)) }}
-        nonce={nonce}
-        type="application/ld+json"
-      />
+      <script dangerouslySetInnerHTML={{ __html: jsonLdScript(productJsonLd(plans, locale)) }} nonce={nonce} type="application/ld+json" />
+      <script dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd(dictionary, notasParaGoogle)) }} nonce={nonce} type="application/ld+json" />
 
-      <HeroSection
-        cifras={sitio.cifras}
+      <Portada
+        abanico={abanico}
+        columnas={columnas}
         dictionary={dictionary}
-        encargo={encargo}
+        disenos={alternados}
         locale={locale}
-        marcas={sitio.marcas}
-        slot={
-          // La composición de sobres, sin botón de «Abrir el sobre» (pedido por el usuario).
-          <div className="relative h-[440px] w-full lg:h-[540px]">
-            <HeroStack alt={dictionary.hero.posterAlt} />
-          </div>
-        }
-      />
-      <FiestaChooser dictionary={dictionary} locale={locale} />
-      <ExperienceSection dictionary={dictionary} />
-      <MobileSection dictionary={dictionary} />
-      <HerramientasDelPanel aLaTabla="#precios" dictionary={dictionary} />
-
-      {templates.length > 0 ? (
-        <section aria-labelledby="collections-title" className="px-6 py-24" id="colecciones">
-          <div className="mx-auto max-w-[1180px]">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <SectionHeading
-                eyebrow={dictionary.collections.eyebrow}
-                title={<span id="collections-title">{dictionary.collections.title}</span>}
-              />
-            </div>
-            {/* El escenario ocupa el ancho entero: las flechas van a sus bordes, como en
-                la maqueta, y no encima de la escena central. */}
-            <div className="mt-14">
-              <CollectionsCarousel
-                dictionary={dictionary}
-                slides={dictionary.collections.scenes.map((scene, i) => ({
-                  key: `${scene.tag}-${scene.name}`,
-                  tag: scene.tag,
-                  name: scene.name,
-                  alt: scene.alt,
-                  src: ESCENAS[i] ?? ESCENAS[0]!,
-                }))}
-              />
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      <ComparisonSection dictionary={dictionary} />
-
-      {encargo ? <ComoFunciona dictionary={dictionary} /> : null}
-
-      {plans.length > 0 ? (
-        <PricingSection
-          comparativa={await comparativaDePlanes(plans, dictionary, locale)}
-          reservas={await reservasDePlanes()}
-          dictionary={dictionary}
-          locale={locale}
-          modelo={modeloElegido}
-          // El código de quien le recomendó viaja hasta el pedido; allí se valida.
-          referido={ref === undefined ? null : ref.replace(/[^A-Za-z0-9-]/g, '').slice(0, 16)}
-          plans={plans}
-        />
-      ) : null}
-
-      {templates.length > 0 ? <ModelsSection dictionary={dictionary} locale={locale} templates={templates} /> : null}
-
-      <AboutSection dictionary={dictionary} />
-      <TestimonialsSection dictionary={dictionary} testimonios={sitio.testimonios} />
-      <FaqSection dictionary={dictionary} encargo={encargo} />
-      <ContactSection
-        categories={categories}
-        contacto={{
-          whatsapp: sitio.whatsapp,
-          whatsappVisible: sitio.whatsappVisible,
-          horario: sitio.horario,
-          mensaje: sitio.mensajeGeneral,
-        }}
-        dictionary={dictionary}
-        locale={locale}
-        privacidad={
-          <PrivacyNotice
-            enlace={dictionary.legal.noticeLink}
-            href={sitio.privacidadPublicada ? rutaDe(locale, 'privacidad') : null}
-            texto={dictionary.legal.notice}
-          />
-        }
+        planes={plans}
+        reservas={reservas}
+        textosComparativa={textosComparativa}
+        whatsapp={sitio.whatsapp.replace(/\D/g, '')}
       />
     </>
   )

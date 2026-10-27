@@ -1,0 +1,901 @@
+:root{
+  /* UN SOLO SUELO: el nacar. Luz de dia, no de noche.
+     El color vivo lo pone la fiesta: el verde del jardin de una boda,
+     el azul rey de unos quince. El oro va plano, nunca en degradado. */
+  --ink:var(--p-suelo); --ink-2:var(--p-suelo-2); --ink-3:var(--p-suelo-3);
+  --tinta:var(--p-tinta);
+  --gold:var(--p-oro); --champagne:var(--p-champan);
+  --line:rgba(13,13,15,.14); --faint:rgba(13,13,15,.64);
+  --cream:var(--p-crema); --paper:var(--p-papel); --green:var(--p-verde); --green-2:var(--p-verde-2);
+  --gold-d:var(--p-oro-hondo); --ink-l:var(--p-tinta-clara); --faint-l:rgba(11,17,36,.6); --line-l:rgba(11,17,36,.12);
+  --sup:rgba(255,255,255,.72); --sup-2:var(--p-blanco);
+  --sombra:0 28px 64px -34px rgba(13,13,15,.3);
+  /* El botón flotante de WhatsApp, medido una sola vez: lo usan él y el hueco del pie. */
+  --wa-alto:58px; --wa-borde:clamp(16px,2.4vw,30px);
+  --serif:'Bodoni Moda',Didot,'Playfair Display',Georgia,serif; --sans:'Jost',system-ui,sans-serif;
+  --mundo-fondo:var(--p-mundo-fondo); --mundo-fondo-2:var(--p-mundo-fondo-2); --mundo-halo:var(--p-mundo-halo);
+  --mundo-acento:var(--p-mundo-acento); --mundo-acento-claro:var(--p-mundo-acento-claro);
+  --brillo:var(--p-brillo); --brillo-2:var(--p-brillo-2);
+  --script:'Parisienne','Snell Roundhand',cursive;
+  --cw:clamp(112px,15vw,198px);
+  --oro-plano:var(--p-oro);
+  --sec:clamp(84px,9vw,160px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{overflow-x:clip}
+/* XV: noche de terciopelo violeta y oro rosado. Boda: medianoche índigo y oro antiguo. */
+html[data-mundo="xv"]{
+  --ink:var(--p-xv-suelo); --ink-2:var(--p-xv-suelo-2); --ink-3:var(--p-xv-suelo-3);
+  --tinta:var(--p-xv-tinta);
+  --gold:var(--p-mundo-acento); --champagne:var(--p-mundo-acento-claro);
+  --line:rgba(18,10,22,.14); --faint:rgba(18,10,22,.64);
+  --green:var(--p-xv-verde); --green-2:var(--p-xv-verde-2); --gold-d:var(--p-xv-oro-hondo); --ink-l:var(--p-xv-tinta-clara);
+  --faint-l:rgba(42,15,58,.6); --line-l:rgba(42,15,58,.12);
+  --cream:var(--p-xv-crema); --paper:var(--p-xv-papel);
+  --sombra:0 28px 64px -34px rgba(18,10,22,.3);
+  /* el azul rey del vestido y el rosa de las hortensias */
+  --brillo:var(--p-xv-brillo); --brillo-2:var(--p-xv-brillo-2);
+}
+html,body{background:var(--ink);transition:background .9s ease}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+body{background:var(--ink);color:var(--tinta);font-family:var(--sans);font-size:16px;line-height:1.62;font-weight:300;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:400;line-height:1.04;letter-spacing:-.01em}
+.it{font-style:italic;color:var(--champagne)}
+.eyebrow{font-size:11.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:400}
+.wrap{width:min(1240px,92vw);margin:0 auto}
+.lead{color:var(--faint);max-width:52ch}
+section{position:relative}
+
+/* ---------- preloader ---------- */
+/* La entrada ya no es un flash blanco: el lacre se estampa sobre la misma noche
+   del resto de la web, y el telón que se abre es de esa noche. Un solo fondo. */
+/* El telón de entrada. **Se quita solo a los 4 s aunque el JavaScript no llegue nunca**: si el
+   trozo de gsap falla —un despliegue a mitad de visita, la red, la CSP—, lo que quedaba era una
+   pantalla crema y la web entera debajo, sin que el visitante viera nada. La animación de verdad
+   lo retira mucho antes. */
+#pre{position:fixed;inset:0;z-index:200;background:var(--ink);display:grid;place-items:center;overflow:hidden;
+  animation:telon-de-seguridad .3s linear 4s forwards}
+@keyframes telon-de-seguridad{to{opacity:0;visibility:hidden;pointer-events:none}}
+#pre .s{width:min(172px,40vw);filter:drop-shadow(0 18px 34px rgba(0,0,0,.8)) drop-shadow(0 0 40px rgba(199,162,74,.3));opacity:0;position:relative;z-index:2}
+#pre .cap{position:absolute;bottom:calc(34px + env(safe-area-inset-bottom,0px));font-family:var(--script);font-size:clamp(23px,3.4vw,31px);color:var(--champagne);line-height:1;opacity:0;z-index:2}
+#pre .half{position:absolute;top:0;bottom:0;width:50.2%;background:var(--ink)}
+/* el doblez del sobre: una hebra de oro que se parte en dos al abrirse el telón */
+#pre .half::after{content:'';position:absolute;top:0;bottom:0;width:1px;
+  background:linear-gradient(transparent,var(--gold) 42%,var(--champagne) 50%,var(--gold) 58%,transparent)}
+#pre .half.l::after{right:0}#pre .half.r::after{left:0}
+#pre .half.l{left:0}#pre .half.r{right:0}
+
+/* ---------- nav ---------- */
+nav.top{position:sticky;top:0;z-index:90;display:flex;align-items:center;justify-content:space-between;padding-block:calc(20px + env(safe-area-inset-top,0px)) 20px;padding-inline:max(18px,env(safe-area-inset-left,0px)) max(18px,env(safe-area-inset-right,0px));transition:background .5s,backdrop-filter .5s,border-color .5s,color .5s;border-bottom:1px solid transparent}
+/* sobre el estreno la barra va en claro: si no, la marca desaparece */
+nav.top.claro{color:var(--p-nacar-alto)}
+nav.top.claro .brand .lamono{filter:none}
+nav.top.claro.solid{background:rgba(13,13,15,.6)}
+nav.top.solid{background:rgba(251,248,243,.86);backdrop-filter:blur(18px) saturate(1.3);border-bottom-color:var(--line)}
+.brand{display:flex;align-items:center;gap:12px;font-family:var(--serif);font-size:19px;letter-spacing:.06em}
+.brand .lamono{width:36px;height:36px;flex:none;filter:drop-shadow(0 5px 11px rgba(13,13,15,.3))}
+nav.top .links{display:flex;gap:30px;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase}
+nav.top .links a{padding-block:12px}
+nav.top .links a{opacity:.76;transition:opacity .3s,color .3s}
+nav.top .links a:hover{opacity:1;color:var(--gold)}
+.cta-pill{padding:13px 24px;border-radius:999px;background:var(--brillo);color:var(--p-blanco);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:400}
+.burger{display:none;width:40px;height:40px;border:1px solid var(--line);border-radius:50%;place-items:center}
+.burger span,.burger span::before,.burger span::after{content:'';display:block;width:15px;height:1px;background:currentColor}
+.burger span::before{transform:translateY(-5px)}.burger span::after{transform:translateY(4px)}
+#movilmenu{position:fixed;inset:0;z-index:95;background:rgba(251,248,243,.98);backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;color:var(--tinta)}
+#movilmenu.open{display:flex}
+#movilmenu a{font-family:var(--serif);font-size:30px}
+#movilmenu .x{position:absolute;top:22px;right:24px;font-size:26px;line-height:1}
+
+/* ---------- la atmósfera: EL único fondo de toda la web ---------- */
+/* Una sola capa fija detrás de todo: luz de día teñida del color del mundo.
+   Ninguna sección pinta fondo propio, así que no hay costuras entre bloques. */
+/* EL FONDO DE TODA LA WEB: lino de verdad con la sombra de una palmera, fijo
+   detrás de todo y muy velado para que sea textura y no fotografía. Encima van
+   el foco de luz y el tinte del mundo. Ninguna sección inventa su propio fondo. */
+#atmos{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  background:url("/site/portada/lino.webp") center top/cover no-repeat;background-attachment:fixed}
+#atmos::before{content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 50% -18%,rgba(255,255,255,.92) 0%,transparent 64%),
+    color-mix(in oklab,var(--ink) 88%,transparent)}
+/* el grano: papel de alto gramaje, no pantalla */
+#atmos::after{content:'';position:absolute;inset:-50%;opacity:.05;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* y la viñeta que hunde los bordes: la luz cae en el centro, como en una galeria */
+#atmos .vignette{position:absolute;inset:0;background:radial-gradient(120% 86% at 50% 38%,transparent 42%,rgba(29,34,48,.1) 100%)}
+#atmos .vel{position:absolute;border-radius:50%;filter:blur(110px);opacity:.5;will-change:transform}
+#atmos .v1{left:-16%;top:6%;width:60vw;height:60vw;background:radial-gradient(circle,color-mix(in oklab,var(--brillo) 44%,transparent),transparent 68%)}
+#atmos .v2{right:-20%;top:40%;width:56vw;height:56vw;background:radial-gradient(circle,color-mix(in oklab,var(--brillo-2) 42%,transparent),transparent 66%)}
+#atmos .v3{left:26%;top:76%;width:50vw;height:50vw;background:radial-gradient(circle,color-mix(in oklab,var(--gold) 30%,transparent),transparent 68%)}
+main>*,footer{position:relative;z-index:1}
+/* nav sigue fija: con `position:relative` ocupaba 86 px de flujo y abría un hueco
+   vacío sobre el hero, que además empujaba las dos puertas fuera de la pantalla. */
+nav.top{z-index:90}
+/* ---------- el estreno: el abanico de portadas ---------- */
+/* Sin fondo propio: aquí se ve el mismo lino que en toda la web. Forzar una
+   banda oscura en una web de lino claro era el error; el arte de las portadas
+   —que ya es oscuro y rico— es el que pone el color sobre la tela. */
+#estreno{position:relative;min-height:124svh;overflow:hidden;
+  --cw:clamp(112px,min(13.5vw,23vh),216px)}
+/* un halo de oro muy suave, como la luz que entra por la ventana */
+#estreno .brillo{position:absolute;left:50%;top:72%;width:88vmax;height:58vmax;z-index:0;
+  transform:translate(-50%,-50%);pointer-events:none;
+  background:radial-gradient(closest-side,rgba(184,134,11,.16),transparent 70%)}
+#estreno .efondo{display:none}
+#estreno .escena{position:absolute;inset:0;perspective:1700px;perspective-origin:50% 40%;z-index:2}
+#estreno .abanico{position:absolute;left:50%;top:78%;transform-style:preserve-3d;width:0;height:0}
+#estreno .cabeza{position:relative;z-index:3;padding-top:clamp(132px,18vh,190px);text-align:center}
+#estreno .eyebrow{color:var(--gold)}
+#estreno h2{font-size:clamp(34px,6vw,92px);line-height:1.02;margin-top:18px;color:var(--tinta)}
+#estreno h2 .l{display:block;overflow:hidden;padding-bottom:.1em}
+#estreno h2 .l>span{display:inline-block}
+#estreno .it{color:var(--gold)}
+#estreno .lead{color:var(--faint);margin:22px auto 0;max-width:52ch}
+/* las portadas: sombra de papel sobre tela, no de pantalla negra */
+.tcard{position:absolute;width:var(--cw);aspect-ratio:9/16;left:calc(var(--cw) / -2);top:calc(var(--cw) * -.889);
+  border-radius:14px;overflow:hidden;transform-style:preserve-3d;background:var(--ink-3);will-change:transform;
+  box-shadow:0 36px 72px -24px rgba(13,13,15,.5),0 0 0 1px rgba(13,13,15,.07)}
+/* La imagen sobra 24 px por arriba y por abajo **a propósito**: el flotar la mueve ±12 px dentro
+   de la carta, y sin ese margen se veía el papel crema del fondo asomando por un borde —los huecos
+   vacíos que el usuario señaló—. La carta recorta lo que sobra. */
+.tcard img{position:absolute;left:0;top:-24px;width:100%;height:calc(100% + 48px);object-fit:cover}
+/* el reflejo que cruza cada portada: lo que las hace parecer de verdad */
+.tcard::after{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+  background:linear-gradient(115deg,rgba(255,255,255,.18) 0%,transparent 28%,transparent 70%,rgba(255,255,255,.05))}
+@media (max-width:760px){#estreno{min-height:104svh}#estreno .cabeza{padding-top:118px}}
+
+/* ---------- ribbon ---------- */
+.ribbon{border-block:1px solid var(--line);overflow:hidden;padding-block:19px;background:var(--sup)}
+.ribbon .track{display:flex;gap:30px;width:max-content;font-size:11.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--faint);align-items:center}
+.ribbon b{color:var(--gold);font-weight:400}
+
+/* ---------- el pase ---------- */
+#pase{display:flex;max-width:560px;margin:clamp(44px,7vh,72px) auto 0;text-align:left;position:relative;
+  background:var(--p-pase);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  box-shadow:0 44px 90px -40px rgba(0,0,0,.9)}
+.pase-cuerpo{flex:1;padding:32px 32px;min-width:0}
+#pase::before{content:'';position:absolute;inset:8px;border:1px solid rgba(168,123,36,.26);border-radius:10px;pointer-events:none;z-index:4}
+.pase-k{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold)}
+/* los renglones vacíos: el pase espera sus datos. En la maqueta este selector se perdió
+   en una edición: el navegador se traga la declaración huérfana, PostCSS no. */
+.pase-luxury{color:var(--p-blanco);font-size:13px;line-height:1.5}
+.pase-luxury b{font-weight:400;color:var(--p-blanco);border-bottom:1px solid rgba(255,255,255,.45)}
+.pase-n{font-family:var(--serif);font-size:clamp(26px,3.4vw,40px);margin:10px 0 4px;line-height:1.08;word-break:break-word}
+.pase-f{font-size:13px;color:var(--faint)}
+.pase-linea{height:1px;background:var(--line);margin:18px 0 14px}
+.pase-pie{display:flex;justify-content:space-between;gap:14px;font-size:11.5px;color:var(--faint);flex-wrap:wrap}
+.pase-talon{width:132px;flex:none;border-left:1px dashed rgba(199,162,74,.4);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;padding:20px 12px;background:rgba(199,162,74,.05)}
+.pase-talon img{width:54px}
+.pase-talon span{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);text-align:center;line-height:1.5}
+@media (max-width:560px){
+  #pase{flex-direction:column}
+  .pase-talon{width:auto;border-left:0;border-top:1px dashed rgba(199,162,74,.4);flex-direction:row}
+}
+
+/* ---------- carrusel de diseños ---------- */
+#disenos{padding-block:var(--sec) calc(var(--sec) * .5);overflow:hidden}
+.sechead{text-align:center;margin-bottom:clamp(34px,5vh,56px)}
+.sechead h2{font-size:clamp(32px,5.1vw,70px);margin-top:14px}
+.chips{display:flex;gap:14px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+.chip{padding:15px 32px;border:1px solid var(--line);border-radius:999px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);transition:.4s;background:var(--sup)}
+.chip:hover{color:var(--brillo);border-color:var(--brillo)}
+.chip.on{color:var(--p-blanco);border-color:transparent;background:var(--brillo)}
+/* El anillo: un cilindro con una portada en cada cara. Se arrastra y gira solo. */
+#ring{--rw:clamp(124px,15vw,206px);position:relative;height:clamp(440px,62vh,620px);margin-top:clamp(30px,5vh,56px);
+  perspective:1900px;perspective-origin:50% 32%;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+#ring:active{cursor:grabbing}
+#carousel{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;will-change:transform}
+.rcard{position:absolute;width:var(--rw);aspect-ratio:9/16;left:calc(var(--rw) / -2);top:calc(var(--rw) * -.889);
+  border-radius:10px;overflow:hidden;background:var(--ink-3);padding:0;border:0;
+  box-shadow:0 26px 54px -24px rgba(29,34,48,.5),0 0 0 1px rgba(29,34,48,.07);
+  transition:box-shadow .4s}
+.rcard img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.rcard::after{content:"";position:absolute;inset:0;background:var(--ink);opacity:var(--velo,0);pointer-events:none}
+/* La de delante se marca en negro: el aro del acento salía rosa sobre las portadas claras. */
+.rcard.front{box-shadow:0 36px 72px -22px rgba(29,34,48,.5),0 0 0 2px var(--tinta)}
+/* La capa del modelo: pantalla entera, el velo y Esc los pone el navegador. */
+/* `dvh`: en el móvil la barra del navegador aparece y desaparece, y con `100%` la capa quedaba
+   más alta que lo que se ve. Nada de altos fijos. */
+#vermodelo{width:100%;max-width:100%;height:100dvh;max-height:100dvh;border:0;padding:0;margin:0;background:var(--p-tinta);overflow:hidden}
+#vermodelo::backdrop{background:rgba(13,13,15,.86)}
+#vermodelo .vm-marco{display:block;width:100%;height:100%;border:0;background:var(--p-tinta)}
+#vermodelo .vm-x{position:fixed;top:max(14px,env(safe-area-inset-top,0px));right:14px;width:44px;height:44px;
+  border-radius:50%;display:grid;place-items:center;color:var(--p-blanco);background:rgba(13,13,15,.55);
+  border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);z-index:2}
+#vermodelo .vm-x:hover{background:rgba(13,13,15,.8)}
+#vermodelo .vm-x svg{width:18px;height:18px}
+/* Mientras la capa está abierta, lo de detrás no se mueve. */
+html.vm-abierta,html.vm-abierta body{overflow:hidden}
+.cfnav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--brillo);z-index:5;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);box-shadow:var(--sombra);transition:.35s}
+.cfnav:hover{border-color:var(--brillo);background:var(--p-blanco)}
+.cfnav.prev{left:clamp(8px,2vw,34px)}.cfnav.next{right:clamp(8px,2vw,34px)}
+.cfnav{z-index:30}
+/* estaba a -18 px y «Mascarada» caia sobre las portadas */
+#cfmeta{text-align:center;margin-top:34px;min-height:104px}
+#cfmeta h3{font-size:clamp(34px,5.2vw,68px);margin:0 0 16px;font-weight:400;letter-spacing:.005em;line-height:1.08}
+#cfmeta a{color:var(--champagne);border-bottom:1px solid rgba(199,162,74,.45);padding-bottom:4px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;transition:.35s}
+#cfmeta a:hover{border-bottom-color:var(--gold)}
+
+/* ---------- la noche necesita ---------- */
+#noche{padding-block:var(--sec)}
+#noche h2{font-size:clamp(32px,5.3vw,74px);margin-top:16px}
+.grid12{display:grid;grid-template-columns:repeat(4,1fr);margin-top:clamp(40px,6vh,64px);border:1px solid var(--line)}
+.f12{position:relative;padding:28px 26px 30px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:214px;display:flex;flex-direction:column;transition:background .45s}
+.f12:nth-child(4n){border-right:0}
+.f12:nth-last-child(-n+4){border-bottom:0}
+.f12:hover{background:linear-gradient(170deg,color-mix(in oklab,var(--brillo) 8%,transparent),transparent 72%)}
+.f12 .n{position:absolute;top:22px;right:24px;font-size:11px;letter-spacing:.2em;color:rgba(29,34,48,.3)}
+.f12 svg{width:44px;height:44px;stroke:var(--brillo);fill:none;stroke-width:1;margin-bottom:auto;
+  transition:stroke .45s,transform .6s cubic-bezier(.16,1,.3,1)}
+.f12:hover svg{stroke:var(--gold);transform:scale(1.1)}
+.f12 h4{font-size:22px;margin:22px 0 9px}
+.f12 p{font-size:13px;color:var(--faint);line-height:1.55}
+
+/* ---------- historias (carrusel de fotos 3D) ---------- */
+#historias{padding-block:var(--sec) calc(var(--sec) * .72);overflow:hidden}
+/* ---------- el hilo de oro que separa un bloque de otro ---------- */
+/* antes había un «puente» que degradaba la noche hasta el crema: con un solo
+   suelo no hay nada que cruzar, basta una costura de luz. */
+.costura{height:clamp(90px,12vh,150px);display:grid;place-items:center}
+.costura .s{width:1px;height:62px;background:linear-gradient(transparent,var(--gold),transparent)}
+
+/* ---------- móvil con la invitación viva ---------- */
+#movil{padding-block:var(--sec);overflow:hidden}
+#movil .row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(34px,6vw,86px);align-items:center}
+.phonewrap{position:relative;display:grid;place-items:center}
+.phone{position:relative;width:clamp(260px,26vw,330px);aspect-ratio:66/113;border-radius:clamp(34px,3.4vw,44px);background:var(--p-telefono);padding:9px;box-shadow:0 50px 100px -40px rgba(29,34,48,.5),0 0 0 1px rgba(29,34,48,.1);z-index:2}
+.phone .notch{position:absolute;left:50%;top:17px;transform:translateX(-50%);width:34%;height:19px;background:var(--p-telefono);border-radius:999px;z-index:4}
+.phone .scr{position:relative;width:100%;height:100%;border-radius:clamp(27px,2.7vw,36px);overflow:hidden;background:var(--p-pantalla)}
+#inv{position:absolute;inset:0;will-change:transform}
+.ivs{display:block;width:100%;height:100%;object-fit:cover;object-position:center top}
+.phone .scr{background:var(--p-pantalla-2)}
+.phone .live{position:absolute;top:-14px;right:-14px;z-index:6;background:var(--brillo);color:var(--p-blanco);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;padding:7px 13px;border-radius:999px;display:flex;align-items:center;gap:7px;box-shadow:0 14px 30px -12px rgba(0,0,0,.4)}
+.phone .live b{width:5px;height:5px;border-radius:50%;background:var(--p-blanco);animation:pulse 1.7s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+#movil h2{font-size:clamp(32px,4.9vw,66px);margin-top:16px}
+.bullets{margin-top:clamp(26px,4vh,40px);display:flex;flex-direction:column;gap:22px}
+.bullets li{display:flex;gap:17px;list-style:none;align-items:flex-start}
+.bullets svg{width:30px;height:30px;stroke:var(--gold);fill:none;stroke-width:1;flex:none;margin-top:2px}
+.bullets h4{font-size:19px;margin-bottom:3px}
+.bullets p{font-size:13px;color:var(--faint)}
+
+/* ---------- panel ---------- */
+#panel{padding-block:var(--sec)}
+#panel h2{font-size:clamp(32px,4.9vw,66px);margin-top:14px}
+.dashrow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,.95fr);gap:22px;margin-top:clamp(38px,5vh,58px);align-items:stretch}
+.dash{border-radius:18px;background:var(--p-tablero);border:1px solid var(--line-l);box-shadow:0 60px 110px -40px rgba(0,0,0,.8),0 0 0 1px rgba(241,236,228,.14);overflow:hidden;display:grid;grid-template-columns:184px minmax(0,1fr)}
+.dnav{background:var(--p-tablero-nav);border-right:1px solid var(--line-l);padding:20px 0}
+.dnav .dbrand{display:flex;align-items:center;gap:9px;padding:0 18px 18px;font-family:var(--serif);font-size:15px;border-bottom:1px solid var(--line-l);margin-bottom:12px}
+.dnav .dbrand i{width:25px;height:25px;border-radius:50%;border:1px solid var(--gold-d);display:grid;place-items:center;font-size:9px;color:var(--gold-d);font-style:normal}
+.dnav a{display:flex;align-items:center;gap:10px;padding:8px 18px;font-size:13px;color:var(--faint-l);transition:.3s;position:relative}
+.dnav a svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.2;flex:none}
+.dnav a.on{color:var(--green);background:rgba(27,42,78,.07);font-weight:400}
+.dnav a.on::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:2px;background:var(--gold-d)}
+.dnav .dsep{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:rgba(11,17,36,.34);padding:16px 18px 6px}
+.dmain{padding:20px 22px 24px;min-width:0}
+.dhead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.dhead h3{font-size:25px}
+.dhead .sub{font-size:11.5px;color:var(--faint-l);margin-top:3px}
+.dlive{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--green);border:1px solid rgba(27,42,78,.22);padding:6px 12px;border-radius:999px}
+.dlive b{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.7s ease-in-out infinite}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:17px}
+.tile{border:1px solid var(--line-l);border-radius:11px;padding:12px 13px;background:var(--p-tablero-ficha)}
+.tile .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint-l)}
+.tile .v{font-family:var(--serif);font-size:30px;line-height:1.1;margin-top:3px}
+.tile .v small{font-size:13px;color:var(--faint-l)}
+.tile.g .v{color:var(--green)}
+.tile.o .v{color:var(--gold-d)}
+.dcols{display:grid;grid-template-columns:168px minmax(0,1fr);gap:18px;margin-top:17px;align-items:center}
+.donut{position:relative;display:grid;place-items:center}
+.donut svg{transform:rotate(-90deg)}
+.donut .mid{position:absolute;text-align:center}
+.donut .mid b{display:block;font-family:var(--serif);font-size:27px;line-height:1}
+.donut .mid span{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint-l)}
+.legend{display:flex;flex-direction:column;gap:9px}
+.legend div{display:flex;align-items:center;gap:9px;font-size:11.5px;border-bottom:1px dotted var(--line-l);padding-bottom:8px}
+.legend i{width:8px;height:8px;border-radius:50%;flex:none}
+.legend b{margin-left:auto;font-family:var(--serif);font-size:19px;font-weight:400}
+.guests{margin-top:15px;border-top:1px solid var(--line-l)}
+.grow{display:flex;align-items:center;gap:11px;padding:9px 2px;border-bottom:1px solid var(--line-l);font-size:13px}
+.grow .av{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:var(--p-panel-av);flex:none;letter-spacing:.04em}
+.grow .st{margin-left:auto;font-size:11px;letter-spacing:.1em;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.st.ok{background:rgba(27,42,78,.1);color:var(--green)}
+.st.no{background:rgba(158,60,60,.1);color:var(--p-no)}
+.st.pend{background:rgba(155,122,46,.12);color:var(--gold-d)}
+.dbars{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:15px}
+.dbar .t{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px}
+.dbar .t b{font-weight:400;color:var(--faint-l)}
+.dbar .track{height:4px;border-radius:4px;background:rgba(11,17,36,.08);overflow:hidden}
+.dbar .track i{display:block;height:100%;border-radius:4px;transform-origin:left;transform:scaleX(0)}
+.luxury{border-radius:18px;background:var(--brillo);color:var(--p-blanco);padding:20px 19px 19px;display:flex;flex-direction:column;box-shadow:0 44px 90px -42px rgba(27,42,78,.6);position:relative;overflow:hidden}
+.luxury::after{content:'';position:absolute;right:-70px;top:-70px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 68%)}
+.lhead{display:flex;align-items:center;gap:11px;position:relative;z-index:2}
+.lhead .orb{width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 34% 30%,var(--p-orbe),var(--gold));flex:none;box-shadow:0 0 22px -3px rgba(201,169,106,.65)}
+.lhead h4{font-size:21px}
+.lhead p{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(238,232,218,.6)}
+/* los mensajes viejos se van por arriba, como en un chat de verdad */
+.lchat{flex:1;display:flex;flex-direction:column;gap:10px;justify-content:flex-end;margin:20px 0 13px;min-height:286px;max-height:340px;overflow:hidden;position:relative;z-index:2}
+.msg{max-width:88%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.5;opacity:0}
+.msg.me{align-self:flex-end;background:var(--p-blanco);color:var(--tinta);border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:rgba(253,250,244,.09);border:1px solid rgba(253,250,244,.14);border-bottom-left-radius:4px}
+.msg .act{display:block;width:fit-content;margin-top:10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;border:1px solid rgba(216,189,134,.5);color:var(--p-oro-suave);padding:5px 11px;border-radius:999px}
+.msg .typing{display:inline-flex;gap:4px}
+.msg .typing i{width:5px;height:5px;border-radius:50%;background:var(--p-oro-suave);animation:bob 1.1s ease-in-out infinite}
+.msg .typing i:nth-child(2){animation-delay:.16s}.msg .typing i:nth-child(3){animation-delay:.32s}
+@keyframes bob{40%{transform:translateY(-4px)}}
+.lbox{border:1px solid rgba(253,250,244,.18);border-radius:999px;padding:11px 16px;font-size:11.5px;color:rgba(238,232,218,.5);display:flex;align-items:center;gap:9px;position:relative;z-index:2}
+.lbox svg{width:15px;height:15px;stroke:var(--p-oro-suave);fill:none;stroke-width:1.2;margin-left:auto}
+.lchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;position:relative;z-index:2}
+.lchips span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;border:1px solid rgba(253,250,244,.16);color:rgba(238,232,218,.66);padding:5px 10px;border-radius:999px}
+
+/* ---------- el tutorial del panel ---------- */
+/* Cuatro pasos: cómo invitas a alguien y qué ve esa persona. */
+.tutor{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:clamp(24px,3.6vh,38px)}
+.tutor button{display:flex;align-items:center;gap:9px;padding:9px 16px;border:1px solid var(--line);
+  border-radius:999px;font-size:12px;color:var(--faint);background:var(--sup);transition:.45s}
+.tutor button i{width:19px;height:19px;border-radius:50%;border:1px solid currentColor;display:grid;
+  place-items:center;font-size:10px;font-style:normal;flex:none}
+.tutor button.on{color:var(--p-blanco);background:var(--brillo);border-color:transparent}
+.tutor-pie{text-align:center;font-size:13px;color:var(--faint);margin-top:14px;min-height:40px}
+.tutor-pie b{display:block;font-family:var(--serif);font-size:19px;color:var(--tinta);font-weight:400;margin-bottom:2px}
+.dashrow{position:relative}
+/* el foco que señala dónde está pasando la cosa */
+/* el foco señala, NO apaga la pagina: el 0 0 0 9999px oscurecia toda la web */
+.foco{position:absolute;border-radius:12px;pointer-events:none;opacity:0;z-index:7;
+  box-shadow:0 0 0 2px var(--brillo),0 20px 44px -18px color-mix(in oklab,var(--brillo) 55%,transparent);transition:none}
+/* las tarjetas que cuentan lo que hace el panel: una sola receta, varios contenidos */
+.pc{position:absolute;z-index:10;left:50%;top:62px;transform:translateX(-50%);width:318px;opacity:0;
+  border-radius:16px;background:var(--p-pc);padding:18px 18px 16px;
+  box-shadow:0 40px 80px -26px rgba(13,13,15,.55),0 0 0 1px rgba(13,13,15,.1)}
+.pc .k{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.pc .fila{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--tinta);
+  padding:7px 0;border-bottom:1px solid rgba(13,13,15,.07)}
+.pc .fila:last-child{border-bottom:0}
+.pc .fila span{margin-left:auto;color:var(--faint-l);font-size:11.5px}
+.pc .tic{width:17px;height:17px;border-radius:50%;background:var(--brillo);flex:none;display:grid;place-items:center}
+.pc .tic::after{content:'';width:7px;height:4px;border-left:1.6px solid var(--p-blanco);border-bottom:1.6px solid var(--p-blanco);
+  transform:rotate(-45deg) translate(1px,-1px)}
+.pc .barra{height:5px;border-radius:5px;background:rgba(13,13,15,.08);overflow:hidden;margin-top:12px}
+.pc .barra i{display:block;height:100%;background:var(--brillo);transform-origin:left;transform:scaleX(0)}
+.pc .pie{font-size:11.5px;color:var(--faint-l);margin-top:9px;display:flex;justify-content:space-between}
+/* el plano de mesas */
+.mesas{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:4px}
+.mesa{aspect-ratio:1;border-radius:50%;border:1px solid rgba(13,13,15,.14);display:grid;place-items:center;
+  font-size:10.5px;color:var(--faint-l);background:var(--p-blanco);transition:.45s}
+.mesa.ok{background:var(--brillo);border-color:transparent;color:var(--p-blanco)}
+/* el pase QR que nace al confirmar */
+.qr{position:absolute;z-index:9;left:50%;top:96px;transform:translateX(-50%);width:186px;border-radius:14px;
+  background:var(--p-pase);box-shadow:0 34px 70px -24px rgba(29,34,48,.55),0 0 0 1px rgba(29,34,48,.1);
+  padding:16px 16px 14px;text-align:center;opacity:0}
+.qr::before{content:'';position:absolute;inset:7px;border:1px solid rgba(168,123,36,.3);border-radius:9px;pointer-events:none}
+.qr svg{width:104px;height:104px;margin:6px auto 8px;display:block}
+.qr .k{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+.qr .n{font-family:var(--serif);font-size:17px;color:var(--tinta);line-height:1.2}
+.qr .p{font-size:11.5px;color:var(--faint-l);margin-top:2px}
+/* la puerta: lo que ve la recepción al escanear */
+.puerta-ok{position:absolute;z-index:9;left:50%;bottom:22px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;
+  padding:13px 20px 13px 15px;border-radius:999px;background:var(--brillo);color:var(--p-blanco);opacity:0;
+  box-shadow:0 26px 54px -20px rgba(29,34,48,.6)}
+.puerta-ok svg{width:26px;height:26px;flex:none;stroke:var(--p-blanco)}
+.puerta-ok b{display:block;font-size:14px;font-weight:400}
+.puerta-ok span{display:block;font-size:11px;opacity:.78;letter-spacing:.04em}
+@media (max-width:1080px){ .qr{top:auto;bottom:120px} }
+/* lo que ve el invitado en su teléfono */
+.quever{position:absolute;z-index:9;width:226px;right:clamp(6px,2vw,22px);top:84px;border-radius:16px;
+  background:var(--p-pase);box-shadow:0 34px 70px -24px rgba(29,34,48,.55),0 0 0 1px rgba(29,34,48,.1);
+  padding:18px 18px 16px;text-align:center;opacity:0}
+.quever .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.quever .n{font-family:var(--serif);font-size:21px;margin:8px 0 4px;color:var(--tinta)}
+.quever .p{font-size:12px;color:var(--faint-l)}
+.quever .b{margin-top:12px;display:block;padding:9px;border-radius:999px;background:var(--brillo);color:var(--p-blanco);
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+.quever::after{content:'';position:absolute;left:50%;top:9px;transform:translateX(-50%);width:34px;height:3px;
+  border-radius:3px;background:rgba(29,34,48,.18)}
+/* el envio por WhatsApp, como se ve de verdad: cabecera, globo verde,
+   vista previa de la invitacion, hora y los dos ticks azules */
+.wasap{position:absolute;z-index:10;left:50%;top:58px;transform:translateX(-50%);width:324px;
+  border-radius:16px;overflow:hidden;opacity:0;
+  box-shadow:0 40px 80px -26px rgba(13,13,15,.6),0 0 0 1px rgba(13,13,15,.12)}
+.wa-top{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--p-wa-barra);color:var(--p-blanco)}
+.wa-top .av{width:30px;height:30px;border-radius:50%;background:var(--p-wa-avatar);display:grid;place-items:center;
+  font-size:11px;letter-spacing:.04em;flex:none}
+.wa-top b{display:block;font-size:13.5px;font-weight:400;font-family:var(--sans)}
+.wa-top i{display:block;font-size:10.5px;font-style:normal;opacity:.75}
+.wa-top svg{width:17px;height:17px;margin-left:auto;stroke:var(--p-blanco);fill:none;stroke-width:1.6;opacity:.85}
+.wa-chat{background:var(--p-wa-chat);padding:14px 12px 12px;min-height:150px;display:flex;justify-content:flex-end}
+.wa-burbuja{background:var(--p-wa-burbuja);border-radius:10px 2px 10px 10px;padding:7px 8px 5px;max-width:96%;
+  font-size:12.5px;line-height:1.42;color:var(--p-wa-tinta);box-shadow:0 1px 1px rgba(13,13,15,.14)}
+.wa-prev{display:flex;gap:9px;background:rgba(13,13,15,.07);border-radius:7px;padding:7px;margin-bottom:6px}
+.wa-prev img{width:46px;height:62px;object-fit:cover;border-radius:4px;flex:none}
+.wa-prev b{display:block;font-size:11.5px;font-weight:500;line-height:1.3;margin-bottom:3px}
+.wa-prev span{font-size:10.5px;color:rgba(17,27,33,.6)}
+.wa-burbuja em{display:block;font-style:normal;color:var(--p-wa-enlace);margin-top:3px;word-break:break-all;font-size:11.5px}
+.wa-hora{display:flex;align-items:center;justify-content:flex-end;gap:3px;font-size:10px;
+  color:rgba(17,27,33,.45);margin-top:2px}
+.wa-hora svg{width:15px;height:15px;stroke:var(--p-wa-visto);fill:none;stroke-width:2}
+.grow.nuevo{background:color-mix(in oklab,var(--brillo) 7%,transparent)}
+@media (max-width:1080px){ .quever{right:10px;top:auto;bottom:14px} .wasap{left:10px;top:auto;bottom:120px} }
+
+/* ---------- mientras carga una foto: nácar con un brillo que pasa ---------- */
+/* Nada de huecos en blanco ni de saltos: el sitio de la foto ya está reservado
+   y un reflejo suave recorre el hueco hasta que la imagen llega. */
+.cargando{position:relative;background:var(--ink-2);overflow:hidden}
+.cargando::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.72) 50%,transparent 80%);
+  transform:translateX(-100%);animation:brillo 1.5s ease-in-out infinite}
+@keyframes brillo{to{transform:translateX(100%)}}
+.cargando > img{opacity:0}
+img.lista{animation:revela .7s ease forwards}
+/* los fondos que cambian con el mundo mandan ellos sobre su opacidad:
+   si no, el revelado los encendía todos a la vez y se encimaban. */
+.pfondo img.lista{animation:none}
+@keyframes revela{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.cargando::after{display:none}}
+
+/* ---------- las postales: el camino, apiladas ---------- */
+/* Mecánica tomada de la maqueta Riviera, con el papel, el oro y las fotos de aquí. */
+#historias{padding-block:var(--sec) 0;overflow:visible}
+#pila{position:relative;height:100svh;display:grid;place-items:center;overflow:hidden}
+/* las fotos del catálogo son verticales: el marco se hace vertical para que
+   la gente salga entera, en vez de recortarles la cabeza. */
+/* como en Riviera: apaisadas y grandes, apiladas en ángulo */
+/* las fotos del catálogo son 3:4; en un marco 4:5 se ven casi enteras */
+.pilainner{position:relative;width:min(560px,80vw);aspect-ratio:4/5}
+/* columna: la foto toma lo que sobra y el pie tiene su propia banda.
+   Con alto fijo, el titular se montaba sobre la foto. */
+.postal{position:absolute;inset:0;background:var(--p-nacar-alto);padding:15px 15px 0;display:flex;flex-direction:column;
+  box-shadow:0 50px 90px -24px rgba(13,13,15,.5),0 0 0 1px rgba(13,13,15,.07);will-change:transform}
+.postal img{width:100%;height:100%;object-fit:cover;object-position:center 28%}
+.postal .marco{position:relative;width:100%;flex:1;min-height:0;overflow:hidden}
+.postal .pie{flex:none;display:flex;flex-direction:column;gap:5px;padding:15px 10px 17px}
+.postal .pie b{font-family:var(--script);font-size:clamp(24px,3.2vw,38px);font-weight:400;color:var(--brillo);
+  line-height:1.05}
+.postal .pie span{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+@media (max-width:760px){
+  .postal{padding:10px 10px 0}
+  .postal .pie{padding:12px 6px 14px;gap:10px}
+  .postal .pie span{white-space:normal;max-width:44%;line-height:1.5}
+}
+
+/* ---------- la puerta: la foto manda y el nácar solo cubre la izquierda ---------- */
+/* Maquetación tomada de la maqueta Le Sceau. El velo se va a cero antes de la
+   mitad derecha: así la escena del check-in se ve, en vez de quedar lavada. */
+#puerta{position:relative;overflow:hidden}
+.pfondo{position:absolute;inset:-6% 0;z-index:0}
+.pfondo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;
+  opacity:0;transition:opacity 1.2s ease}
+.pfondo img.on{opacity:1}
+#puerta .capa{position:relative;z-index:2;padding-block:clamp(110px,16vh,170px);background:
+  linear-gradient(90deg,color-mix(in oklab,var(--ink) 96%,transparent) 0%,
+                        color-mix(in oklab,var(--ink) 88%,transparent) 38%,
+                        transparent 64%)}
+.puerta-txt{max-width:530px;display:flex;flex-direction:column;gap:20px}
+.puerta-txt h2{font-size:clamp(42px,5.4vw,84px);line-height:.98;color:var(--tinta)}
+#puerta .it{color:var(--brillo);font-style:italic}
+.puerta-txt .lead{margin:0;color:var(--faint)}
+.contador{display:flex;gap:clamp(26px,4vw,52px);margin-top:6px}
+.contador div{display:flex;flex-direction:column}
+.contador strong{font-family:var(--serif);font-weight:400;font-size:clamp(44px,5vw,64px);line-height:1;
+  color:var(--gold);font-variant-numeric:tabular-nums}
+.contador span{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+/* el pase que ve la recepción, en tinta sobre la foto */
+.tarjeta-bien{position:absolute;right:max(22px,5vw);bottom:clamp(40px,8vh,90px);z-index:3;
+  background:var(--tinta);color:var(--p-nacar-alto);padding:22px 26px;min-width:258px;border-radius:4px;
+  box-shadow:0 34px 64px -18px rgba(0,0,0,.6)}
+.tarjeta-bien .ok{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--p-si)}
+.tarjeta-bien .ok::before{content:'✓  '}
+.tarjeta-bien strong{display:block;font-family:var(--serif);font-weight:400;font-style:italic;
+  font-size:clamp(24px,2.6vw,30px);margin:5px 0 3px}
+.tarjeta-bien .det{font-size:13px;color:rgba(255,253,248,.62)}
+@media (max-width:900px){
+  #puerta .capa{background:linear-gradient(180deg,color-mix(in oklab,var(--ink) 94%,transparent) 0%,color-mix(in oklab,var(--ink) 80%,transparent) 62%,transparent)}
+  .tarjeta-bien{position:relative;right:auto;bottom:auto;margin:26px auto 0;max-width:min(330px,88vw)}
+}
+
+/* ---------- el itinerario: el tallo que se dibuja (de la maqueta Jardín) ---------- */
+#pasos{padding-block:var(--sec)}
+#pasos h2{font-size:clamp(32px,4.9vw,68px);margin-top:14px}
+.vine{position:relative;max-width:940px;margin:clamp(40px,7vh,70px) auto 0}
+.vine svg.stem{position:absolute;left:50%;top:0;height:100%;width:120px;transform:translateX(-50%);overflow:visible;opacity:.55}
+.st{display:grid;grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr);align-items:center;
+  margin-bottom:clamp(34px,6vh,72px)}
+.st:nth-child(odd) .txt{grid-column:1;text-align:right}
+.st:nth-child(even) .txt{grid-column:3;text-align:left}
+.st .dot{grid-column:2;width:62px;height:62px;margin:0 auto;border-radius:50%;background:var(--ink);
+  border:1px solid var(--gold);display:grid;place-items:center;font-family:var(--serif);font-size:25px;
+  color:var(--gold);position:relative;z-index:2}
+.st .txt h3{font-family:var(--serif);font-size:clamp(22px,2.6vw,30px);color:var(--tinta);margin-bottom:7px}
+.st .txt p{font-size:13.5px;color:var(--faint);max-width:38ch}
+.st:nth-child(odd) .txt p{margin-left:auto}
+@media (max-width:760px){
+  .st{grid-template-columns:76px minmax(0,1fr);margin-bottom:34px}
+  .st .txt,.st:nth-child(odd) .txt,.st:nth-child(even) .txt{grid-column:2;text-align:left}
+  .st:nth-child(odd) .txt p{margin-left:0}
+  .st .dot{grid-column:1;width:52px;height:52px;font-size:21px}
+  .vine svg.stem{left:38px}
+}
+
+/* ---------- planes en sobres ---------- */
+#planes{padding-block:var(--sec)}
+#planes h2{font-size:clamp(32px,4.9vw,66px);margin-top:14px}
+.envs{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2.4vw,30px);margin-top:clamp(44px,6vh,70px);align-items:start}
+.env{position:relative}
+/* una tarjeta de plan es una invitación: papel marfil y filete de oro por dentro */
+.card{background:var(--p-pase);border:1px solid var(--line-l);border-radius:13px;overflow:hidden;padding:34px 26px 36px;text-align:center;
+  box-shadow:0 34px 70px -34px rgba(29,34,48,.42),0 0 0 1px rgba(255,255,255,.9);position:relative;z-index:3}
+.card::before{content:'';position:absolute;inset:9px;border:1px solid rgba(168,123,36,.3);border-radius:8px 8px 0 0;pointer-events:none}
+.card::after{content:'';position:absolute;left:50%;top:9px;transform:translateX(-50%);width:42px;height:1px;background:var(--gold);opacity:.6}
+.env.mid .card{border-color:rgba(168,123,36,.45);box-shadow:0 46px 86px -34px rgba(29,34,48,.5),0 0 0 1px rgba(255,255,255,.9)}
+.badge{position:absolute;left:50%;top:-14px;transform:translateX(-50%);background:var(--brillo);color:var(--p-panel-av);font-size:11px;letter-spacing:.2em;text-transform:uppercase;padding:7px 15px;border-radius:999px;white-space:nowrap;z-index:5}
+.card .nm{font-family:var(--serif);font-size:clamp(28px,3.2vw,40px);font-style:italic}
+.card .tag{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint-l);margin-top:5px}
+.card .before{margin-top:15px;font-size:13px;color:var(--faint-l);display:flex;align-items:center;gap:9px;justify-content:center}
+.card .before s{opacity:.72}
+.card .before em{font-style:normal;font-size:11px;letter-spacing:.14em;text-transform:uppercase;border:1px solid rgba(155,122,46,.4);color:var(--gold-d);padding:3px 8px;border-radius:999px}
+.card .price{font-family:var(--serif);font-size:clamp(40px,5.2vw,62px);color:var(--gold-d);line-height:1.05;margin-top:4px}
+.card .price span{font-size:14px;color:var(--faint-l);font-family:var(--sans)}
+.card .res{font-size:11.5px;color:var(--gold-d);margin-top:5px}
+.card .desc{font-size:13px;color:var(--faint-l);margin-top:15px;padding-top:15px;border-top:1px solid var(--line-l);text-align:left}
+.feats{text-align:left;margin-top:16px;font-size:13px}
+.feats .gr{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-d);margin:14px 0 8px;display:block}
+.feats .gr::before{content:none!important}
+.feats .gr:first-child{margin-top:0}
+.feats li{list-style:none;display:flex;gap:9px;align-items:flex-start;margin-bottom:7px;line-height:1.46}
+.feats li::before{content:'✓';color:var(--green);font-size:11px;line-height:1.5;flex:none}
+.feats li em{font-style:normal;color:var(--gold-d)}
+.feats li .ex{font-size:11px;letter-spacing:.14em;text-transform:uppercase;border:1px solid rgba(155,122,46,.4);color:var(--gold-d);padding:2px 7px;border-radius:999px;margin-left:5px}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.pills span{font-size:11.5px;border:1px solid var(--line-l);border-radius:999px;padding:5px 11px;color:var(--faint-l)}
+.pills span em{font-style:normal;color:var(--gold-d)}
+.cbtn{display:block;margin-top:22px;padding:14px;border-radius:999px;border:1px solid var(--ink-l);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;text-align:center;transition:.35s}
+.cbtn:hover{background:var(--ink-l);color:var(--paper)}
+.env.mid .cbtn{background:var(--brillo);border-color:transparent;color:var(--p-blanco)}
+/* Los planes: la carta va METIDA en el sobre (mecánica de la maqueta Jardín) y
+   lleva dentro toda la información del plan, no un resumen. */
+.envs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(18px,2.4vw,30px);
+  margin-top:clamp(56px,8vh,110px);align-items:stretch}
+.env{position:relative;display:flex;flex-direction:column}
+.env .back{position:absolute;left:0;right:0;bottom:0;height:264px;background:var(--p-sobre-dorso);border-radius:6px;
+  box-shadow:0 34px 60px -24px rgba(13,13,15,.5);z-index:1}
+.env .front{position:absolute;left:0;right:0;bottom:0;height:264px;z-index:3;border-radius:6px;
+  background:linear-gradient(160deg,var(--p-sobre-cara),var(--p-sobre-cara-2));filter:drop-shadow(0 -2px 3px rgba(13,13,15,.12));
+  clip-path:polygon(0 0,50% 48%,100% 0,100% 100%,0 100%);pointer-events:none}
+.env .front::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(13,13,15,.07),transparent 30%,rgba(13,13,15,.08))}
+.env .seal2{position:absolute;left:50%;bottom:72px;width:64px;transform:translateX(-50%);z-index:4;
+  filter:drop-shadow(0 7px 10px rgba(13,13,15,.4))}
+/* la carta: en el flujo, con hueco abajo para que la solapa la tape */
+.env .lettr{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;margin:0 14px 22px;
+  background:var(--p-nacar-alto);border-radius:4px;padding:34px 26px 252px;text-align:center;border:1px solid rgba(184,134,11,.3);
+  box-shadow:0 12px 34px rgba(13,13,15,.16)}
+.env .lettr h3{font-family:var(--serif);font-style:italic;font-size:clamp(28px,3.2vw,40px);color:var(--tinta);line-height:1}
+.env .linea{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint-l);margin-top:7px}
+.env .antes{margin-top:16px;font-size:12.5px;color:var(--faint-l);display:flex;align-items:center;gap:9px;justify-content:center;flex-wrap:wrap}
+.env .antes s{opacity:.7}
+.env .antes em{font-style:normal;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  border:1px solid rgba(184,134,11,.45);color:var(--gold);padding:4px 9px;border-radius:999px}
+.env .price{font-family:var(--serif);font-size:clamp(38px,4.6vw,56px);color:var(--gold);line-height:1.04;margin-top:6px}
+.env .price span{font-size:13px;color:var(--faint-l);font-family:var(--sans);margin-left:4px}
+.env .res{font-size:11.5px;color:var(--gold);margin-top:5px}
+.env .desc{font-size:13px;color:var(--faint-l);margin-top:17px;padding-top:16px;border-top:1px solid var(--line-l);text-align:left;line-height:1.6}
+.env .feats{text-align:left;margin:16px 0 0;padding:0;display:block;font-size:13px}
+.env .feats li{list-style:none;display:flex;gap:9px;align-items:flex-start;margin-bottom:8px;line-height:1.5;color:var(--tinta)}
+.env .feats li::before{content:'';flex:none;width:5px;height:5px;margin-top:7px;background:var(--gold);transform:rotate(45deg)}
+.env .feats li.gr{display:block;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);
+  margin:16px 0 9px}
+.env .feats li.gr:first-child{margin-top:0}
+.env .feats li.gr::before{display:none}
+.env .feats .ex{display:inline-block;margin-left:7px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  border:1px solid rgba(184,134,11,.45);color:var(--gold);padding:2px 8px;border-radius:999px}
+.env .pills{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px;margin-bottom:22px}
+.env .pills span{font-size:11px;border:1px solid var(--line-l);border-radius:999px;padding:5px 11px;color:var(--faint-l)}
+.env .pills em{font-style:normal;color:var(--gold)}
+.env .tag{display:inline-block;margin-bottom:12px;padding:5px 13px;border-radius:99px;background:var(--gold);
+  color:var(--p-blanco);font-size:10px;letter-spacing:.22em;text-transform:uppercase}
+/* el botón se va al fondo: los tres quedan alineados aunque el texto difiera */
+.env .btn-plan{display:block;margin-top:auto;padding-top:15px;padding:15px;border-radius:999px;border:1px solid var(--tinta);
+  font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--tinta);
+  transition:all .5s cubic-bezier(.16,1,.3,1)}
+.env .btn-plan:hover{background:var(--tinta);color:var(--p-nacar-alto)}
+.env.star .front{background:linear-gradient(160deg,var(--p-sobre-verde-claro),var(--p-sobre-verde))}
+.env.star .back{background:var(--p-sobre-verde-hondo)}
+.env.star .btn-plan{background:var(--p-sobre-verde);color:var(--p-nacar-alto);border-color:var(--p-sobre-verde)}
+.env.star .btn-plan:hover{background:var(--brillo);border-color:var(--brillo)}
+@media (max-width:1080px){.envs{grid-template-columns:1fr;max-width:470px;margin-inline:auto}}
+@media (max-width:760px){
+  .env .lettr{padding:28px 20px 226px}
+  .env .back,.env .front{height:234px}
+  .env .seal2{bottom:62px;width:56px}
+}
+.resline{text-align:center;font-size:13px;color:var(--faint);margin-top:clamp(28px,4vh,44px)}
+
+/* ---------- comparativa ---------- */
+#comparativa{padding-block:calc(var(--sec) * .72) var(--sec)}
+.allinc{border:1px solid var(--line);border-radius:13px;padding:20px 24px;background:var(--sup);margin-top:clamp(30px,4vh,46px)}
+.allinc .k{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);margin-bottom:9px}
+.allinc p{font-size:13px;color:var(--faint);line-height:1.72}
+.tablewrap{margin-top:22px;overflow-x:auto;border:1px solid var(--line);border-radius:13px;background:var(--sup)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:660px}
+th,td{padding:12px 16px;text-align:center}
+th:first-child,td:first-child{text-align:left;width:46%}
+thead th{font-family:var(--serif);font-size:23px;font-weight:400;padding-top:22px;padding-bottom:16px;vertical-align:top}
+thead th .pb{display:block;font-family:var(--sans);font-size:11px;color:var(--faint);margin-top:5px}
+thead th .pb s{opacity:.66}
+thead th .pb b{display:block;color:var(--champagne);font-weight:400;font-size:13px}
+thead th.hi{background:color-mix(in oklab,var(--brillo) 10%,transparent)}
+td.hi{background:color-mix(in oklab,var(--brillo) 5%,transparent)}
+tr.grp td{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);padding-top:22px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+tbody tr:not(.grp){border-bottom:1px solid var(--line)}
+tbody tr:not(.grp):hover{background:rgba(29,34,48,.035)}
+td .y{color:var(--brillo)}
+td .n{color:rgba(29,34,48,.26)}
+td .plus{color:var(--gold);font-size:11.5px}
+
+/* ---------- faq ---------- */
+#faq{padding-block:var(--sec)}
+#faq h2{font-size:clamp(32px,4.9vw,64px);margin-top:14px}
+.qs{max-width:880px;margin:clamp(38px,5vh,58px) auto 0;display:flex;flex-direction:column;gap:10px}
+.q{border:1px solid var(--line);border-radius:13px;background:var(--sup);overflow:hidden;transition:border-color .35s,background .35s}
+.q.open{border-color:var(--gold);background:var(--sup-2)}
+.q button{width:100%;display:flex;align-items:center;gap:16px;padding:19px 24px;text-align:left;font-family:var(--serif);font-size:19px}
+.q button .pm{margin-left:auto;width:19px;height:19px;position:relative;flex:none}
+.q button .pm::before,.q button .pm::after{content:'';position:absolute;left:50%;top:50%;background:var(--gold);transition:transform .4s}
+.q button .pm::before{width:13px;height:1px;transform:translate(-50%,-50%)}
+.q button .pm::after{width:1px;height:13px;transform:translate(-50%,-50%)}
+.q.open .pm::after{transform:translate(-50%,-50%) rotate(90deg)}
+.q .ans{height:0;overflow:hidden}
+.q .ans p{padding:0 24px 20px;font-size:15px;color:var(--faint);max-width:72ch}
+
+/* ---------- el cierre: la gala, a sangre ---------- */
+/* al quitar el formulario la sección quedó apretada: la foto necesita aire */
+#cierre{position:relative;min-height:88svh;display:grid;align-items:center;
+  padding-block:clamp(120px,16vh,190px);overflow:hidden;color:var(--p-blanco);
+  border-top:1px solid rgba(184,134,11,.3)}
+.cfondo{position:absolute;inset:0;z-index:0;overflow:hidden}
+.cfondo img{width:100%;height:100%;object-fit:cover;object-position:center 38%}
+.cfondo::after{content:'';position:absolute;inset:0;background:
+  linear-gradient(rgba(13,13,15,.62),rgba(13,13,15,.5) 50%,rgba(13,13,15,.78)),
+  radial-gradient(70% 60% at 72% 50%,transparent,rgba(13,13,15,.45))}
+.crow{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1fr);
+  gap:clamp(34px,5vw,80px);align-items:center}
+.crow.sola{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center;position:relative;
+  padding-right:clamp(0px,16vw,280px)}
+.crow.sola h2,.crow.sola .lead{max-width:none}
+.crow.sola .lead{margin-inline:auto;max-width:48ch}
+#cierre .eyebrow{color:var(--champagne)}
+#cierre h2{font-size:clamp(38px,5.6vw,82px);line-height:1.04;margin-top:18px;color:var(--p-blanco);max-width:12ch}
+#cierre .it{color:var(--gold)}
+#cierre .lead{color:rgba(255,255,255,.76);margin-top:22px;max-width:44ch}
+/* la placa: una chapa de oro con filete, a la derecha, fuera de la pareja.
+   Un círculo en el centro tapaba lo único que importa de la foto. */
+.placa{position:absolute;right:max(24px,4vw);top:50%;transform:translateY(-50%);z-index:4;
+  display:inline-flex;align-items:center;gap:12px;padding:19px 26px;background:var(--gold);color:var(--p-placa);
+  font-size:11px;letter-spacing:.24em;text-transform:uppercase;white-space:nowrap;
+  box-shadow:0 22px 46px -16px rgba(13,13,15,.7);transition:all .6s cubic-bezier(.16,1,.3,1)}
+.placa::before{content:'';position:absolute;inset:5px;border:1px solid rgba(23,18,10,.34);pointer-events:none}
+.placa i{width:6px;height:6px;background:var(--p-placa);transform:rotate(45deg);flex:none}
+.placa em{font-style:normal;font-size:15px;line-height:1;transform:translateY(-1px)}
+.placa:hover{background:var(--tinta);color:var(--p-nacar-alto);box-shadow:0 26px 54px -14px rgba(13,13,15,.8)}
+.placa:hover i{background:var(--gold)}
+.placa:hover::before{border-color:rgba(255,253,248,.34)}
+@media (max-width:900px){
+  .placa{position:relative;right:auto;top:auto;transform:none;margin-top:clamp(26px,4vh,40px)}
+}
+/* el pase, sobre la foto */
+#cierre #pase{margin:0;max-width:none}
+#cierre .pase-k{color:var(--gold)}
+/* ---------- la reserva: un sobre que se abre sobre la página ---------- */
+#reserva{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:clamp(16px,4vh,48px)}
+#reserva[hidden]{display:none}
+#reserva .velo{position:absolute;inset:0;background:rgba(13,13,15,.62);backdrop-filter:blur(7px)}
+.sobre-form{position:relative;z-index:2;width:min(620px,100%);max-height:86svh;overflow:auto;
+  background:var(--p-nacar-alto);border-radius:6px;padding:30px clamp(26px,5vw,46px) 34px;text-align:center;
+  border:1px solid rgba(184,134,11,.35);box-shadow:0 60px 120px -34px rgba(0,0,0,.7)}
+.sobre-form::before{content:'';position:absolute;inset:9px;border:1px solid rgba(184,134,11,.26);
+  border-radius:3px;pointer-events:none;z-index:1}
+/* el lacre va DENTRO de la tarjeta: colgado fuera, el borde lo cortaba */
+.lacre-form{display:block;width:54px;margin:0 auto 16px;
+  filter:drop-shadow(0 7px 12px rgba(13,13,15,.32))}
+.sobre-form .eyebrow{color:var(--gold)}
+.sobre-form h3{font-family:var(--serif);font-size:clamp(25px,3vw,34px);color:var(--tinta);margin-top:10px;line-height:1.1;text-wrap:balance}
+.sobre-form .it{color:var(--gold);font-style:italic}
+.pie-form{font-size:13px;color:var(--faint-l);margin:13px auto 30px;max-width:46ch;line-height:1.65}
+.campo{display:block;text-align:left;margin-bottom:16px}
+.campo > span{display:block;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint-l);margin-bottom:7px}
+.campo input,.campo select{width:100%;border:0;border-bottom:1px solid rgba(184,134,11,.45);background:none;
+  padding:7px 0;font-family:var(--serif);font-size:19px;color:var(--tinta);border-radius:0;appearance:none}
+.campo input:focus,.campo select:focus{outline:none;border-bottom-color:var(--brillo);border-bottom-width:2px}
+.campo input::placeholder{color:rgba(13,13,15,.26)}
+.fila2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.campo-k{display:block;text-align:left;font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--faint-l);margin:6px 0 10px}
+.planes-radio{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:26px}
+.planes-radio label{display:grid;gap:2px;padding:12px 8px;border:1px solid var(--line-l);border-radius:8px;
+  cursor:pointer;transition:.35s}
+.planes-radio input{position:absolute;opacity:0;pointer-events:none}
+.planes-radio b{font-family:var(--serif);font-style:italic;font-size:17px;font-weight:400;color:var(--tinta)}
+.planes-radio i{font-style:normal;font-size:11.5px;color:var(--faint-l)}
+.planes-radio label:has(input:checked){border-color:var(--gold);background:color-mix(in oklab,var(--gold) 9%,transparent)}
+.planes-radio label:has(input:checked) i{color:var(--gold)}
+.enviar{display:block;width:100%;padding:16px;border-radius:999px;background:var(--brillo);color:var(--p-blanco);
+  font-size:11px;letter-spacing:.24em;text-transform:uppercase;transition:.4s}
+.enviar:hover{background:var(--tinta)}
+.nota{font-size:11.5px;color:var(--faint-l);margin-top:14px;line-height:1.6}
+.cerrar{position:sticky;top:0;float:right;margin:-8px -10px 0 0;width:34px;height:34px;display:grid;
+  place-items:center;font-size:24px;line-height:1;color:var(--faint-l);z-index:5;background:var(--p-nacar-alto);border-radius:50%}
+.cerrar:hover{color:var(--tinta)}
+@media (max-width:560px){.fila2,.planes-radio{grid-template-columns:1fr}}
+
+/* ---------- WhatsApp, siempre a la mano ---------- */
+.wa{position:fixed;right:var(--wa-borde);bottom:calc(var(--wa-borde) + env(safe-area-inset-bottom,0px));z-index:80;
+  display:flex;align-items:center;gap:0;height:var(--wa-alto);padding:0 17px;border-radius:999px;background:var(--p-wa);
+  color:var(--p-blanco);box-shadow:0 16px 36px -10px rgba(13,13,15,.5);overflow:hidden;
+  transition:gap .5s cubic-bezier(.16,1,.3,1),padding .5s cubic-bezier(.16,1,.3,1)}
+.wa svg{width:26px;height:26px;fill:var(--p-blanco);flex:none}
+.wa b{font-weight:400;font-size:12.5px;letter-spacing:.06em;white-space:nowrap;max-width:0;opacity:0;
+  transition:max-width .5s cubic-bezier(.16,1,.3,1),opacity .4s}
+.wa:hover{gap:11px}
+.wa:hover b{max-width:190px;opacity:1}
+@media (max-width:900px){
+  .crow,.crow.sola{grid-template-columns:minmax(0,1fr);padding-right:0}
+  #cierre h2{max-width:none}
+  .btn-redondo{margin-inline:auto}
+}
+/* sitio para el botón de WhatsApp: antes tapaba los enlaces del pie */
+/* ---------- el pie: la ultima hoja, no una linea ---------- */
+/* Abajo, lo justo. Los 104 px de la maqueta reservaban sitio para el botón flotante de WhatsApp,
+   y en un portátil dejaban una franja vacía del alto de media tarjeta. El hueco solo hace falta
+   donde el botón tapa de verdad: en el móvil (ahí, y con la muesca contada). */
+footer{position:relative;margin-top:clamp(46px,5vw,76px);padding:0 clamp(18px,4vw,46px) 24px;font-size:13px;color:var(--faint);overflow:hidden}
+footer .filo{max-width:1240px;margin:0 auto clamp(52px,5.5vw,80px);height:1px;background:var(--line);display:grid;place-items:center}
+footer .filo i{width:7px;height:7px;background:var(--gold);transform:rotate(45deg)}
+/* La sombra de la palmera cruza el pie: profundidad sin meter otra foto. */
+footer::before{content:'';position:absolute;right:-6%;bottom:0;width:min(38%,520px);height:100%;
+  background:url(/site/portada/lino.webp) right top/cover no-repeat;mix-blend-mode:multiply;opacity:.16;
+  -webkit-mask-image:radial-gradient(135% 115% at 108% 46%,var(--p-negro) 12%,transparent 72%);mask-image:radial-gradient(135% 115% at 108% 46%,var(--p-negro) 12%,transparent 72%);pointer-events:none;z-index:-1}
+.pie-rejilla{display:grid;grid-template-columns:1.5fr .85fr .85fr 1.05fr;gap:clamp(28px,4vw,64px);max-width:1240px;margin:0 auto}
+.pie-marca .marca{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.pie-marca .marca img{width:52px;height:52px;flex:none;filter:drop-shadow(0 8px 16px rgba(13,13,15,.16))}
+.pie-marca .marca b{font-family:var(--serif);font-weight:500;font-size:clamp(19px,1.5vw,23px);letter-spacing:.16em;color:var(--champagne);white-space:nowrap}
+.pie-marca p{max-width:34ch;font-size:14px;line-height:1.8;color:rgba(13,13,15,.72)}
+.pie-donde{margin-top:14px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--champagne)}
+.pie-tel{display:inline-flex;align-items:center;gap:10px;margin-top:22px;font-family:var(--serif);font-size:15px;color:var(--tinta);letter-spacing:.02em;border-bottom:1px solid var(--line);padding-bottom:5px;transition:.35s}
+.pie-tel svg{width:16px;height:16px;fill:var(--gold)}
+.pie-tel:hover{color:var(--gold);border-color:var(--gold)}
+.pie-col h5{font-family:var(--serif);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.24em;color:var(--champagne);margin-bottom:18px}
+.pie-col a{display:block;width:fit-content;padding:8px 0;position:relative;font-size:14.5px;color:rgba(13,13,15,.8);transition:color .3s}
+.pie-col a::after{content:'';position:absolute;left:0;bottom:5px;width:0;height:1px;background:var(--gold);transition:width .4s ease}
+.pie-col a:hover{color:var(--tinta)}
+.pie-col a:hover::after{width:100%}
+.pie-res p{font-size:14px;line-height:1.75;color:rgba(13,13,15,.8);margin-bottom:20px}
+.pie-res .cta-pill{border:0;cursor:pointer;font-family:var(--sans)}
+.pie-redes{display:flex;gap:11px;margin-top:24px}
+.pie-redes a{width:38px;height:38px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--faint);transition:border-color .35s,color .35s,transform .35s}
+.pie-redes a:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px)}
+.pie-redes svg{width:16px;height:16px}
+.pie-bar{max-width:1240px;margin:clamp(44px,5vw,72px) auto 0;padding-top:26px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;font-size:12.5px}
+.pie-bar .legal{display:flex;gap:22px}
+.pie-bar a:hover{color:var(--tinta)}
+.pie-ms{display:inline-flex;align-items:center;gap:9px}
+.pie-ms i{width:5px;height:5px;background:var(--gold);transform:rotate(45deg);flex:none}
+.pie-ms b{font-weight:400;color:var(--tinta);letter-spacing:.06em}
+.pie-ms:hover b{color:var(--gold)}
+@media(max-width:980px){.pie-rejilla{grid-template-columns:1fr 1fr}.pie-marca{grid-column:1/-1}}
+/* En el movil la sombra se cruza con los enlaces: fuera. El lino del fondo ya da textura. */
+@media(max-width:760px){footer::before{display:none}}
+/* El botón flota pegado a la esquina y la barra del pie llega hasta 1240 px: por debajo de
+   1240 + el hueco del botón a cada lado (~90), la firma se le mete debajo. Ahí, y solo ahí,
+   la barra le reserva su sitio a la derecha. */
+@media(max-width:1420px){.pie-bar{padding-right:calc(var(--wa-alto) + var(--wa-borde))}}
+/* En el movil las dos listas van a la par: una sola columna estiraba el pie a lo largo de dos pantallas. */
+@media(max-width:560px){.pie-rejilla{grid-template-columns:1fr 1fr;gap:26px clamp(18px,6vw,34px)}
+  .pie-marca,.pie-res{grid-column:1/-1}
+  .pie-bar{flex-direction:column;align-items:flex-start;gap:14px}}
+
+/* ---------- responsive ---------- */
+@media (max-width:1080px){
+  .grid12{grid-template-columns:repeat(2,1fr)}
+  .f12:nth-child(4n){border-right:1px solid var(--line)}
+  .f12:nth-child(2n){border-right:0}
+  .f12:nth-last-child(-n+4){border-bottom:1px solid var(--line)}
+  .f12:nth-last-child(-n+2){border-bottom:0}
+  #movil .row{grid-template-columns:1fr;gap:46px}
+  .dashrow{grid-template-columns:1fr}
+  .dash{grid-template-columns:1fr}
+  .dnav{display:flex;gap:4px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line-l);padding:12px}
+  .dnav .dbrand,.dnav .dsep{display:none}
+  .dnav a{white-space:nowrap;border-radius:999px;padding:7px 13px}
+  .envs{grid-template-columns:1fr;max-width:460px;margin-inline:auto}
+}
+@media (max-width:760px){
+  nav.top .links{display:none}
+  nav.top .cta-pill{display:none}
+  .burger{display:grid}
+  /* dos columnas compactas: en una sola, doce tarjetas son 2.400 px de scroll muerto */
+  .grid12{grid-template-columns:1fr 1fr}
+  .f12{min-height:0;padding:20px 16px 22px;border-right:1px solid var(--line)!important;border-bottom:1px solid var(--line)!important}
+  .f12:nth-child(2n){border-right:0!important}
+  .f12:nth-last-child(-n+2){border-bottom:0!important}
+  .f12 svg{width:34px;height:34px;margin-bottom:14px}
+  .f12 .n{top:16px;right:16px}
+  .f12 h4{font-size:18px;margin:0 0 7px}
+  .f12 p{font-size:13px}
+  .tiles{grid-template-columns:1fr 1fr}
+  .dcols{grid-template-columns:1fr}
+  .step{grid-template-columns:54px 1fr;gap:16px}
+  .step .c,.step.l .c,.step.r .c{grid-column:2;text-align:left}
+  .step.l .c p{margin-left:0}
+  .step .sp{display:none}
+  .step .num{grid-column:1;width:52px;height:52px;font-size:21px}
+  .steps .path{display:none}
+  .dbars{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  #pre{display:none}
+}
+
+/* Dos párrafos que en la maqueta llevaban su estilo en el atributo: aquí tienen su clase. */
+#planes .lead-centrada{margin:18px auto 0;text-align:center}
+#movil .lead-movil{margin-top:18px}
+/* La cinta, por pares: cada palabra con su rombo, para que React pinte una lista y no una cadena. */
+.ribbon .par{display:inline-flex;align-items:center;gap:30px}
+/* La píldora del pie es un enlace, y `.pie-col a` le ganaba en especificidad: sin esto se
+   quedaba sin aire y con el subrayado de oro de los enlaces de columna. */
+.pie-res .cta-pill{padding:13px 24px;color:var(--p-blanco)}
+.pie-res .cta-pill::after{content:none}
+/* El aviso del sobre: solo se ve si el mensaje no pudo salir. */
+.sobre-form .nota.aviso{color:var(--brillo);border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
+
+/* ---------- la barra y el resto del sitio ----------
+   **La barra es `sticky`, no `fixed`, y por eso nadie tiene que reservarle sitio.** Ocupa su hueco
+   en el flujo como cualquier elemento: mida lo que mida —más alta en inglés, más baja con la
+   hamburguesa, más alta todavía en un iPhone con muesca—, el contenido empieza justo debajo. Sin
+   números, sin medir y sin un dispositivo que se salga de la cuenta.
+
+   La única excepción es la portada: ahí la barra **tiene que flotar** sobre el abanico, que ocupa
+   la pantalla entera y está pensado para pasar por debajo. Como esa sección es lo primero de la
+   página, flotar no deja ningún hueco que rellenar. */
+body:has(#estreno) nav.top{position:fixed;inset:0 0 auto}
+
+/* ---------- la barra en tabletas ----------
+   **El corte está medido, no elegido**: la barra completa necesita 964 px en español y 1.002 en
+   inglés —«The invitation», «Reserve your date»—. A 940 ya no cabía: la marca se partía en dos
+   líneas y la píldora pisaba «Planes» (visto en iPad vertical, 768 y 834). Se corta en 1.080 para
+   que el peor caso, el inglés, entre con 78 px de aire y no justo. De ahí abajo manda la
+   hamburguesa, que ya existía pero solo entraba a 760. Si se alargan las palabras del menú, hay
+   que volver a medir. */
+@media (max-width:1080px){
+  nav.top .links{display:none}
+  nav.top .cta-pill{display:none}
+  .burger{display:grid}
+}
+
+/* ---------- toques de 44 px en lo que se usa con el dedo ----------
+   La maqueta se dibujó con el ratón: la hamburguesa (40), los enlaces del pie (39 de alto), los
+   iconos de las redes (38) y la firma (20) se quedaban por debajo del mínimo de 44 px. Solo en
+   aparatos sin ratón, y creciendo por dentro: ni un píxel se mueve de sitio en escritorio. */
+/* El menú del móvil: `#movilmenu a` es más específico que `.cta-pill` y estiraba el botón de
+   reservar a 30 px —se partía en dos líneas y salía de lado a lado—. Y su ✕ medía 26 px. */
+#movilmenu{padding-inline:24px}
+#movilmenu .cta-pill{font-size:12px;letter-spacing:.16em;max-width:100%;text-align:center}
+#movilmenu .x{top:16px;right:16px;width:44px;height:44px;display:grid;place-items:center}
+
+@media (hover:none){
+  /* Donde se navega con el dedo, el botón de WhatsApp flota sobre el texto: el pie se aparta
+     **lo que mide el botón** —su alto, sus dos márgenes y la muesca—, ni un píxel más. */
+  footer{padding-bottom:calc(var(--wa-alto) + var(--wa-borde) * 2 + env(safe-area-inset-bottom,0px))}
+  .burger{width:44px;height:44px}
+  .brand{padding-block:5px}
+  .pie-col a{padding:11px 0}
+  .pie-redes{gap:10px}
+  .pie-redes a{width:44px;height:44px}
+  .pie-bar .legal a,.pie-ms{padding-block:12px}
+  .chip{padding-block:16px}
+}

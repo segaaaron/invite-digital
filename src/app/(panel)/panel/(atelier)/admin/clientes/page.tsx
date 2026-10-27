@@ -414,7 +414,7 @@ async function Ficha({
                           {t('Código', 'Code')} <b className="font-codigo font-medium tracking-[0.12em] text-ink">{codigo}</b>
                         </span>
                         <span className="text-ink-mute">{plural(usos.get(codigo) ?? 0, t('compra con su código', 'purchase with their code'), t('compras con su código', 'purchases with their code'))}</span>
-                        <span className="w-full truncate font-codigo text-[12px] text-ink-mute">{`${sitio}/es?ref=${codigo}#precios`}</span>
+                        <span className="w-full truncate font-codigo text-[12px] text-ink-mute">{`${sitio}/es?ref=${codigo}#planes`}</span>
                       </div>
                     )}
                   </li>

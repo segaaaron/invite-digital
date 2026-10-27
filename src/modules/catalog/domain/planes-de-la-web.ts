@@ -25,12 +25,12 @@ export const PLANES_DE_LA_WEB: Readonly<Record<string, ContenidoDePlan>> = {
     precioAntesCents: 59000,
     features: {
       es: [
-        'Tu evento:',
+        'Su evento:',
         'Portada y cuenta regresiva',
         'Ubicación en Google Maps y cronograma',
         'Código de vestimenta y música de fondo',
         'Galería de fotos',
-        'Tus invitados:',
+        'Sus invitados:',
         'Nombre del invitado y pases «Reservamos X lugares»',
         'Envíos ilimitados',
         'Confirmación por WhatsApp + lista de confirmados',
@@ -64,7 +64,7 @@ export const PLANES_DE_LA_WEB: Readonly<Record<string, ContenidoDePlan>> = {
     precioAntesCents: 79000,
     features: {
       es: [
-        'Diseño a tu gusto:',
+        'Diseño a su gusto:',
         'Colores y tipografías personalizadas',
         'Galería ampliada (hasta 10 fotos)',
         'Regalos y recuerdos:',
@@ -101,7 +101,7 @@ export const PLANES_DE_LA_WEB: Readonly<Record<string, ContenidoDePlan>> = {
         'Número de mesa, plano del salón y QR de acceso',
         'Recepción con pase QR, también sin señal · 10 personas de recepción',
         'Recuerdos y organización:',
-        'Álbum compartido: tus invitados suben sus fotos con un QR',
+        'Álbum compartido: sus invitados suben sus fotos con un QR',
         'Luxury, tu planner con IA, y Día D con enlace para cada proveedor',
         'Entrega:',
         '5 rondas de corrección',

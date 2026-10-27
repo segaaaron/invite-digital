@@ -92,7 +92,7 @@ export function productJsonLd(
         price: toPriceUnits(cents),
         priceCurrency: moneda,
         availability: 'https://schema.org/InStock',
-        url: `${baseUrl}/${locale}#precios`,
+        url: `${baseUrl}/${locale}#planes`,
       })
       const enBs = oferta(plan.price.cents, plan.price.currency)
       return plan.priceUsdCents == null ? enBs : [enBs, oferta(plan.priceUsdCents, 'USD')]
@@ -112,11 +112,16 @@ export function websiteJsonLd(locale: Locale, baseUrl: string = env.SITE_URL): W
   }
 }
 
-export function faqJsonLd(dictionary: FaqSource): FaqJsonLd {
+/**
+ * Las preguntas, para Google. **Tienen que ser las que la página enseña**: marcar unas y pintar
+ * otras es exactamente lo que Google llama marcado engañoso. Por eso acepta una lista propia —la
+ * portada tiene las suyas— y solo cae en las del diccionario cuando no se le pasa ninguna.
+ */
+export function faqJsonLd(dictionary: FaqSource, preguntas?: readonly { readonly question: string; readonly answer: string }[]): FaqJsonLd {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: dictionary.faq.items.map((item) => ({
+    mainEntity: (preguntas ?? dictionary.faq.items).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: { '@type': 'Answer', text: item.answer },

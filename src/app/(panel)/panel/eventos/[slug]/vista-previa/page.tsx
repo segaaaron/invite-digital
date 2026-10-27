@@ -63,7 +63,7 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
     <VistaPreviaDelPanel
       // La cinta de la demo se enseña también aquí: el admin tiene que ver **lo mismo** que le va a
       // llegar al cliente, y antes solo salía abriendo el enlace de verdad.
-      demo={esDemo(event.value) ? { textos: diccionario.invitation.demo, href: `/${event.value.locale}#precios` } : null}
+      demo={esDemo(event.value) ? { textos: diccionario.invitation.demo, href: `/${event.value.locale}#planes` } : null}
       fuentes={variables}
       volver={`/panel/eventos/${event.value.slug}/configuracion`}
     >

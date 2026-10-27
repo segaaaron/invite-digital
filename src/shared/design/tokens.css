@@ -301,3 +301,80 @@
   --radius-card: 22px;
   font-weight: 300;
 }
+
+/* ============================================================================
+   LA PORTADA (maqueta «mix», aprobada el 26 oct). Los hexadecimales viven aquí
+   porque es la única casa que tienen; `src/sections/portada/portada.css` solo
+   los nombra. No alcanzan al panel ni a la invitación: son de la web pública.
+   ============================================================================ */
+:root {
+  /* La portada nueva: el suelo de nácar y la tinta. */
+  --p-suelo: #FFFAF2;
+  --p-suelo-2: #FDF3E6;
+  --p-suelo-3: #F6E9D8;
+  --p-tinta: #0D0D0F;
+  --p-blanco: #FFFFFF;
+  --p-negro: #000000;
+  --p-nacar-alto: #FFFDF8;
+  --p-pc: #FFFDF9;
+  /* El oro, siempre plano. */
+  --p-oro: #B8860B;
+  --p-champan: #8A6309;
+  --p-oro-hondo: #9B7A2E;
+  --p-oro-suave: #D8BD86;
+  --p-orbe: #F5E3B8;
+  /* El color vivo lo pone la fiesta: borgoña en bodas, fucsia en quince. */
+  --p-brillo: #A1123C;
+  --p-brillo-2: #E86A2C;
+  --p-mundo-fondo: #FBF8F3;
+  --p-mundo-fondo-2: #F5F0E7;
+  --p-mundo-halo: #ECE5D9;
+  --p-mundo-acento: #A87B24;
+  --p-mundo-acento-claro: #8C6416;
+  /* El mundo de los XV: el mismo esqueleto, otra piel. */
+  --p-xv-suelo: #FFF8FC;
+  --p-xv-suelo-2: #FDEDF6;
+  --p-xv-suelo-3: #F9DCEE;
+  --p-xv-tinta: #120A16;
+  --p-xv-crema: #ECE4EF;
+  --p-xv-papel: #F6F1F7;
+  --p-xv-verde: #2D1340;
+  --p-xv-verde-2: #3C1A55;
+  --p-xv-oro-hondo: #8E5FA8;
+  --p-xv-tinta-clara: #2A0F3A;
+  --p-xv-brillo: #D4118A;
+  --p-xv-brillo-2: #6D2BD9;
+  /* El papel: la carta, el sobre y el pase. */
+  --p-crema: #E9E7E2;
+  --p-papel: #F4F3F0;
+  --p-pase: #FDFBF6;
+  --p-placa: #17120A;
+  --p-sobre-dorso: #DCCEB2;
+  --p-sobre-cara: #EFE2C6;
+  --p-sobre-cara-2: #DFCFAC;
+  --p-sobre-verde: #1F3A2C;
+  --p-sobre-verde-claro: #2E5240;
+  --p-sobre-verde-hondo: #183024;
+  --p-verde: #131D38;
+  --p-verde-2: #1B2A4E;
+  --p-tinta-clara: #0B1124;
+  /* El teléfono y el panel que se enseñan dentro de la portada. */
+  --p-telefono: #0D1326;
+  --p-pantalla: #FAF9F7;
+  --p-pantalla-2: #F4F1EA;
+  --p-tablero: #FBFAF8;
+  --p-tablero-nav: #EEEDEA;
+  --p-tablero-ficha: #FDFCFB;
+  --p-panel-av: #F7F6F3;
+  --p-si: #9FD3B4;
+  --p-no: #9E3C3C;
+  /* La conversación de WhatsApp de la maqueta: son los colores de WhatsApp, no los de la marca. */
+  --p-wa: #1EA952;
+  --p-wa-barra: #075E54;
+  --p-wa-avatar: #128C7E;
+  --p-wa-chat: #ECE5DD;
+  --p-wa-burbuja: #D9FDD3;
+  --p-wa-tinta: #111B21;
+  --p-wa-enlace: #027EB5;
+  --p-wa-visto: #53BDEB;
+}

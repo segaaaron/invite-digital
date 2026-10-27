@@ -73,7 +73,7 @@ describe('política de seguridad de contenido', () => {
     const politica = csp(proxy(pedir('/es')))
 
     expect(politica).toContain("script-src 'self' 'nonce-")
-    expect(politica).toContain("frame-ancestors 'none'")
+    expect(politica).toContain("frame-ancestors 'self'")
     expect(politica).toContain("object-src 'none'")
   })
 

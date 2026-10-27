@@ -1,100 +1,104 @@
-import Link from 'next/link'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { SELLO } from '@/sections/portada/sello'
+import { BRAND } from '@/shared/config/brand'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
-import { Button } from '@/shared/design/ui/Button'
-import { MenuMovil } from './MenuMovil'
-import { rutaDe } from '@/shared/i18n/rutas'
 
 type Props = { locale: Locale; dictionary: Dictionary }
 
 /**
- * **Lo que decide la cabecera de un celular no es el ancho: es que se toca** (20 oct, pedido del usuario).
+ * La cabecera de la maqueta «mix»: el sello con el nombre, las cinco entradas, la píldora que
+ * lleva al cierre y, en pantalla estrecha, el menú a pantalla completa.
  *
- * Con un corte en píxeles siempre hay un aparato que cae del lado equivocado: un iPhone 17 Pro Max mide
- * 440 justos, y el mismo teléfono en horizontal mide 932 y pasaba por computadora, con la fila entera
- * apretada. `hover: none` y `pointer: coarse` es lo que distingue un dedo de un ratón —lo dice el propio
- * navegador, en cualquier aparato y en cualquier orientación— y no hay que mantener ninguna lista.
+ * **Es cliente** por dos cosas que la maqueta hace con JavaScript: abrir el menú (`#movilmenu.open`)
+ * y poner la barra opaca al rodar (`nav.top.solid`). Lo demás —qué se ve y a qué ancho— lo decide
+ * `portada.css`, que ya trae las medias del menú en 980 px: aquí no hay ni un estilo nuevo.
  *
- * Va en CSS, no en el servidor: leer el `user-agent` haría dinámica toda la web pública y la dejaría sin
- * caché, y además los `user-agent` mienten.
+ * El `.claro` de la maqueta (la barra sobre un fondo oscuro) queda fuera: el estreno es de lino
+ * claro, y la clase ahí dejaría la marca invisible.
  */
-// `dedo:` es la variante declarada en `globals.css`: el aparato se toca, sea cual sea su ancho.
-
 export function SiteHeader({ locale, dictionary }: Props) {
-  // Las cinco entradas de la maqueta: dos a la izquierda del logotipo y dos a la derecha,
-  // con el botón al final.
-  //
-  // Con la portada delante: la cabecera sale también en colecciones y en el pedido, y ahí
-  // un `#precios` a secas no llevaba a ninguna parte.
+  const [menuAbierto, setMenuAbierto] = useState(false)
+  const [solida, setSolida] = useState(false)
+  const { pie, nav } = dictionary.portada
+
+  // Por evento, nunca por reloj: la barra se vuelve opaca pasados los 80 px, como en la maqueta.
+  useEffect(() => {
+    const alRodar = () => setSolida(window.scrollY > 80)
+    alRodar()
+    window.addEventListener('scroll', alRodar, { passive: true })
+    return () => window.removeEventListener('scroll', alRodar)
+  }, [])
+
+  // La cabecera sale en toda la web, no solo en la portada: las anclas van con el idioma delante
+  // para que también funcionen desde colecciones o desde un pedido.
   const inicio = `/${locale}`
-  // Las dos fiestas van primero: son dos productos, cada uno con su página.
-  const izquierda = [
-    { href: rutaDe(locale, 'bodas'), label: dictionary.nav.weddings },
-    { href: rutaDe(locale, 'xv-anos'), label: dictionary.nav.quinceaneras },
-  ]
-  const derecha = [
-    { href: rutaDe(locale, 'colecciones'), label: dictionary.nav.collections },
-    { href: `${inicio}#precios`, label: dictionary.nav.pricing },
+  const enlaces = [
+    { href: `${inicio}#disenos`, label: nav.disenos },
+    { href: `${inicio}#noche`, label: nav.noche },
+    { href: `${inicio}#movil`, label: nav.invitacion },
+    { href: `${inicio}#puerta`, label: nav.puerta },
+    { href: `${inicio}#planes`, label: nav.planes },
   ]
 
   return (
-    <header className="fixed inset-x-0 top-[18px] z-[70] flex justify-center px-4">
-      <div className="relative flex w-full max-w-[1180px] items-center gap-3 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-bg-raised/72 px-4 py-3 md:gap-8 md:px-6 shadow-[var(--shadow-float)] backdrop-blur-[18px]">
-        <nav className="hidden flex-1 items-center justify-end gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex dedo:hidden!">
-          {izquierda.map((link) => (
-            <a key={link.href} className="whitespace-nowrap text-ink-soft transition-colors hover:text-gold-deep" href={link.href}>
-              {link.label}
-            </a>
-          ))}
-        </nav>
-
-        {/* El logotipo horizontal de la marca: el sello de lacre «LA» y el nombre en una línea. */}
-        <Link aria-label="Luxury Atelier" className="flex items-center gap-2.5 px-1 leading-none" href={`/${locale}`}>
-          {/* El sello de lacre de la marca (9 oct: el dorado con «LA» en chocolate, el mismo del favicon), recortado
-              del fondo y sacado de la fuente grande en 1x, 2x y 3x: reducir una copia pequeña dejaba la caligrafía
-              borrosa. Cambia de nombre al cambiar de contenido, o el navegador sigue con el anterior. */}
+    <>
+      <nav className={solida ? 'top solid' : 'top'}>
+        <a className="brand" href={`${inicio}#estreno`}>
+          {/* El sello de lacre de la marca en 1x, 2x y 3x: reducir una copia pequeña dejaba la
+              caligrafía borrosa. `.lamono` lo pone a 36 px. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             alt=""
-            className="size-12 shrink-0 object-contain drop-shadow-[0_2px_5px_rgb(104_80_36/0.28)] max-[359px]:size-10"
-            height={48}
-            src="/site/marca/sello-la-48-627a79b8.avif"
-            srcSet="/site/marca/sello-la-48-627a79b8.avif 1x, /site/marca/sello-la-96-56d82990.avif 2x, /site/marca/sello-la-144-59259035.avif 3x"
-            width={48}
+            className="lamono"
+            height={36}
+            src={SELLO.src}
+            srcSet={SELLO.srcSet}
+            sizes={SELLO.sizes.barra}
+            width={36}
           />
-          <span className="bg-gradient-to-r from-gold-deep via-gold-light to-gold-deep bg-clip-text font-display text-[19px] font-medium tracking-[0.16em] whitespace-nowrap text-transparent max-[359px]:text-[16px] max-[359px]:tracking-[0.1em] min-[440px]:text-[21px]">
-            LUXURY ATELIER
-          </span>
-        </Link>
-
-        <nav className="hidden flex-1 items-center gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex dedo:hidden!">
-          {derecha.map((link) => (
-            <a key={link.href} className="whitespace-nowrap text-ink-soft transition-colors hover:text-gold-deep" href={link.href}>
-              {link.label}
+          {BRAND.siteName}
+        </a>
+        <div className="links">
+          {enlaces.map((enlace) => (
+            <a href={enlace.href} key={enlace.href}>
+              {enlace.label}
             </a>
           ))}
-          <Button href={`${inicio}#precios`} className="ml-auto whitespace-nowrap">
-            {dictionary.nav.contact}
-          </Button>
-        </nav>
-
-        {/* En pantallas estrechas no caben logotipo, botón y menú: el botón pasa al menú.
-            El corte estaba en 440 px y un iPhone 17 Pro Max mide **exactamente 440**: el botón aparecía y se
-            comía «LUXURY ATELIER», que no se parte nunca (20 oct, captura del usuario). Hasta 560 px el
-            botón vive solo dentro del menú, donde sigue siendo la primera opción. */}
-        <Button href={`${inicio}#precios`} className="ml-auto px-4! whitespace-nowrap max-[559px]:hidden! md:hidden! dedo:hidden!">
-          {dictionary.nav.contact}
-        </Button>
-        {/* El menú: en pantalla estrecha, y **siempre** en un aparato que se toca. */}
-        <div className="ml-auto min-[560px]:ml-0 md:hidden dedo:ml-auto! dedo:block!">
-          <MenuMovil
-            abrir={dictionary.nav.menu}
-            accion={{ href: `${inicio}#precios`, label: dictionary.nav.contact }}
-            cerrar={dictionary.nav.closeMenu}
-            enlaces={[...izquierda, ...derecha]}
-          />
         </div>
+        <a className="cta-pill" href={`${inicio}#cierre`}>
+          {nav.cta}
+        </a>
+        <button
+          aria-controls="movilmenu"
+          aria-expanded={menuAbierto}
+          aria-label={dictionary.nav.menu}
+          className="burger"
+          onClick={() => setMenuAbierto(true)}
+          type="button"
+        >
+          <span />
+        </button>
+      </nav>
+
+      <div className={menuAbierto ? 'open' : undefined} id="movilmenu">
+        <button aria-label={dictionary.nav.closeMenu} className="x" onClick={() => setMenuAbierto(false)} type="button">
+          ×
+        </button>
+        {enlaces.map((enlace) => (
+          <a href={enlace.href} key={enlace.href} onClick={() => setMenuAbierto(false)}>
+            {enlace.label}
+          </a>
+        ))}
+        <a href={`${inicio}#faq`} onClick={() => setMenuAbierto(false)}>
+          {pie.preguntas}
+        </a>
+        <a className="cta-pill" href={`${inicio}#cierre`} onClick={() => setMenuAbierto(false)} style={{ marginTop: 14 }}>
+          {nav.cta}
+        </a>
       </div>
-    </header>
+    </>
   )
 }

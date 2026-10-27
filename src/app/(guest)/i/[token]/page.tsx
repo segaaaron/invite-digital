@@ -74,7 +74,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
     // quien se le quiere vender. Se le enseña por qué no abre y a dónde ir.
     if (invitation.error.kind === 'demo_expired') {
       const locale = (await idiomaDeLaPeticion()) === 'en' ? 'en' : 'es'
-      return <DemoCaducada href={`/${locale}#precios`} textos={getDictionary(locale).invitation.demoCaducada} />
+      return <DemoCaducada href={`/${locale}#planes`} textos={getDictionary(locale).invitation.demoCaducada} />
     }
     notFound()
   }
@@ -311,7 +311,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
             }}
           />
           </EstiloDeLaInvitacion>
-          {esDemo(event) ? <CintaDeDemo href={`/${event.locale}#precios`} textos={dictionary.demo} /> : null}
+          {esDemo(event) ? <CintaDeDemo href={`/${event.locale}#planes`} textos={dictionary.demo} /> : null}
           <HechoPorLuxury href={env.SITE_URL} texto={dictionary.madeBy} />
         </div>
       </div>

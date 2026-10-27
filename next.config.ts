@@ -95,7 +95,8 @@ const nextConfig: NextConfig = {
           // http —desarrollo— el navegador la ignora por especificación.
           { key: 'Strict-Transport-Security', value: 'max-age=86400' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'X-Frame-Options', value: 'DENY' },
+          // SAMEORIGIN, no DENY: la portada abre el modelo en una capa, dentro de nuestro propio sitio.
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         ],
       },

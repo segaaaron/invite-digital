@@ -12,6 +12,8 @@ import { SiteHeader } from '@/sections/SiteHeader'
 import { WhatsAppFloat } from '@/sections/WhatsAppFloat'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../../globals.css'
+// La piel de la portada nueva: la cabecera y el pie también la usan, así que vive aquí.
+import '@/sections/portada/portada.css'
 import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormularios'
 import { IdiomaProvider } from '@/shared/i18n/idioma-navegador'

@@ -93,6 +93,8 @@ export default async function ModelPreviewPage({
   // Gala deja elegir, y solo eso (`leerEstilo`). Cualquier otro valor, el del diseño.
   const consulta = await searchParams
   const texto = (k: string) => (typeof consulta[k] === 'string' ? consulta[k] : '')
+  // `?incrustado=1`: el modelo va dentro de la capa que abre la portada, no en su propia página.
+  const incrustado = texto('incrustado') === '1'
   const estilo =
     leerEstilo(
       // Lo que el diseño no admite se ignora (el escaparate no es un formulario).
@@ -167,8 +169,10 @@ export default async function ModelPreviewPage({
       // Lo que cierra el círculo: de mirar el modelo a pedirlo, llevándose la clave del
       // diseño hasta el pedido. Antes el escaparate y la compra eran dos caminos que no
       // se tocaban, y quien aprobaba no sabía qué modelo había mirado el cliente.
-      action={{ href: `/${locale}?modelo=${encodeURIComponent(slug)}#precios`, label: diccionario.themes.chooseDesign }}
-      exit={{ href: rutaDe(locale, 'colecciones', '#modelos'), label: diccionario.themes.previewClose }}
+      action={{ href: `/${locale}?modelo=${encodeURIComponent(slug)}#planes`, label: diccionario.themes.chooseDesign, enLaVentana: incrustado }}
+      // Dentro de la capa de la portada la cruz la pone la capa, que es la que sabe cerrarse:
+      // la de aquí volvería atrás **dentro del marco** y dejaría la capa abierta y en blanco.
+      {...(incrustado ? {} : { exit: { href: rutaDe(locale, 'colecciones', '#modelos'), label: diccionario.themes.previewClose } })}
     >
       <EstiloDeLaInvitacion estilo={estilo} tema={tema}>
       <Tema

@@ -9,9 +9,11 @@ describe('buildContentSecurityPolicy', () => {
     expect(policy).not.toMatch(/script-src[^;]*unsafe-eval/)
   })
 
-  it('prohíbe el enmarcado y los objetos, y fija base-uri y form-action', () => {
+  it('solo deja que nos enmarquemos nosotros, prohíbe los objetos y fija base-uri y form-action', () => {
     const policy = buildContentSecurityPolicy('abc123')
-    expect(policy).toContain("frame-ancestors 'none'")
+    // 'self' y nada más: la portada abre el modelo en una capa; ningún otro sitio puede enmarcarnos.
+    expect(policy).toContain("frame-ancestors 'self'")
+    expect(policy).not.toContain('frame-ancestors *')
     expect(policy).toContain("object-src 'none'")
     expect(policy).toContain("base-uri 'self'")
     expect(policy).toContain("form-action 'self'")

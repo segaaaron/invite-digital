@@ -942,4 +942,122 @@ export interface Dictionary {
   seo: SeoDictionary
   footer: FooterDictionary
   legal: LegalDictionary
+  portada: PortadaDictionary
+}
+
+/**
+ * **La portada nueva** (maqueta «mix», aprobada el 26 de octubre de 2026).
+ *
+ * Vive aparte del resto del diccionario porque es la única parte de la web que habla **de
+ * usted**: una marca de lujo elige un trato y no se mueve. El resto del sitio sigue
+ * tuteando, y cuando se repase se traerá aquí.
+ *
+ * Lo que no está: los precios, los planes, los modelos y sus nombres. Eso sale del admin y
+ * del catálogo, nunca escrito a mano.
+ */
+export interface PortadaDictionary {
+  /** La barra de arriba: etiquetas cortas, no las del pie («Diseños», no «Los diseños»). */
+  nav: { disenos: string; noche: string; invitacion: string; puerta: string; planes: string; preguntas: string; cta: string }
+  /** El abanico de portadas. El título va en dos líneas; la segunda, en cursiva. */
+  estreno: { eyebrow: string; titulo: string; tituloIt: string; lead: string }
+  /** La cinta que gira: las celebraciones que se venden hoy. */
+  cinta: readonly string[]
+  /** El anillo de diseños. El título cambia con el mundo: boda o XV. */
+  disenos: {
+    eyebrow: string
+    titulo: string
+    tituloIt: string
+    tituloXv: string
+    tituloXvIt: string
+    todos: string
+    xv: string
+    bodas: string
+    anterior: string
+    siguiente: string
+    verModelo: string
+  }
+  /** Las doce secciones que trae la invitación, con su icono dibujado. */
+  noche: { eyebrow: string; titulo: string; tituloIt: string; items: readonly { titulo: string; texto: string }[] }
+  /** Las postales que se apilan, una por celebración. */
+  historias: { eyebrow: string; titulo: string; tituloIt: string; postales: readonly { titulo: string; pie: string }[] }
+  /** La invitación dentro del teléfono y lo que se enseña al lado. */
+  movil: {
+    eyebrow: string
+    titulo: string
+    tituloIt: string
+    lead: string
+    enVivo: string
+    puntos: readonly { titulo: string; texto: string }[]
+  }
+  /** La puerta: el pase QR y los contadores. */
+  puerta: {
+    eyebrow: string
+    titulo: string
+    tituloIt: string
+    lead: string
+    dentro: string
+    confirmados: string
+    mesas: string
+    bienvenidos: string
+    familia: string
+    detalle: string
+  }
+  /** Del primer «sí» a la última canción: cinco pasos. */
+  pasos: { eyebrow: string; titulo: string; tituloIt: string; items: readonly { titulo: string; texto: string }[] }
+  /** Los sobres de los planes. Los precios y lo que incluye cada uno vienen del admin. */
+  planes: {
+    eyebrow: string
+    titulo: string
+    tituloIt: string
+    lead: string
+    /** El lema de cada sobre, en el orden del catálogo. */
+    lemas: readonly string[]
+    masElegido: string
+    exclusivo: string
+    ahorra: string
+    porEvento: string
+    reserva: string
+    elegir: string
+    pie: string
+  }
+  /** La comparativa fila por fila. */
+  comparativa: { titulo: string; incluyen: string }
+  /** Las notas: las doce preguntas de esta portada, de usted. */
+  notas: { eyebrow: string; titulo: string; tituloIt: string; items: readonly { pregunta: string; respuesta: string }[] }
+  /** El cierre con la placa que abre el sobre de la reserva. */
+  cierre: { eyebrow: string; titulo: string; tituloIt: string; lead: string; cta: string }
+  /** El sobre que se abre sobre la página y arma el mensaje de WhatsApp. */
+  reserva: {
+    eyebrow: string
+    titulo: string
+    tituloIt: string
+    intro: string
+    nombres: string
+    fiesta: string
+    fiestas: readonly string[]
+    fecha: string
+    telefono: string
+    plan: string
+    enviar: string
+    nota: string
+    /** Lo que se dice cuando el mensaje no pudo salir: sin número cargado o ventana bloqueada. */
+    aviso: string
+    cerrar: string
+    /** El mensaje que se arma: {nombres}, {fiesta}, {fecha}, {plan}, {telefono}. */
+    mensaje: string
+  }
+  /** El pie nuevo. */
+  pie: {
+    descripcion: string
+    oficio: string
+    whatsapp: string
+    columnaGala: string
+    columnaCelebraciones: string
+    columnaFecha: string
+    fechaTexto: string
+    enlaces: { disenos: string; noche: string; invitacion: string; puerta: string; pasos: string; planes: string }
+    celebraciones: readonly string[]
+    preguntas: string
+    disenadoPor: string
+  }
 }

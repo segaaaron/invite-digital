@@ -1,4 +1,6 @@
 export type { Allowance, DesignChange, PlanFeature, PlannerSuite } from './domain/allowance'
+export { filasComparativas, grupoDeFila } from './domain/comparativa'
+export type { CeldaComparativa, FilaComparativa, GrupoDeComparativa, TextosComparativa } from './domain/comparativa'
 export { capacidadDePlan } from './application/plan-capacity'
 export { DESIGN_CHANGES, PLANNER_SUITES, WARNING_RATIO, canAddGroup, hasFeature, planThatIncludes, puedeCambiarDiseno, remainingGroups, seccionesFueraDelPlan, usageRatio } from './domain/allowance'
 export type { PlansError, PlansErrorKind } from './domain/errors'

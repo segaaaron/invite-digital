@@ -40,7 +40,7 @@ export function PhonePreview({
    * invitación, que es lo único que se viene a ver. Es opcional porque la vista previa del
    * panel enseña una boda ya vendida y ahí no hay nada que elegir.
    */
-  readonly action?: { readonly href: string; readonly label: string }
+  readonly action?: { readonly href: string; readonly label: string; readonly enLaVentana?: boolean }
 }) {
   return (
     <div className="theme-phone-stage">
@@ -50,8 +50,10 @@ export function PhonePreview({
         </EnlaceDeVuelta>
       )}
       <div className="theme-phone-frame">{children}</div>
+      {/* `enLaVentana`: dentro de la capa de la portada hay que **salir del marco**, o elegir el
+          diseño cargaría la portada entera dentro del teléfono. */}
       {action === undefined ? null : (
-        <Link className="theme-phone-cta" href={action.href}>
+        <Link className="theme-phone-cta" href={action.href} target={action.enLaVentana === true ? '_top' : undefined}>
           {action.label}
         </Link>
       )}
