@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SELLO } from '@/sections/portada/sello'
+import { CloseIcon } from '@/shared/design/ui/icons'
 import { BRAND } from '@/shared/config/brand'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
@@ -83,21 +84,37 @@ export function SiteHeader({ locale, dictionary }: Props) {
         </button>
       </nav>
 
+      {/*
+        El menú del móvil. Antes era una lista centrada flotando en una pantalla crema; ahora es
+        una carta: arriba la misma marca que en la barra —y la ✕ justo donde estaba la
+        hamburguesa, para que abrir y cerrar sea el mismo gesto—, en medio los destinos
+        numerados y separados por un filete, y abajo la llamada a reservar.
+      */}
       <div className={menuAbierto ? 'open' : undefined} id="movilmenu">
-        <button aria-label={dictionary.nav.closeMenu} className="x" onClick={() => setMenuAbierto(false)} type="button">
-          ×
-        </button>
-        {enlaces.map((enlace) => (
-          <a href={enlace.href} key={enlace.href} onClick={() => setMenuAbierto(false)}>
-            {enlace.label}
+        <div className="mm-barra">
+          <a className="brand" href={`${inicio}#estreno`} onClick={() => setMenuAbierto(false)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img alt="" className="lamono" height={36} sizes={SELLO.sizes.barra} src={SELLO.src} srcSet={SELLO.srcSet} width={36} />
+            {BRAND.siteName}
           </a>
-        ))}
-        <a href={`${inicio}#faq`} onClick={() => setMenuAbierto(false)}>
-          {pie.preguntas}
-        </a>
-        <a className="cta-pill" href={`${inicio}#cierre`} onClick={() => setMenuAbierto(false)} style={{ marginTop: 14 }}>
-          {nav.cta}
-        </a>
+          <button aria-label={dictionary.nav.closeMenu} className="x" onClick={() => setMenuAbierto(false)} type="button">
+            <CloseIcon />
+          </button>
+        </div>
+        <nav className="mm-enlaces">
+          {[...enlaces, { href: `${inicio}#faq`, label: pie.preguntas }].map((enlace, i) => (
+            <a href={enlace.href} key={enlace.href} onClick={() => setMenuAbierto(false)}>
+              <span className="mm-n">{String(i + 1).padStart(2, '0')}</span>
+              {enlace.label}
+            </a>
+          ))}
+        </nav>
+        <div className="mm-pie">
+          <span className="mm-oficio">{pie.oficio}</span>
+          <a className="cta-pill" href={`${inicio}#cierre`} onClick={() => setMenuAbierto(false)}>
+            {nav.cta}
+          </a>
+        </div>
       </div>
     </>
   )

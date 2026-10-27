@@ -47,7 +47,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 h1,h2,h3,h4{font-family:var(--serif);font-weight:400;line-height:1.04;letter-spacing:-.01em}
 .it{font-style:italic;color:var(--champagne)}
 .eyebrow{font-size:11.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:400}
-.wrap{width:min(1240px,92vw);margin:0 auto}
+/* El margen lateral: 26 px en un móvil pequeño y hasta 36 por lado en pantalla grande. Con los
+   92vw de la maqueta el titular quedaba a 15 px del borde y se leía apretado. */
+.wrap{width:min(1240px,100% - clamp(52px,14vw,72px));margin:0 auto}
 .lead{color:var(--faint);max-width:52ch}
 section{position:relative}
 
@@ -87,10 +89,49 @@ nav.top .links a:hover{opacity:1;color:var(--gold)}
 .burger{display:none;width:40px;height:40px;border:1px solid var(--line);border-radius:50%;place-items:center}
 .burger span,.burger span::before,.burger span::after{content:'';display:block;width:15px;height:1px;background:currentColor}
 .burger span::before{transform:translateY(-5px)}.burger span::after{transform:translateY(4px)}
-#movilmenu{position:fixed;inset:0;z-index:95;background:rgba(251,248,243,.98);backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;color:var(--tinta)}
+/* ---------- el menú del móvil: una carta, no una lista flotando ----------
+   Arriba la misma marca que la barra y la ✕ donde estaba la hamburguesa: abrir y cerrar es el
+   mismo gesto, en el mismo sitio. En medio los destinos, numerados y con su filete. Abajo, la
+   reserva. Todo el alto lo da `dvh` y la muesca la da `env()`: ni una medida inventada. */
+#movilmenu{position:fixed;inset:0;z-index:95;display:none;flex-direction:column;color:var(--tinta);
+  /* El mismo suelo que toda la web: la crema del catálogo tira a gris y aquí ensuciaba la carta. */
+  background:var(--ink);
+  padding:0 clamp(20px,6vw,34px) calc(18px + env(safe-area-inset-bottom,0px));
+  height:100dvh;overflow-y:auto;overscroll-behavior:contain}
+/* la misma luz dorada de la portada, muy velada, para que no sea una pared plana */
+#movilmenu::before{content:'';position:absolute;right:-42%;top:-34%;width:110vw;height:110vw;pointer-events:none;
+  background:radial-gradient(closest-side,color-mix(in oklab,var(--champagne) 16%,transparent),transparent 70%)}
 #movilmenu.open{display:flex}
-#movilmenu a{font-family:var(--serif);font-size:30px}
-#movilmenu .x{position:absolute;top:22px;right:24px;font-size:26px;line-height:1}
+#movilmenu>*{position:relative}
+.mm-barra{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding-block:calc(14px + env(safe-area-inset-top,0px)) 14px;margin-inline:calc(clamp(20px,6vw,34px) * -1);
+  padding-inline:clamp(20px,6vw,34px);border-bottom:1px solid var(--line)}
+.mm-barra .brand{font-size:17px}
+#movilmenu .x{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);
+  border-radius:50%;color:var(--tinta);flex:none;background:var(--sup-2)}
+#movilmenu .x svg{width:15px;height:15px}
+.mm-enlaces{display:flex;flex-direction:column;margin-top:6px}
+#movilmenu .mm-enlaces a{display:flex;align-items:center;gap:16px;padding:17px 2px;
+  font-family:var(--serif);font-size:clamp(23px,6.4vw,29px);line-height:1.1;letter-spacing:-.01em;
+  border-bottom:1px solid var(--line)}
+.mm-n{font-family:var(--sans);font-size:11.5px;letter-spacing:.22em;color:var(--gold);width:26px;flex:none}
+#movilmenu .mm-enlaces a:active{color:var(--brillo)}
+.mm-pie{margin-top:auto;padding-top:22px;display:flex;flex-direction:column;gap:14px;align-items:stretch}
+.mm-oficio{font-size:11.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);text-align:center}
+#movilmenu .cta-pill{font-size:12px;letter-spacing:.16em;padding:17px 24px;text-align:center;border-radius:999px}
+/* entran una tras otra, como se reparten las tarjetas */
+@media (prefers-reduced-motion:no-preference){
+  #movilmenu.open .mm-barra,#movilmenu.open .mm-enlaces a,#movilmenu.open .mm-pie{
+    animation:mmEntra .5s cubic-bezier(.16,1,.3,1) backwards}
+  #movilmenu.open .mm-enlaces a:nth-child(1){animation-delay:.04s}
+  #movilmenu.open .mm-enlaces a:nth-child(2){animation-delay:.08s}
+  #movilmenu.open .mm-enlaces a:nth-child(3){animation-delay:.12s}
+  #movilmenu.open .mm-enlaces a:nth-child(4){animation-delay:.16s}
+  #movilmenu.open .mm-enlaces a:nth-child(5){animation-delay:.2s}
+  #movilmenu.open .mm-enlaces a:nth-child(6){animation-delay:.24s}
+  #movilmenu.open .mm-pie{animation-delay:.28s}
+}
+@keyframes mmEntra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
 /* ---------- la atmósfera: EL único fondo de toda la web ---------- */
 /* Una sola capa fija detrás de todo: luz de día teñida del color del mundo.
@@ -184,7 +225,11 @@ nav.top{z-index:90}
 .sechead{text-align:center;margin-bottom:clamp(34px,5vh,56px)}
 .sechead h2{font-size:clamp(32px,5.1vw,70px);margin-top:14px}
 .chips{display:flex;gap:14px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+/* En pantalla estrecha los tres filtros caben en una línea si aprietan los costados. */
 .chip{padding:15px 32px;border:1px solid var(--line);border-radius:999px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);transition:.4s;background:var(--sup)}
+/* En pantalla estrecha los tres filtros entran en una línea si aprietan los costados. */
+@media (max-width:620px){.chips{gap:9px}.chip{padding-inline:16px;letter-spacing:.13em}}
+@media (max-width:359px){.chips{gap:7px}.chip{padding-inline:11px;letter-spacing:.1em}}
 .chip:hover{color:var(--brillo);border-color:var(--brillo)}
 .chip.on{color:var(--p-blanco);border-color:transparent;background:var(--brillo)}
 /* El anillo: un cilindro con una portada en cada cara. Se arrastra y gira solo. */
@@ -881,12 +926,6 @@ body:has(#estreno) nav.top{position:fixed;inset:0 0 auto}
    La maqueta se dibujó con el ratón: la hamburguesa (40), los enlaces del pie (39 de alto), los
    iconos de las redes (38) y la firma (20) se quedaban por debajo del mínimo de 44 px. Solo en
    aparatos sin ratón, y creciendo por dentro: ni un píxel se mueve de sitio en escritorio. */
-/* El menú del móvil: `#movilmenu a` es más específico que `.cta-pill` y estiraba el botón de
-   reservar a 30 px —se partía en dos líneas y salía de lado a lado—. Y su ✕ medía 26 px. */
-#movilmenu{padding-inline:24px}
-#movilmenu .cta-pill{font-size:12px;letter-spacing:.16em;max-width:100%;text-align:center}
-#movilmenu .x{top:16px;right:16px;width:44px;height:44px;display:grid;place-items:center}
-
 @media (hover:none){
   /* Donde se navega con el dedo, el botón de WhatsApp flota sobre el texto: el pie se aparta
      **lo que mide el botón** —su alto, sus dos márgenes y la muesca—, ni un píxel más. */
