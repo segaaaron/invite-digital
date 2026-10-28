@@ -30,7 +30,7 @@ export async function generateMetadata() {
 }
 export const dynamic = 'force-dynamic'
 
-const BASE = '/panel/admin/eventos'
+const BASE = '/dashboard/admin/events'
 /** Eventos por página: cada fila lleva su menú y su diálogo de soporte. */
 const PAGINA = 20
 const FIESTAS: readonly { key: string; label: string; fiesta: FiestaDeLista }[] = [
@@ -287,7 +287,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
               )}
               {/* «Abrir el panel» y «Entrar al panel» decían casi lo mismo y hacían otra cosa (16 oct): la ficha se llama ficha. */}
               <div className="grid grid-cols-2 gap-2.5 max-[1023px]:grid-cols-1">
-                <PanelButton href={`/panel/eventos/${ev.slug}/configuracion`} variant="primary">
+                <PanelButton href={`/dashboard/events/${ev.slug}/setup`} variant="primary">
                   {t('Ver la ficha', 'See the record')}
                 </PanelButton>
                 <EntrarComoCliente anfitriones={ev.anfitriones} eventId={ev.id} />
@@ -360,10 +360,10 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
               )}
             </section>
             <div className="flex flex-wrap gap-2.5">
-              <PanelButton href={`/panel/eventos/${abierto.slug}/configuracion`} variant="primary">
+              <PanelButton href={`/dashboard/events/${abierto.slug}/setup`} variant="primary">
                 {t('Abrir la ficha', 'Open the record')}
               </PanelButton>
-              <PanelButton href={`/panel/eventos/${abierto.slug}/vista-previa`}>{t('Ver la invitación', 'See the invitation')}</PanelButton>
+              <PanelButton href={`/dashboard/events/${abierto.slug}/preview`}>{t('Ver la invitación', 'See the invitation')}</PanelButton>
             </div>
           </div>
         </PanelLateral>

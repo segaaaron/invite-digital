@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // Lo que se enseña cambia con cada hora que pasa: nada que cachear.
 export const dynamic = 'force-dynamic'
 
-const BASE = '/panel/admin/demos'
+const BASE = '/dashboard/admin/demos'
 
 /**
  * **Demos**: la invitación de muestra que se le manda a un posible cliente para que vea cómo funciona
@@ -143,7 +143,7 @@ export default async function AdminDemosPage({ searchParams }: { searchParams: P
                 )}
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <PanelButton href={`/panel/eventos/${demo.slug}/configuracion?vista=invitacion`} size="sm">
+                  <PanelButton href={`/dashboard/events/${demo.slug}/setup?vista=invitacion`} size="sm">
                     {t('Editarla', 'Edit it')}
                   </PanelButton>
                   {enlace.estado !== 'listo' || horas === 0 ? null : (
@@ -164,7 +164,7 @@ export default async function AdminDemosPage({ searchParams }: { searchParams: P
                       {t('Correo', 'Email')}
                     </PanelButton>
                   )}
-                  <Link className="text-[13px] text-ink-mute underline-offset-4 hover:text-ink hover:underline" href={`/panel/eventos/${demo.slug}/vista-previa`}>
+                  <Link className="text-[13px] text-ink-mute underline-offset-4 hover:text-ink hover:underline" href={`/dashboard/events/${demo.slug}/preview`}>
                     {t('Verla', 'View it')}
                   </Link>
                   <span className="flex-1" />

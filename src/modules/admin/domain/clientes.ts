@@ -198,13 +198,13 @@ export type HitoDeCliente = { readonly cuando: Date; readonly texto: string; rea
 /** Lo que ha pasado con esta persona, en orden: consultas, pedidos, pagos y eventos. */
 export function lineaDeTiempo(c: Cliente): HitoDeCliente[] {
   const hitos: HitoDeCliente[] = [
-    ...c.consultas.map((k) => ({ cuando: k.createdAt, texto: 'Escribió desde la web', href: `/panel/admin/ventas?venta=c-${k.id}` })),
-    ...c.pedidos.map((p) => ({ cuando: p.createdAt, texto: `Pedido ${p.producto}`, href: `/panel/admin/ventas?venta=p-${p.publicRef}` })),
+    ...c.consultas.map((k) => ({ cuando: k.createdAt, texto: 'Escribió desde la web', href: `/dashboard/admin/sales?venta=c-${k.id}` })),
+    ...c.pedidos.map((p) => ({ cuando: p.createdAt, texto: `Pedido ${p.producto}`, href: `/dashboard/admin/sales?venta=p-${p.publicRef}` })),
     ...c.pedidos
       .filter((p): p is typeof p & { decidedAt: Date } => p.status === 'approved' && p.decidedAt instanceof Date)
-      .map((p) => ({ cuando: p.decidedAt, texto: 'Pago aprobado', href: `/panel/admin/ventas?venta=p-${p.publicRef}` })),
+      .map((p) => ({ cuando: p.decidedAt, texto: 'Pago aprobado', href: `/dashboard/admin/sales?venta=p-${p.publicRef}` })),
     // Dice qué es («Su evento …»), no solo el título suelto: «VALERIA» a secas no se entendía (16 oct).
-    ...c.eventos.map((e) => ({ cuando: new Date(`${e.eventDate}T12:00:00Z`), texto: `Su evento «${e.title}»`, href: `/panel/eventos/${e.slug}/configuracion` })),
+    ...c.eventos.map((e) => ({ cuando: new Date(`${e.eventDate}T12:00:00Z`), texto: `Su evento «${e.title}»`, href: `/dashboard/events/${e.slug}/setup` })),
   ]
   return hitos.sort((a, b) => a.cuando.getTime() - b.cuando.getTime())
 }

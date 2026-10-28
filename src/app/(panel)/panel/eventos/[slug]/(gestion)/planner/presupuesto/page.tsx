@@ -78,7 +78,7 @@ export default async function PresupuestoPage({ params, searchParams }: { params
   const totales = totalesDelPresupuesto(partidas)
   const evento = { eventId: event.value.id, eventSlug: event.value.slug }
   const opciones = { categorias: categoriasDe(fiesta).map((c) => ({ ...c, nombre: traducir(c.nombre, t) })), pagadores: PAGADORES.map((clave) => ({ clave, nombre: traducir(nombreDePagador(fiesta, clave), t) })) }
-  const base = `/panel/eventos/${event.value.slug}/planner/presupuesto`
+  const base = `/dashboard/events/${event.value.slug}/planner/budget`
 
   // El total y su reparto: el punto de partida del presupuesto.
   const plan = await planner.getBudgetPlan(event.value.id)

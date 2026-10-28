@@ -31,7 +31,7 @@ test('Luxury registra un invitado en el momento, responde con los datos y rechaz
   await seedInvitation({ slug: SLUG, plan: 'imperial' })
   await escribirInvitacion(SLUG)
 
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/dashboard/events/${SLUG}/guests`)
   await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
   const panel = page.locator('dialog[open]')
   await expect(panel.getByRole('heading', { name: 'Luxury' })).toBeVisible()
@@ -77,12 +77,12 @@ test('Luxury registra un invitado en el momento, responde con los datos y rechaz
 })
 
 test('Luxury lleva a la pantalla que se le pide (9 oct)', async ({ page }) => {
-  await page.goto(`/panel/eventos/${SLUG}/mensajes`)
+  await page.goto(`/dashboard/events/${SLUG}/messages`)
   await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
   const panel = page.locator('dialog[open]')
   await panel.getByLabel('Escríbele a Luxury').fill('Llévame a invitados')
   await panel.getByLabel('Escríbele a Luxury').press('Enter')
-  await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/invitados$`))
+  await expect(page).toHaveURL(new RegExp(`/dashboard/events/${SLUG}/guests$`))
   // Con pantalla ancha el chat es un panel lateral: sigue abierto con la conversación (14 oct).
   await expect(panel).toContainText('Llévame a invitados')
 })
@@ -90,7 +90,7 @@ test('Luxury lleva a la pantalla que se le pide (9 oct)', async ({ page }) => {
 test('la conversación no se pierde al llevarte (celular), al recargar, y «Nueva conversación» la empieza de cero', async ({ page }) => {
   // 14 oct: «cuando le pido que me lleve a invitaciones o regalos se pierde la conversación».
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(`/panel/eventos/${SLUG}/mensajes`)
+  await page.goto(`/dashboard/events/${SLUG}/messages`)
   await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
   const panel = page.locator('dialog[open]')
   await panel.getByLabel('Escríbele a Luxury').fill('¿Quién falta por responder?')
@@ -98,7 +98,7 @@ test('la conversación no se pierde al llevarte (celular), al recargar, y «Nuev
   await expect(panel).toContainText(/Faltan por responder/)
   await panel.getByLabel('Escríbele a Luxury').fill('Llévame a regalos')
   await panel.getByLabel('Escríbele a Luxury').press('Enter')
-  await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/regalos$`))
+  await expect(page).toHaveURL(new RegExp(`/dashboard/events/${SLUG}/gifts$`))
   // En el celular el chat se cierra para ver la pantalla, y el robot ofrece seguir donde quedó.
   await expect(page.locator('dialog[open]')).toHaveCount(0)
   await page.getByRole('button', { name: 'Seguir conversando' }).click()
@@ -117,7 +117,7 @@ test('la conversación no se pierde al llevarte (celular), al recargar, y «Nuev
 })
 
 test('Luxury crea y borra una tarea cuando se le pide, y la pantalla de detrás lo enseña', async ({ page }) => {
-  await page.goto(`/panel/eventos/${SLUG}/planner/tareas`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/tasks`)
   await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
   const panel = page.locator('dialog[open]')
   const cuantas = async () => (await sql<{ n: number }[]>`select count(*)::int as n from planner_tasks t join events e on e.id = t.event_id where e.slug = ${SLUG} and t.title = 'Probar el menú con el catering'`)[0]!.n
@@ -165,7 +165,7 @@ test.describe('hablarle', () => {
       Object.assign(window, { webkitSpeechRecognition: Falso, SpeechRecognition: undefined, __leido: leido })
       window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => void leido.push(u.text)
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
     const panel = page.locator('dialog[open]')
     await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
@@ -206,7 +206,7 @@ test.describe('hablarle', () => {
         setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 30)
       }
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
     const panel = page.locator('dialog[open]')
     await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
@@ -250,7 +250,7 @@ test.describe('hablarle', () => {
         setTimeout(() => u.onend?.(), 20)
       }) as unknown as typeof window.speechSynthesis.speak
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
     const panel = page.locator('dialog[open]')
     await panel.getByRole('button', { name: 'Voz', exact: true }).click()
@@ -295,7 +295,7 @@ test.describe('hablarle', () => {
         setTimeout(() => u.onstart?.(new Event('start') as SpeechSynthesisEvent), 10)
       }
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
     const panel = page.locator('dialog[open]')
     await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
@@ -335,7 +335,7 @@ test.describe('hablarle', () => {
         setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 30)
       }
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
     // Responde en la tarjeta del robot, en voz alta, y el chat sigue cerrado.
     const tarjeta = page.getByRole('status').filter({ has: page.getByRole('button', { name: /^(Cancelar|Callar|Cerrar)$/ }) })
@@ -378,7 +378,7 @@ test.describe('hablarle', () => {
       Object.assign(window, { webkitSpeechRecognition: Lento, SpeechRecognition: undefined })
       window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => void setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 20)
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
     const panel = page.locator('dialog[open]')
     await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
@@ -403,7 +403,7 @@ test.describe('hablarle', () => {
       }
       Object.assign(window, { webkitSpeechRecognition: SinPermiso, SpeechRecognition: undefined })
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
     const tarjeta = page.getByRole('status').filter({ has: page.getByRole('button', { name: /^(Cancelar|Callar|Cerrar)$/ }) })
     await expect(tarjeta).toContainText('permite el micrófono')
@@ -430,7 +430,7 @@ test.describe('hablarle', () => {
       }
       Object.assign(window, { webkitSpeechRecognition: Calla, SpeechRecognition: undefined })
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
     const panel = page.locator('dialog[open]')
     await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
@@ -458,9 +458,9 @@ test.describe('hablarle', () => {
     })
     // El acceso del manifiesto (Android: mantener pulsado el icono).
     const manifiesto = (await (await page.request.get('/panel.webmanifest')).json()) as { shortcuts?: { url: string }[] }
-    expect(manifiesto.shortcuts?.map((x) => x.url)).toContain('/panel/luxury')
-    await page.goto('/panel/luxury')
-    await expect(page).toHaveURL(/\/panel\/eventos\/[^/?]+$/)
+    expect(manifiesto.shortcuts?.map((x) => x.url)).toContain('/dashboard/luxury')
+    await page.goto('/dashboard/luxury')
+    await expect(page).toHaveURL(/\/dashboard\/events\/[^/?]+$/)
     await expect(page.locator('dialog[open]').getByText('Te escucho…', { exact: true })).toBeVisible()
   })
 
@@ -486,7 +486,7 @@ test.describe('hablarle', () => {
       Object.assign(window, { webkitSpeechRecognition: Lento, SpeechRecognition: undefined })
       window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => void setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 20)
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
     const tarjeta = page.getByRole('status').filter({ has: page.getByRole('button', { name: /^(Cancelar|Callar|Cerrar)$/ }) })
     await expect(tarjeta).toContainText('Abriendo el micrófono…')
@@ -512,7 +512,7 @@ test.describe('hablarle', () => {
       }
       Object.assign(window, { webkitSpeechRecognition: Mudo, SpeechRecognition: undefined })
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
     const panel = page.locator('dialog[open]')
     await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
@@ -539,7 +539,7 @@ test.describe('hablarle', () => {
         Object.assign(window, { __leido: leido })
         window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => void leido.push(u.text)
       })
-      await page.goto(`/panel/eventos/${SLUG}/invitados`)
+      await page.goto(`/dashboard/events/${SLUG}/guests`)
       await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
       const panel = page.locator('dialog[open]')
       await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
@@ -592,7 +592,7 @@ test.describe('hablarle', () => {
       Object.assign(window, { webkitSpeechRecognition: Roto, SpeechRecognition: undefined })
       Object.defineProperty(navigator, 'language', { value: 'es-BO' })
     })
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
     const panel = page.locator('dialog[open]')
     await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
@@ -610,12 +610,12 @@ test.describe('hablarle', () => {
   test('el micrófono queda permitido aunque se entre al panel por otra página', async ({ page }) => {
     // La política de permisos la fija la primera página que carga el navegador y no cambia al navegar dentro
     // del panel: quien entraba por la bandeja y llegaba al evento con clics tenía el micrófono prohibido.
-    for (const ruta of ['/panel', '/panel/entrar', '/panel/ayuda']) {
+    for (const ruta of ['/dashboard', '/dashboard/login', '/dashboard/help']) {
       const r = await page.request.get(ruta, { maxRedirects: 0 })
       expect(r.headers()['permissions-policy'], ruta).toContain('microphone=(self)')
       expect(r.headers()['permissions-policy'], ruta).toContain('camera=(self)')
     }
-    await page.goto('/panel/ayuda')
+    await page.goto('/dashboard/help')
     expect(await page.evaluate(() => (document as unknown as { featurePolicy?: { allowsFeature(f: string): boolean } }).featurePolicy?.allowsFeature('microphone'))).toBe(true)
     // El escáner del portero, con cámara.
     const portero = await page.request.get('/p/no-existe/puerta', { maxRedirects: 0 })
@@ -624,7 +624,7 @@ test.describe('hablarle', () => {
 
   test('sin reconocimiento en el navegador (Firefox) no hay micrófono: se escribe', async ({ page }) => {
     await page.addInitScript(() => Object.assign(window, { webkitSpeechRecognition: undefined, SpeechRecognition: undefined }))
-    const respuesta = await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    const respuesta = await page.goto(`/dashboard/events/${SLUG}/guests`)
     // El micrófono solo se abre al propio sitio y en las páginas del evento: sin esto, el navegador lo niega.
     expect(respuesta!.headers()['permissions-policy']).toContain('microphone=(self)')
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
@@ -635,7 +635,7 @@ test.describe('hablarle', () => {
 })
 
 test('«Oye Siri, Luxury»: la llave de Mi cuenta solo vale en la ruta de Siri, y Siri recibe texto para leer', async ({ page, playwright }) => {
-  await page.goto('/panel/cuenta#siri')
+  await page.goto('/dashboard/account#siri')
   // Sin enlace de iCloud, el atajo firmado se descarga de aquí.
   await expect(page.getByRole('link', { name: 'Descargar el atajo' })).toHaveAttribute('href', '/siri/Luxury.shortcut')
   const atajo = await page.request.get('/siri/Luxury.shortcut')
@@ -651,15 +651,15 @@ test('«Oye Siri, Luxury»: la llave de Mi cuenta solo vale en la ruta de Siri, 
     extraHTTPHeaders: { 'accept-language': 'es-BO,es;q=0.9' },
     storageState: { cookies: [], origins: [] },
   })
-  const pregunta = (clave: string) => siri.post('/panel/luxury/siri', { headers: { authorization: `Bearer ${clave}` }, data: { texto: '¿Quién falta por responder?' } })
+  const pregunta = (clave: string) => siri.post('/dashboard/luxury/siri', { headers: { authorization: `Bearer ${clave}` }, data: { texto: '¿Quién falta por responder?' } })
   const bien = await pregunta(llave)
   expect(bien.headers()['content-type']).toContain('text/plain')
   expect(await bien.text()).toMatch(/Faltan por responder|Ya respondieron todos/)
   expect(await (await pregunta('llave-que-no-existe-0000000')).text()).toContain('ya no vale')
   // La llave no abre nada más: en cualquier otra ruta, a la puerta.
-  const fuera = await siri.get('/panel/cuenta', { headers: { authorization: `Bearer ${llave}` }, maxRedirects: 0 })
+  const fuera = await siri.get('/dashboard/account', { headers: { authorization: `Bearer ${llave}` }, maxRedirects: 0 })
   expect(fuera.status()).toBe(307)
-  expect(fuera.headers()['location']).toContain('/panel/entrar')
+  expect(fuera.headers()['location']).toContain('/dashboard/login')
   await siri.dispose()
 
   // Se ve en las sesiones abiertas como una más.
@@ -671,8 +671,8 @@ test('«Oye Siri, Luxury»: la llave de Mi cuenta solo vale en la ruta de Siri, 
 test('con la cuota del mes gastada lo dice y no responde', async ({ page }) => {
   const [evento] = await sql<{ id: string }[]>`select id from events where slug = ${SLUG}`
   await sql`update assistant_usage set messages = 300 where event_id = ${evento!.id}`
-  await page.goto(`/panel/eventos/${SLUG}`)
-  const respuesta = await page.request.post(`/panel/eventos/${SLUG}/asistente`, { data: { mensajes: [{ rol: 'usuario', texto: 'Hola' }] } })
+  await page.goto(`/dashboard/events/${SLUG}`)
+  const respuesta = await page.request.post(`/dashboard/events/${SLUG}/assistant`, { data: { mensajes: [{ rol: 'usuario', texto: 'Hola' }] } })
   expect(respuesta.status()).toBe(200)
   expect(await respuesta.text()).toContain('ya usaste todos los mensajes')
 })
@@ -680,22 +680,22 @@ test('con la cuota del mes gastada lo dice y no responde', async ({ page }) => {
 test('un plan sin Luxury lo ve con candado y cómo conseguirlo; la ruta responde 404', async ({ page }) => {
   await seedInvitation({ slug: SLUG_BASICO, plan: 'atelier' })
   await escribirInvitacion(SLUG_BASICO)
-  await page.goto(`/panel/eventos/${SLUG_BASICO}`)
+  await page.goto(`/dashboard/events/${SLUG_BASICO}`)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Conocer a Luxury, tu planner con IA' }).click()
   const dialogo = page.locator('dialog[open]')
   await expect(dialogo).toContainText('Carga a tus invitados')
   // El atelier dueño mejora cambiando de plan.
-  await expect(dialogo.getByRole('link', { name: 'Ver planes' })).toHaveAttribute('href', `/panel/eventos/${SLUG_BASICO}/plan`)
-  const respuesta = await page.request.post(`/panel/eventos/${SLUG_BASICO}/asistente`, { data: { mensajes: [{ rol: 'usuario', texto: 'Hola' }] } })
+  await expect(dialogo.getByRole('link', { name: 'Ver planes' })).toHaveAttribute('href', `/dashboard/events/${SLUG_BASICO}/plan`)
+  const respuesta = await page.request.post(`/dashboard/events/${SLUG_BASICO}/assistant`, { data: { mensajes: [{ rol: 'usuario', texto: 'Hola' }] } })
   expect(respuesta.status()).toBe(404)
 })
 
 test('con Luxury comprado como extra, un plan que no lo trae lo usa', async ({ page }) => {
   const [evento] = await sql<{ id: string }[]>`select id from events where slug = ${SLUG_BASICO}`
   await sql`insert into event_addons (event_id, addon_slug, effect, amount) values (${evento!.id}, 'luxury', 'asistente', 0)`
-  await page.goto(`/panel/eventos/${SLUG_BASICO}`)
+  await page.goto(`/dashboard/events/${SLUG_BASICO}`)
   await expect(page.getByRole('button', { name: 'Conocer a Luxury, tu planner con IA' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
   const panel = page.locator('dialog[open]')
@@ -710,7 +710,7 @@ test.describe('Admin › Asistente', () => {
   test('el admin ve el gasto del mes y guarda los topes', async ({ page }) => {
     const antes = (await sql<{ value: string }[]>`select value from app_settings where key = 'asistente.config'`)[0]?.value ?? null
     try {
-      await page.goto('/panel/admin/asistente')
+      await page.goto('/dashboard/admin/assistant')
       await expect(page.getByRole('heading', { name: 'Asistente Luxury', level: 1 })).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Luxury este mes' })).toBeVisible()
       await expect(page.getByRole('checkbox', { name: 'Imperial' })).toBeChecked()
@@ -738,7 +738,7 @@ test.describe('Luxury hace cosas del evento', () => {
   })
 
   const abrir = async (page: import('@playwright/test').Page, ruta = '') => {
-    await page.goto(`/panel/eventos/${SLUG}${ruta}`)
+    await page.goto(`/dashboard/events/${SLUG}${ruta}`)
     await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
     return page.locator('dialog[open]')
   }

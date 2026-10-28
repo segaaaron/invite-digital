@@ -98,8 +98,8 @@ describe('avisarDelEvento', () => {
 describe('avisarAlAdmin', () => {
   it('le llega a cada admin, sin evento', async () => {
     const d = dobles([aparato('a9', 'admin1')])
-    await avisarAlAdmin(d)(avisoDeVenta({ titulo: 'Nueva consulta de Carla', detalle: '', ruta: '/panel/admin/ventas' }))
+    await avisarAlAdmin(d)(avisoDeVenta({ titulo: 'Nueva consulta de Carla', detalle: '', ruta: '/dashboard/admin/sales' }))
     expect(d.creados).toEqual([{ userId: 'admin1', eventId: null, title: 'Nueva consulta de Carla' }])
-    expect(d.enviados[0]?.carga).toEqual({ title: 'Nueva consulta de Carla', body: '', url: '/panel/admin/ventas', tag: 'venta' })
+    expect(d.enviados[0]?.carga).toEqual({ title: 'Nueva consulta de Carla', body: '', url: '/dashboard/admin/sales', tag: 'venta' })
   })
 })

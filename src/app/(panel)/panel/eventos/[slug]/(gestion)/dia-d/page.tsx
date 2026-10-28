@@ -62,7 +62,7 @@ export default async function DiaDPage({ params }: { params: Promise<{ slug: str
     ahora: momentoAhora ? { title: momentoAhora.title, startsAt: momentoAhora.startsAt, cue: momentoAhora.cue, owner: momentoAhora.owner } : null,
     sigue: momentoSigue ? { title: momentoSigue.title, startsAt: momentoSigue.startsAt, enMinutos: (minutosDe(momentoSigue.startsAt) - minutosDe(hora) + 1440) % 1440 } : null,
     loQueSigue: (desde === -1 ? [] : ordenados.slice(desde, desde + 4)).map((m) => ({ id: m.id, startsAt: m.startsAt, title: m.title })),
-    ingreso: `/panel/eventos/${event.value.slug}/checkin`,
+    ingreso: `/dashboard/events/${event.value.slug}/check-in`,
     llegadas: estadoPuerta
       ? { grupos: estadoPuerta.tally.arrivedGroups, esperados: estadoPuerta.tally.expectedGroups, personas: estadoPuerta.tally.headsInside, personasEsperadas: estadoPuerta.tally.expectedHeads }
       : null,

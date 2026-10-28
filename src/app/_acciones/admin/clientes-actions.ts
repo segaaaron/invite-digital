@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin, opinionesDe } from '@/app/composition/container'
 import { invalidarLaWeb } from '@/app/_acciones/admin/admin-comun'
 import { requireAdmin } from '@/app/_acciones/sesion'
@@ -30,7 +30,7 @@ export async function guardarNotaClienteAction(_previo: ClienteActionState, form
     if (guardada.error.kind === 'storage_failure') registrarFallo('admin/clientes-actions', 'guardarNotaClienteAction', guardada.error.detail)
     return { status: 'error', message: guardada.error.kind === 'storage_failure' ? t('No pudimos guardar la nota. Vuelve a intentarlo.', 'We couldn’t save the note. Try again.') : traducir(guardada.error.detail, t) }
   }
-  revalidatePath('/panel/admin/clientes')
+  revalidarRuta('/dashboard/admin/clients')
   return { status: 'success', message: t('Guardado.', 'Saved.') }
 }
 
@@ -39,7 +39,7 @@ export async function generarReferidoAction(formData: FormData): Promise<void> {
   await requireAdmin()
   const creado = await admin.ensureReferralCode(campo(formData, 'eventId'))
   if (isErr(creado)) registrarFallo('admin/clientes-actions', 'generarReferidoAction', creado.error.detail)
-  revalidatePath('/panel/admin/clientes')
+  revalidarRuta('/dashboard/admin/clients')
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -70,9 +70,9 @@ export async function publicarOpinionAction(_previo: ClienteActionState, formDat
             : traducir(publicada.error.detail, t),
     }
   }
-  revalidatePath('/panel/admin/clientes')
-  revalidatePath('/panel/admin/web')
-  revalidatePath('/', 'layout')
+  revalidarRuta('/dashboard/admin/clients')
+  revalidarRuta('/dashboard/admin/web')
+  revalidarRuta('/', 'layout')
   invalidarLaWeb('ajustes')
   return { status: 'success', message: t('Publicada en la web.', 'Published on the website.') }
 }

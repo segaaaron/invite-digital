@@ -87,9 +87,9 @@ describe('componerHoy', () => {
     )
     const hoy = componerHoy({ ...nada, ventas }, HOY)
     expect(hoy.grupos[0]?.avisos.map((a) => [a.etiqueta, a.href])).toEqual([
-      ['Pagado', '/panel/admin/ventas?venta=p-PAGADO22'],
-      ['Comprobante', '/panel/admin/ventas?venta=p-REVISA33'],
-      ['Consulta', '/panel/admin/ventas?venta=c-a'],
+      ['Pagado', '/dashboard/admin/sales?venta=p-PAGADO22'],
+      ['Comprobante', '/dashboard/admin/sales?venta=p-REVISA33'],
+      ['Consulta', '/dashboard/admin/sales?venta=c-a'],
     ])
     expect(hoy.total).toBe(3)
   })
@@ -97,7 +97,7 @@ describe('componerHoy', () => {
   it('más de cuatro de una etapa se resumen en uno que abre su lista', () => {
     const ventas = componerVentas({ consultas: ['a', 'b', 'c', 'd', 'e'].map((id, i) => consulta(id, i + 1)), pedidos: [] }, AHORA)
     const [aviso] = componerHoy({ ...nada, ventas }, HOY).grupos[0]?.avisos ?? []
-    expect(aviso).toMatchObject({ titulo: '5 consultas sin contestar', href: '/panel/admin/ventas?vista=lista&etapa=nueva' })
+    expect(aviso).toMatchObject({ titulo: '5 consultas sin contestar', href: '/dashboard/admin/sales?vista=lista&etapa=nueva' })
   })
 
   it('los eventos en riesgo salen de su salud, en los próximos 90 días', () => {
@@ -129,8 +129,8 @@ describe('componerHoy', () => {
     const avisos = hoy.grupos.find((g) => g.id === 'opiniones')?.avisos ?? []
     expect(avisos.map((a) => [a.href, a.accion])).toEqual(
       expect.arrayContaining([
-        ['/panel/admin/clientes?evento=con-permiso', 'Publicar'],
-        ['/panel/admin/eventos?evento=sin-permiso', 'Ver'],
+        ['/dashboard/admin/clients?evento=con-permiso', 'Publicar'],
+        ['/dashboard/admin/events?evento=sin-permiso', 'Ver'],
       ]),
     )
   })

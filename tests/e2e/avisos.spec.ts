@@ -39,7 +39,7 @@ test('la campana se entera en vivo de que un invitado abrió su invitación y co
   const id = await atelierId()
   await sql`update avisos set seen_at = now() where user_id = ${id} and seen_at is null`
 
-  await page.goto(`/panel/eventos/${eventSlug}/invitados`)
+  await page.goto(`/dashboard/events/${eventSlug}/guests`)
   const campana = page.getByRole('button', { name: /^Avisos/ })
   await expect(campana).toHaveAccessibleName('Avisos')
 
@@ -62,11 +62,11 @@ test('la campana se entera en vivo de que un invitado abrió su invitación y co
 
   // Cada aviso lleva a su pantalla.
   await lista.getByRole('link', { name: /confirmó/ }).first().click()
-  await expect(page).toHaveURL(new RegExp(`/panel/eventos/${eventSlug}/invitados$`))
+  await expect(page).toHaveURL(new RegExp(`/dashboard/events/${eventSlug}/guests$`))
 })
 
 test('en Mi cuenta elige qué avisos van a sus aparatos', async ({ page }) => {
-  await page.goto('/panel/cuenta#avisos')
+  await page.goto('/dashboard/account#avisos')
   const seccion = page.locator('#avisos')
   await expect(seccion.getByRole('heading', { name: 'Avisos' })).toBeVisible()
   // Las ventas son del admin: al atelier no se le ofrecen.
@@ -78,11 +78,11 @@ test('en Mi cuenta elige qué avisos van a sus aparatos', async ({ page }) => {
 })
 
 test('el aparato se guarda con su sesión, y lo que no es una suscripción de push se rechaza', async ({ page }) => {
-  await page.goto('/panel')
-  const bien = await page.request.post('/panel/avisos/aparato', { data: { endpoint: ENDPOINT, keys: { p256dh: 'clave-publica', auth: 'secreto' } } })
+  await page.goto('/dashboard')
+  const bien = await page.request.post('/dashboard/alerts/device', { data: { endpoint: ENDPOINT, keys: { p256dh: 'clave-publica', auth: 'secreto' } } })
   expect(bien.status()).toBe(204)
   expect((await sql<{ n: number }[]>`select count(*)::int as n from push_subscriptions where user_id = ${await atelierId()} and endpoint = ${ENDPOINT}`)[0]!.n).toBe(1)
 
-  const mal = await page.request.post('/panel/avisos/aparato', { data: { endpoint: 'http://no-es-https', keys: { p256dh: 'x', auth: 'y' } } })
+  const mal = await page.request.post('/dashboard/alerts/device', { data: { endpoint: 'http://no-es-https', keys: { p256dh: 'x', auth: 'y' } } })
   expect(mal.status()).toBe(400)
 })

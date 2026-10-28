@@ -29,7 +29,7 @@ export type EntradaDeAgenda = {
   readonly detalle: string | null
   /** Tarea cerrada o pago hecho: se ve tachado y no va a la suscripción. */
   readonly hecha: boolean
-  /** Dónde se edita, relativo a `/panel/eventos/<slug>`. */
+  /** Dónde se edita, relativo a `/dashboard/events/<slug>`. */
   readonly ruta: string
 }
 
@@ -67,27 +67,27 @@ export function componerAgenda(datos: {
   const hora = evento.inicio !== null && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(evento.inicio) ? evento.inicio.slice(11, 16) : null
   const entradas: EntradaDeAgenda[] = [
     { id: 'evento', clase: 'evento', dia: evento.eventDate, hora, minutos: hora === null ? null : 300, titulo: evento.title, detalle: null, hecha: false, ruta: '' },
-    { id: 'confirmacion', clase: 'confirmacion', dia: evento.rsvpDeadline, hora: null, minutos: null, titulo: 'Último día para confirmar', detalle: null, hecha: false, ruta: '/invitados' },
+    { id: 'confirmacion', clase: 'confirmacion', dia: evento.rsvpDeadline, hora: null, minutos: null, titulo: 'Último día para confirmar', detalle: null, hecha: false, ruta: '/guests' },
   ]
   for (const t of datos.tareas) {
     if (t.dueDate === null) continue
-    entradas.push({ id: t.id, clase: 'tarea', dia: t.dueDate, hora: null, minutos: null, titulo: t.title, detalle: null, hecha: t.doneAt !== null, ruta: '/planner/tareas' })
+    entradas.push({ id: t.id, clase: 'tarea', dia: t.dueDate, hora: null, minutos: null, titulo: t.title, detalle: null, hecha: t.doneAt !== null, ruta: '/planner/tasks' })
   }
   for (const p of datos.partidas) {
     for (const g of p.pagos) {
       if (g.dueDate === null) continue
       const titulo = `${g.label ? `${g.label[0]!.toUpperCase()}${g.label.slice(1)} · ` : 'Pago · '}${p.concept}`
-      entradas.push({ id: g.id, clase: 'pago', dia: g.dueDate, hora: null, minutos: null, titulo, detalle: bs(g.amountCents), hecha: g.paidAt !== null, ruta: '/planner/presupuesto' })
+      entradas.push({ id: g.id, clase: 'pago', dia: g.dueDate, hora: null, minutos: null, titulo, detalle: bs(g.amountCents), hecha: g.paidAt !== null, ruta: '/planner/budget' })
     }
   }
   for (const m of datos.momentos) {
     // Como en el cronograma: lo de antes de las 06:00 es la madrugada de esa noche, del día siguiente.
     const dia = m.startsAt < '06:00' ? sumarDias(evento.eventDate, 1) : evento.eventDate
-    entradas.push({ id: m.id, clase: 'momento', dia, hora: m.startsAt, minutos: m.durationMin, titulo: m.title, detalle: m.place, hecha: false, ruta: '/planner/cronograma' })
+    entradas.push({ id: m.id, clase: 'momento', dia, hora: m.startsAt, minutos: m.durationMin, titulo: m.title, detalle: m.place, hecha: false, ruta: '/planner/schedule' })
   }
   for (const e of datos.ensayos) {
     const local = aBolivia(e.date)
-    entradas.push({ id: e.id, clase: 'ensayo', dia: local.slice(0, 10), hora: local.slice(11, 16), minutos: 60, titulo: 'Ensayo del cortejo', detalle: e.place, hecha: false, ruta: '/planner/cortejo' })
+    entradas.push({ id: e.id, clase: 'ensayo', dia: local.slice(0, 10), hora: local.slice(11, 16), minutos: 60, titulo: 'Ensayo del cortejo', detalle: e.place, hecha: false, ruta: '/planner/procession' })
   }
   for (const c of datos.citas) {
     entradas.push({ id: c.id, clase: 'cita', dia: c.startsAt.slice(0, 10), hora: c.startsAt.slice(11, 16), minutos: c.durationMin, titulo: c.title, detalle: c.place, hecha: false, ruta: `/planner/agenda?cita=${c.id}` })

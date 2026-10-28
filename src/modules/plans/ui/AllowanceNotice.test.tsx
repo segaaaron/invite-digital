@@ -7,7 +7,7 @@ const pintar = (props: { maxGuestGroups: number | null; currentGroups: number; m
     <AllowanceNotice
       currentGroups={props.currentGroups}
       maxGuestGroups={props.maxGuestGroups}
-      mejorar={props.mejorar === undefined ? { href: '/panel/eventos/boda-rojas/plan', label: 'Cambiar de plan' } : props.mejorar}
+      mejorar={props.mejorar === undefined ? { href: '/dashboard/events/boda-rojas/plan', label: 'Cambiar de plan' } : props.mejorar}
     />,
   )
 
@@ -37,12 +37,12 @@ describe('AllowanceNotice', () => {
 
     const aviso = screen.getByRole('alert')
     expect(aviso).toHaveTextContent(/no admite más invitaciones/i)
-    expect(screen.getByRole('link', { name: /plan/i })).toHaveAttribute('href', '/panel/eventos/boda-rojas/plan')
+    expect(screen.getByRole('link', { name: /plan/i })).toHaveAttribute('href', '/dashboard/events/boda-rojas/plan')
   })
 
   it('el anfitrión va a Extras; quien no compra no recibe un enlace que da 404', () => {
-    pintar({ maxGuestGroups: 30, currentGroups: 30, mejorar: { href: '/panel/eventos/boda-rojas/extras', label: 'Sumar invitaciones' } })
-    expect(screen.getByRole('link', { name: 'Sumar invitaciones' })).toHaveAttribute('href', '/panel/eventos/boda-rojas/extras')
+    pintar({ maxGuestGroups: 30, currentGroups: 30, mejorar: { href: '/dashboard/events/boda-rojas/extras', label: 'Sumar invitaciones' } })
+    expect(screen.getByRole('link', { name: 'Sumar invitaciones' })).toHaveAttribute('href', '/dashboard/events/boda-rojas/extras')
   })
 
   it('sin adónde ir, dice con quién hablar', () => {

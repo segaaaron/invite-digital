@@ -4,15 +4,15 @@ import { FeatureLocked } from './FeatureLocked'
 
 describe('FeatureLocked', () => {
   it('dice qué plan sí trae la función', () => {
-    render(<FeatureLocked eventSlug="boda-rojas" mejorar={{ href: '/panel/eventos/boda-rojas/plan', label: 'Ver planes' }} reason="El plan atelier no incluye la mesa de regalos; lo trae el plan gala." title="Regalos" />)
+    render(<FeatureLocked eventSlug="boda-rojas" mejorar={{ href: '/dashboard/events/boda-rojas/plan', label: 'Ver planes' }} reason="El plan atelier no incluye la mesa de regalos; lo trae el plan gala." title="Regalos" />)
 
     expect(screen.getByText(/gala/)).toBeInTheDocument()
   })
 
   it('lleva adonde quien mira puede mejorar el plan', () => {
-    render(<FeatureLocked eventSlug="boda-rojas" mejorar={{ href: '/panel/eventos/boda-rojas/extras', label: 'Ver extras' }} reason="No incluido." title="Día D" />)
+    render(<FeatureLocked eventSlug="boda-rojas" mejorar={{ href: '/dashboard/events/boda-rojas/extras', label: 'Ver extras' }} reason="No incluido." title="Día D" />)
 
-    expect(screen.getByRole('link', { name: 'Ver extras' })).toHaveAttribute('href', '/panel/eventos/boda-rojas/extras')
+    expect(screen.getByRole('link', { name: 'Ver extras' })).toHaveAttribute('href', '/dashboard/events/boda-rojas/extras')
   })
 
   // El cliente no abre «Plan»: un enlace ahí era una página en blanco (404).

@@ -94,7 +94,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   /** En el celular, la invitación abierta a pantalla completa (maqueta M09). */
   const [enCelular, setEnCelular] = useState<string | null>(null)
 
-  const base = `/panel/eventos/${eventSlug}/invitados`
+  const base = `/dashboard/events/${eventSlug}/guests`
 
   // Las visibles, juntas por invitación y con el principal primero.
   const grupos = useMemo(() => {

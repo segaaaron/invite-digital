@@ -103,7 +103,7 @@ export function PanelSidebar({
     >
       {evento === null ? (
         <>
-          <Link className="flex items-center gap-3.5 px-2 text-shell-ink no-underline" href={sections[0]?.items[0]?.href ?? '/panel'}>
+          <Link className="flex items-center gap-3.5 px-2 text-shell-ink no-underline" href={sections[0]?.items[0]?.href ?? '/dashboard'}>
             <SelloLA />
             <span className="min-w-0">
               <span className="block font-display text-[21px] leading-[1.05] font-medium">Luxury Atelier</span>
@@ -219,7 +219,7 @@ function TarjetaDeUsuario({ user }: { user: PanelUser }) {
             {t('Volver al admin', 'Back to admin')}
           </button>
         ) : (
-          <Link className="text-[12.5px] text-shell-mute no-underline hover:text-shell-ink" href="/panel/cuenta">
+          <Link className="text-[12.5px] text-shell-mute no-underline hover:text-shell-ink" href="/dashboard/account">
             {t('Mi cuenta', 'My account')}
           </Link>
         )}

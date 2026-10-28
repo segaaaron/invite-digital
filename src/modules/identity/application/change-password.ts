@@ -6,7 +6,7 @@ import type { PasswordHasher, SessionRepository, UserRepository } from './ports'
 /**
  * Cambiar la propia contraseña.
  *
- * Existe porque las cuentas las da de alta otro —el admin en `/panel/admin/usuarios`, el
+ * Existe porque las cuentas las da de alta otro —el admin en `/dashboard/admin/users`, el
  * atelier al dar acceso a su cliente— y esa contraseña viaja por WhatsApp. Sin esta
  * pantalla, la clave que escribió otra persona vale para siempre.
  *

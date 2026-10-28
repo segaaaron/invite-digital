@@ -29,29 +29,29 @@ const recortar = (texto: string, max: number): string => {
   const limpio = texto.trim().replace(/\s+/g, ' ')
   return limpio.length <= max ? limpio : `${limpio.slice(0, max - 1).trimEnd()}…`
 }
-const enEvento = (slug: string, ruta: string) => `/panel/eventos/${slug}${ruta}`
+const enEvento = (slug: string, ruta: string) => `/dashboard/events/${slug}${ruta}`
 
 export function avisoDeRespuesta(i: DelEvento & { invitado: string; lugares: number }): Aviso {
   const title =
     i.lugares <= 0 ? `${i.invitado} no podrá asistir` : i.lugares === 1 ? `${i.invitado} confirmó su asistencia` : `${i.invitado} confirmó ${i.lugares} lugares`
-  return { kind: 'rsvp', title: recortar(title, 160), body: i.titulo, href: enEvento(i.slug, '/invitados') }
+  return { kind: 'rsvp', title: recortar(title, 160), body: i.titulo, href: enEvento(i.slug, '/guests') }
 }
 
 export function avisoDeMensaje(i: DelEvento & { invitado: string; texto: string }): Aviso {
-  return { kind: 'mensaje', title: recortar(`${i.invitado} te dejó un mensaje`, 160), body: recortar(i.texto, MAX_CUERPO), href: enEvento(i.slug, '/mensajes') }
+  return { kind: 'mensaje', title: recortar(`${i.invitado} te dejó un mensaje`, 160), body: recortar(i.texto, MAX_CUERPO), href: enEvento(i.slug, '/messages') }
 }
 
 export function avisoDeApertura(i: DelEvento & { invitado: string }): Aviso {
-  return { kind: 'apertura', title: recortar(`${i.invitado} abrió su invitación`, 160), body: i.titulo, href: enEvento(i.slug, '/invitados') }
+  return { kind: 'apertura', title: recortar(`${i.invitado} abrió su invitación`, 160), body: i.titulo, href: enEvento(i.slug, '/guests') }
 }
 
 export function avisoDeRegalo(i: DelEvento & { invitado: string; regalo: string }): Aviso {
-  return { kind: 'regalo', title: recortar(`${i.invitado} reservó «${i.regalo}»`, 160), body: i.titulo, href: enEvento(i.slug, '/regalos') }
+  return { kind: 'regalo', title: recortar(`${i.invitado} reservó «${i.regalo}»`, 160), body: i.titulo, href: enEvento(i.slug, '/gifts') }
 }
 
 /** El diseño por encargo: hay una versión lista para revisar. Lleva a «Personalizar invitación». */
 export function avisoDeVersionLista(i: DelEvento): Aviso {
-  return { kind: 'diseno', title: 'Tu invitación está lista para revisar', body: i.titulo, href: enEvento(i.slug, '/configuracion') }
+  return { kind: 'diseno', title: 'Tu invitación está lista para revisar', body: i.titulo, href: enEvento(i.slug, '/setup') }
 }
 
 /** `cuando`: «mañana», «en 7 días»… `ruta`: la pantalla del evento donde se atiende. */

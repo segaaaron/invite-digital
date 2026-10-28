@@ -67,7 +67,7 @@ export default async function ExtrasPage({ params, searchParams }: { params: Pro
   const abierto = refAbierta === undefined ? undefined : pedidos.find((p) => p.ref === refAbierta && p.porPagar)
   const cobro = abierto === undefined ? null : await admin.payment()
   const pago = cobro === null || isErr(cobro) || !isPayable(cobro.value) ? null : cobro.value
-  const base = `/panel/eventos/${event.value.slug}/extras`
+  const base = `/dashboard/events/${event.value.slug}/extras`
 
   return (
     <>

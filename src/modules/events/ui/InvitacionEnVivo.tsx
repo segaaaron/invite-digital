@@ -56,10 +56,10 @@ export async function InvitacionEnVivo({ event, content, estilo }: { event: Even
       </div>
       </div>
       <div className="flex flex-wrap justify-center gap-2.5">
-        <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`} size="sm">
+        <PanelButton href={`/dashboard/events/${event.slug}/preview`} size="sm">
           <EyeIcon className="size-4" /> {t('Pantalla completa', 'Full screen')}
         </PanelButton>
-        <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`} size="sm">
+        <PanelButton href={`/dashboard/events/${event.slug}/preview`} size="sm">
           <MusicIcon className="size-4" /> {t('Con sonido', 'With sound')}
         </PanelButton>
       </div>

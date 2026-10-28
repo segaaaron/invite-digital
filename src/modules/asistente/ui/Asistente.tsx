@@ -89,7 +89,7 @@ const textoConsultando = (t: T): Record<string, string> => ({
 
 /** Los enlaces del propio evento que Luxury escribe se vuelven enlaces de verdad; nada de fuera. */
 function conEnlaces(texto: string, slug: string, alNavegar: () => void, t: T): ReactNode {
-  const base = `/panel/eventos/${slug}`
+  const base = `/dashboard/events/${slug}`
   // Si el modelo escribe markdown (13 oct): sin los «**» de las negritas, y «[texto](ruta)» enlaza con su texto.
   const partes = texto.replace(/\*\*(.+?)\*\*/g, '$1').split(/(\[[^\]\n]+\]\(\/panel\/eventos\/[^)\s]+\)|\/panel\/eventos\/[a-z0-9-]+(?:\/[\w\-/?=&]*)?)/g)
   return partes.map((parte, i) => {
@@ -111,7 +111,7 @@ function conEnlaces(texto: string, slug: string, alNavegar: () => void, t: T): R
 
 /**
  * **Luxury**: el botón flotante del panel del evento y su conversación. La conversación vive aquí (no se
- * guarda en ningún sitio) y viaja entera a `/panel/eventos/<slug>/asistente` en cada mensaje; la
+ * guarda en ningún sitio) y viaja entera a `/dashboard/events/<slug>/assistant` en cada mensaje; la
  * respuesta llega por trozos y se va escribiendo. **Hace lo que se le pide** con las mismas acciones de
  * las pantallas (7 de octubre); al terminar algo, el panel de detrás se vuelve a pintar. Solo el envío por
  * WhatsApp lleva tarjeta: cada mensaje necesita el toque de la persona.
@@ -276,7 +276,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
   /** En qué está Luxury fuera del chat: el punto de la tarjeta, el aro bajo el robot y su boca. */
   const estadoFuera = !modoFuera ? null : escuchando ? 'escucha' : ocupado ? 'piensa' : lectura.hablando ? 'habla' : null
   const apartado = useApartarAlBajar()
-  const enIngreso = usePathname().endsWith('/checkin')
+  const enIngreso = usePathname().endsWith('/check-in')
   const hayAviso = dictado.aviso !== null
   useEffect(() => {
     if (!quieto) return
@@ -348,7 +348,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
     let destino: string | null = null
     let recibido = ''
     try {
-      const respuesta = await fetch(`/panel/eventos/${slug}/asistente`, {
+      const respuesta = await fetch(`/dashboard/events/${slug}/assistant`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         // El idioma del aparato: Luxury responde en inglés si el celular o la computadora está en inglés.
@@ -494,7 +494,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
     }
   }
 
-  // **«Hablar con Luxury» desde el icono** (Android: acceso del manifiesto → `/panel/luxury` → aquí con `?luxury=voz`):
+  // **«Hablar con Luxury» desde el icono** (Android: acceso del manifiesto → `/dashboard/luxury` → aquí con `?luxury=voz`):
   // se abre ya escuchando. Si el navegador pide un toque para el micrófono, el aviso lo dice.
   const alAbrirConVoz = useRef(() => {})
   useEffect(() => {

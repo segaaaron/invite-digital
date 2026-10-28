@@ -14,9 +14,9 @@ import { useT } from '@/shared/i18n/idioma-navegador'
  * pantalla donde vive lo creado.
  */
 export const CREAR = [
-  { href: '/panel/admin/eventos?crear=evento', titulo: 'Evento para un cliente', detalle: 'Ya pagó o lo cobras por fuera', icono: 'evento' },
-  { href: '/panel/admin/ventas?crear=cotizacion', titulo: 'Cotización', detalle: 'Precio armado para enviar por WhatsApp', icono: 'cotizacion' },
-  { href: '/panel/admin/usuarios?crear=persona', titulo: 'Persona del equipo', detalle: 'Admin o atelier, con su propia cuenta', icono: 'persona' },
+  { href: '/dashboard/admin/events?crear=evento', titulo: 'Evento para un cliente', detalle: 'Ya pagó o lo cobras por fuera', icono: 'evento' },
+  { href: '/dashboard/admin/sales?crear=cotizacion', titulo: 'Cotización', detalle: 'Precio armado para enviar por WhatsApp', icono: 'cotizacion' },
+  { href: '/dashboard/admin/users?crear=persona', titulo: 'Persona del equipo', detalle: 'Admin o atelier, con su propia cuenta', icono: 'persona' },
 ] as const
 
 const ICONO = { evento: CalendarIcon, cotizacion: ReceiptIcon, persona: UsersIcon } as const

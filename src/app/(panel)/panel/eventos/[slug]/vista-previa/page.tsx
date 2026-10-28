@@ -65,7 +65,7 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
       // llegar al cliente, y antes solo salía abriendo el enlace de verdad.
       demo={esDemo(event.value) ? { textos: diccionario.invitation.demo, href: `/${event.value.locale}#planes` } : null}
       fuentes={variables}
-      volver={`/panel/eventos/${event.value.slug}/configuracion`}
+      volver={`/dashboard/events/${event.value.slug}/setup`}
     >
       <EstiloDeLaInvitacion estilo={await events.estilo.leer(event.value.id)} tema={definicion}>
         <Tema

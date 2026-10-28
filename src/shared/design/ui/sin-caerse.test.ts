@@ -17,7 +17,7 @@ describe('sinCaerse', () => {
 
 describe('esSaltoDeNext', () => {
   it('reconoce los saltos de Next, que quien los atrape tiene que volver a lanzar', () => {
-    expect(esSaltoDeNext(Object.assign(new Error('x'), { digest: 'NEXT_REDIRECT;replace;/panel/entrar;307;' }))).toBe(true)
+    expect(esSaltoDeNext(Object.assign(new Error('x'), { digest: 'NEXT_REDIRECT;replace;/dashboard/login;307;' }))).toBe(true)
     expect(esSaltoDeNext(Object.assign(new Error('x'), { digest: 'NEXT_NOT_FOUND' }))).toBe(true)
   })
 

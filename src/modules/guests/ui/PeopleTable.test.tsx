@@ -182,8 +182,8 @@ describe('PeopleTable · la fecha de confirmación', () => {
 describe('PeopleTable · acciones de la fila', () => {
   it('ver pase y editar llevan a su propio panel, con la persona en la dirección', () => {
     render(<PeopleTable eventSlug="boda" rows={[filas[0]!]} />)
-    expect(within(tabla()).getByRole('link', { name: 'Ver el pase de Ana Lucía Vega' })).toHaveAttribute('href', '/panel/eventos/boda/invitados?panel=pase&persona=p1')
-    expect(within(tabla()).getByRole('link', { name: 'Editar a Ana Lucía Vega' })).toHaveAttribute('href', '/panel/eventos/boda/invitados?panel=editar&persona=p1')
+    expect(within(tabla()).getByRole('link', { name: 'Ver el pase de Ana Lucía Vega' })).toHaveAttribute('href', '/dashboard/events/boda/guests?panel=pase&persona=p1')
+    expect(within(tabla()).getByRole('link', { name: 'Editar a Ana Lucía Vega' })).toHaveAttribute('href', '/dashboard/events/boda/guests?panel=editar&persona=p1')
   })
 
   it('eliminar pregunta y solo el segundo clic borra', async () => {

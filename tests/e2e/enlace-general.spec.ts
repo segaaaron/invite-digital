@@ -21,11 +21,11 @@ test.describe('el enlace general', () => {
     await seedCliente(SLUG, CUENTA)
     ctx = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.78' } })
     page = await ctx.newPage()
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(CUENTA.email)
     await page.getByLabel('Contraseña').fill(CUENTA.password)
     await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page).toHaveURL(/\/panel\/eventos\//)
+    await expect(page).toHaveURL(/\/dashboard\/events\//)
   })
 
   test.afterAll(async () => {
@@ -35,7 +35,7 @@ test.describe('el enlace general', () => {
   })
 
   test('el anfitrión crea el enlace general', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     await page.getByRole('button', { name: 'Crear enlace general' }).click()
     const codigo = page.locator('code').filter({ hasText: '/abierta/' })
     await expect(codigo).toBeVisible()
@@ -54,7 +54,7 @@ test.describe('el enlace general', () => {
   })
 
   test('aparece en la lista de invitados, con su acompañante', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
     // Una familia lleva su fila de cabecera: quién, cuántas personas y si ya se envió.
     await expect(page.getByRole('cell', { name: 'Mónica Salvatierra 2 personas, enviada' })).toBeVisible()
   })

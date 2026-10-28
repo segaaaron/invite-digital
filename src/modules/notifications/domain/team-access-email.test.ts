@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { teamAccessEmail } from './team-access-email'
 
-const base = { email: 'ana@mail.bo', password: 'Provisional-2026', panelUrl: 'https://x.bo/panel/entrar', whatsapp: null, siteUrl: 'https://x.bo' }
+const base = { email: 'ana@mail.bo', password: 'Provisional-2026', panelUrl: 'https://x.bo/dashboard/login', whatsapp: null, siteUrl: 'https://x.bo' }
 
 describe('teamAccessEmail', () => {
   it('lleva el enlace, el usuario, la contraseña provisional y el aviso de cambiarla', () => {
     const correo = teamAccessEmail({ ...base, rol: 'admin' })
-    for (const trozo of ['https://x.bo/panel/entrar', 'ana@mail.bo', 'Provisional-2026', 'provisional']) {
+    for (const trozo of ['https://x.bo/dashboard/login', 'ana@mail.bo', 'Provisional-2026', 'provisional']) {
       expect(correo.text).toContain(trozo)
       expect(correo.html).toContain(trozo)
     }

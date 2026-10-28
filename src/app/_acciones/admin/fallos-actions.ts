@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { borrarTipoDeFallo } from '@/shared/observability/lectura'
@@ -12,5 +12,5 @@ export async function borrarTipoDeFalloAction(formData: FormData): Promise<void>
   if (!/^[0-9a-f]{16}$/.test(huella)) return
   const n = await borrarTipoDeFallo(huella)
   await admin.record(actor, { action: 'fallos.borrados', subject: huella, detail: `${n} registros` })
-  revalidatePath('/panel/admin/fallos')
+  revalidarRuta('/dashboard/admin/errors')
 }

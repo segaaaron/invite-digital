@@ -18,7 +18,7 @@ const SLUG = 'boda-acceso-cliente-e2e'
  * **Inicia sesión una sola vez, en `beforeAll`, y comparte contexto.** Con el login en un
  * `beforeEach` eran siete intentos de la misma cuenta en un minuto, y el limitador
  * —tres por cuenta, cinco por IP— los rechazaba: pasaban los tres primeros y los demás
- * se quedaban en `/panel/entrar`. Además consumía el cupo de la IP y tumbaba a las suites
+ * se quedaban en `/dashboard/login`. Además consumía el cupo de la IP y tumbaba a las suites
  * vecinas que también inician sesión. Es la misma razón por la que `auth.setup.ts` guarda
  * la cookie una vez para todo el resto de la suite.
  */
@@ -36,12 +36,12 @@ test.describe('el panel del cliente', () => {
     contexto = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.2' } })
     page = await contexto.newPage()
 
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(CLIENTE.email)
     await page.getByLabel('Contraseña').fill(CLIENTE.password)
     await page.getByRole('button', { name: 'Entrar' }).click()
     // Entrar le deja en su boda, no en la bandeja: es el único evento que ve.
-    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}$`))
+    await expect(page).toHaveURL(new RegExp(`/dashboard/events/${SLUG}$`))
   })
 
   test.afterAll(async () => {
@@ -51,13 +51,13 @@ test.describe('el panel del cliente', () => {
   })
 
   test('ve sus invitados', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
 
     await expect(page.getByRole('cell', { name: /^Rosa Vargas/ })).toBeVisible()
   })
 
   test('y el recuento de su lista', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.goto(`/dashboard/events/${SLUG}/guests`)
 
     // La cabecera cuenta personas e invitaciones (7 de octubre: «27 personas · 8 invitaciones»).
     await expect(page.getByText('1 persona en 1 invitación', { exact: false })).toBeVisible()
@@ -66,7 +66,7 @@ test.describe('el panel del cliente', () => {
   // Producción, 7 de octubre: las páginas se le abrían y cada botón acababa en «Evento no
   // encontrado» —las acciones pedían la sección `full`—. Se crea de verdad, no basta con ver.
   test('reparte su salón y arma su mesa de regalos', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/mesas?panel=mesa`)
+    await page.goto(`/dashboard/events/${SLUG}/tables?panel=mesa`)
     await page.getByLabel('Nombre de la mesa').fill('Mesa del cliente')
     await page.getByLabel('Capacidad (asientos)').fill('6')
     await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
@@ -74,21 +74,21 @@ test.describe('el panel del cliente', () => {
     await page.getByRole('link', { name: 'Vista de tarjetas' }).click()
     await expect(page.getByRole('heading', { name: 'Mesa del cliente' })).toBeVisible()
     // Su botón «Imprimir plan» abre el plan, no un 404 (13 oct: la página pedía `full`).
-    expect((await page.goto(`/panel/eventos/${SLUG}/mesas/imprimir`))?.status()).toBe(200)
+    expect((await page.goto(`/dashboard/events/${SLUG}/tables/print`))?.status()).toBe(200)
     await expect(page.getByText('Mesa del cliente')).toBeVisible()
 
-    await page.goto(`/panel/eventos/${SLUG}/regalos?panel=regalo`)
+    await page.goto(`/dashboard/events/${SLUG}/gifts?panel=regalo`)
     await page.getByLabel('Regalo', { exact: true }).fill('Juego de copas')
     await page.getByLabel('Precio').fill('200')
     await page.getByRole('button', { name: 'Añadir regalo' }).click()
-    await page.waitForURL(/regalos$/)
+    await page.waitForURL(/gifts$/)
     await page.getByRole('link', { name: 'Lista de regalos', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Juego de copas' })).toBeVisible()
   })
 
   test('abre su planner y suma una tarea propia', async () => {
-    expect((await page.goto(`/panel/eventos/${SLUG}/planner/presupuesto`))?.status()).toBe(200)
-    await page.goto(`/panel/eventos/${SLUG}/planner/tareas?panel=tarea`)
+    expect((await page.goto(`/dashboard/events/${SLUG}/planner/budget`))?.status()).toBe(200)
+    await page.goto(`/dashboard/events/${SLUG}/planner/tasks?panel=tarea`)
     await page.getByRole('textbox', { name: 'Tarea' }).fill('Probar el peinado')
     await page.getByLabel('Etapa').selectOption('propias')
     await page.getByRole('button', { name: 'Añadir tarea' }).click()
@@ -96,7 +96,7 @@ test.describe('el panel del cliente', () => {
   })
 
   test('suma a su planner desde Equipo, y ya no ofrece co-anfitriones', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/equipo`)
+    await page.goto(`/dashboard/events/${SLUG}/team`)
     await page.getByLabel('Correo').fill(EQUIPO.planner)
     await page.getByRole('button', { name: 'Sumar a la planner' }).click()
     await expect(page.getByRole('status').filter({ hasText: EQUIPO.planner })).toBeVisible({ timeout: 15_000 })
@@ -114,25 +114,25 @@ test.describe('el panel del cliente', () => {
     await fijarClave(EQUIPO.coanfitriona, 'clave-de-la-mama-1')
     const suyo = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.2' } })
     const mama = await suyo.newPage()
-    await mama.goto('/panel/entrar')
+    await mama.goto('/dashboard/login')
     await mama.getByLabel('Correo').fill(EQUIPO.coanfitriona)
     await mama.getByLabel('Contraseña').fill('clave-de-la-mama-1')
     await mama.getByRole('button', { name: 'Entrar' }).click()
-    await expect(mama).toHaveURL(new RegExp(`/panel/eventos/${SLUG}$`), { timeout: 20_000 })
+    await expect(mama).toHaveURL(new RegExp(`/dashboard/events/${SLUG}$`), { timeout: 20_000 })
 
-    expect((await mama.goto(`/panel/eventos/${SLUG}/planner/tareas`))?.status()).toBe(200)
+    expect((await mama.goto(`/dashboard/events/${SLUG}/planner/tasks`))?.status()).toBe(200)
     // Ve el presupuesto, pero no lo edita: el dinero lo llevan el anfitrión y su planner.
-    expect((await mama.goto(`/panel/eventos/${SLUG}/planner/presupuesto`))?.status()).toBe(200)
+    expect((await mama.goto(`/dashboard/events/${SLUG}/planner/budget`))?.status()).toBe(200)
     await expect(mama.getByRole('link', { name: 'Anotar un gasto' })).toHaveCount(0)
     for (const ruta of ['/equipo', '/porteros', '/plan', '/checkin']) {
-      expect((await mama.goto(`/panel/eventos/${SLUG}${ruta}`))?.status(), ruta).toBe(404)
+      expect((await mama.goto(`/dashboard/events/${SLUG}${ruta}`))?.status(), ruta).toBe(404)
     }
     await suyo.close()
   })
 
   // 13 oct, sin cobertura hasta hoy: quitar a alguien del equipo le corta el acceso al instante.
   test('quita a su planner del equipo, con confirmación en la fila', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/equipo`)
+    await page.goto(`/dashboard/events/${SLUG}/team`)
     const fila = page.getByRole('listitem', { name: EQUIPO.planner })
     await fila.getByRole('button', { name: `Quitar a ${EQUIPO.planner}` }).click()
     await fila.getByRole('button', { name: 'Sí, quitar' }).click()
@@ -145,7 +145,7 @@ test.describe('el panel del cliente', () => {
     // tocaba nada. Ahora el admin le da acceso justo para que ajuste su invitación —los
     // textos y su canción—, así que la pantalla se abre. Lo que sigue cerrado es el evento,
     // y eso lo vigilan las dos pruebas de abajo.
-    const respuesta = await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    const respuesta = await page.goto(`/dashboard/events/${SLUG}/setup`)
     expect(respuesta?.status()).toBe(200)
 
     await expect(page.getByRole('heading', { name: 'Mi invitación', exact: true })).toBeVisible()
@@ -172,7 +172,7 @@ test.describe('el panel del cliente', () => {
   })
 
   test('y el selector de su música está ahí, que es para lo que sube el MP3', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
 
     const cancion = await abrirSeccion(page, 'Canción')
     await expect(cancion.getByLabel('Archivo que suena')).toBeVisible()
@@ -182,7 +182,7 @@ test.describe('el panel del cliente', () => {
     // El corte que queda. `EventForm` lleva dentro el selector de **diseño**, el `slug` y
     // el estado: cambiarlos sería cambiarse el modelo que le vendieron, romper los enlaces
     // ya repartidos o devolver la boda a borrador.
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
 
     await expect(page.getByRole('heading', { name: 'Detalles del evento' })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Acceso del cliente' })).toHaveCount(0)
@@ -190,21 +190,21 @@ test.describe('el panel del cliente', () => {
   })
 
   test('y el plan y los códigos QR, también', async () => {
-    expect((await page.goto(`/panel/eventos/${SLUG}/plan`))?.status()).toBe(404)
-    expect((await page.goto(`/panel/eventos/${SLUG}/qr`))?.status()).toBe(404)
+    expect((await page.goto(`/dashboard/events/${SLUG}/plan`))?.status()).toBe(404)
+    expect((await page.goto(`/dashboard/events/${SLUG}/qr`))?.status()).toBe(404)
   })
 
   test('le pone nombre a su evento sin tocar el enlace', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
+    await page.goto(`/dashboard/events/${SLUG}/settings`)
     const campo = page.getByLabel('Cómo se llama en tu panel')
     const antes = await campo.inputValue()
     await campo.fill('XV de Amanda e2e')
     await page.getByRole('button', { name: 'Guardar nombre' }).click()
     await expect(page.getByText('Nombre guardado.')).toBeVisible()
-    await page.goto(`/panel/eventos/${SLUG}`)
+    await page.goto(`/dashboard/events/${SLUG}`)
     await expect(page.getByRole('heading', { name: 'XV de Amanda e2e' })).toBeVisible()
     // Y se deja como estaba: la suite comparte el evento.
-    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
+    await page.goto(`/dashboard/events/${SLUG}/settings`)
     await page.getByLabel('Cómo se llama en tu panel').fill(antes)
     await page.getByRole('button', { name: 'Guardar nombre' }).click()
     await expect(page.getByText('Nombre guardado.')).toBeVisible()
@@ -212,23 +212,23 @@ test.describe('el panel del cliente', () => {
 
   test('no da de alta eventos: no ve el botón y la dirección es 404', async () => {
     // Un evento creado por un cliente quedaría suyo y sin poder abrirlo (solo el atelier entra como dueño).
-    await page.goto('/panel')
+    await page.goto('/dashboard')
     await expect(page.getByRole('link', { name: '+ Nuevo evento' })).toHaveCount(0)
-    expect((await page.goto('/panel/eventos/nuevo'))?.status()).toBe(404)
+    expect((await page.goto('/dashboard/events/new'))?.status()).toBe(404)
   })
 
   test('el 404 del admin no dice qué página es', async () => {
-    expect((await page.goto('/panel/admin'))?.status()).toBe(404)
+    expect((await page.goto('/dashboard/admin'))?.status()).toBe(404)
     await expect(page).toHaveTitle('Página no disponible · Luxury Atelier')
   })
 
   test('ve las llegadas de su evento', async () => {
-    expect((await page.goto(`/panel/eventos/${SLUG}/checkin`))?.status()).toBe(200)
+    expect((await page.goto(`/dashboard/events/${SLUG}/check-in`))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Ingreso al evento' })).toBeVisible()
   })
 
   test('la barra no le ofrece lo que no puede abrir', async () => {
-    await page.goto(`/panel/eventos/${SLUG}`)
+    await page.goto(`/dashboard/events/${SLUG}`)
 
     const barra = page.getByRole('navigation')
     await expect(barra.getByRole('link', { name: 'Invitados' })).toBeVisible()
@@ -244,7 +244,7 @@ test.describe('el panel del cliente', () => {
   test('su cuenta no deja cambiar la contraseña, y enseña sus sesiones', async () => {
     // La clave inicial la escribió el atelier y viajó por WhatsApp: sin esta pantalla
     // valdría para siempre.
-    await page.goto('/panel/cuenta')
+    await page.goto('/dashboard/account')
 
     await expect(page.getByRole('heading', { name: 'Mi cuenta' })).toBeVisible()
     // La contraseña no se cambia aquí: con la cuenta compartida, cualquiera la cambiaría. Se recupera desde la entrada.

@@ -36,7 +36,7 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
 
   useEffect(
     () =>
-      escucharEnVivo('/panel/avisos/en-vivo', {
+      escucharEnVivo('/dashboard/alerts/live', {
         alAbrir: () => undefined,
         alFallar: () => undefined,
         alCambiar: (tipo) => {
@@ -148,7 +148,7 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
 
           <footer className="flex flex-col items-center gap-2.5 px-5 py-3.5">
             <ActivarAvisos clavePublica={clavePublica} />
-            <Link className="text-[14px] font-medium text-gold-deep underline underline-offset-4 hover:text-ink" href="/panel/cuenta#avisos" onClick={cerrar}>
+            <Link className="text-[14px] font-medium text-gold-deep underline underline-offset-4 hover:text-ink" href="/dashboard/account#avisos" onClick={cerrar}>
               {t('Elegir qué avisos recibo', 'Choose which notifications I get')}
             </Link>
           </footer>

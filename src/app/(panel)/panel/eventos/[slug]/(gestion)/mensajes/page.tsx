@@ -42,7 +42,7 @@ export default async function MensajesPage({ params, searchParams }: { params: P
   }
   const sinAgradecer = libro.value.filter((m) => m.reply === null).length
   const soloSinAgradecer = filtro === 'sin-agradecer'
-  const base = `/panel/eventos/${event.value.slug}/mensajes`
+  const base = `/dashboard/events/${event.value.slug}/messages`
 
   return (
     <>
@@ -51,14 +51,14 @@ export default async function MensajesPage({ params, searchParams }: { params: P
           total === 0 ? undefined : (
             // El informe del evento trae el libro entero, listo para guardar como PDF.
             <span>
-              <PanelButton href={`/panel/eventos/${event.value.slug}/informe#libro`}>{t('Descargar el libro', 'Download the book')}</PanelButton>
+              <PanelButton href={`/dashboard/events/${event.value.slug}/report#libro`}>{t('Descargar el libro', 'Download the book')}</PanelButton>
             </span>
           )
         }
         meta={total === 0 ? t('Lo que tus invitados te escriben al confirmar.', 'What your guests write to you when they RSVP.') : t(`${total} ${total === 1 ? 'firma' : 'firmas'}. Lo que tus invitados te escriben al confirmar.`, `${total} ${total === 1 ? 'entry' : 'entries'}. What your guests write to you when they RSVP.`)}
         title={t('Libro de firmas', 'Guestbook')}
       />
-      <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
+      <EnVivo modo="aviso" tipos={['rsvp']} url={`/dashboard/events/${event.value.slug}/live`} />
 
       {total === 0 || sinAgradecer === 0 ? null : (
         <nav aria-label={t('Filtrar firmas', 'Filter entries')} className="mb-6 flex gap-2.5">

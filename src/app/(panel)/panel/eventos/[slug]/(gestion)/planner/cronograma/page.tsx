@@ -44,7 +44,7 @@ export default async function CronogramaPage({ params, searchParams }: { params:
   // Los iconos del diseño de su invitación, para los momentos que salen en ella.
   const tema = themeFor(event.value.themeKey)
   const iconos = iconosDelItinerario(tema.key)
-  const base = `/panel/eventos/${event.value.slug}/planner/cronograma`
+  const base = `/dashboard/events/${event.value.slug}/planner/schedule`
   const aqui = proveedor ? `${base}?proveedor=${proveedor}` : base
   const conMomento = (valor: string) => `${aqui}${proveedor ? '&' : '?'}momento=${valor}`
   const enInvitacion = todos.filter((m) => m.enInvitacion)
@@ -89,9 +89,9 @@ export default async function CronogramaPage({ params, searchParams }: { params:
             <ItinerarioEnLaInvitacion
               ejemplo={ejemplo}
               filas={enInvitacion.map((m) => ({ time: m.startsAt, label: m.title, icono: m.icono }))}
-              vistaPrevia={`/panel/eventos/${event.value.slug}/vista-previa`}
+              vistaPrevia={`/dashboard/events/${event.value.slug}/preview`}
             />
-            <a className="inline-flex min-h-11 items-center justify-center text-[13.5px] text-gold-deep" href={`/panel/eventos/${event.value.slug}/cronograma/imprimir`} rel="noopener" target="_blank">
+            <a className="inline-flex min-h-11 items-center justify-center text-[13.5px] text-gold-deep" href={`/dashboard/events/${event.value.slug}/schedule/print`} rel="noopener" target="_blank">
               {t('Imprimir el cronograma', 'Print the schedule')}
             </a>
           </aside>

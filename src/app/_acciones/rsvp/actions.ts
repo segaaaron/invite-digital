@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { headers } from 'next/headers'
 import { guests, plans, rsvp } from '@/app/composition/container'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
@@ -61,7 +61,7 @@ export async function firmarLibroAction(_previous: FirmaState, formData: FormDat
   if (isErr(await plans.requireFeature(group.value.eventId, 'guestbook'))) return { status: 'error', message: 'invalid_payload' }
 
   if (!(await rsvp.firmarLibro(group.value.id, mensaje))) return { status: 'error', message: 'already_answered' }
-  revalidatePath(`/i/${token}`)
+  revalidarRuta(`/i/${token}`)
   avisarDelMensaje({ eventId: group.value.eventId, invitado: group.value.label, texto: mensaje })
   return { status: 'success' }
 }
@@ -88,7 +88,7 @@ export async function respondAction(_previous: RsvpActionState, formData: FormDa
   // `acts` son casillas: llegan varias con el mismo nombre y `fromEntries` se quedaría con la última.
   const outcome = await respond({ ip, token, payload: { ...Object.fromEntries(formData), acts: formData.getAll('acts') } })
   if (outcome.status === 'success') {
-    revalidatePath(`/i/${token}`)
+    revalidarRuta(`/i/${token}`)
     if (!isErr(group)) {
       avisarALosAnfitriones({ eventId: group.value.eventId, invitado: group.value.label, asistentes: outcome.attending, mensaje: campo(formData, 'message') || null })
     }
@@ -135,8 +135,8 @@ export async function respondByPersonAction(_previous: RsvpActionState, formData
     return { status: 'error', message: resultado.error.kind }
   }
 
-  revalidatePath(`/i/${token}`)
-  revalidatePath(`/i/${token}/confirmar`)
+  revalidarRuta(`/i/${token}`)
+  revalidarRuta(`/i/${token}/confirmar`)
   if (!isErr(group)) {
     avisarALosAnfitriones({ eventId: group.value.eventId, invitado: group.value.label, asistentes: resultado.value.attending, mensaje: campo(formData, 'message') || null })
   }

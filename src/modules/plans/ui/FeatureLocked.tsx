@@ -36,7 +36,7 @@ export function FeatureLocked({ title, reason, eventSlug, mejorar }: { title: st
             {mejorar.label}
           </Link>
         )}
-        <Link className="inline-flex min-h-11 items-center text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" href={`/panel/eventos/${eventSlug}`}>
+        <Link className="inline-flex min-h-11 items-center text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" href={`/dashboard/events/${eventSlug}`}>
           <T en="Back to the event" es="Volver al evento" />
         </Link>
       </div>

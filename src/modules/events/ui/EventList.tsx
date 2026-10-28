@@ -61,7 +61,7 @@ export async function EventList({ events, avance = {} }: { events: readonly Even
               {/* Escritorio: la portada grande encima (E32). Celular: una fila con su miniatura, en su tarjeta (M32). */}
               <Link
                 className="group grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-ink no-underline max-[767px]:rounded-[16px] max-[767px]:border max-[767px]:border-line-panel max-[767px]:bg-bg-raised max-[767px]:p-3.5 min-[768px]:flex min-[768px]:flex-col"
-                href={`/panel/eventos/${event.slug}`}
+                href={`/dashboard/events/${event.slug}`}
               >
                 <span className="row-span-5 block w-[84px] self-start overflow-hidden rounded-[10px] border border-line-panel bg-bg-sunken transition-colors group-hover:border-gold max-[767px]:aspect-[3/4] min-[768px]:mb-2 min-[768px]:aspect-[9/16] min-[768px]:w-auto min-[768px]:rounded-[16px]">
                   {portada ? (

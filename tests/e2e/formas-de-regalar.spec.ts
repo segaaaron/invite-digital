@@ -37,17 +37,17 @@ test('sobres y transferencia con QR: se guardan en el panel y el invitado los ve
   const qrPng = await sharp({ create: { width: 64, height: 64, channels: 3, background: '#000000' } }).png().toBuffer()
 
   // 1. Sin nada encendido, el panel lo dice: la invitación no enseña la sección.
-  await page.goto(`/panel/eventos/${SLUG}/regalos`)
+  await page.goto(`/dashboard/events/${SLUG}/gifts`)
   await expect(page.getByText('Tu invitación no muestra regalos todavía')).toBeVisible()
 
   // 2. Una transferencia sin cuenta ni QR no se guarda: el invitado no tendría cómo pagar.
-  await page.goto(`/panel/eventos/${SLUG}/regalos?panel=transferencia`)
+  await page.goto(`/dashboard/events/${SLUG}/gifts?panel=transferencia`)
   await page.getByRole('switch', { name: /Recibir por transferencia/ }).check()
   await page.getByRole('button', { name: 'Guardar' }).click()
   await expect(page.getByText('carga los datos de tu cuenta o sube el QR')).toBeVisible()
 
   // 3. Sobres con su frase (su tarjeta), y luego la cuenta y el QR del banco (la suya): guardar una no apaga la otra.
-  await page.goto(`/panel/eventos/${SLUG}/regalos?panel=sobres`)
+  await page.goto(`/dashboard/events/${SLUG}/gifts?panel=sobres`)
   await page.getByRole('switch', { name: /Pedir lluvia de sobres/ }).check()
   await page.getByLabel('La frase (opcional)').fill('Tu presencia es lo más importante; si quieres, trae tu sobre.')
   await page.getByRole('button', { name: 'Guardar' }).click()
@@ -62,7 +62,7 @@ test('sobres y transferencia con QR: se guardan en el panel y el invitado los ve
   await expect(page.locator('dialog[open]')).toHaveCount(0)
   await expect(page.getByText('Tu invitación muestra: lluvia de sobres, transferencia.')).toBeVisible()
   await expect(page.getByText('Con sus datos y el QR de tu banco.')).toBeVisible()
-  await page.goto(`/panel/eventos/${SLUG}/regalos?panel=transferencia`)
+  await page.goto(`/dashboard/events/${SLUG}/gifts?panel=transferencia`)
   await expect(page.getByRole('img', { name: 'Tu QR para recibir transferencias' })).toBeVisible()
 
   // 4. El invitado lo ve en su invitación, con la cuenta para copiar y el QR para descargar.

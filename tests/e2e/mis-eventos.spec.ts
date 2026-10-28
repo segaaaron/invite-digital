@@ -30,7 +30,7 @@ test.describe('el cliente con dos eventos', () => {
 
     contexto = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.31' } })
     page = await contexto.newPage()
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(CUENTA.email)
     await page.getByLabel('Contraseña').fill(CUENTA.password)
     await page.getByRole('button', { name: 'Entrar' }).click()
@@ -45,7 +45,7 @@ test.describe('el cliente con dos eventos', () => {
   })
 
   test('entra a «Mis eventos»: lo que viene primero y lo celebrado dicho', async () => {
-    await expect(page).toHaveURL(/\/panel$/)
+    await expect(page).toHaveURL(/\/dashboard$/)
     await expect(page.getByRole('heading', { name: 'Mis eventos' })).toBeVisible()
     const filas = page.locator('main li a')
     await expect(filas.nth(0)).toContainText('Boda con acceso de cliente')
@@ -54,12 +54,12 @@ test.describe('el cliente con dos eventos', () => {
   })
 
   test('desde un evento vuelve a «Mis eventos»', async () => {
-    await page.goto(`/panel/eventos/${NUEVO}/invitados`)
-    await expect(page.getByRole('link', { name: 'Mis eventos' }).first()).toHaveAttribute('href', '/panel')
+    await page.goto(`/dashboard/events/${NUEVO}/guests`)
+    await expect(page.getByRole('link', { name: 'Mis eventos' }).first()).toHaveAttribute('href', '/dashboard')
   })
 
   test('el celebrado se mira, pero no se guarda nada', async () => {
-    await page.goto(`/panel/eventos/${PASADO}/mesas?panel=mesa`)
+    await page.goto(`/dashboard/events/${PASADO}/tables?panel=mesa`)
     await expect(page.getByText('Este evento ya se celebró.')).toBeVisible()
     await page.getByLabel('Nombre de la mesa').fill('Mesa tardía')
     const guardar = page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true })
@@ -68,13 +68,13 @@ test.describe('el cliente con dos eventos', () => {
 
     // Y aunque se le haga llegar el clic desde el navegador, el servidor no escribe: vuelve a la pantalla.
     await guardar.dispatchEvent('click')
-    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${PASADO}/mesas$`))
+    await expect(page).toHaveURL(new RegExp(`/dashboard/events/${PASADO}/tables$`))
     const [n] = await sql<{ n: number }[]>`select count(*)::int as n from venue_tables t join events e on e.id = t.event_id where e.slug = ${PASADO}`
     expect(n!.n).toBe(0)
   })
 
   test('en el que viene, todo sigue igual', async () => {
-    await page.goto(`/panel/eventos/${NUEVO}/mesas`)
+    await page.goto(`/dashboard/events/${NUEVO}/tables`)
     await expect(page.getByText('Este evento ya se celebró.')).toHaveCount(0)
   })
 })

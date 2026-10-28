@@ -18,7 +18,7 @@ beforeEach(() => {
 describe('PanelDialog', () => {
   it('se abre como modal: es lo único que deja el fondo inerte', () => {
     render(
-      <PanelDialog closeHref="/panel" title="Añadir regalo">
+      <PanelDialog closeHref="/dashboard" title="Añadir regalo">
         <p>contenido</p>
       </PanelDialog>,
     )
@@ -28,7 +28,7 @@ describe('PanelDialog', () => {
 
   it('el aspa cierra el diálogo y vuelve a la dirección de origen', () => {
     render(
-      <PanelDialog closeHref="/panel/eventos/boda/regalos" title="Añadir regalo">
+      <PanelDialog closeHref="/dashboard/events/boda/gifts" title="Añadir regalo">
         <p>contenido</p>
       </PanelDialog>,
     )
@@ -36,12 +36,12 @@ describe('PanelDialog', () => {
 
     expect(HTMLDialogElement.prototype.close).toHaveBeenCalled()
     // `replace` y no `push`: volver atrás no debe reabrir el diálogo.
-    expect(replace).toHaveBeenCalledWith('/panel/eventos/boda/regalos')
+    expect(replace).toHaveBeenCalledWith('/dashboard/events/boda/gifts')
   })
 
   it('el título nombra al diálogo para quien navega con lector de pantalla', () => {
     render(
-      <PanelDialog closeHref="/panel" title="Abrir un fondo">
+      <PanelDialog closeHref="/dashboard" title="Abrir un fondo">
         <p>contenido</p>
       </PanelDialog>,
     )

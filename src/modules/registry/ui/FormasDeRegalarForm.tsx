@@ -131,7 +131,7 @@ export function FormasDeRegalarForm({
               <img
                 alt={t('Tu QR para recibir transferencias', 'Your QR to receive transfers')}
                 className={`size-24 rounded-[10px] border border-line-panel bg-white object-contain p-1 transition-opacity ${quitarQr ? 'opacity-30' : ''}`}
-                src={`/panel/eventos/${eventSlug}/regalos/qr`}
+                src={`/dashboard/events/${eventSlug}/gifts/qr`}
               />
               <label className="flex cursor-pointer items-center gap-2 text-[13px] text-ink-soft">
                 <input checked={quitarQr} className="accent-ink" name="quitarQr" onChange={(e) => setQuitarQr(e.target.checked)} type="checkbox" value="1" />

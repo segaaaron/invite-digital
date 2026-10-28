@@ -8,12 +8,12 @@ import { escribirInvitacion } from '../fixtures/invitacion-minima'
  * de intentos es de tres por minuto y por cuenta.
  */
 export async function signIn(page: Page): Promise<void> {
-  await page.goto('/panel/entrar')
+  await page.goto('/dashboard/login')
   await page.getByLabel('Correo').fill(ATELIER.email)
   await page.getByLabel('Contraseña').fill(ATELIER.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
   // Entrar cae en el resumen del evento activo; sin ningún evento, en la bandeja.
-  await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+|\/admin)?$/)
+  await expect(page).toHaveURL(/\/dashboard(\/events\/[a-z0-9-]+|\/admin)?$/)
 }
 
 type EventInput = {
@@ -27,7 +27,7 @@ type EventInput = {
 
 /** Crea un evento por el formulario del panel y espera su confirmación. */
 export async function createEvent(page: Page, input: EventInput): Promise<void> {
-  await page.goto('/panel/eventos/nuevo')
+  await page.goto('/dashboard/events/new')
   await page.getByLabel('Título').fill(input.title)
   await page.getByLabel('Enlace del evento').fill(input.slug)
   // Calendario propio, no un `<input type=date>`: se elige como lo haría el atelier.
@@ -51,14 +51,14 @@ export async function createGuestGroup(
   // persona —«Invitación propia», que es lo que viene puesto— con tantos acompañantes como
   // cupos de más; la invitación se llama como ella.
   await escribirInvitacion(eventSlug)
-  await page.goto(`/panel/eventos/${eventSlug}/invitados?panel=alta`)
+  await page.goto(`/dashboard/events/${eventSlug}/guests?panel=alta`)
   await page.getByLabel('Nombre completo').fill(label)
   // «Acompañado» abre un campo por acompañante, y de cada uno solo se pide el nombre: los
   // cupos del grupo son la persona más ellos.
   await añadirAcompanantes(page, Math.max(0, seats - 1))
   await page.getByRole('button', { name: 'Guardar', exact: true }).click()
   // Guardar cierra el diálogo.
-  await page.waitForURL(/invitados$/)
+  await page.waitForURL(/guests$/)
 }
 
 /**

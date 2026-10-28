@@ -2,7 +2,7 @@
   "name": "Puerta · Luxury Atelier",
   "short_name": "Puerta",
   "description": "Check-in de invitados el día del evento.",
-  "start_url": "/panel",
+  "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#171818",

@@ -45,7 +45,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     throw new Error(event.error.detail)
   }
   const id = event.value.id
-  const base = `/panel/eventos/${event.value.slug}`
+  const base = `/dashboard/events/${event.value.slug}`
   const ahora = new Date()
   const hoyBolivia = fechaEnBolivia(ahora)
 
@@ -98,22 +98,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     titulo: t('Escribe tu invitación', 'Write your invitation'),
     detalle: t('Para enviarla basta con quién celebra y sus papás. Lo que no escribas sale como el ejemplo del diseño.', 'To send it you only need who is celebrating and their parents. Anything you don’t write shows as the design’s example.'),
     accion: t('Escribirla', 'Write it'),
-    href: `${base}/configuracion`,
-    secundaria: { accion: t('Verla', 'View it'), href: `${base}/vista-previa` },
+    href: `${base}/setup`,
+    secundaria: { accion: t('Verla', 'View it'), href: `${base}/preview` },
   }
   const proximo =
     !invitacionLista && !algunaEnviada
       ? escribir
       : filas.length === 0
-        ? { titulo: t('Carga a tus invitados', 'Add your guests'), detalle: t('Cada uno recibe su enlace; sus acompañantes entran con el mismo.', 'Each one gets their link; their companions come in with the same one.'), accion: t('Añadir invitados', 'Add guests'), href: `${base}/invitados?panel=alta`, secundaria: { accion: t('Importar una lista', 'Import a list'), href: `${base}/invitados?panel=importar` } }
+        ? { titulo: t('Carga a tus invitados', 'Add your guests'), detalle: t('Cada uno recibe su enlace; sus acompañantes entran con el mismo.', 'Each one gets their link; their companions come in with the same one.'), accion: t('Añadir invitados', 'Add guests'), href: `${base}/guests?panel=alta`, secundaria: { accion: t('Importar una lista', 'Import a list'), href: `${base}/guests?panel=importar` } }
         : porEnviar > 0
-          ? { titulo: porEnviar === 1 ? t('Falta 1 invitación por enviar', '1 invitation left to send') : t(`Faltan ${porEnviar} invitaciones por enviar`, `${porEnviar} invitations left to send`), detalle: t('Se envían por WhatsApp o con su enlace, una por una.', 'They are sent via WhatsApp or with their link, one by one.'), accion: t('Enviar ahora', 'Send now'), href: `${base}/invitados?panel=envio`, secundaria: { accion: t('Ver quiénes son', 'See who they are'), href: `${base}/invitados` } }
+          ? { titulo: porEnviar === 1 ? t('Falta 1 invitación por enviar', '1 invitation left to send') : t(`Faltan ${porEnviar} invitaciones por enviar`, `${porEnviar} invitations left to send`), detalle: t('Se envían por WhatsApp o con su enlace, una por una.', 'They are sent via WhatsApp or with their link, one by one.'), accion: t('Enviar ahora', 'Send now'), href: `${base}/guests?panel=envio`, secundaria: { accion: t('Ver quiénes son', 'See who they are'), href: `${base}/guests` } }
           : !invitacionLista
             ? escribir
             : pendientes > 0
               ? // En personas, como la dona y la lista de Invitados (16 oct: «2 aún no responden» junto a «3 sin responder»).
-                { titulo: sinResponder === 1 ? t('1 invitado aún no responde', '1 guest hasn’t replied yet') : t(`${sinResponder} invitados aún no responden`, `${sinResponder} guests haven’t replied yet`), detalle: t('Un recordatorio por WhatsApp suele traer la mitad de vuelta.', 'A WhatsApp reminder usually brings half of them back.'), accion: t('Enviar recordatorios', 'Send reminders'), href: `${base}/invitados?panel=recordar`, secundaria: { accion: t('Ver quiénes son', 'See who they are'), href: `${base}/invitados` } }
-              : { titulo: t('Todos respondieron', 'Everyone replied'), detalle: vienen === 1 ? t('1 persona viene.', '1 person is coming.') : t(`${vienen} personas vienen.`, `${vienen} people are coming.`), accion: t('Ver invitados', 'View guests'), href: `${base}/invitados`, secundaria: null }
+                { titulo: sinResponder === 1 ? t('1 invitado aún no responde', '1 guest hasn’t replied yet') : t(`${sinResponder} invitados aún no responden`, `${sinResponder} guests haven’t replied yet`), detalle: t('Un recordatorio por WhatsApp suele traer la mitad de vuelta.', 'A WhatsApp reminder usually brings half of them back.'), accion: t('Enviar recordatorios', 'Send reminders'), href: `${base}/guests?panel=recordar`, secundaria: { accion: t('Ver quiénes son', 'See who they are'), href: `${base}/guests` } }
+              : { titulo: t('Todos respondieron', 'Everyone replied'), detalle: vienen === 1 ? t('1 persona viene.', '1 person is coming.') : t(`${vienen} personas vienen.`, `${vienen} people are coming.`), accion: t('Ver invitados', 'View guests'), href: `${base}/guests`, secundaria: null }
 
   // ── Esta semana: lo que vence o ya venció, cada cosa con adónde ir.
   const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY)
@@ -127,7 +127,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       href: `${base}/planner/presupuesto`,
     })),
     ...(mesas !== null && mesas.unseated.length > 0
-      ? [{ clave: 'mesas', titulo: mesas.unseated.length === 1 ? t('Sentar a 1 invitación', 'Seat 1 invitation') : t(`Sentar a ${mesas.unseated.length} invitaciones`, `Seat ${mesas.unseated.length} invitations`), detalle: t('Aún no tienen mesa', 'They don’t have a table yet'), accion: t('Ir a mesas', 'Go to tables'), href: `${base}/mesas` }]
+      ? [{ clave: 'mesas', titulo: mesas.unseated.length === 1 ? t('Sentar a 1 invitación', 'Seat 1 invitation') : t(`Sentar a ${mesas.unseated.length} invitaciones`, `Seat ${mesas.unseated.length} invitations`), detalle: t('Aún no tienen mesa', 'They don’t have a table yet'), accion: t('Ir a mesas', 'Go to tables'), href: `${base}/tables` }]
       : []),
     ...proveedoresSinConfirmar(proveedores).map((v): Pendiente => {
       const whatsapp = v.whatsapp ? buildWhatsAppLink(v.whatsapp, t(`Hola, ¿nos confirmas para ${event.value.title}?`, `Hi, can you confirm for ${event.value.title}?`)) : null
@@ -145,7 +145,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       .filter(({ estado }) => estado === 'atrasada' || estado === 'semana')
       .map(({ tarea, estado }) => ({ clave: `tarea-${tarea.id}`, titulo: tarea.title, detalle: estado === 'atrasada' ? t(`Venció el ${dia(tarea.dueDate!)}`, `Was due ${dia(tarea.dueDate!)}`) : t(`Vence el ${dia(tarea.dueDate!)}`, `Due ${dia(tarea.dueDate!)}`), accion: t('Ver', 'View'), href: `${base}/planner/tareas` })),
     ...(porAgradecer > 0
-      ? [{ clave: 'firmas', titulo: porAgradecer === 1 ? t('Agradecer 1 firma nueva', 'Thank 1 new entry') : t(`Agradecer ${porAgradecer} firmas nuevas`, `Thank ${porAgradecer} new entries`), detalle: t('En tu libro de firmas', 'In your guestbook'), accion: t('Leer', 'Read'), href: `${base}/mensajes` }]
+      ? [{ clave: 'firmas', titulo: porAgradecer === 1 ? t('Agradecer 1 firma nueva', 'Thank 1 new entry') : t(`Agradecer ${porAgradecer} firmas nuevas`, `Thank ${porAgradecer} new entries`), detalle: t('En tu libro de firmas', 'In your guestbook'), accion: t('Leer', 'Read'), href: `${base}/messages` }]
       : []),
   ].slice(0, 5)
 
@@ -156,7 +156,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
   return (
     <div className="flex flex-col gap-8 max-[767px]:gap-7">
-      <EnVivo modo="aviso" tipos={['rsvp', 'ingreso', 'visita']} url={`${base}/en-vivo`} />
+      <EnVivo modo="aviso" tipos={['rsvp', 'ingreso', 'visita']} url={`${base}/live`} />
 
       {/* La cabecera. En el celular, en su tarjeta esmeralda (maqueta M06). */}
       <div className="flex flex-wrap items-center gap-7 max-[767px]:hidden">
@@ -205,9 +205,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <p className="mb-2.5 text-[13px] font-medium text-gold-deep">{t('Tu evento', 'Your event')}</p>
         <ul className="grid grid-cols-2 gap-2.5">
           {[
-            { href: `${base}/configuracion`, icono: NAV_ICONS.editar, titulo: t('Mi invitación', 'My invitation'), estado: invitacionLista ? t('Lista para enviar', 'Ready to send') : t('Por terminar', 'To finish'), atencion: !invitacionLista },
+            { href: `${base}/setup`, icono: NAV_ICONS.editar, titulo: t('Mi invitación', 'My invitation'), estado: invitacionLista ? t('Lista para enviar', 'Ready to send') : t('Por terminar', 'To finish'), atencion: !invitacionLista },
             {
-              href: `${base}/invitados`,
+              href: `${base}/guests`,
               icono: NAV_ICONS.invitados,
               titulo: t('Invitados', 'Guests'),
               estado: filas.length === 0 ? t('Sin cargar', 'None added') : porEnviar > 0 ? t(`${porEnviar} sin enviar`, `${porEnviar} not sent`) : t(`${vienen} ${vienen === 1 ? 'viene' : 'vienen'}`, `${vienen} coming`),
@@ -215,10 +215,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             },
             ...(mesas === null
               ? []
-              : [{ href: `${base}/mesas`, icono: NAV_ICONS.mesas, titulo: t('Mesas', 'Tables'), estado: mesas.unseated.length > 0 ? t(`${mesas.unseated.length} sin mesa`, `${mesas.unseated.length} without a table`) : t('Todos sentados', 'Everyone seated'), atencion: mesas.unseated.length > 0 }]),
-            { href: `${base}/regalos`, icono: NAV_ICONS.regalos, titulo: t('Regalos', 'Gifts'), estado: t('Cómo te regalan', 'How they give to you'), atencion: false },
+              : [{ href: `${base}/tables`, icono: NAV_ICONS.mesas, titulo: t('Mesas', 'Tables'), estado: mesas.unseated.length > 0 ? t(`${mesas.unseated.length} sin mesa`, `${mesas.unseated.length} without a table`) : t('Todos sentados', 'Everyone seated'), atencion: mesas.unseated.length > 0 }]),
+            { href: `${base}/gifts`, icono: NAV_ICONS.regalos, titulo: t('Regalos', 'Gifts'), estado: t('Cómo te regalan', 'How they give to you'), atencion: false },
             {
-              href: `${base}/mensajes`,
+              href: `${base}/messages`,
               icono: NAV_ICONS.mensajes,
               titulo: t('Libro de firmas', 'Guestbook'),
               estado: porAgradecer > 0 ? t(`${porAgradecer} por agradecer`, `${porAgradecer} to thank`) : firmas.length === 0 ? t('Aún sin firmas', 'No entries yet') : t(`${firmas.length} ${firmas.length === 1 ? 'firma' : 'firmas'}`, `${firmas.length} ${firmas.length === 1 ? 'entry' : 'entries'}`),
@@ -244,7 +244,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <h2 className="font-display text-[24px] font-medium max-[767px]:sr-only" id="invitacion-titulo">
               {t('Cómo va tu invitación', 'How your invitation is doing')}
             </h2>
-            <Link className="inline-flex min-h-11 items-center gap-1 text-[14px] font-medium text-gold-deep underline underline-offset-4" href={`${base}/informe`}>
+            <Link className="inline-flex min-h-11 items-center gap-1 text-[14px] font-medium text-gold-deep underline underline-offset-4" href={`${base}/report`}>
               {t('Informe del evento', 'Event report')} <span aria-hidden>→</span>
             </Link>
           </div>
@@ -292,7 +292,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </div>
 
       {hayPreguntas(preguntas) ? (
-        <PanelCard action={<PanelButton href={`${base}/ajustes`}>{t('Cambiar preguntas', 'Change questions')}</PanelButton>} title={t('Lo que contestaron', 'What they answered')}>
+        <PanelCard action={<PanelButton href={`${base}/settings`}>{t('Cambiar preguntas', 'Change questions')}</PanelButton>} title={t('Lo que contestaron', 'What they answered')}>
           <LoQueContestaron resultados={await rsvp.preguntas.resultados(id)} />
         </PanelCard>
       ) : null}

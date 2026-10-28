@@ -3,7 +3,7 @@
   "name": "Luxury Atelier · Panel",
   "short_name": "Luxury Atelier",
   "description": "Tus eventos, invitados y avisos de Luxury Atelier.",
-  "start_url": "/panel",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -29,7 +29,7 @@
       "name": "Hablar con Luxury",
       "short_name": "Luxury",
       "description": "Abre Luxury escuchando: háblale y te responde en voz alta.",
-      "url": "/panel/luxury",
+      "url": "/dashboard/luxury",
       "icons": [
         {
           "src": "/icons/panel-192.png",

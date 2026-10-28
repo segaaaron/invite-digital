@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
  */
 export default async function HablarConLuxury() {
   const actor = await requireSession()
-  if (isAdmin(actor)) redirect('/panel/admin')
+  if (isAdmin(actor)) redirect('/dashboard/admin')
   const acceso = await primerEventoConLuxury(actor)
-  redirect(acceso === null ? '/panel' : `/panel/eventos/${acceso.evento.slug}?luxury=voz`)
+  redirect(acceso === null ? '/dashboard' : `/dashboard/events/${acceso.evento.slug}?luxury=voz`)
 }

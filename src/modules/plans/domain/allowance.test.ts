@@ -143,13 +143,13 @@ describe('el planner por plan', () => {
 describe('seccionesFueraDelPlan', () => {
   it('el plan básico no ofrece puerta, planner completo, Día D ni equipo; sí mesas y regalos (sobres y transferencia)', () => {
     expect(seccionesFueraDelPlan(atelier)).toEqual([
-      '/checkin',
-      '/planner/proveedores',
-      '/planner/cronograma',
-      '/planner/cortejo',
-      '/planner/documentos',
-      '/dia-d',
-      '/equipo',
+      '/check-in',
+      '/planner/vendors',
+      '/planner/schedule',
+      '/planner/procession',
+      '/planner/documents',
+      '/event-day',
+      '/team',
     ])
   })
 
@@ -158,7 +158,7 @@ describe('seccionesFueraDelPlan', () => {
   })
 
   it('con recepción o planner contratable, Equipo se ofrece', () => {
-    expect(seccionesFueraDelPlan({ ...atelier, maxHiredPlanners: 1 })).not.toContain('/equipo')
-    expect(seccionesFueraDelPlan({ ...atelier, maxDoorPorters: 3 })).not.toContain('/equipo')
+    expect(seccionesFueraDelPlan({ ...atelier, maxHiredPlanners: 1 })).not.toContain('/team')
+    expect(seccionesFueraDelPlan({ ...atelier, maxDoorPorters: 3 })).not.toContain('/team')
   })
 })

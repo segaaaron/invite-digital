@@ -69,9 +69,9 @@ describe('conversar', () => {
   it('«llévame a invitados» lleva al navegador y al modelo solo el resultado (9 oct)', async () => {
     const { salidas, entradas } = await correr(
       [llamada('ir_a', { pantalla: 'invitados' }), [{ tipo: 'texto', delta: 'Te llevo a Invitados.' }, { tipo: 'fin', uso: USO }]],
-      async () => ({ navegar: '/panel/eventos/boda/invitados', resultado: { hecho: 'Abierta Invitados' } }),
+      async () => ({ navegar: '/dashboard/events/boda/guests', resultado: { hecho: 'Abierta Invitados' } }),
     )
-    expect(salidas).toContainEqual({ tipo: 'navegar', href: '/panel/eventos/boda/invitados' })
+    expect(salidas).toContainEqual({ tipo: 'navegar', href: '/dashboard/events/boda/guests' })
     expect(JSON.stringify(entradas[1])).not.toContain('navegar')
   })
 

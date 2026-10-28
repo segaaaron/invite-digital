@@ -30,14 +30,14 @@ const acciones = (t: T): readonly { titulo: string; detalle: string; href: strin
     const titulo = traducir(c.titulo, t)
     return { titulo: t(`Crear ${titulo.toLowerCase()}`, `Create ${titulo.toLowerCase()}`), detalle: traducir(c.detalle, t), href: c.href, palabras: `crear nuevo nueva alta create new add ${c.titulo} ${titulo}` }
   }),
-  { titulo: t('Ir a Hoy', 'Go to Today'), detalle: t('Lo que espera por ti', 'What is waiting for you'), href: '/panel/admin', palabras: 'hoy inicio pendiente today home pending' },
-  { titulo: t('Ir a Ventas', 'Go to Sales'), detalle: t('El embudo, de la consulta al evento', 'The funnel, from inquiry to event'), href: '/panel/admin/ventas', palabras: 'ventas embudo consultas pedidos tablero sales funnel inquiries orders board' },
-  { titulo: t('Ir a Ingresos', 'Go to Revenue'), detalle: t('Lo cobrado y lo que falta cobrar', 'What was collected and what is still due'), href: '/panel/admin/ingresos', palabras: 'ingresos cobros dinero csv revenue payments money' },
-  { titulo: t('Ir a Eventos', 'Go to Events'), detalle: t('La cartera con su salud', 'The portfolio and its health'), href: '/panel/admin/eventos', palabras: 'eventos cartera bodas xv riesgo events portfolio weddings risk' },
-  { titulo: t('Ir al Calendario', 'Go to Calendar'), detalle: t('Qué fin de semana queda libre', 'Which weekend is still free'), href: '/panel/admin/eventos/calendario', palabras: 'calendario agenda sabado fin de semana calendar saturday weekend' },
-  { titulo: t('Ir a Clientes', 'Go to Clients'), detalle: t('La persona entera', 'The whole person'), href: '/panel/admin/clientes', palabras: 'clientes personas clients people' },
-  { titulo: t('Ir al Catálogo', 'Go to Catalog'), detalle: t('Modelos, planes y extras', 'Designs, plans and extras'), href: '/panel/admin/modelos', palabras: 'escaparate modelos disenos planes extras catalogo catalog designs plans' },
-  { titulo: t('Ir a Ajustes', 'Go to Settings'), detalle: t('Fallos, equipo, cobros, la web y auditoría', 'Errors, team, payments, the website and audit'), href: '/panel/admin/fallos', palabras: 'ajustes equipo usuarios cobros mensajes agenda auditoria web fallos settings team users payments messages audit errors' },
+  { titulo: t('Ir a Hoy', 'Go to Today'), detalle: t('Lo que espera por ti', 'What is waiting for you'), href: '/dashboard/admin', palabras: 'hoy inicio pendiente today home pending' },
+  { titulo: t('Ir a Ventas', 'Go to Sales'), detalle: t('El embudo, de la consulta al evento', 'The funnel, from inquiry to event'), href: '/dashboard/admin/sales', palabras: 'ventas embudo consultas pedidos tablero sales funnel inquiries orders board' },
+  { titulo: t('Ir a Ingresos', 'Go to Revenue'), detalle: t('Lo cobrado y lo que falta cobrar', 'What was collected and what is still due'), href: '/dashboard/admin/revenue', palabras: 'ingresos cobros dinero csv revenue payments money' },
+  { titulo: t('Ir a Eventos', 'Go to Events'), detalle: t('La cartera con su salud', 'The portfolio and its health'), href: '/dashboard/admin/events', palabras: 'eventos cartera bodas xv riesgo events portfolio weddings risk' },
+  { titulo: t('Ir al Calendario', 'Go to Calendar'), detalle: t('Qué fin de semana queda libre', 'Which weekend is still free'), href: '/dashboard/admin/events/calendar', palabras: 'calendario agenda sabado fin de semana calendar saturday weekend' },
+  { titulo: t('Ir a Clientes', 'Go to Clients'), detalle: t('La persona entera', 'The whole person'), href: '/dashboard/admin/clients', palabras: 'clientes personas clients people' },
+  { titulo: t('Ir al Catálogo', 'Go to Catalog'), detalle: t('Modelos, planes y extras', 'Designs, plans and extras'), href: '/dashboard/admin/designs', palabras: 'escaparate modelos disenos planes extras catalogo catalog designs plans' },
+  { titulo: t('Ir a Ajustes', 'Go to Settings'), detalle: t('Fallos, equipo, cobros, la web y auditoría', 'Errors, team, payments, the website and audit'), href: '/dashboard/admin/errors', palabras: 'ajustes equipo usuarios cobros mensajes agenda auditoria web fallos settings team users payments messages audit errors' },
 ]
 const plano = (t: string) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
@@ -158,11 +158,11 @@ export function BuscadorRapido() {
             <p className="px-3 py-6 text-center text-[13px] text-ink-mute">{t(`Nada con «${buscado}».`, `Nothing for “${buscado}”.`)}</p>
           ) : (
             <>
-              <Grupo icono="evento" titulo={t('Eventos', 'Events')} filas={resultados.eventos.map((e) => ({ clave: e.slug, titulo: e.title, detalle: diaCorto(e.eventDate, undefined, locale), href: `/panel/admin/eventos?evento=${e.slug}` }))} alElegir={alElegir} />
-              <Grupo icono="venta" titulo={t('Pedidos', 'Orders')} filas={resultados.pedidos.map((p) => ({ clave: p.ref, titulo: p.customerName, detalle: `${p.ref} · ${estadoDePedido(t)[p.status] ?? p.status}`, href: `/panel/admin/ventas?venta=p-${p.ref}` }))} alElegir={alElegir} />
-              <Grupo icono="persona" titulo={t('Consultas', 'Inquiries')} filas={resultados.consultas.map((c) => ({ clave: c.id, titulo: c.name, detalle: t('Consulta', 'Inquiry'), href: `/panel/admin/ventas?consulta=${c.id}` }))} alElegir={alElegir} />
+              <Grupo icono="evento" titulo={t('Eventos', 'Events')} filas={resultados.eventos.map((e) => ({ clave: e.slug, titulo: e.title, detalle: diaCorto(e.eventDate, undefined, locale), href: `/dashboard/admin/events?evento=${e.slug}` }))} alElegir={alElegir} />
+              <Grupo icono="venta" titulo={t('Pedidos', 'Orders')} filas={resultados.pedidos.map((p) => ({ clave: p.ref, titulo: p.customerName, detalle: `${p.ref} · ${estadoDePedido(t)[p.status] ?? p.status}`, href: `/dashboard/admin/sales?venta=p-${p.ref}` }))} alElegir={alElegir} />
+              <Grupo icono="persona" titulo={t('Consultas', 'Inquiries')} filas={resultados.consultas.map((c) => ({ clave: c.id, titulo: c.name, detalle: t('Consulta', 'Inquiry'), href: `/dashboard/admin/sales?consulta=${c.id}` }))} alElegir={alElegir} />
               <Grupo icono="persona" titulo={t('Cuentas', 'Accounts')} filas={resultados.usuarios.map((u) => ({ clave: u.email, titulo: u.email, detalle: ({ admin: t('Administrador', 'Administrator'), atelier: t('Atelier', 'Atelier'), cliente: t('Cliente', 'Client'), puerta: t('Recepción', 'Reception') } as Record<string, string>)[u.role] ?? u.role, // Clientes solo junta cuentas de cliente; el resto del equipo vive en Ajustes › Equipo.
-                href: u.role === 'cliente' ? `/panel/admin/clientes?q=${encodeURIComponent(u.email)}` : '/panel/admin/usuarios' }))} alElegir={alElegir} />
+                href: u.role === 'cliente' ? `/dashboard/admin/clients?q=${encodeURIComponent(u.email)}` : '/dashboard/admin/users' }))} alElegir={alElegir} />
             </>
           )}
         </div>

@@ -1,8 +1,8 @@
 'use server'
 
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
 import { events, identity, notifications } from '@/app/composition/container'
 import { cuboDeLaPeticion } from '@/shared/http/client-ip'
 import { enSegundoPlano } from '@/shared/http/en-segundo-plano'
@@ -55,7 +55,7 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
 async function entrarCon(token: string): Promise<never> {
   // Entrar deja al atelier en el resumen del evento activo —el de fecha más próxima—,
   // que es la pantalla de la maqueta y la que se mira todos los días. La bandeja de
-  // eventos sigue en `/panel`, en «Todos los eventos» de la barra, y es adonde se cae
+  // eventos sigue en `/dashboard`, en «Todos los eventos» de la barra, y es adonde se cae
   // cuando todavía no hay ningún evento creado o la base no responde.
   // El actor se resuelve del token recién acuñado, no de la cookie: escribirla y leerla
   // en la misma petición funciona, pero apoyarse en eso es apoyarse en un detalle del
@@ -82,20 +82,20 @@ async function entrarCon(token: string): Promise<never> {
   // Con la contraseña provisional se va **directo** a cambiarla. El guard lo rebotaría
   // igual desde cualquier página, pero mandarlo primero a su evento para devolverlo acto
   // seguido es un parpadeo que no explica nada.
-  if (usuario !== null && usuario.mustChangePassword) redirect('/panel/nueva-contrasena')
+  if (usuario !== null && usuario.mustChangePassword) redirect('/dashboard/new-password')
 
   // El admin no entra a los datos de ninguna boda: su puerta es la administración.
-  if (usuario !== null && parseRole(usuario.role) === 'admin') redirect('/panel/admin')
+  if (usuario !== null && parseRole(usuario.role) === 'admin') redirect('/dashboard/admin')
 
   // El cliente con más de un evento (compró otro) elige en «Mis eventos».
   const varios = usuario !== null && parseRole(usuario.role) === 'cliente' && listados !== null && !isErr(listados) && listados.value.length > 1
 
   redirect(
     activo === null || varios
-      ? '/panel'
+      ? '/dashboard'
       : esPuerta
-        ? `/panel/eventos/${activo.slug}/checkin`
-        : `/panel/eventos/${activo.slug}`,
+        ? `/dashboard/events/${activo.slug}/check-in`
+        : `/dashboard/events/${activo.slug}`,
   )
 }
 
@@ -144,7 +144,7 @@ export async function changePasswordAction(
   if (isErr(nueva)) {
     // Guardada sí; la sesión no se abrió. Que entre con la suya.
     jar.delete(SESSION_COOKIE)
-    redirect('/panel/entrar')
+    redirect('/dashboard/login')
   }
   jar.set(SESSION_COOKIE, nueva.value.token, sessionCookieOptions(nueva.value.expiresAt))
   return entrarCon(nueva.value.token)
@@ -293,7 +293,7 @@ export async function closeOtherSessionsAction(_previo: CodigoDeCuentaState, for
   const t = await tr()
   const actor = await requireSession()
   const sesion = await identity.authenticateSession((await cookies()).get(SESSION_COOKIE)?.value ?? null)
-  if (isErr(sesion)) redirect('/panel/entrar')
+  if (isErr(sesion)) redirect('/dashboard/login')
 
   const cerradas = await identity.closeOtherSessions({ userId: actor.userId, sessionId: sesion.value.sessionId, code: campo(formData, 'code') })
   if (isErr(cerradas)) {
@@ -307,7 +307,7 @@ export async function closeOtherSessionsAction(_previo: CodigoDeCuentaState, for
             : t('El código no es válido, ya se usó o caducó. Pide uno nuevo.', 'The code is not valid, was already used or expired. Request a new one.'),
     }
   }
-  revalidatePath('/panel/cuenta')
+  revalidarRuta('/dashboard/account')
   return { status: 'done', message: t('Listo: solo queda abierta tu sesión en este dispositivo.', 'Done: only your session on this device remains open.') }
 }
 
@@ -328,7 +328,7 @@ export async function guardarMisDatosAction(_previo: MisDatosState, formData: Fo
     registrarFallo('identity/actions', 'no se pudieron guardar los datos de la cuenta', 'storage_failure', e)
     return { status: 'error', message: t('No pudimos guardarlos. Inténtalo en un momento.', 'We couldn’t save them. Try again in a moment.') }
   }
-  revalidatePath('/panel', 'layout')
+  revalidarRuta('/dashboard', 'layout')
   return { status: 'success', message: t('Guardado.', 'Saved.') }
 }
 
@@ -398,7 +398,7 @@ export async function cambiarCorreoAction(_previo: CodigoDeCuentaState, formData
     })
   }
 
-  revalidatePath('/panel', 'layout')
+  revalidarRuta('/dashboard', 'layout')
   return { status: 'done', message: t(`Listo: ahora entras con ${hecho.value}.`, `Done: you now sign in with ${hecho.value}.`) }
 }
 
@@ -412,5 +412,5 @@ export async function signOutAction(): Promise<void> {
     await identity.signOut(token)
   }
   jar.delete(SESSION_COOKIE)
-  redirect('/panel/entrar')
+  redirect('/dashboard/login')
 }

@@ -115,13 +115,13 @@ export default async function EventoLayout({
         ) : (
           <BarraSuperior
             arriba={
-              <Link className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-line-panel-strong bg-bg-raised px-4.5 text-[14.5px] font-medium text-ink no-underline transition-colors hover:border-gold hover:text-shell-deep" href={`/panel/eventos/${event.value.slug}/vista-previa`}>
+              <Link className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-line-panel-strong bg-bg-raised px-4.5 text-[14.5px] font-medium text-ink no-underline transition-colors hover:border-gold hover:text-shell-deep" href={`/dashboard/events/${event.value.slug}/preview`}>
                 <EyeIcon className="size-[18px]" />
                 {t('Ver mi invitación', 'View my invitation')}
               </Link>
             }
             enElCelular={
-              <Link aria-label={t('Ver mi invitación', 'View my invitation')} className="grid size-11 place-items-center rounded-xl text-ink" href={`/panel/eventos/${event.value.slug}/vista-previa`}>
+              <Link aria-label={t('Ver mi invitación', 'View my invitation')} className="grid size-11 place-items-center rounded-xl text-ink" href={`/dashboard/events/${event.value.slug}/preview`}>
                 <EyeIcon className="size-[22px]" />
               </Link>
             }
@@ -141,7 +141,7 @@ export default async function EventoLayout({
         portada: portadaParaCompartir(event.value.themeKey),
         // A dónde vuelve cada uno: el admin a la cartera, el atelier a su bandeja. El cliente y
         // la puerta no tienen «fuera»: su panel es este evento.
-        salirHref: isAdmin(actor) ? '/panel/admin/eventos' : actor.role === 'atelier' || misEventos ? '/panel' : null,
+        salirHref: isAdmin(actor) ? '/dashboard/admin/events' : actor.role === 'atelier' || misEventos ? '/dashboard' : null,
         salirLabel: isAdmin(actor) ? t('Volver a la administración', 'Back to administration') : t('Volver a mis eventos', 'Back to my events'),
       }}
       user={{ email: actor.email, nombre, rol: rotuloDeRol(actor.role, t), soporte: actor.soporte !== undefined }}

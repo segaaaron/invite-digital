@@ -23,7 +23,7 @@ const filas = [
 const pinta = (over: Partial<Parameters<typeof DeliveryPanel>[0]> = {}) =>
   render(
     <DeliveryPanel
-      closeHref="/panel/eventos/boda/invitados"
+      closeHref="/dashboard/events/boda/guests"
       eventLocale="es"
       eventSlug="boda"
       eventTitle="Quince de Camila"
@@ -131,6 +131,6 @@ describe('DeliveryPanel', () => {
   it('cerrar vuelve a la lista sin el parámetro', () => {
     pinta()
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
-    expect(replace).toHaveBeenCalledWith('/panel/eventos/boda/invitados')
+    expect(replace).toHaveBeenCalledWith('/dashboard/events/boda/guests')
   })
 })

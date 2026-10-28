@@ -58,7 +58,7 @@ export function EventForm({
   const currencyId = useId()
   const templateId = useId()
   const errorId = useId()
-  // El enlace se arma solo con el título (16 oct: pedirlo a mano, con «/panel/eventos/» delante, era jerga);
+  // El enlace se arma solo con el título (16 oct: pedirlo a mano, con «/dashboard/events/» delante, era jerga);
   // si se toca, manda lo escrito.
   const [slug, setSlug] = useState('')
   const [slugTocado, setSlugTocado] = useState(false)
@@ -223,7 +223,7 @@ export function EventForm({
         <p aria-live="polite" className="text-[13px] text-ink-soft" role="status">
           {t('Evento guardado.', 'Event saved.')}{' '}
           {event ? null : (
-            <Link className="underline underline-offset-4" href="/panel">
+            <Link className="underline underline-offset-4" href="/dashboard">
               {t('Ver mis eventos', 'See my events')}
             </Link>
           )}

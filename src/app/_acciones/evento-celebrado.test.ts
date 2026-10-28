@@ -12,7 +12,7 @@ const redirect = vi.fn((destino: string) => {
 
 vi.mock('next/navigation', () => ({ notFound: vi.fn(), redirect: (destino: string) => redirect(destino) }))
 vi.mock('next/headers', () => ({
-  headers: async () => new Headers({ referer: 'https://luxuryatelier.net/panel/eventos/boda/mesas?panel=mesa' }),
+  headers: async () => new Headers({ referer: 'https://luxuryatelier.net/dashboard/events/boda/tables?panel=mesa' }),
   cookies: async () => ({ get: () => undefined }),
 }))
 vi.mock('@/shared/observability/fallos', () => ({ registrarFallo: vi.fn() }))
@@ -33,7 +33,7 @@ describe('requireEventAccess con el evento celebrado', () => {
     vi.setSystemTime(new Date('2026-10-04T06:00:00-04:00'))
     celebrado()
     const { requireEventAccess } = await import('./sesion')
-    await expect(requireEventAccess(cliente, { eventId: 'e1', section: 'cliente' })).rejects.toThrow('NEXT_REDIRECT /panel/eventos/boda/mesas')
+    await expect(requireEventAccess(cliente, { eventId: 'e1', section: 'cliente' })).rejects.toThrow('NEXT_REDIRECT /dashboard/events/boda/tables')
   })
 
   it('la madrugada de la fiesta sigue abierta', async () => {

@@ -12,7 +12,7 @@ export default async function PanelHomePage() {
   const t = await tr()
   const actor = await requireSession()
   // La bandeja enlaza al resumen de cada boda, que el admin no abre: su lista es la cartera.
-  if (isAdmin(actor)) redirect('/panel/admin/eventos')
+  if (isAdmin(actor)) redirect('/dashboard/admin/events')
   const listed = await events.listFor(actor)
   // Cómo va cada uno: quiénes confirmaron de cuántas personas (una lectura por evento; un cliente tiene pocos).
   const avance = isErr(listed)
@@ -33,7 +33,7 @@ export default async function PanelHomePage() {
       <PanelHeader
         actions={
           puedeCrearEventos(actor) ? (
-            <PanelButton href="/panel/eventos/nuevo" variant="primary">
+            <PanelButton href="/dashboard/events/new" variant="primary">
               + Nuevo evento
             </PanelButton>
           ) : undefined

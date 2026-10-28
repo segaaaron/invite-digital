@@ -41,7 +41,7 @@ const grupos = [
 
 const invitacion = { id: 'g1', label: 'Familia Rojas Peña', revocada: false, respondida: true }
 
-const props = { closeHref: '/panel/eventos/boda/invitados', eventSlug: 'boda', groups: grupos, person: persona, invitacion }
+const props = { closeHref: '/dashboard/events/boda/guests', eventSlug: 'boda', groups: grupos, person: persona, invitacion }
 
 beforeEach(() => {
   updatePersonAction.mockClear()
@@ -140,7 +140,7 @@ describe('EditPersonDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(updatePersonAction).not.toHaveBeenCalled()
-    expect(replace).toHaveBeenCalledWith('/panel/eventos/boda/invitados')
+    expect(replace).toHaveBeenCalledWith('/dashboard/events/boda/guests')
   })
 
   it('principal o acompañante no se elige a mano: lo decide la invitación', () => {

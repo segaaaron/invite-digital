@@ -99,7 +99,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
     if (fila === undefined) {
       // Un plan publicado que no está entre los activos es un desajuste de datos, no un caso
       // normal: sin esto desaparecía de la tabla y seguía en los sobres, y nadie lo veía.
-      registrarFallo('[locale]/page', `El plan «${plan.slug}» se vende pero no está entre los planes activos: queda fuera de la comparativa`)
+      registrarFallo('[locale]/page', `No se pudo poner el plan «${plan.slug}» en la comparativa: se vende pero no está entre los planes activos`)
       return []
     }
     const limites = capacidadDePlan(fila)

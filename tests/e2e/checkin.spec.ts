@@ -32,7 +32,7 @@ test('el lector por teclado registra la llegada sin cámara', async ({ page }) =
   const SLUG = nuevoSlug()
   const { token, groupId } = await seedDoorEvent(SLUG)
 
-  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await page.goto(`/dashboard/events/${SLUG}/door`)
   await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('0')
 
   // Un lector por USB se comporta como un teclado: teclea el código y remata con Enter.
@@ -92,7 +92,7 @@ test('un pase escaneado con la cámara registra la llegada del grupo', async ({ 
     })
   }, matrix)
 
-  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await page.goto(`/dashboard/events/${SLUG}/door`)
 
   await expect(page.getByText(/Bienvenidos/i)).toBeVisible({ timeout: 30_000 })
   await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('1')
@@ -105,7 +105,7 @@ test('el pase de otra boda no abre esta puerta', async ({ page }) => {
   await seedDoorEvent(SLUG)
   const ajeno = await seedDoorEvent('boda-ajena-e2e')
 
-  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await page.goto(`/dashboard/events/${SLUG}/door`)
   await expect(page.getByLabel('Invitaciones que han llegado')).toBeVisible()
   await page.keyboard.type(ajeno.token)
   await page.keyboard.press('Enter')
@@ -124,7 +124,7 @@ test('el pase de una invitación revocada no entra, y no se registra nada', asyn
   const { token, groupId } = await seedDoorEvent(SLUG)
   await revokeGroup(groupId)
 
-  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await page.goto(`/dashboard/events/${SLUG}/door`)
   // **Esperar a que la puerta esté escuchando antes de teclear.** Un lector por USB teclea de golpe, y
   // si la pantalla aún no está montada se pierden caracteres: el pase llega partido y se lee como de
   // otro evento. Es lo que hacía fallar esta prueba solo dentro de la pasada entera. La primera prueba
@@ -143,7 +143,7 @@ test('sin red la puerta sigue registrando, y sube al volver', async ({ page, con
   const SLUG = nuevoSlug()
   const { token, groupId } = await seedDoorEvent(SLUG)
 
-  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await page.goto(`/dashboard/events/${SLUG}/door`)
   await expect(page.getByLabel('Escaneos por subir')).toHaveText('0')
 
   await context.setOffline(true)
@@ -160,6 +160,6 @@ test('sin red la puerta sigue registrando, y sube al volver', async ({ page, con
 
   // Y la llegada está de verdad en la base, no solo en la pantalla.
   expect(await liveArrivals(groupId)).toEqual([{ arrivedCount: 3 }])
-  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await page.goto(`/dashboard/events/${SLUG}/door`)
   await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('1')
 })

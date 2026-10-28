@@ -1,4 +1,5 @@
-import { revalidatePath, updateTag } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
+import { updateTag } from 'next/cache'
 import { ETIQUETAS_WEB } from '@/shared/cache/lectura-cacheada'
 
 // Lo que comparten las acciones del admin, partidas por pantalla (`usuarios-actions.ts`,
@@ -26,12 +27,12 @@ export type AdminActionState =
   | { status: 'error'; message: string; valores?: Record<string, string> }
 
 export const refrescar = () => {
-  revalidatePath('/panel/admin')
-  revalidatePath('/panel/admin/usuarios')
-  revalidatePath('/panel/admin/eventos')
-  revalidatePath('/panel/admin/auditoria')
-  revalidatePath('/panel/admin/ventas')
-  revalidatePath('/panel/admin/clientes')
+  revalidarRuta('/dashboard/admin')
+  revalidarRuta('/dashboard/admin/users')
+  revalidarRuta('/dashboard/admin/events')
+  revalidarRuta('/dashboard/admin/audit')
+  revalidarRuta('/dashboard/admin/sales')
+  revalidarRuta('/dashboard/admin/clients')
 }
 
 export const texto = (formData: FormData, clave: string): string => {

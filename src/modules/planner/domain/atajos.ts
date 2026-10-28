@@ -52,28 +52,28 @@ const contratado = (ya: LoQueYaHay, titulo: string) => {
   return servicio !== undefined && ya.proveedoresContratados.some((p) => servicio.test(normal(p)))
 }
 
-const PROVEEDORES: Atajo = { ruta: '/planner/proveedores', texto: 'Ir a Proveedores' }
+const PROVEEDORES: Atajo = { ruta: '/planner/vendors', texto: 'Ir a Proveedores' }
 
 const REGLAS: readonly Regla[] = [
-  { si: /fijar la fecha/, atajo: { ruta: '/configuracion', texto: 'Ver la fecha' }, hecha: () => true },
-  { si: /presupuesto/, atajo: { ruta: '/planner/presupuesto', texto: 'Ir al Presupuesto' }, hecha: (ya) => ya.presupuesto },
-  { si: /pagos finales/, atajo: { ruta: '/planner/presupuesto', texto: 'Ir al Presupuesto' } },
-  { si: /terminar la invitacion/, atajo: { ruta: '/configuracion', texto: 'Escribir la invitación' }, hecha: (ya) => ya.invitacionLista },
-  { si: /repartir las invitaciones/, atajo: { ruta: '/invitados', texto: 'Ir a Invitados' }, hecha: (ya) => ya.invitacionesRepartidas },
-  { si: /no confirmo/, atajo: { ruta: '/invitados', texto: 'Ir a Invitados' } },
-  { si: /distribuir las mesas/, atajo: { ruta: '/mesas', texto: 'Ir a Mesas' }, hecha: (ya) => ya.mesasRepartidas },
-  { si: /mesa de regalos/, atajo: { ruta: '/regalos', texto: 'Ir a la Mesa de regalos' }, hecha: (ya) => ya.regalos },
-  { si: /cronograma|horarios con los proveedores/, atajo: { ruta: '/planner/cronograma', texto: 'Ir al Cronograma' }, hecha: (ya) => ya.cronograma },
+  { si: /fijar la fecha/, atajo: { ruta: '/setup', texto: 'Ver la fecha' }, hecha: () => true },
+  { si: /presupuesto/, atajo: { ruta: '/planner/budget', texto: 'Ir al Presupuesto' }, hecha: (ya) => ya.presupuesto },
+  { si: /pagos finales/, atajo: { ruta: '/planner/budget', texto: 'Ir al Presupuesto' } },
+  { si: /terminar la invitacion/, atajo: { ruta: '/setup', texto: 'Escribir la invitación' }, hecha: (ya) => ya.invitacionLista },
+  { si: /repartir las invitaciones/, atajo: { ruta: '/guests', texto: 'Ir a Invitados' }, hecha: (ya) => ya.invitacionesRepartidas },
+  { si: /no confirmo/, atajo: { ruta: '/guests', texto: 'Ir a Invitados' } },
+  { si: /distribuir las mesas/, atajo: { ruta: '/tables', texto: 'Ir a Mesas' }, hecha: (ya) => ya.mesasRepartidas },
+  { si: /mesa de regalos/, atajo: { ruta: '/gifts', texto: 'Ir a la Mesa de regalos' }, hecha: (ya) => ya.regalos },
+  { si: /cronograma|horarios con los proveedores/, atajo: { ruta: '/planner/schedule', texto: 'Ir al Cronograma' }, hecha: (ya) => ya.cronograma },
   { si: /^(contratar|reservar|encargar la torta|encargar el vestido|elegir vestido)|cerrar el menu|decoracion y show|prueba del vestido/, atajo: PROVEEDORES, hecha: contratado },
-  { si: /vals/, atajo: { ruta: '/planner/cortejo', texto: 'Ir al Cortejo' } },
-  { si: /ensayo/, atajo: { ruta: '/planner/cortejo', texto: 'Ir al Cortejo' } },
-  { si: /padrinos|chambelanes|corte de honor/, atajo: { ruta: '/planner/cortejo', texto: 'Ir al Cortejo' }, hecha: (ya) => ya.cortejo },
-  { si: /recepcion y mandarle su acceso|personal de recepcion|porteros/, atajo: { ruta: '/equipo', texto: 'Ir a Equipo' }, hecha: (ya) => ya.recepcion },
+  { si: /vals/, atajo: { ruta: '/planner/procession', texto: 'Ir al Cortejo' } },
+  { si: /ensayo/, atajo: { ruta: '/planner/procession', texto: 'Ir al Cortejo' } },
+  { si: /padrinos|chambelanes|corte de honor/, atajo: { ruta: '/planner/procession', texto: 'Ir al Cortejo' }, hecha: (ya) => ya.cortejo },
+  { si: /recepcion y mandarle su acceso|personal de recepcion|porteros/, atajo: { ruta: '/team', texto: 'Ir a Equipo' }, hecha: (ya) => ya.recepcion },
 ]
 
 const reglaDe = (titulo: string) => REGLAS.find((r) => r.si.test(normal(titulo)))
 
-/** Adónde lleva la tarea, relativo al evento (`/planner/proveedores`), o `null`. */
+/** Adónde lleva la tarea, relativo al evento (`/planner/vendors`), o `null`. */
 export const atajoDeTarea = (titulo: string): Atajo | null => reglaDe(titulo)?.atajo ?? null
 
 /** Si lo que pide la tarea ya está hecho en el panel. */

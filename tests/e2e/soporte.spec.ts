@@ -27,12 +27,12 @@ test.describe('soporte como el cliente', () => {
     await seedCliente(SLUG)
     contexto = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.40' } })
     page = await contexto.newPage()
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(ADMIN.email)
     await page.getByLabel('Contraseña').fill(ADMIN.password)
     await page.getByRole('button', { name: 'Entrar' }).click()
     // El admin no cae en ninguna boda: su puerta es la administración.
-    await expect(page).toHaveURL(/\/panel\/admin$/)
+    await expect(page).toHaveURL(/\/dashboard\/admin$/)
   })
 
   test.afterAll(async () => {
@@ -45,21 +45,21 @@ test.describe('soporte como el cliente', () => {
 
   test('sin modo soporte, el admin no abre los datos de la boda', async () => {
     for (const ruta of ['', '/invitados', '/mensajes', '/mesas', '/planner/tareas', '/extras']) {
-      expect((await page.goto(`/panel/eventos/${SLUG}${ruta}`))?.status(), `sección ${ruta || 'resumen'}`).toBe(404)
+      expect((await page.goto(`/dashboard/events/${SLUG}${ruta}`))?.status(), `sección ${ruta || 'resumen'}`).toBe(404)
     }
   })
 
   test('pero sí su ficha: configuración sin el contenido del cliente, plan y vista previa', async () => {
-    expect((await page.goto(`/panel/eventos/${SLUG}/configuracion`))?.status()).toBe(200)
+    expect((await page.goto(`/dashboard/events/${SLUG}/setup`))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Detalles' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Escribir la invitación' })).toHaveCount(0)
-    expect((await page.goto(`/panel/eventos/${SLUG}/plan`))?.status()).toBe(200)
-    expect((await page.goto(`/panel/eventos/${SLUG}/vista-previa`))?.status()).toBe(200)
+    expect((await page.goto(`/dashboard/events/${SLUG}/plan`))?.status()).toBe(200)
+    expect((await page.goto(`/dashboard/events/${SLUG}/preview`))?.status()).toBe(200)
   })
 
   test('escribe la invitación del cliente sin entrar como él, y queda en la auditoría', async () => {
     // Servicio hecho por nosotros: el equipo diseña la invitación. Solo la invitación.
-    await page.goto(`/panel/eventos/${SLUG}/configuracion?vista=invitacion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup?vista=invitacion`)
     await expect(page.getByRole('heading', { name: 'Escribir la invitación' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Detalles' })).toHaveCount(0)
     const cancion = await abrirSeccion(page, 'Canción')
@@ -71,14 +71,14 @@ test.describe('soporte como el cliente', () => {
   })
 
   test('entra como el cliente de un clic, cambia algo firmado a su nombre y regresa', async () => {
-    await page.goto(`/panel/admin/eventos?q=${SLUG}`)
-    const fila = page.getByRole('listitem').filter({ has: page.locator(`a[href="/panel/eventos/${SLUG}/configuracion"]`) }).first()
+    await page.goto(`/dashboard/admin/events?q=${SLUG}`)
+    const fila = page.getByRole('listitem').filter({ has: page.locator(`a[href="/dashboard/events/${SLUG}/setup"]`) }).first()
     // En el «⋯» de la fila: la fila entera abre la ficha, y lo demás va en su menú.
     await fila.locator('summary[aria-label^="Más acciones de"]').click()
     // Un clic, sin motivo (28 de septiembre): la entrada queda en la auditoría.
     await fila.getByRole('button', { name: 'Entrar como el cliente' }).click()
 
-    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}(/configuracion)?$`), { timeout: 30_000 })
+    await expect(page).toHaveURL(new RegExp(`/dashboard/events/${SLUG}(/setup)?$`), { timeout: 30_000 })
     await expect(page.getByRole('status').filter({ hasText: CLIENTE.email })).toBeVisible()
     // Entra de verdad, a la primera: antes la URL era la buena y la página un 404 (el actor de la
     // petición seguía siendo el admin), y solo al volver atrás se veía el panel del cliente.
@@ -86,10 +86,10 @@ test.describe('soporte como el cliente', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 
     // Ve lo que ve el cliente.
-    expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(200)
+    expect((await page.goto(`/dashboard/events/${SLUG}/guests`))?.status()).toBe(200)
 
     // Y lo que cambia queda registrado como el admin.
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
     const cancion = await abrirSeccion(page, 'Canción')
     await cancion.getByLabel('Título de la canción', { exact: true }).fill('Arreglada por soporte')
     await cancion.getByRole('button', { name: 'Guardar' }).click()
@@ -99,15 +99,15 @@ test.describe('soporte como el cliente', () => {
       .toBeGreaterThan(0)
 
     // La cuenta del cliente no se toca en modo soporte.
-    expect((await page.goto('/panel/cuenta'))?.status()).toBe(404)
+    expect((await page.goto('/dashboard/account'))?.status()).toBe(404)
 
-    await page.goto(`/panel/eventos/${SLUG}`)
+    await page.goto(`/dashboard/events/${SLUG}`)
     // La salida está en dos sitios a la vista: la franja de arriba y lo primero de la barra.
     await expect(page.getByRole('button', { name: 'Volver al admin' })).toHaveCount(2)
     await page.getByRole('button', { name: 'Volver al admin' }).first().click()
-    await expect(page).toHaveURL(/\/panel\/admin\/eventos$/, { timeout: 30_000 })
+    await expect(page).toHaveURL(/\/dashboard\/admin\/events$/, { timeout: 30_000 })
     await expect(page.getByRole('heading', { name: 'Esta página no está disponible' })).toHaveCount(0)
-    expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(404)
+    expect((await page.goto(`/dashboard/events/${SLUG}/guests`))?.status()).toBe(404)
 
     const [entrada] = await sql<{ n: number }[]>`select count(*)::int as n from audit_log where action in ('soporte.entrada', 'soporte.salida') and actor_email = ${ADMIN.email} and (subject = ${SLUG} or detail = ${`como ${CLIENTE.email}`})`
     expect(entrada!.n).toBe(2)
@@ -116,18 +116,18 @@ test.describe('soporte como el cliente', () => {
   test('un cliente no llega a nada de admin', async ({ browser }) => {
     const cliente = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.41' } })
     const suya = await cliente.newPage()
-    await suya.goto('/panel/entrar')
+    await suya.goto('/dashboard/login')
     await suya.getByLabel('Correo').fill(CLIENTE.email)
     await suya.getByLabel('Contraseña').fill(CLIENTE.password)
     await suya.getByRole('button', { name: 'Entrar' }).click()
-    await expect(suya).toHaveURL(new RegExp(`/panel/eventos/${SLUG}$`))
+    await expect(suya).toHaveURL(new RegExp(`/dashboard/events/${SLUG}$`))
     await expect(suya.getByRole('button', { name: 'Volver al admin' })).toHaveCount(0)
     // Ni rastro de la administración en su barra.
     for (const enlace of ['Hoy', 'Usuarios', 'Planes', 'Auditoría']) await expect(suya.getByRole('link', { name: enlace, exact: true })).toHaveCount(0)
     // Abajo de la barra, su tarjeta (maqueta E21): su nombre y «Mi cuenta», sin «Volver al admin».
     await expect(suya.getByRole('complementary').getByRole('link', { name: 'Mi cuenta' })).toBeVisible()
     await expect(suya.getByRole('button', { name: 'Volver al admin' })).toHaveCount(0)
-    for (const ruta of ['/panel/admin', '/panel/admin/eventos', '/panel/admin/auditoria']) {
+    for (const ruta of ['/dashboard/admin', '/dashboard/admin/events', '/dashboard/admin/audit']) {
       expect((await suya.goto(ruta))?.status(), ruta).toBe(404)
     }
     await cliente.close()
@@ -136,33 +136,33 @@ test.describe('soporte como el cliente', () => {
     // «Lo llevas tú»: el evento no tiene cliente. Antes el botón ni salía y el admin no podía cargar
     // invitados (6 de octubre). Se quita el acceso del cliente al final, para no tocar las de arriba.
     await sql`delete from event_staff where event_id = (select id from events where slug = ${SLUG}) and membership = 'cliente'`
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
     await expect(page.getByText('Sin cliente todavía: lo llevas tú', { exact: false })).toBeVisible()
     await page.getByRole('button', { name: 'Entrar al panel del evento' }).first().click()
 
-    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}(/configuracion)?$`), { timeout: 30_000 })
+    await expect(page).toHaveURL(new RegExp(`/dashboard/events/${SLUG}(/setup)?$`), { timeout: 30_000 })
     await expect(page.getByRole('status').filter({ hasText: 'anfitrión del evento (sin cliente)' })).toBeVisible()
-    expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(200)
+    expect((await page.goto(`/dashboard/events/${SLUG}/guests`))?.status()).toBe(200)
     // Producción, 7 de octubre: crear una mesa así acababa en «Evento no encontrado». Se crea de verdad.
-    await page.goto(`/panel/eventos/${SLUG}/mesas?panel=mesa`)
+    await page.goto(`/dashboard/events/${SLUG}/tables?panel=mesa`)
     await page.getByLabel('Nombre de la mesa').fill('Mesa del equipo')
     await page.getByLabel('Capacidad (asientos)').fill('8')
     await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
     await expect(page.locator('dialog[open]')).toHaveCount(0)
     const [mesa] = await sql<{ n: number }[]>`select count(*)::int as n from venue_tables t join events e on e.id = t.event_id where e.slug = ${SLUG} and t.label = 'Mesa del equipo'`
     expect(mesa!.n).toBe(1)
-    await page.goto(`/panel/eventos/${SLUG}/regalos?panel=regalo`)
+    await page.goto(`/dashboard/events/${SLUG}/gifts?panel=regalo`)
     await page.getByLabel('Regalo', { exact: true }).fill('Vajilla')
     await page.getByLabel('Precio').fill('500')
     await page.getByRole('button', { name: 'Añadir regalo' }).click()
-    await page.waitForURL(/regalos$/)
+    await page.waitForURL(/gifts$/)
     // Solo ese evento: la administración sigue cerrada mientras actúa como anfitrión.
-    expect((await page.goto('/panel/admin/eventos'))?.status()).toBe(404)
+    expect((await page.goto('/dashboard/admin/events'))?.status()).toBe(404)
 
-    await page.goto(`/panel/eventos/${SLUG}`)
+    await page.goto(`/dashboard/events/${SLUG}`)
     await page.getByRole('button', { name: 'Volver al admin' }).first().click()
-    await expect(page).toHaveURL(/\/panel\/admin\/eventos$/, { timeout: 30_000 })
-    expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(404)
+    await expect(page).toHaveURL(/\/dashboard\/admin\/events$/, { timeout: 30_000 })
+    expect((await page.goto(`/dashboard/events/${SLUG}/guests`))?.status()).toBe(404)
     const [entrada] = await sql<{ n: number }[]>`select count(*)::int as n from audit_log where action = 'soporte.entrada' and subject = ${SLUG} and detail = 'como anfitrión (sin cliente)'`
     expect(entrada!.n).toBe(1)
   })

@@ -32,7 +32,7 @@ export async function generateMetadata() {
 }
 export const dynamic = 'force-dynamic'
 
-const BASE = '/panel/admin/clientes'
+const BASE = '/dashboard/admin/clients'
 const PAGINA = 30
 
 type Params = { [K in 'q' | 'etapa' | 'cliente' | 'de' | 'evento' | 'n']?: string | undefined }
@@ -375,7 +375,7 @@ async function Ficha({
                 return (
                   <li className="flex flex-col gap-2.5 rounded-[16px] border border-line-panel bg-white px-4 py-3.5" key={e.slug}>
                     <div className="flex items-center justify-between gap-3">
-                      <Link className="flex min-h-11 min-w-0 items-center truncate font-display text-[17px] text-ink hover:underline" href={`/panel/eventos/${e.slug}/configuracion`}>
+                      <Link className="flex min-h-11 min-w-0 items-center truncate font-display text-[17px] text-ink hover:underline" href={`/dashboard/events/${e.slug}/setup`}>
                         {e.title}
                       </Link>
                       <span className="shrink-0 text-[12px] text-ink-mute">{diaCorto(e.eventDate, hoy, locale)}</span>
@@ -424,7 +424,7 @@ async function Ficha({
           </Bloque>
         )}
 
-          <PanelButton href="/panel/admin/ventas?crear=cotizacion">{t('Nueva cotización', 'New quote')}</PanelButton>
+          <PanelButton href="/dashboard/admin/sales?crear=cotizacion">{t('Nueva cotización', 'New quote')}</PanelButton>
         </div>
       </details>
     </section>

@@ -12,7 +12,7 @@ const ETAPA: Readonly<Record<string, string>> = {
 /**
  * **Pedidos ya no es una pantalla**: un pedido es una etapa de su venta, y vive en Ventas con la
  * consulta de la que salió (28 de septiembre). Los enlaces viejos llegan al mismo filtro.
- * Los comprobantes siguen en `/panel/pedidos/comprobante/<id>`.
+ * Los comprobantes siguen en `/dashboard/orders/receipt/<id>`.
  */
 export default async function PedidosRedirige({ searchParams }: { searchParams: Promise<{ estado?: string }> }) {
   await requireAdmin()
@@ -20,5 +20,5 @@ export default async function PedidosRedirige({ searchParams }: { searchParams: 
   const params = new URLSearchParams({ vista: 'lista' })
   const etapa = estado === undefined ? undefined : ETAPA[estado]
   if (etapa !== undefined) params.set('etapa', etapa)
-  permanentRedirect(`/panel/admin/ventas?${params.toString()}`)
+  permanentRedirect(`/dashboard/admin/sales?${params.toString()}`)
 }

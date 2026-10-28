@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { RegistryTabs } from './RegistryTabs'
 
-const props = { base: '/panel/eventos/boda/regalos', funds: <p>los fondos</p>, gifts: <p>los regalos</p> }
+const props = { base: '/dashboard/events/boda/gifts', funds: <p>los fondos</p>, gifts: <p>los regalos</p> }
 
 describe('RegistryTabs', () => {
   it('enseña lo que pide la URL, no un estado propio', () => {
@@ -18,8 +18,8 @@ describe('RegistryTabs', () => {
 
   it('cada pestaña es un enlace, así que sobrevive a la revalidación de un alta', () => {
     render(<RegistryTabs {...props} current="fondos" />)
-    expect(screen.getByRole('link', { name: 'Lista de regalos' }).getAttribute('href')).toBe('/panel/eventos/boda/regalos')
-    expect(screen.getByRole('link', { name: 'Fondos en efectivo' }).getAttribute('href')).toBe('/panel/eventos/boda/regalos?vista=fondos')
+    expect(screen.getByRole('link', { name: 'Lista de regalos' }).getAttribute('href')).toBe('/dashboard/events/boda/gifts')
+    expect(screen.getByRole('link', { name: 'Fondos en efectivo' }).getAttribute('href')).toBe('/dashboard/events/boda/gifts?vista=fondos')
   })
 
   it('marca la pestaña abierta para quien no ve el contraste', () => {

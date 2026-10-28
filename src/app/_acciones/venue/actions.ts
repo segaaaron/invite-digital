@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { plans, venue } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -17,7 +17,7 @@ import { traducir } from '@/shared/i18n/en-ingles'
  */
 export type VenueActionResult = { ok: true; message?: string } | { ok: false; kind: string; message: string }
 
-const refresh = (slug: string) => revalidatePath(`/panel/eventos/${slug}/mesas`)
+const refresh = (slug: string) => revalidarRuta(`/dashboard/events/${slug}/tables`)
 
 /**
  * El plano del salón solo lo traen algunos planes. La comprobación va **aquí**, en la

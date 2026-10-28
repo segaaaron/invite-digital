@@ -40,7 +40,7 @@ test('todos los planes se reservan con el pedido, y el WhatsApp sale en el pie',
   // el número de antes, que es justo el comportamiento correcto.
   const admin = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
   const guardarWhatsapp = async (numero: string) => {
-    await admin.goto('/panel/admin/web')
+    await admin.goto('/dashboard/admin/web')
     const campo = admin.getByLabel('WhatsApp del negocio')
     if ((await campo.inputValue()) === numero) return
     // La web es un índice (maqueta): cada bloque se despliega para editarlo.
@@ -50,11 +50,11 @@ test('todos los planes se reservan con el pedido, y el WhatsApp sale en el pie',
     // Se comprueba lo guardado recargando, no el aviso: la acción revalida el árbol y remonta
     // el formulario, y «Guardado.» puede desaparecer antes de que la prueba lo mire.
     await expect(async () => {
-      await admin.goto('/panel/admin/web')
+      await admin.goto('/dashboard/admin/web')
       await expect(admin.getByLabel('WhatsApp del negocio')).toHaveValue(numero, { timeout: 1_000 })
     }).toPass({ timeout: 15_000 })
   }
-  await admin.goto('/panel/admin/web')
+  await admin.goto('/dashboard/admin/web')
   const previo = await admin.getByLabel('WhatsApp del negocio').inputValue()
   await guardarWhatsapp(`+${WHATSAPP_DIGITS}`)
   try {
@@ -173,7 +173,9 @@ test('las cabeceras de seguridad llegan al cliente', async ({ request }) => {
   const response = await request.get('/es')
   const headers = response.headers()
   expect(headers['x-content-type-options']).toBe('nosniff')
-  expect(headers['x-frame-options']).toBe('DENY')
+  // SAMEORIGIN y no DENY desde la portada nueva: el modelo se abre en una capa, dentro del
+  // propio sitio (`next.config.ts`). Sigue sin dejar que nos enmarque nadie de fuera.
+  expect(headers['x-frame-options']).toBe('SAMEORIGIN')
   expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin')
   expect(headers['x-powered-by']).toBeUndefined()
 })

@@ -18,8 +18,8 @@ describe('PanelButton', () => {
   })
 
   it('renderiza un enlace cuando hay href', () => {
-    render(<PanelButton href="/panel/eventos/boda/mesas">Ver mesas</PanelButton>)
-    expect(screen.getByRole('link', { name: 'Ver mesas' }).getAttribute('href')).toBe('/panel/eventos/boda/mesas')
+    render(<PanelButton href="/dashboard/events/boda/tables">Ver mesas</PanelButton>)
+    expect(screen.getByRole('link', { name: 'Ver mesas' }).getAttribute('href')).toBe('/dashboard/events/boda/tables')
   })
 
   it('la variante peligrosa no se confunde con las demás', () => {

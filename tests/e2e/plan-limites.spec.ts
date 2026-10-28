@@ -31,7 +31,7 @@ test('con las fotos del plan agotadas, subir otra se rechaza y lo dice', async (
   // Las fotos se suben desde el campo que las pide (desde el 16 de septiembre ya no hay tarjeta
   // de fotos aparte): la galería de «Botánica», como en `panel.spec`.
   await sql`update events set theme_key = 'boda-bot' where id = ${evento!.id}`
-  await page.goto(`/panel/eventos/${eventSlug}/configuracion`)
+  await page.goto(`/dashboard/events/${eventSlug}/setup`)
   const galeria = await abrirSeccion(page, 'Galería')
   await galeria.getByRole('button', { name: 'Subir una fotografía' }).first().click()
   const subida = page.locator('dialog[open]')
@@ -49,7 +49,7 @@ test('un plan sin cambio de modelo lo enseña fijo, y un POST con otro modelo no
   const { eventSlug } = await seedInvitation({ slug: 'plan-modelo-e2e', plan: 'atelier' })
   await sql`update events set theme_key = 'boda-bot' where slug = ${eventSlug}`
 
-  await page.goto(`/panel/eventos/${eventSlug}/configuracion`)
+  await page.goto(`/dashboard/events/${eventSlug}/setup`)
   await expect(page.getByText('Tu plan no incluye cambiar de modelo.')).toBeVisible()
 
   // Se reescribe el campo oculto desde el navegador, como haría quien manipula el formulario.
@@ -77,10 +77,10 @@ test('un plan sin libro ni formas de regalar: el panel lo dice y la invitación 
     from plans p where p.slug = 'atelier'`
   const { eventSlug, token } = await seedInvitation({ slug: 'plan-sin-libro-e2e', plan: PLAN })
   try {
-    await page.goto(`/panel/eventos/${eventSlug}/mensajes`)
+    await page.goto(`/dashboard/events/${eventSlug}/messages`)
     await expect(page.getByText(/no incluye el libro de firmas/)).toBeVisible()
 
-    await page.goto(`/panel/eventos/${eventSlug}/regalos`)
+    await page.goto(`/dashboard/events/${eventSlug}/gifts`)
     // Sobres, transferencia y —porque `atelier` tampoco la trae— la lista de regalos.
     await expect(page.getByRole('region', { name: 'Formas de regalar' }).getByRole('link', { name: /: no viene en tu plan$/ })).toHaveCount(3)
 

@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { guestbook } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -28,7 +28,7 @@ const fallo = async (error: { kind: string; detail: string }): Promise<Guestbook
 type Target = { responseId: string; eventId: string; eventSlug: string }
 
 /** La bandeja y la página del invitado cambian a la vez: la respuesta se ve en las dos. */
-const refrescar = (slug: string) => revalidatePath(`/panel/eventos/${slug}/mensajes`)
+const refrescar = (slug: string) => revalidarRuta(`/dashboard/events/${slug}/messages`)
 
 export async function replyAction(input: Target & { text: string }): Promise<GuestbookActionResult> {
   const actor = await requireSession()

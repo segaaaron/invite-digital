@@ -85,7 +85,7 @@ describe('política de seguridad de contenido', () => {
   })
 
   it('también protege las rutas sin idioma que se dejan pasar', () => {
-    expect(csp(proxy(pedir('/panel')))).toContain("default-src 'self'")
+    expect(csp(proxy(pedir('/dashboard')))).toContain("default-src 'self'")
   })
 
   // Estas rutas no son documentos: una política de contenido ahí no aporta nada y el
@@ -121,12 +121,12 @@ describe('las descargas privadas llevan su propia política', () => {
   // Un comprobante o un contrato se sirven con `CSP: sandbox`. Si el proxy les pone la
   // política de la página encima, un PDF abierto en línea vuelve a poder ejecutar guion.
   it('no pisa la política de un comprobante ni de un documento del evento', () => {
-    expect(csp(proxy(pedir('/panel/pedidos/comprobante/abc')))).toBeNull()
-    expect(csp(proxy(pedir('/panel/eventos/boda-ana/documentos/abc')))).toBeNull()
+    expect(csp(proxy(pedir('/dashboard/orders/receipt/abc')))).toBeNull()
+    expect(csp(proxy(pedir('/dashboard/events/boda-ana/documents/abc')))).toBeNull()
   })
 
   it('y sigue poniéndola en las páginas del panel', () => {
-    expect(csp(proxy(pedir('/panel/eventos/boda-ana/planner/documentos')))).not.toBeNull()
+    expect(csp(proxy(pedir('/dashboard/events/boda-ana/planner/documents')))).not.toBeNull()
   })
 })
 

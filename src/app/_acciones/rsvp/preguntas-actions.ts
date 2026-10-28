@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { rsvp } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { leerPreguntas } from '@/modules/rsvp/domain/preguntas'
@@ -21,6 +21,6 @@ export async function guardarPreguntasAction(_previo: PreguntasState, formData: 
   const preguntas = leerPreguntas({ cancion: formData.get('cancion') === 'on', menus: campo(formData, 'menus'), actos: campo(formData, 'actos') })
   if (isErr(preguntas)) return { status: 'error', message: traducir(preguntas.error.detail, t) }
   await rsvp.preguntas.guardar(eventId, preguntas.value)
-  revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
+  revalidarRuta(`/dashboard/events/${eventSlug}`, 'layout')
   return { status: 'success', message: t('Guardado. Tus invitados lo ven al confirmar que vienen.', 'Saved. Your guests see it when they confirm they are coming.') }
 }

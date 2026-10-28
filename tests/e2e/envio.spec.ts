@@ -18,7 +18,7 @@ test('enviar guarda el enlace y lo enseña siempre igual; generar uno nuevo inva
 
   // Enviar por WhatsApp prepara su enlace y lo guarda (cifrado): desde el 16 de septiembre
   // **enviar no rota**. El sembrado no estaba guardado, así que se acuña uno y queda fijo.
-  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=envio`)
+  await page.goto(`/dashboard/events/${SLUG}/guests?panel=envio`)
   const whatsapp = page.waitForEvent('popup')
   await page.getByRole('button', { name: 'Formas de enviar a Familia Rojas Peña' }).click()
   await page.getByRole('button', { name: 'Enviar por WhatsApp a Familia Rojas Peña' }).click()
@@ -53,7 +53,7 @@ test('la importación dice fila por fila qué entró y qué no', async ({ page }
 
   // Con el parámetro, no pulsando el botón de la cabecera: la prueba no depende de un
   // clic previo para llegar al formulario.
-  await page.goto(`/panel/eventos/${slug}/invitados?panel=importar`)
+  await page.goto(`/dashboard/events/${slug}/guests?panel=importar`)
   await page.getByLabel(/pégalas aquí/i).fill('Familia García;5;+59170022233\n;3\nAna Vega;2;')
   await page.getByRole('button', { name: 'Importar invitados' }).click()
 
@@ -75,7 +75,7 @@ test('el QR del invitado es digital: se descarga como imagen, no se imprime', as
   const slug = `${SLUG}-qr`
   await seedEnvioEvent(slug)
 
-  await page.goto(`/panel/eventos/${slug}/invitados?panel=envio`)
+  await page.goto(`/dashboard/events/${slug}/guests?panel=envio`)
   const fila = page.getByRole('listitem', { name: 'Familia Rojas Peña' })
   await fila.getByRole('button', { name: /Formas de enviar a/ }).click()
   const hoja = page.getByRole('region', { name: 'Enviar a Familia Rojas Peña' })

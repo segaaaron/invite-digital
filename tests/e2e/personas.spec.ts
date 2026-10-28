@@ -14,7 +14,7 @@ test.afterAll(async () => {
 test('el atelier carga personas dentro del grupo, y el catering ve sus menús', async ({ page }) => {
   await seedPeopleEvent(SLUG)
 
-  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
+  await page.goto(`/dashboard/events/${SLUG}/guests?panel=alta`)
 
   // 1. Una persona con restricción, dentro del grupo sembrado (4 cupos). El alta es el
   // diálogo de la maqueta.
@@ -22,7 +22,7 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   await page.getByText('Restricciones, correo y VIP').click()
   await page.getByLabel('Restricciones').fill('Sin gluten')
   await page.getByRole('button', { name: 'Guardar', exact: true }).click()
-  await page.waitForURL(/invitados$/)
+  await page.waitForURL(/guests$/)
   // Dos celdas con su nombre: ella y su invitación, que se llama como ella.
   await expect(page.getByRole('cell', { name: /^Ana Lucía Vega/ }).first()).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Sin gluten', exact: true })).toBeVisible()
@@ -40,7 +40,7 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   await expect(fila.getByText('Viene', { exact: true })).toBeVisible()
 
   // 4. El reporte del catering sale de esas restricciones.
-  await page.goto(`/panel/eventos/${SLUG}/mesas`)
+  await page.goto(`/dashboard/events/${SLUG}/tables`)
   await expect(page.getByText('Sin gluten')).toBeVisible()
   await expect(page.getByText('comensales confirmados')).toBeVisible()
 })

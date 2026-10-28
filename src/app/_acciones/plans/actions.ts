@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { plans } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -34,7 +34,7 @@ export async function requestPlanChangeAction(_previous: PlanChangeState, formDa
     return { status: 'error', kind: result.error.kind }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/plan`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/plan`)
   return { status: 'success', planSlug: result.value.requestedPlanSlug }
 }
 
@@ -62,8 +62,8 @@ export async function applyPlanChangeAction(
     return { status: 'error', kind: result.error.kind }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/plan`)
-  revalidatePath(`/panel/eventos/${eventSlug}`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/plan`)
+  revalidarRuta(`/dashboard/events/${eventSlug}`)
   return { status: 'success' }
 }
 
@@ -81,6 +81,6 @@ export async function rejectPlanChangeAction(
     return { status: 'error', kind: result.error.kind }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/plan`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/plan`)
   return { status: 'success' }
 }

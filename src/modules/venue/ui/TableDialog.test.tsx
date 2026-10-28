@@ -23,7 +23,7 @@ beforeEach(() => {
   })
 })
 
-const props = { eventId: 'e1', eventSlug: 'boda', closeHref: '/panel/eventos/boda/mesas' }
+const props = { eventId: 'e1', eventSlug: 'boda', closeHref: '/dashboard/events/boda/tables' }
 
 describe('TableDialog', () => {
   it('es el diálogo de la maqueta: nombre, capacidad, forma y notas', () => {
@@ -92,7 +92,7 @@ describe('TableDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(addTableAction).not.toHaveBeenCalled()
-    expect(push).toHaveBeenCalledWith('/panel/eventos/boda/mesas')
+    expect(push).toHaveBeenCalledWith('/dashboard/events/boda/tables')
   })
 
   it('la mesa principal se llama según la fiesta: en unos XV es de la quinceañera', () => {

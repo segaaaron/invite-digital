@@ -49,9 +49,9 @@ test('el pedido va de la web al panel: referencia, comprobante y aprobación', a
   // Luxury Atelier, y aprobar crea cuentas y eventos. Un atelier recibe 404.
   // Los pedidos viven en Ventas: la bandeja vieja redirige a la lista, y la venta se abre en su ficha.
   const atelier = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
-  await atelier.goto('/panel/pedidos?estado=proof_submitted')
-  await expect(atelier).toHaveURL(/\/panel\/admin\/ventas\?vista=lista&etapa=por_revisar/)
-  await atelier.goto(`/panel/admin/ventas?venta=p-${referencia}`)
+  await atelier.goto('/dashboard/orders?estado=proof_submitted')
+  await expect(atelier).toHaveURL(/\/dashboard\/admin\/sales\?vista=lista&etapa=por_revisar/)
+  await atelier.goto(`/dashboard/admin/sales?venta=p-${referencia}`)
   const ficha = atelier.locator('section[aria-labelledby="ficha-de-venta"]')
   await expect(ficha.locator('[aria-current="step"]')).toHaveText('Comprobante')
 
@@ -74,8 +74,8 @@ test('el pedido va de la web al panel: referencia, comprobante y aprobación', a
 test('el comprobante no se descarga sin sesión, y una referencia inventada es 404', async ({ page }) => {
   // Sin sesión, el route handler redirige a la entrada del panel en vez de servir el
   // fichero: dentro va el nombre, el banco y la cuenta de una persona.
-  const respuesta = await page.goto(`/panel/pedidos/comprobante/${crypto.randomUUID()}`)
-  expect(page.url()).toContain('/panel/entrar')
+  const respuesta = await page.goto(`/dashboard/orders/receipt/${crypto.randomUUID()}`)
+  expect(page.url()).toContain('/dashboard/login')
   expect(respuesta?.headers()['content-type']).not.toContain('image/')
 
   expect((await page.goto('/es/pedido/ref/ZZZZZZZZ'))?.status()).toBe(404)

@@ -148,7 +148,7 @@ async function seed() {
         includesStyle: p.encargo.style,
       })
       // **Solo siembra lo que falta.** Precio, límites y funciones se editan desde
-      // `/panel/admin/planes`, y este seed corre en cada despliegue: con el `update` de
+      // `/dashboard/admin/plans`, y este seed corre en cada despliegue: con el `update` de
       // antes, cada push devolvía los precios a los del código sin que nadie lo notara.
       // El `set` sobre el propio `slug` es un no-op que existe solo para que `returning`
       // devuelva la fila también cuando ya estaba.
@@ -182,7 +182,7 @@ async function seed() {
         sortOrder: orden,
         // **Nace publicado salvo que el catálogo diga que no.** `cumple-beer` está portado
         // y todavía no se vende: entra retirado y solo el admin lo ve. Al actualizar no se
-        // toca, así que publicarlo desde `/panel/admin/modelos` es definitivo.
+        // toca, así que publicarlo desde `/dashboard/admin/designs` es definitivo.
         isPublished: entrada.publicar !== false,
         sampleMonogram: entrada.sample.monogram,
         sampleNames: entrada.sample.names,
@@ -196,7 +196,7 @@ async function seed() {
           categoryId,
           sortOrder: orden,
           // `isPublished` NO se toca al actualizar: el admin publica y retira modelos
-          // desde `/panel/admin/modelos`, y este seed corre en cada despliegue.
+          // desde `/dashboard/admin/designs`, y este seed corre en cada despliegue.
           palette: entrada.palette,
           sampleMonogram: entrada.sample.monogram,
           sampleNames: entrada.sample.names,

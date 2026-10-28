@@ -60,7 +60,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
     actor.role === 'puerta'
       ? null
       : await Promise.all([porters.list(event.value.id), porters.activity(event.value.id)]).then(([lista, actividad]) => ({
-          gestionarHref: `/panel/eventos/${event.value.slug}/equipo`,
+          gestionarHref: `/dashboard/events/${event.value.slug}/team`,
           personas: lista.map((p) => ({
             id: p.id,
             nombre: p.name,
@@ -76,9 +76,9 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <PanelHeader kicker={t('Día del evento', 'Event day')} meta={t('Escanea el pase o busca por nombre. La familia entra junta con un toque.', 'Scan the pass or search by name. The family checks in together with one tap.')} title={t('Ingreso al evento', 'Event check-in')} />
-      <EnVivo modo="auto" tipos={['ingreso', 'invitado']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
+      <EnVivo modo="auto" tipos={['ingreso', 'invitado']} url={`/dashboard/events/${event.value.slug}/live`} />
       <ControlDeIngreso
-        escanerHref={`/panel/eventos/${event.value.slug}/puerta`}
+        escanerHref={`/dashboard/events/${event.value.slug}/door`}
         eventId={event.value.id}
         eventSlug={event.value.slug}
         filas={filas}

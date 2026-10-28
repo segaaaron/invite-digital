@@ -119,7 +119,7 @@ export const notifications = {
         email: input.to,
         password: input.password,
         eventTitle: input.eventTitle,
-        panelUrl: `${sitioPublicoUrl}/panel/entrar`,
+        panelUrl: `${sitioPublicoUrl}/dashboard/login`,
         siteUrl: sitioPublicoUrl,
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
         // La petición es del admin, no de quien lo recibe: sin cuenta suya con idioma, español (el mercado es Bolivia).
@@ -134,7 +134,7 @@ export const notifications = {
         email: input.to,
         password: input.password,
         rol: input.rol,
-        panelUrl: `${sitioPublicoUrl}/panel/entrar`,
+        panelUrl: `${sitioPublicoUrl}/dashboard/login`,
         siteUrl: sitioPublicoUrl,
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
         locale: await idiomaDelCorreo(input.to, () => 'es'),

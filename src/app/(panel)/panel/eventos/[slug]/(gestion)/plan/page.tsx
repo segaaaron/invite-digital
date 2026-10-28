@@ -84,7 +84,7 @@ export default async function PlanPage({
             allowance: tarjeta.allowance,
             name: tarjeta.name,
             price: tarjeta.price,
-            changeHref: `/panel/eventos/${event.value.slug}/plan?plan=${tarjeta.allowance.planSlug}#cambio`,
+            changeHref: `/dashboard/events/${event.value.slug}/plan?plan=${tarjeta.allowance.planSlug}#cambio`,
           }))}
         />
 

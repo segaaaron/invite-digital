@@ -45,7 +45,7 @@ export default async function FallosPage({ searchParams }: { searchParams: Promi
   const tipos = await tiposDeFallo(dias, origen)
   const total = tipos.reduce((suma, x) => suma + x.veces, 0)
   const ahora = new Date()
-  const enlace = (d: number, o: string | null) => `/panel/admin/fallos?dias=${d}${o === null ? '' : `&origen=${o}`}`
+  const enlace = (d: number, o: string | null) => `/dashboard/admin/errors?dias=${d}${o === null ? '' : `&origen=${o}`}`
 
   return (
     <>

@@ -23,7 +23,7 @@ describe('productJsonLd', () => {
 
   it('apunta al ancla de precios del idioma', () => {
     const [product] = productJsonLd(plans, 'en', SITE)
-    expect(product?.offers).toMatchObject({ url: 'https://invitepremium.bo/en#precios' })
+    expect(product?.offers).toMatchObject({ url: 'https://invitepremium.bo/en#planes' })
   })
 })
 

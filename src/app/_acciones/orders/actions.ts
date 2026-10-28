@@ -1,9 +1,9 @@
 'use server'
 
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { randomBytes } from 'node:crypto'
 import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
 import { headers } from 'next/headers'
-import { revalidatePath } from 'next/cache'
 import { admin, diseno, events, extrasParaPedido, identity, leads, notifications, orders, plans, site } from '@/app/composition/container'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { type Actor, createCredential, parseRole } from '@/modules/identity'
@@ -148,12 +148,12 @@ export async function uploadProofAction(_previous: UploadProofState, formData: F
     return { status: 'error', code: result.error.kind === 'wrong_status' ? 'proofApproved' : 'proofFailed' }
   }
 
-  revalidatePath(`/panel/pedidos`)
-  revalidatePath('/panel/admin/ventas')
+  revalidarRuta(`/dashboard/orders`)
+  revalidarRuta('/dashboard/admin/sales')
   avisarAlAdmin({
     asunto: `Nuevo comprobante · ${result.value.publicRef}`,
     lineas: [`${result.value.customerName} subió el comprobante del pedido ${result.value.publicRef}. Espera tu revisión.`],
-    ruta: `/panel/admin/ventas?pedido=${result.value.publicRef}`,
+    ruta: `/dashboard/admin/sales?pedido=${result.value.publicRef}`,
   })
   return { status: 'success' }
 }
@@ -209,8 +209,8 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
   }
 
   if (decision === 'rejected') {
-    revalidatePath('/panel/pedidos')
-    revalidatePath('/panel/admin/ventas')
+    revalidarRuta('/dashboard/orders')
+    revalidarRuta('/dashboard/admin/sales')
     return { status: 'success' }
   }
 
@@ -220,9 +220,9 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
   const aprovisionado = await aprovisionar(actor, orderId, formData)
   console.info('pedido %s aprobado — %s', orderId, aprovisionado.message)
 
-  revalidatePath('/panel/pedidos')
-  revalidatePath('/panel/admin/ventas')
-  revalidatePath('/panel')
+  revalidarRuta('/dashboard/orders')
+  revalidarRuta('/dashboard/admin/sales')
+  revalidarRuta('/dashboard')
   return { status: 'success' }
 }
 
@@ -399,7 +399,7 @@ async function aprovisionar(
     avisarAlAdmin({
       asunto: `El acceso de ${correo} no salió por correo`,
       lineas: ['Abre su evento y usa «Restablecer acceso»: la contraseña nueva sale en pantalla para pasársela por WhatsApp.'],
-      ruta: `/panel/admin/eventos?evento=${evento.value.slug}`,
+      ruta: `/dashboard/admin/events?evento=${evento.value.slug}`,
     })
   }
 

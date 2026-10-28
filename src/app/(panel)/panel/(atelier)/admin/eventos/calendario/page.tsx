@@ -22,7 +22,7 @@ export async function generateMetadata() {
 }
 export const dynamic = 'force-dynamic'
 
-const BASE = '/panel/admin/eventos/calendario'
+const BASE = '/dashboard/admin/events/calendar'
 const formatoDeMes = (locale: Locale) => new Intl.DateTimeFormat(INTL[locale], { month: 'long', year: 'numeric', timeZone: 'UTC' })
 const dias = (t: T) => [t('Lun', 'Mon'), t('Mar', 'Tue'), t('Mié', 'Wed'), t('Jue', 'Thu'), t('Vie', 'Fri'), t('Sáb', 'Sat'), t('Dom', 'Sun')]
 /** Las ventas abiertas con fecha: aún no son eventos, pero ya ocupan el día en la cabeza del planner. */
@@ -66,12 +66,12 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
   const poner = (dia: string, e: Entrada) => porDia.set(dia, [...(porDia.get(dia) ?? []), e])
   for (const e of eventos.value) {
     if (!e.eventDate.startsWith(mes.slice(0, 4))) continue
-    poner(e.eventDate, { clave: e.id, titulo: e.title, fiesta: fiestaDeTema(e.themeKey), href: `/panel/admin/eventos?evento=${e.slug}`, tentativa: false })
+    poner(e.eventDate, { clave: e.id, titulo: e.title, fiesta: fiestaDeTema(e.themeKey), href: `/dashboard/admin/events?evento=${e.slug}`, tentativa: false })
   }
   if (!isErr(ventas)) {
     for (const v of ventas.value.ventas) {
       if (v.fechaEvento === null || !TENTATIVAS.has(v.etapa)) continue
-      poner(v.fechaEvento, { clave: v.clave, titulo: v.nombre, fiesta: v.fiesta, href: `/panel/admin/ventas?venta=${v.clave}`, tentativa: true })
+      poner(v.fechaEvento, { clave: v.clave, titulo: v.nombre, fiesta: v.fiesta, href: `/dashboard/admin/sales?venta=${v.clave}`, tentativa: true })
     }
   }
 
@@ -112,7 +112,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
           { label: t('Eventos del mes', 'Events this month'), value: eventosDelMes },
           { label: t('Sábados ocupados', 'Saturdays booked'), value: t(`${sabadosOcupados} de ${sabados.length}`, `${sabadosOcupados} of ${sabados.length}`), detail: t(`${sabados.length - sabadosOcupados} libres`, `${sabados.length - sabadosOcupados} free`) },
           { label: t('Días llenos', 'Full days'), value: diasLlenos, tono: diasLlenos > 0 ? 'alerta' : 'normal', detail: t('Con la agenda completa', 'With the calendar full') },
-          { label: t('Tentativos', 'Tentative'), value: tentativasDelMes, detail: t('Ventas abiertas con fecha', 'Open sales with a date'), href: '/panel/admin/ventas' },
+          { label: t('Tentativos', 'Tentative'), value: tentativasDelMes, detail: t('Ventas abiertas con fecha', 'Open sales with a date'), href: '/dashboard/admin/sales' },
         ]}
       />
 

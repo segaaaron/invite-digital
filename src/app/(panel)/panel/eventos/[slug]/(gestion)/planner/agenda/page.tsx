@@ -76,7 +76,7 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
   const entradas = todas.filter((e) => !ocultas.includes(e.clase))
 
   // La dirección de la agenda con lo que se mira (mes, vista, filtros) y los cambios que se pidan.
-  const raiz = `/panel/eventos/${event.value.slug}`
+  const raiz = `/dashboard/events/${event.value.slug}`
   const url = (cambios: Partial<Record<keyof Busqueda, string | null>> = {}) => {
     const p = new URLSearchParams()
     const valor: Record<string, string | null | undefined> = { mes, vista: q.vista ?? null, ocultar: ocultas.join(',') || null, dia: null, cita: null, hecho: null, mover: null, ...cambios }

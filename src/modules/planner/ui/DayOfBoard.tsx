@@ -59,7 +59,7 @@ export function DayOfBoard({ evento, dia }: { evento: Evento; dia: DiaDVista }) 
   return (
     <div className="flex flex-col gap-9">
       {/* Las llegadas de la puerta y las respuestas entran solas, en vivo (SSE). */}
-      <EnVivo modo="auto" tipos={['ingreso', 'rsvp']} url={`/panel/eventos/${evento.eventSlug}/en-vivo`} />
+      <EnVivo modo="auto" tipos={['ingreso', 'rsvp']} url={`/dashboard/events/${evento.eventSlug}/live`} />
 
       {/* Arriba en el celular (13 oct): el día del evento se usa en el teléfono y al final de las listas no se veía. */}
       <div className="min-[768px]:hidden">

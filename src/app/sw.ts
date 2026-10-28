@@ -59,7 +59,7 @@ self.addEventListener('push', (event) => {
       icon: '/icons/panel-192.png',
       // El icono pequeño de la barra de Android: blanco sobre transparente.
       badge: '/icons/badge-96.png',
-      data: { url: carga.url ?? '/panel' },
+      data: { url: carga.url ?? '/dashboard' },
     } as NotificationOptions),
   )
 })
@@ -67,13 +67,13 @@ self.addEventListener('push', (event) => {
 // Tocar la notificación abre su pantalla: en la pestaña del panel que ya esté abierta, o en una nueva.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const destino = new URL(String((event.notification.data as { url?: string } | null)?.url ?? '/panel'), self.location.origin)
+  const destino = new URL(String((event.notification.data as { url?: string } | null)?.url ?? '/dashboard'), self.location.origin)
   // Solo dentro del sitio: la dirección viene del servidor, pero una notificación no abre nada ajeno.
   if (destino.origin !== self.location.origin) return
   event.waitUntil(
     (async () => {
       const ventanas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-      const delPanel = ventanas.find((v) => new URL(v.url).pathname.startsWith('/panel'))
+      const delPanel = ventanas.find((v) => new URL(v.url).pathname.startsWith('/dashboard'))
       if (delPanel) {
         await delPanel.focus()
         await delPanel.navigate(destino.href)
@@ -91,7 +91,7 @@ self.addEventListener('pushsubscriptionchange', (event) => {
   const nueva = cambio.newSubscription
   if (!nueva) return
   cambio.waitUntil(
-    fetch('/panel/avisos/aparato', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(nueva.toJSON()) }).catch(() => undefined),
+    fetch('/dashboard/alerts/device', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(nueva.toJSON()) }).catch(() => undefined),
   )
 })
 

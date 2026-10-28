@@ -15,7 +15,7 @@ test('el grupo sin contestar sale en la cola, se marca recordado y deja de salir
   await seedRecordatorioEvent(SLUG)
 
   // La cola es el diálogo «Recordar» (E55), que abre el botón de cada fila.
-  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=recordar`)
+  await page.goto(`/dashboard/events/${SLUG}/guests?panel=recordar`)
 
   const cola = page.getByRole('dialog')
   const fila = cola.getByRole('listitem').filter({ hasText: 'Familia Rojas Peña' })

@@ -42,7 +42,7 @@ test('retirar un modelo desde el admin lo quita de la colección en la siguiente
   const admin = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
   const fila = admin.getByRole('listitem').filter({ has: admin.getByRole('link', { name: 'Abrir el modelo Botánica en una pestaña nueva' }) })
   try {
-    await admin.goto('/panel/admin/modelos')
+    await admin.goto('/dashboard/admin/designs')
     // Retirar va en «⋯» y se confirma: es lo que saca un modelo de la venta.
     await fila.locator('summary[aria-label="Más acciones de Botánica"]').click()
     await fila.getByRole('button', { name: 'Retirar de la web' }).click()
@@ -57,7 +57,7 @@ test('retirar un modelo desde el admin lo quita de la colección en la siguiente
       await expect(tarjeta()).toHaveCount(0, { timeout: 1_000 })
     }).toPass({ timeout: 15_000 })
   } finally {
-    await admin.goto('/panel/admin/modelos')
+    await admin.goto('/dashboard/admin/designs')
     await fila.getByRole('button', { name: 'Publicar en la web' }).click()
     await expect(fila.getByText('Publicado en la web.')).toBeVisible({ timeout: 15_000 })
     await admin.context().close()

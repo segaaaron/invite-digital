@@ -20,37 +20,37 @@ type Seccion = { readonly nombre: string; readonly pestanas: readonly Pestana[] 
  * pestañas (se llega desde Hoy y ⌘K), solo para que la barra diga dónde se está.
  */
 export const SECCIONES_DEL_ADMIN: readonly Seccion[] = [
-  { nombre: 'Hoy', pestanas: [{ href: '/panel/admin', label: 'Hoy' }] },
-  { nombre: 'Ventas', pestanas: [{ href: '/panel/admin/ventas', label: 'Ventas' }] },
-  { nombre: 'Clientes', pestanas: [{ href: '/panel/admin/clientes', label: 'Clientes' }] },
-  { nombre: 'Ingresos', pestanas: [{ href: '/panel/admin/ingresos', label: 'Ingresos' }] },
-  { nombre: 'Demos', pestanas: [{ href: '/panel/admin/demos', label: 'Demos' }] },
+  { nombre: 'Hoy', pestanas: [{ href: '/dashboard/admin', label: 'Hoy' }] },
+  { nombre: 'Ventas', pestanas: [{ href: '/dashboard/admin/sales', label: 'Ventas' }] },
+  { nombre: 'Clientes', pestanas: [{ href: '/dashboard/admin/clients', label: 'Clientes' }] },
+  { nombre: 'Ingresos', pestanas: [{ href: '/dashboard/admin/revenue', label: 'Ingresos' }] },
+  { nombre: 'Demos', pestanas: [{ href: '/dashboard/admin/demos', label: 'Demos' }] },
   {
     nombre: 'Eventos',
     pestanas: [
-      { href: '/panel/admin/eventos', label: 'Eventos' },
-      { href: '/panel/admin/eventos/calendario', label: 'Calendario' },
+      { href: '/dashboard/admin/events', label: 'Eventos' },
+      { href: '/dashboard/admin/events/calendar', label: 'Calendario' },
     ],
   },
   {
     nombre: 'Catálogo',
     pestanas: [
-      { href: '/panel/admin/modelos', label: 'Modelos' },
-      { href: '/panel/admin/planes', label: 'Planes' },
-      { href: '/panel/admin/extras', label: 'Extras' },
+      { href: '/dashboard/admin/designs', label: 'Modelos' },
+      { href: '/dashboard/admin/plans', label: 'Planes' },
+      { href: '/dashboard/admin/extras', label: 'Extras' },
     ],
   },
   {
     nombre: 'Ajustes',
     pestanas: [
       // Lo que se configura a menudo primero; el registro de fallos y la auditoría, que se consultan, al final (16 oct).
-      { href: '/panel/admin/usuarios', label: 'Equipo' },
-      { href: '/panel/admin/pagos', label: 'Cobros' },
-      { href: '/panel/admin/web', label: 'La web' },
-      { href: '/panel/admin/mensajes', label: 'Mensajes y agenda', corta: 'Mensajes' },
-      { href: '/panel/admin/asistente', label: 'Asistente Luxury', corta: 'Luxury' },
-      { href: '/panel/admin/fallos', label: 'Registro de fallos', corta: 'Fallos' },
-      { href: '/panel/admin/auditoria', label: 'Auditoría' },
+      { href: '/dashboard/admin/users', label: 'Equipo' },
+      { href: '/dashboard/admin/payments', label: 'Cobros' },
+      { href: '/dashboard/admin/web', label: 'La web' },
+      { href: '/dashboard/admin/messages', label: 'Mensajes y agenda', corta: 'Mensajes' },
+      { href: '/dashboard/admin/assistant', label: 'Asistente Luxury', corta: 'Luxury' },
+      { href: '/dashboard/admin/errors', label: 'Registro de fallos', corta: 'Fallos' },
+      { href: '/dashboard/admin/audit', label: 'Auditoría' },
     ],
   },
 ]
@@ -123,7 +123,7 @@ export function PestanasDeAdmin({ cuentas = {} }: { cuentas?: Readonly<Record<st
 export function RutaDelAdmin({ hoy }: { hoy: string }) {
   const t = useT()
   const ruta = usePathname()
-  if (ruta === '/panel/admin') return <span>{hoy}</span>
+  if (ruta === '/dashboard/admin') return <span>{hoy}</span>
   const donde = dondeEnElAdmin(ruta)
   if (donde === null) return null
   return (
@@ -151,7 +151,7 @@ export function IslaDelAdmin({ menu }: { menu: ReactNode }) {
   return (
     <>
       <span className="contents [&_[data-contexto]]:hidden">{menu}</span>
-      <Link className="flex min-w-0 flex-1 items-center gap-2 text-ink no-underline min-[768px]:hidden" href="/panel/admin/ajustes">
+      <Link className="flex min-w-0 flex-1 items-center gap-2 text-ink no-underline min-[768px]:hidden" href="/dashboard/admin/settings">
         <span aria-hidden className="grid size-11 shrink-0 place-items-center">
           <ArrowLeftIcon className="size-5" />
         </span>

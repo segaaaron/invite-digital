@@ -26,7 +26,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
   // Celebrado el evento, la suscripción muere como todo enlace (13 oct).
   if (isErr(evento) || yaSeCelebro(evento.value.eventDate, new Date())) return noEsta()
 
-  const base = `${env.SITE_URL.replace(/\/$/, '')}/panel/eventos/${evento.value.slug}`
+  const base = `${env.SITE_URL.replace(/\/$/, '')}/dashboard/events/${evento.value.slug}`
   const entradas = (await planner.dia.agenda(evento.value)).filter((e) => !e.hecha)
   const aCalendario = (e: EntradaDeAgenda): EventoDeCalendario => ({
     uid: `${e.clase}-${e.id}-${evento.value.id}@luxuryatelier.net`,

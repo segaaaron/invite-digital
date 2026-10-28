@@ -106,7 +106,7 @@ export default async function AdminModelosPage({ searchParams }: { searchParams:
             <Link
               aria-current={filtro === f.key ? 'page' : undefined}
               className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13.5px] font-medium no-underline max-[859px]:min-h-11 ${i === 4 ? 'ml-auto max-[559px]:ml-0' : ''} ${filtro === f.key ? 'border-shell-deep bg-shell-deep text-shell-ink' : 'border-line-panel-strong bg-bg-raised text-ink hover:border-gold'}`}
-              href={f.key === 'todos' ? '/panel/admin/modelos' : `/panel/admin/modelos?filtro=${f.key}`}
+              href={f.key === 'todos' ? '/dashboard/admin/designs' : `/dashboard/admin/designs?filtro=${f.key}`}
               key={f.key}
             >
               {traducir(f.label, t)} {n}

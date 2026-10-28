@@ -24,7 +24,7 @@ test('revocar el enlace de una invitación lo apaga: el invitado ya no la abre',
   const invitado = await (await browser.newContext({ storageState: { cookies: [], origins: [] } })).newPage()
   expect((await invitado.goto(`/i/${token}`))?.status()).toBe(200)
 
-  await page.goto(`/panel/eventos/${eventSlug}/invitados?panel=editar&persona=${await personaDe(groupId)}`)
+  await page.goto(`/dashboard/events/${eventSlug}/guests?panel=editar&persona=${await personaDe(groupId)}`)
   await page.getByRole('button', { name: 'Revocar enlace' }).click()
   await expect.poll(async () => (await sql`select revoked_at from guest_groups where id = ${groupId}`)[0]?.revoked_at).not.toBeNull()
 
@@ -36,7 +36,7 @@ test('en «Ingreso al evento» se registra a alguien a mano, y se deshace con co
   const { groupId, eventSlug } = await seedInvitation({ slug: 'boda-ingreso-e2e', people: ['Ana Vega'], plan: 'imperial' })
   const vivas = async () => (await sql<{ n: number }[]>`select count(*)::int as n from arrivals where guest_group_id = ${groupId} and voided_at is null`)[0]!.n
 
-  await page.goto(`/panel/eventos/${eventSlug}/checkin`)
+  await page.goto(`/dashboard/events/${eventSlug}/check-in`)
   await page.getByRole('button', { name: 'Registrar a Ana Vega' }).click()
   await expect.poll(vivas).toBe(1)
 

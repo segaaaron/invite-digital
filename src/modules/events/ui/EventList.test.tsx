@@ -20,8 +20,8 @@ describe('EventList', () => {
   it('muestra cada evento con su enlace al detalle', async () => {
     render(await EventList({ events: [evento('boda-ana', 'Boda de Ana'), evento('xv-sofia', 'XV de Sofía')] }))
 
-    expect(screen.getByRole('link', { name: /Boda de Ana/ })).toHaveAttribute('href', '/panel/eventos/boda-ana')
-    expect(screen.getByRole('link', { name: /XV de Sofía/ })).toHaveAttribute('href', '/panel/eventos/xv-sofia')
+    expect(screen.getByRole('link', { name: /Boda de Ana/ })).toHaveAttribute('href', '/dashboard/events/boda-ana')
+    expect(screen.getByRole('link', { name: /XV de Sofía/ })).toHaveAttribute('href', '/dashboard/events/xv-sofia')
   })
 
   it('avisa cuando no hay ninguno, en vez de dejar la página muda', async () => {

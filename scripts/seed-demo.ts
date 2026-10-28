@@ -293,7 +293,7 @@ async function seedDemo() {
 
   const personas = GRUPOS.reduce((suma, g) => suma + g.personas.length, 0)
   console.log('Demo sembrada: evento «%s», %d grupos, %d personas.', SLUG, GRUPOS.length, personas)
-  console.log('Panel:      /panel/eventos/%s', SLUG)
+  console.log('Panel:      /dashboard/events/%s', SLUG)
   console.log('Invitados:  %s', enlaces.map((e) => `${e.grupo} → /i/${e.token}`).join('\n            '))
 }
 

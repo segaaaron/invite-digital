@@ -19,7 +19,7 @@ async function crearGrupo(page: Page, etiqueta: string, acompanantes = 1): Promi
   await page.getByLabel('Nombre completo').fill(etiqueta)
   await añadirAcompanantes(page, acompanantes)
   await page.getByRole('button', { name: 'Guardar', exact: true }).click()
-  await page.waitForURL(/invitados$/)
+  await page.waitForURL(/guests$/)
 }
 
 test('el límite del plan corta en el servidor, no solo en el botón', async ({ page }) => {
@@ -27,20 +27,20 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
   // bajado para el resto de la suite y para la base de desarrollo.
   const { eventId } = await seedPlanEvent(SLUG, 2)
 
-  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
+  await page.goto(`/dashboard/events/${SLUG}/guests?panel=alta`)
 
   // 1. Los dos que caben entran.
   await crearGrupo(page, 'Familia Rojas')
   await expect(page.getByRole('cell', { name: 'Familia Rojas' }).first()).toBeVisible()
 
-  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
+  await page.goto(`/dashboard/events/${SLUG}/guests?panel=alta`)
   await crearGrupo(page, 'Familia Vargas')
   await expect(page.getByRole('cell', { name: 'Familia Vargas' }).first()).toBeVisible()
 
   expect(await guestGroupCount(eventId)).toBe(2)
 
   // 2. En el tope, el aviso cambia de tono y el botón de guardar queda deshabilitado.
-  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
+  await page.goto(`/dashboard/events/${SLUG}/guests?panel=alta`)
   await page.getByRole('radio', { name: /Personal/ }).check()
   await expect(page.getByText('El plan no admite más invitaciones')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Guardar', exact: true })).toBeDisabled()
@@ -66,7 +66,7 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
 test('sin mesa de regalos en el plan: sobres y transferencia sí, la lista y los fondos no', async ({ page }) => {
   await seedPlanEvent(SLUG, 5)
 
-  await page.goto(`/panel/eventos/${SLUG}/regalos`)
+  await page.goto(`/dashboard/events/${SLUG}/gifts`)
 
   await expect(page.getByRole('heading', { name: 'Regalos', exact: true })).toBeVisible()
   // La lluvia de sobres y la transferencia van en todos los planes.
@@ -74,7 +74,7 @@ test('sin mesa de regalos en el plan: sobres y transferencia sí, la lista y los
   await expect(page.getByRole('link', { name: /Lluvia de sobres/ })).toBeVisible()
   // La lista no viene en el plan: su fila lo dice, y su interruptor lleva a cambiar de plan (el atelier; el anfitrión no,
   // la lista no se vende como extra).
-  await expect(page.getByRole('link', { name: 'Lista de regalos: no viene en tu plan' })).toHaveAttribute('href', `/panel/eventos/${SLUG}/plan`)
+  await expect(page.getByRole('link', { name: 'Lista de regalos: no viene en tu plan' })).toHaveAttribute('href', `/dashboard/events/${SLUG}/plan`)
   // Lo que el plan no trae no se ofrece: ni las altas ni el formulario de la lista.
   await expect(page.getByRole('link', { name: /Añadir regalo/ })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /Añadir fondo/ })).toHaveCount(0)
@@ -84,7 +84,7 @@ test('sin mesa de regalos en el plan: sobres y transferencia sí, la lista y los
 test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {
   await seedPlanEvent(SLUG, 2)
 
-  await page.goto(`/panel/eventos/${SLUG}/plan`)
+  await page.goto(`/dashboard/events/${SLUG}/plan`)
 
   await page.getByLabel('Plan que se quiere').selectOption({ label: 'Imperial' })
   await page.getByLabel('Nota para el atelier').fill('La lista creció.')
@@ -102,6 +102,6 @@ test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {
   await expect(page.getByLabel('Plan Imperial')).toContainText('Plan actual')
 
   // El alta vive en la vista de invitados, que es propia como en la maqueta.
-  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
+  await page.goto(`/dashboard/events/${SLUG}/guests?panel=alta`)
   await expect(page.getByRole('button', { name: 'Guardar', exact: true })).toBeEnabled()
 })

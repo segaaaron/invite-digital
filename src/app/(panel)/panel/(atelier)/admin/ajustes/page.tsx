@@ -16,13 +16,13 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic'
 
 const ENTRADAS = [
-  { href: '/panel/admin/usuarios', titulo: 'Equipo', detalle: 'Quién trabaja en el atelier', Icono: UsersIcon },
-  { href: '/panel/admin/pagos', titulo: 'Cobros', detalle: 'Cuenta y QR para las transferencias', Icono: CardIcon },
-  { href: '/panel/admin/web', titulo: 'La web', detalle: 'Contacto, testimonios y textos', Icono: GlobeIcon },
-  { href: '/panel/admin/mensajes', titulo: 'Mensajes y agenda', detalle: 'Plantillas y capacidad por fin de semana', Icono: MessageIcon },
-  { href: '/panel/admin/asistente', titulo: 'Asistente Luxury', detalle: 'Planes, límites y gasto del mes', Icono: SparkIcon },
-  { href: '/panel/admin/fallos', titulo: 'Registro de fallos', detalle: 'Lo que se rompió, en palabras', Icono: ShieldIcon },
-  { href: '/panel/admin/auditoria', titulo: 'Auditoría', detalle: 'Quién cambió qué y cuándo', Icono: ClockIcon },
+  { href: '/dashboard/admin/users', titulo: 'Equipo', detalle: 'Quién trabaja en el atelier', Icono: UsersIcon },
+  { href: '/dashboard/admin/payments', titulo: 'Cobros', detalle: 'Cuenta y QR para las transferencias', Icono: CardIcon },
+  { href: '/dashboard/admin/web', titulo: 'La web', detalle: 'Contacto, testimonios y textos', Icono: GlobeIcon },
+  { href: '/dashboard/admin/messages', titulo: 'Mensajes y agenda', detalle: 'Plantillas y capacidad por fin de semana', Icono: MessageIcon },
+  { href: '/dashboard/admin/assistant', titulo: 'Asistente Luxury', detalle: 'Planes, límites y gasto del mes', Icono: SparkIcon },
+  { href: '/dashboard/admin/errors', titulo: 'Registro de fallos', detalle: 'Lo que se rompió, en palabras', Icono: ShieldIcon },
+  { href: '/dashboard/admin/audit', titulo: 'Auditoría', detalle: 'Quién cambió qué y cuándo', Icono: ClockIcon },
 ] as const
 
 /**
@@ -38,8 +38,8 @@ export default async function AjustesPage() {
   // Los de la última semana, como abre el registro.
   const fallos = await cuantosTiposDeFallo(7).catch(() => 0)
   const aviso: Record<string, string | null> = {
-    '/panel/admin/pagos': faltaCobro ? t('Faltan datos', 'Missing details') : null,
-    '/panel/admin/fallos': fallos > 0 ? (fallos === 1 ? t('1 por revisar', '1 to review') : t(`${fallos} por revisar`, `${fallos} to review`)) : null,
+    '/dashboard/admin/payments': faltaCobro ? t('Faltan datos', 'Missing details') : null,
+    '/dashboard/admin/errors': fallos > 0 ? (fallos === 1 ? t('1 por revisar', '1 to review') : t(`${fallos} por revisar`, `${fallos} to review`)) : null,
   }
   return (
     <>

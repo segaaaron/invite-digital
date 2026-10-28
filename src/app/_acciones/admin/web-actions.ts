@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { parseSiteSettings } from '@/modules/admin/domain/site-settings'
@@ -56,8 +56,8 @@ export async function saveSiteSettingsAction(_previous: SiteActionState, formDat
     return { status: 'error', message: t('No pudimos guardar. Vuelve a intentarlo en un momento.', 'We couldn’t save. Try again in a moment.') }
   }
 
-  revalidatePath('/panel/admin/web')
-  revalidatePath('/', 'layout')
+  revalidarRuta('/dashboard/admin/web')
+  revalidarRuta('/', 'layout')
   invalidarLaWeb('ajustes')
   return { status: 'success', message: t('Guardado. La web ya enseña los cambios.', 'Saved. The website now shows the changes.') }
 }
@@ -73,8 +73,8 @@ export async function restoreSiteVersionAction(_previous: SiteActionState, formD
     return { status: 'error', message: restaurado.error.kind === 'storage_failure' ? t('No pudimos restaurar. Vuelve a intentarlo.', 'We couldn’t restore. Try again.') : traducir(restaurado.error.detail, t) }
   }
 
-  revalidatePath('/panel/admin/web')
-  revalidatePath('/', 'layout')
+  revalidarRuta('/dashboard/admin/web')
+  revalidarRuta('/', 'layout')
   invalidarLaWeb('ajustes')
   return { status: 'success', message: t('Versión restaurada. La web ya la enseña.', 'Version restored. The website now shows it.') }
 }

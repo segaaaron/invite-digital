@@ -15,7 +15,7 @@ test.afterAll(async () => {
 })
 
 async function entrar(page: Page, quien: { email: string; password: string }): Promise<void> {
-  await page.goto('/panel/entrar')
+  await page.goto('/dashboard/login')
   await page.getByLabel('Correo').fill(quien.email)
   await page.getByLabel('Contraseña').fill(quien.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
@@ -43,7 +43,7 @@ test('el personal de puerta con cuenta solo ve el check-in, y el admin se lo qui
   `
 
   const gestor = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
-  await gestor.goto(`/panel/eventos/${SLUG}/configuracion`)
+  await gestor.goto(`/dashboard/events/${SLUG}/setup`)
   // En la ficha del admin (maqueta E35) el personal de puerta va dentro de «Accesos».
   const tarjeta = gestor.getByRole('region', { name: 'Accesos' })
   await expect(tarjeta.getByRole('listitem').filter({ hasText: PUERTA.email })).toBeVisible()
@@ -53,7 +53,7 @@ test('el personal de puerta con cuenta solo ve el check-in, y el admin se lo qui
   // --- Esa persona entra y cae en el check-in, no en el resumen.
   const puerta = await (await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.7' } })).newPage()
   await entrar(puerta, PUERTA)
-  await expect(puerta).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/checkin$`))
+  await expect(puerta).toHaveURL(new RegExp(`/dashboard/events/${SLUG}/check-in$`))
   await expect(puerta.getByRole('heading', { name: 'Ingreso al evento' })).toBeVisible()
 
   // Su barra tiene una sola entrada: enseñarle el resto sería enseñarle enlaces que le
@@ -63,20 +63,20 @@ test('el personal de puerta con cuenta solo ve el check-in, y el admin se lo qui
 
   // Y el resto del evento **no existe** para ella. 404, no 403.
   for (const ruta of ['', '/invitados', '/mesas', '/regalos', '/mensajes', '/configuracion', '/plan', '/planner/tareas', '/planner/presupuesto']) {
-    expect((await puerta.goto(`/panel/eventos/${SLUG}${ruta}`))?.status(), `sección ${ruta || 'resumen'}`).toBe(404)
+    expect((await puerta.goto(`/dashboard/events/${SLUG}${ruta}`))?.status(), `sección ${ruta || 'resumen'}`).toBe(404)
   }
 
   // Tampoco la administración, ni el evento de otro.
-  expect((await puerta.goto('/panel/admin'))?.status()).toBe(404)
-  expect((await puerta.goto('/panel/eventos/demo-boda/checkin'))?.status()).toBe(404)
+  expect((await puerta.goto('/dashboard/admin'))?.status()).toBe(404)
+  expect((await puerta.goto('/dashboard/events/demo-boda/check-in'))?.status()).toBe(404)
 
   // --- El admin le quita el acceso y deja de entrar.
-  await gestor.goto(`/panel/eventos/${SLUG}/configuracion`)
+  await gestor.goto(`/dashboard/events/${SLUG}/setup`)
   await tarjeta.getByRole('button', { name: 'Quitar' }).click()
   // Quitar se confirma (16 oct): el diálogo dice qué pasa y la cuenta no se borra.
   await gestor.locator('dialog[open]').getByRole('button', { name: 'Quitar el acceso' }).click()
   // Quitada, ya no está en «Accesos»: se espera a que la acción termine antes de probar su entrada.
   await expect(tarjeta.getByRole('listitem').filter({ hasText: PUERTA.email })).toHaveCount(0)
 
-  expect((await puerta.goto(`/panel/eventos/${SLUG}/checkin`))?.status()).toBe(404)
+  expect((await puerta.goto(`/dashboard/events/${SLUG}/check-in`))?.status()).toBe(404)
 })

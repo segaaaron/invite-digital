@@ -5,7 +5,7 @@ import { SeatViewToggle } from './SeatViewToggle'
 // jsdom no aplica media queries: el enlace también lee «Lista de mesas», el texto del celular.
 const MAPA = /^Vista de mapa/
 
-const base = '/panel/eventos/boda/mesas'
+const base = '/dashboard/events/boda/tables'
 
 describe('SeatViewToggle', () => {
   it('el plano es la vista de partida, como en la maqueta', () => {

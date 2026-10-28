@@ -20,7 +20,7 @@ describe('lo que dice cada aviso', () => {
       kind: 'rsvp',
       title: 'Familia Pérez confirmó 3 lugares',
       body: 'Boda de Ana y Luis',
-      href: '/panel/eventos/boda-ana/invitados',
+      href: '/dashboard/events/boda-ana/guests',
     })
     expect(avisoDeRespuesta({ ...evento, invitado: 'Ramón', lugares: 1 }).title).toBe('Ramón confirmó su asistencia')
     expect(avisoDeRespuesta({ ...evento, invitado: 'Ramón', lugares: 0 }).title).toBe('Ramón no podrá asistir')
@@ -32,7 +32,7 @@ describe('lo que dice cada aviso', () => {
     expect(aviso.title).toBe('Tía Marta te dejó un mensaje')
     expect(aviso.body.length).toBeLessThanOrEqual(140)
     expect(aviso.body.endsWith('…')).toBe(true)
-    expect(aviso.href).toBe('/panel/eventos/boda-ana/mensajes')
+    expect(aviso.href).toBe('/dashboard/events/boda-ana/messages')
   })
 
   it('la primera apertura, el regalo reservado y lo que vence mañana', () => {
@@ -40,22 +40,22 @@ describe('lo que dice cada aviso', () => {
     expect(avisoDeRegalo({ ...evento, invitado: 'Familia Pérez', regalo: 'Cafetera' })).toMatchObject({
       kind: 'regalo',
       title: 'Familia Pérez reservó «Cafetera»',
-      href: '/panel/eventos/boda-ana/regalos',
+      href: '/dashboard/events/boda-ana/gifts',
     })
-    expect(avisoDeAgenda({ ...evento, que: 'Pagar al fotógrafo', cuando: 'mañana', ruta: '/planner/presupuesto' })).toEqual({
+    expect(avisoDeAgenda({ ...evento, que: 'Pagar al fotógrafo', cuando: 'mañana', ruta: '/planner/budget' })).toEqual({
       kind: 'agenda',
       title: 'Mañana: Pagar al fotógrafo',
       body: 'Boda de Ana y Luis',
-      href: '/panel/eventos/boda-ana/planner/presupuesto',
+      href: '/dashboard/events/boda-ana/planner/budget',
     })
   })
 
   it('los del admin llevan a su pantalla', () => {
-    expect(avisoDeVenta({ titulo: 'Nueva consulta de Carla', detalle: 'Boda · 14 feb', ruta: '/panel/admin/ventas' })).toEqual({
+    expect(avisoDeVenta({ titulo: 'Nueva consulta de Carla', detalle: 'Boda · 14 feb', ruta: '/dashboard/admin/sales' })).toEqual({
       kind: 'venta',
       title: 'Nueva consulta de Carla',
       body: 'Boda · 14 feb',
-      href: '/panel/admin/ventas',
+      href: '/dashboard/admin/sales',
     })
   })
 })
@@ -64,7 +64,7 @@ describe('la notificación push', () => {
   it('lleva título, texto, a dónde abrir y una etiqueta por evento y tipo para no amontonarse', () => {
     const aviso = avisoDeRespuesta({ ...evento, invitado: 'Ramón', lugares: 1 })
     expect(cargaPush(aviso, 'e1')).toEqual({ title: 'Ramón confirmó su asistencia', body: 'Boda de Ana y Luis', url: aviso.href, tag: 'rsvp:e1' })
-    expect(cargaPush(avisoDeVenta({ titulo: 't', detalle: '', ruta: '/panel/admin' }), null).tag).toBe('venta')
+    expect(cargaPush(avisoDeVenta({ titulo: 't', detalle: '', ruta: '/dashboard/admin' }), null).tag).toBe('venta')
   })
 })
 

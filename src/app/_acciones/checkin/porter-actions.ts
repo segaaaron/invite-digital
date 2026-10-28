@@ -1,7 +1,7 @@
 'use server'
 
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { createHash } from 'node:crypto'
-import { revalidatePath } from 'next/cache'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { checkin, events, plans, porters } from '@/app/composition/container'
@@ -65,7 +65,7 @@ export async function addPorterAction(_previous: PorterActionState, formData: Fo
   const nombre = texto(formData, 'name').trim()
   const telefono = texto(formData, 'phone').trim()
 
-  revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/team`)
   return {
     status: 'created',
     nombre,
@@ -91,7 +91,7 @@ export async function removePorterAction(_previous: PorterActionState, formData:
   const quitado = await porters.revoke(eventId, texto(formData, 'porterId'))
   if (!quitado) return { status: 'error', message: t('Esa persona ya no estaba en recepción.', 'That person was no longer at reception.') }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/team`)
   return { status: 'removed' }
 }
 

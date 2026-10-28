@@ -22,7 +22,7 @@ export default async function RecuperarPage() {
   const t = await tr()
   return (
     <PuertaConFoto>
-      <Link className="flex w-fit items-center gap-2 text-[14.5px] font-medium text-gold-deep underline underline-offset-4" href="/panel/entrar">
+      <Link className="flex w-fit items-center gap-2 text-[14.5px] font-medium text-gold-deep underline underline-offset-4" href="/dashboard/login">
         <span aria-hidden>←</span> Volver a entrar
       </Link>
       <header className="flex flex-col gap-2">

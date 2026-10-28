@@ -41,7 +41,7 @@ export function RecoverForm() {
     return (
       <div className="flex flex-col gap-4" role="status">
         <p className="text-[15px] text-ink">{cambio.message}</p>
-        <Link className={`${BOTON} w-fit text-center`} href="/panel/entrar">
+        <Link className={`${BOTON} w-fit text-center`} href="/dashboard/login">
           {t('Entrar', 'Sign in')}
         </Link>
       </div>

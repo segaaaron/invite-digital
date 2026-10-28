@@ -41,8 +41,8 @@ test('abrir la invitación cuenta una visita, con su dispositivo y su camino', a
   // 3. El resumen lo enseña con su desglose (Estadísticas se unió a él); la dirección vieja lleva ahí.
   const atelier = await browser.newContext({ storageState: AUTH_STATE })
   const panel = await atelier.newPage()
-  await panel.goto(`/panel/eventos/${SLUG}/estadisticas`)
-  await expect(panel).toHaveURL(new RegExp(`/panel/eventos/${SLUG}#invitacion$`))
+  await panel.goto(`/dashboard/events/${SLUG}/stats`)
+  await expect(panel).toHaveURL(new RegExp(`/dashboard/events/${SLUG}#invitacion$`))
   // «Cómo va tu invitación» (maqueta E21) lo dice en una frase: desde qué aparato y por dónde llega.
   await expect(panel.getByText(/desde el celular \(100 %\) y les llega por Código QR/)).toBeVisible()
   await expect(panel.getByText('1 vez')).toBeVisible()

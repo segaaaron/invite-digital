@@ -24,11 +24,11 @@ test.describe('el save the date', () => {
     eventId = (await seedCliente(SLUG, CUENTA)).eventId
     ctx = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.80' } })
     page = await ctx.newPage()
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(CUENTA.email)
     await page.getByLabel('Contraseña').fill(CUENTA.password)
     await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page).toHaveURL(/\/panel\/eventos\//)
+    await expect(page).toHaveURL(/\/dashboard\/events\//)
   })
 
   test.afterAll(async () => {
@@ -39,7 +39,7 @@ test.describe('el save the date', () => {
   })
 
   test('sin el extra, se pide en Extras', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
+    await page.goto(`/dashboard/events/${SLUG}/settings`)
     await expect(page.getByRole('link', { name: 'Pedirlo en Extras' })).toBeVisible()
   })
 

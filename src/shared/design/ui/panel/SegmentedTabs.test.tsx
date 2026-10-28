@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { SegmentedTabs } from './SegmentedTabs'
 
 const SEGMENTOS = [
-  { key: 'personas', label: 'Personas', href: '/invitados', count: 27 },
+  { key: 'personas', label: 'Personas', href: '/guests', count: 27 },
   { key: 'grupos', label: 'Grupos', href: '/invitados?vista=grupos', count: 8 },
 ]
 

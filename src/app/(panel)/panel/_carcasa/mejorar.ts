@@ -11,7 +11,7 @@ import { tr } from '@/shared/i18n/idioma-servidor'
  */
 export async function mejorarPara(actor: Actor, slug: string, textoExtras?: string): Promise<Mejorar> {
   const t = await tr()
-  const base = `/panel/eventos/${slug}`
+  const base = `/dashboard/events/${slug}`
   if (isOk(await events.getFor(actor, slug, { section: 'ficha' }))) return { href: `${base}/plan`, label: t('Ver planes', 'See plans') }
   // Al anfitrión solo se le manda a Extras si hay algo a la venta: con todo apagado, Extras es una página vacía.
   if (isOk(await events.getFor(actor, slug, { section: 'equipo' })) && (await plans.listActiveExtras()).length > 0) return { href: `${base}/extras`, label: textoExtras ?? t('Ver extras', 'See extras') }

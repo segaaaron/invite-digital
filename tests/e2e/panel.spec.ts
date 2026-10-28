@@ -11,18 +11,18 @@ test.describe('sin sesión', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
   test('el panel exige sesión', async ({ page }) => {
-    await page.goto('/panel')
-    await expect(page).toHaveURL(/\/panel\/entrar$/)
+    await page.goto('/dashboard')
+    await expect(page).toHaveURL(/\/dashboard\/login$/)
   })
 
   test('una contraseña incorrecta no abre sesión', async ({ page }) => {
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(ATELIER.email)
     await page.getByLabel('Contraseña').fill('esta-no-es-la-buena')
     await page.getByRole('button', { name: 'Entrar' }).click()
     // Acotado al formulario: Next monta su propio anunciador de rutas con role="alert".
     await expect(page.locator('form').getByRole('alert')).toContainText('incorrectos')
-    await expect(page).toHaveURL(/\/panel\/entrar$/)
+    await expect(page).toHaveURL(/\/dashboard\/login$/)
   })
 })
 
@@ -40,13 +40,13 @@ test.describe('con sesión', () => {
   })
 
   test('la sesión sobrevive a la recarga', async ({ page }) => {
-    await page.goto('/panel')
+    await page.goto('/dashboard')
     await page.reload()
     await expect(page.getByRole('heading', { name: 'Eventos' })).toBeVisible()
   })
 
   test('crea un evento y lo muestra en la bandeja', async ({ page }) => {
-    await page.goto('/panel/eventos/nuevo')
+    await page.goto('/dashboard/events/new')
 
     await page.getByLabel('Título').fill('Boda e2e')
     await page.getByLabel('Enlace del evento').fill(SLUG)
@@ -57,12 +57,12 @@ test.describe('con sesión', () => {
     // Un alta hecha no se repite: el botón queda deshabilitado.
     await expect(page.getByRole('button', { name: 'Creado ✓' })).toBeDisabled()
 
-    await page.goto('/panel')
+    await page.goto('/dashboard')
     await expect(page.getByRole('link', { name: /Boda e2e/ })).toBeVisible()
   })
 
   test('rechaza una fecha límite posterior al evento', async ({ page }) => {
-    await page.goto('/panel/eventos/nuevo')
+    await page.goto('/dashboard/events/new')
 
     await page.getByLabel('Título').fill('Boda inválida')
     await page.getByLabel('Enlace del evento').fill(SLUG)
@@ -87,10 +87,10 @@ test.describe('cierre de sesión', () => {
     await page.getByRole('complementary').getByRole('button', { name: 'Cerrar sesión' }).click()
     // Pide confirmación: el botón de dentro del diálogo es el que cierra la sesión.
     await page.getByRole('dialog', { name: 'Cerrar sesión' }).getByRole('button', { name: 'Cerrar sesión' }).click()
-    await expect(page).toHaveURL(/\/panel\/entrar$/)
+    await expect(page).toHaveURL(/\/dashboard\/login$/)
 
-    await page.goto('/panel')
-    await expect(page).toHaveURL(/\/panel\/entrar$/)
+    await page.goto('/dashboard')
+    await expect(page).toHaveURL(/\/dashboard\/login$/)
   })
 })
 
@@ -110,7 +110,7 @@ test.describe('contenido de la invitación', () => {
   })
 
   test('el contenido se edita campo a campo y lo guardado sobrevive a recargar', async ({ page }) => {
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
 
     await expect(page.getByRole('heading', { name: 'Itinerario' })).toBeVisible()
 
@@ -128,7 +128,7 @@ test.describe('contenido de la invitación', () => {
   test('la vista previa enseña la invitación de esta boda, no la de muestra', async ({ page }) => {
     // El escaparate enseña el diseño con el contenido de la maqueta. Esto enseña lo que el
     // atelier acaba de escribir, sin repartir un enlace ni contar la visita de un invitado.
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
 
     const portada = await abrirSeccion(page, 'Portada y nombres')
     await portada.getByLabel('Primer nombre').fill('Zulema')
@@ -136,12 +136,12 @@ test.describe('contenido de la invitación', () => {
     await expect(portada.getByRole('status')).toContainText('Guardado')
 
     await page.getByRole('link', { name: 'Pantalla completa' }).click()
-    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/vista-previa$`))
+    await expect(page).toHaveURL(new RegExp(`/dashboard/events/${SLUG}/preview$`))
     await expect(page.getByText('Zulema').first()).toBeVisible()
 
     // Y se vuelve: en una pantalla sin carcasa, salir con el botón de atrás es adivinar.
     await page.getByRole('link', { name: 'Volver al panel' }).click()
-    await expect(page).toHaveURL(new RegExp(`/${SLUG}/configuracion$`))
+    await expect(page).toHaveURL(new RegExp(`/${SLUG}/setup$`))
   })
 
   test('la fotografía subida se guarda reducida y en webp, no tal cual llegó', async ({ page }) => {
@@ -155,7 +155,7 @@ test.describe('contenido de la invitación', () => {
 
     // Se sube desde el propio campo, en la galería, **que es donde este diseño pinta sus
     // fotografías**: «Botánica» no abre con una portada fotográfica, así que ese campo no se le pide.
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
     await expect(page.getByRole('group', { name: 'Fotografía de portada' })).toHaveCount(0)
     const galeria = await abrirSeccion(page, 'Galería')
     // Una casilla por cada foto que pinta el diseño, ya puestas.
@@ -178,7 +178,7 @@ test.describe('contenido de la invitación', () => {
     // Es el fallo que encontró el QA de la colección: el contenido se fusionaba con la
     // muestra del diseño en cada lectura, así que quitar algo no servía de nada. La
     // invitación nace vacía, así que la fila se escribe aquí antes de quitarla.
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
 
     const itinerario = await abrirSeccion(page, 'Itinerario')
     await itinerario.getByRole('button', { name: 'Añadir momento' }).click()
@@ -218,7 +218,7 @@ test.describe('invitados del evento', () => {
   })
 
   test('añade un invitado y guardar cierra el diálogo', async ({ page }) => {
-    await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
+    await page.goto(`/dashboard/events/${SLUG}/guests?panel=alta`)
 
     // El alta es el diálogo de la maqueta: un grupo nace con su primer invitado y sus
     // acompañantes, que son los cupos de más.
@@ -227,7 +227,7 @@ test.describe('invitados del evento', () => {
     await page.getByRole('button', { name: 'Guardar', exact: true }).click()
 
     // Guardar cierra el diálogo y no enseña enlace: se prepara desde «Enviar invitaciones».
-    await expect(page).toHaveURL(/invitados$/)
+    await expect(page).toHaveURL(/guests$/)
     await expect(page.locator('dialog[open]')).toHaveCount(0)
 
     // Se ve el invitado, no un grupo: la pantalla no enseña grupos.
@@ -238,7 +238,7 @@ test.describe('invitados del evento', () => {
   })
 
   test('un invitado sin nombre no se envía: el navegador lo corta', async ({ page }) => {
-    await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
+    await page.goto(`/dashboard/events/${SLUG}/guests?panel=alta`)
     await page.getByRole('button', { name: 'Guardar', exact: true }).click()
 
     // `required` corta el envío en el navegador; el dominio vuelve a rechazarlo si

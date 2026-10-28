@@ -35,7 +35,7 @@ export async function generateMetadata() {
 }
 export const dynamic = 'force-dynamic'
 
-const BASE = '/panel/admin/ventas'
+const BASE = '/dashboard/admin/sales'
 /** Filas de la lista antes de «Ver más». */
 const PAGINA = 30
 const FIESTAS: readonly { key: string; una: string; fiesta: FiestaDeVenta }[] = [
@@ -138,7 +138,7 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
         <div className={pedida === undefined ? '' : 'max-[767px]:hidden'}>
         <PanelAlert tone="error">
           {t('Faltan tus datos de cobro: quien recibe una cotización no ve a dónde pagar.', 'Your payment details are missing: whoever receives a quote won’t see where to pay.')}{' '}
-          <Link className="inline-flex min-h-11 items-center font-medium underline underline-offset-4 align-middle" href="/panel/admin/pagos">
+          <Link className="inline-flex min-h-11 items-center font-medium underline underline-offset-4 align-middle" href="/dashboard/admin/payments">
             {t('Cargarlos', 'Add them')}
           </Link>
         </PanelAlert>
@@ -341,12 +341,12 @@ async function Ficha({
           correo: v.correo === null ? null : `mailto:${v.correo}?subject=${encodeURIComponent(`${BRAND.siteName} · tu evento`)}&body=${encodeURIComponent(saludo)}`,
           recordar: plantillas === null ? null : enlaceWhatsapp(contacto, rellenar(plantillas.recordatorio, vars)),
           pedido: enlacePedido,
-          cliente: `/panel/admin/clientes?de=${encodeURIComponent(v.correo ?? v.telefono ?? v.nombre)}`,
+          cliente: `/dashboard/admin/clients?de=${encodeURIComponent(v.correo ?? v.telefono ?? v.nombre)}`,
           crearEvento:
             v.pedido !== null
-              ? `/panel/admin/eventos?crear=evento&pedido=${v.pedido.publicRef}`
+              ? `/dashboard/admin/events?crear=evento&pedido=${v.pedido.publicRef}`
               : v.consulta !== null && (v.etapa === 'nueva' || v.etapa === 'contactada')
-                ? `/panel/admin/eventos?crear=evento&consulta=${v.consulta.id}`
+                ? `/dashboard/admin/events?crear=evento&consulta=${v.consulta.id}`
                 : null,
           cotizar: cotizarHref,
         }}

@@ -27,7 +27,7 @@ test.afterAll(async () => {
 
 for (const seccion of ['', '/invitados', '/mesas', '/mesas?panel=mesa', '/regalos', '/mensajes', '/checkin', '/porteros', '/configuracion']) {
   test(`el panel de unos XV no habla de bodas · ${seccion || 'resumen'}`, async ({ page }) => {
-    await page.goto(`/panel/eventos/${SLUG}${seccion}`)
+    await page.goto(`/dashboard/events/${SLUG}${seccion}`)
     const principal = page.locator('main')
     await expect(principal).toBeVisible()
     // Solo el contenido de la sección: la barra lateral lista la administración entera.

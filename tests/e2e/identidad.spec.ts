@@ -51,21 +51,21 @@ test.describe('la contraseña provisional', () => {
    * flujo ya gasta dos.
    */
   test('el panel no se abre hasta que elige su contraseña', async ({ page }) => {
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(PROVISIONAL.email)
     await page.getByLabel('Contraseña').fill(PROVISIONAL.password)
     await page.getByRole('button', { name: 'Entrar' }).click()
 
     // Directo a su pantalla propia, fuera del panel y sin barra lateral.
-    await expect(page).toHaveURL(/\/panel\/nueva-contrasena$/)
+    await expect(page).toHaveURL(/\/dashboard\/new-password$/)
     await expect(page.getByRole('heading', { name: 'Elige tu contraseña' })).toBeVisible()
     await expect(page.getByRole('navigation')).toHaveCount(0)
 
     // Y el resto del panel devuelve aquí mismo mientras siga provisional: esto es el
     // corte de verdad, no el aviso de la pantalla. Es justo lo que estuvo roto — la
     // página se redirigía a sí misma en bucle y dejaba fuera a todo el mundo.
-    await page.goto('/panel')
-    await expect(page).toHaveURL(/\/panel\/nueva-contrasena$/)
+    await page.goto('/dashboard')
+    await expect(page).toHaveURL(/\/dashboard\/new-password$/)
 
     // La cambia.
     await page.getByLabel('Tu contraseña nueva').fill(NUEVA_PASSWORD)
@@ -73,7 +73,7 @@ test.describe('la contraseña provisional', () => {
 
     // Sin pedir la provisional otra vez y sin volver a la puerta: entra directo con la suya.
     // Margen largo: son dos argon2 (el cambio y la sesión nueva) y en el CI tardan más.
-    await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+|\/admin)?$/, { timeout: 20_000 })
+    await expect(page).toHaveURL(/\/dashboard(\/events\/[a-z0-9-]+|\/admin)?$/, { timeout: 20_000 })
     expect(await debeCambiarla()).toBe(false)
   })
 })
@@ -90,7 +90,7 @@ test.describe('recuperar la contraseña con código', () => {
 
   test('la pantalla existe y no dice si el correo tiene cuenta', async ({ page }) => {
     await seedProvisional(RECUPERA)
-    await page.goto('/panel/recuperar')
+    await page.goto('/dashboard/recover')
 
     await page.getByLabel('Tu correo').fill('no-existe-nadie-asi@invitepremium.bo')
     await page.getByRole('button', { name: /Enviarme un código/ }).click()
@@ -106,7 +106,7 @@ test.describe('recuperar la contraseña con código', () => {
     await seedCodigo('424242', RECUPERA.email)
     const antes = await hashActualDe(RECUPERA.email)
 
-    await page.goto('/panel/recuperar')
+    await page.goto('/dashboard/recover')
     await page.getByLabel('Tu correo').fill(RECUPERA.email)
     await page.getByRole('button', { name: /Enviarme un código/ }).click()
     await expect(page.getByText(/Si ese correo tiene cuenta/)).toBeVisible()
@@ -132,7 +132,7 @@ test.describe('recuperar la contraseña con código', () => {
     await seedCodigo('111111', RECUPERA.email)
     const antes = await hashActualDe(RECUPERA.email)
 
-    await page.goto('/panel/recuperar')
+    await page.goto('/dashboard/recover')
     await page.getByLabel('Tu correo').fill(RECUPERA.email)
     await page.getByRole('button', { name: /Enviarme un código/ }).click()
     await seedCodigo('111111', RECUPERA.email)

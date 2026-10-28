@@ -21,11 +21,11 @@ test.describe('las preguntas al confirmar', () => {
     token = (await seedCliente(SLUG, CUENTA)).token
     ctx = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.77' } })
     page = await ctx.newPage()
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(CUENTA.email)
     await page.getByLabel('Contraseña').fill(CUENTA.password)
     await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page).toHaveURL(/\/panel\/eventos\//)
+    await expect(page).toHaveURL(/\/dashboard\/events\//)
   })
 
   test.afterAll(async () => {
@@ -35,7 +35,7 @@ test.describe('las preguntas al confirmar', () => {
   })
 
   test('el anfitrión elige qué preguntar', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
+    await page.goto(`/dashboard/events/${SLUG}/settings`)
     await page.getByLabel('Pedir una canción que no puede faltar').check()
     await page.getByLabel(/Menús para elegir/).fill('Carne\nPollo')
     await page.getByLabel(/Actos/).fill('Iglesia\nFiesta')
@@ -60,7 +60,7 @@ test.describe('las preguntas al confirmar', () => {
   })
 
   test('el resumen cuenta lo que contestaron', async () => {
-    await page.goto(`/panel/eventos/${SLUG}`)
+    await page.goto(`/dashboard/events/${SLUG}`)
     const tarjeta = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Lo que contestaron' }) })
     await expect(tarjeta.getByText('Pollo · 1')).toBeVisible()
     await expect(tarjeta.getByText('Iglesia · 1')).toBeVisible()

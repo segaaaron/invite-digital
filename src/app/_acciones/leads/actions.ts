@@ -38,7 +38,7 @@ export async function submitConsultationAction(
     avisarAlAdmin({
       asunto: `Nueva consulta de ${nombre}`,
       lineas: [`${nombre} escribió desde el formulario de la web. Quien contesta primero se queda la venta.`],
-      ruta: '/panel/admin/ventas',
+      ruta: '/dashboard/admin/sales',
     })
   }
   return resultado

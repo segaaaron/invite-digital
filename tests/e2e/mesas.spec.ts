@@ -20,7 +20,7 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   // El alta es el diálogo de la maqueta, que abre «+ Añadir mesa». Se entra por la barra
   // de direcciones para no depender de un clic previo.
   const crearMesa = async (nombre: string, cupo: string) => {
-    await page.goto(`/panel/eventos/${SLUG}/mesas?panel=mesa`)
+    await page.goto(`/dashboard/events/${SLUG}/tables?panel=mesa`)
     await page.getByLabel('Nombre de la mesa').fill(nombre)
     await page.getByLabel('Capacidad (asientos)').fill(cupo)
     await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
@@ -51,12 +51,12 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   await expect(page.getByRole('region', { name: 'Invitados sin mesa' })).toBeHidden()
 
   // El plan del banquete lo lleva impreso.
-  await page.goto(`/panel/eventos/${SLUG}/mesas/imprimir`)
+  await page.goto(`/dashboard/events/${SLUG}/tables/print`)
   await expect(page.getByRole('heading', { name: 'Mesa 01' })).toBeVisible()
   await expect(page.getByText('Familia Rojas Peña')).toBeVisible()
 
   // Y la puerta canta el número al escanear el pase.
-  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await page.goto(`/dashboard/events/${SLUG}/door`)
   // Esperar a que la puerta esté montada antes de teclear: el escucha de teclado que
   // atiende al lector de códigos lo engancha React al hidratar, y teclear antes se
   // pierde en el vacío. Sin esta espera la prueba falla de forma reproducible.
@@ -74,7 +74,7 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
 test('el plano no guarda hasta que se pulsa Guardar', async ({ page }) => {
   await seedVenueEvent(`${SLUG}-plano`)
 
-  await page.goto(`/panel/eventos/${SLUG}-plano/mesas?panel=mesa`)
+  await page.goto(`/dashboard/events/${SLUG}-plano/tables?panel=mesa`)
   await page.getByLabel('Nombre de la mesa').fill('Mesa 01')
   await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
   await expect(page.locator('dialog[open]')).toHaveCount(0)

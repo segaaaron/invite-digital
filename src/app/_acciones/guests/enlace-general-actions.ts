@@ -1,7 +1,7 @@
 'use server'
 
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { headers } from 'next/headers'
-import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { acceptsResponses } from '@/modules/events'
 import { events, guests, plans } from '@/app/composition/container'
@@ -33,7 +33,7 @@ export async function crearEnlaceGeneralAction(_previo: EnlaceGeneralState, form
   const eventSlug = campo(formData, 'eventSlug')
   const eventId = await requireEventAccess(actor, { eventId: campo(formData, 'eventId'), eventSlug, section: 'cliente' })
   const token = await guests.general.crear(eventId)
-  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/guests`)
   return { status: 'success', message: (await tr())('Enlace general listo. Si ya habías compartido uno, ese dejó de abrir.', 'General link ready. If you had shared one before, it stopped opening.'), url: urlGeneral(token) }
 }
 
@@ -42,7 +42,7 @@ export async function quitarEnlaceGeneralAction(_previo: EnlaceGeneralState, for
   const eventSlug = campo(formData, 'eventSlug')
   const eventId = await requireEventAccess(actor, { eventId: campo(formData, 'eventId'), eventSlug, section: 'cliente' })
   await guests.general.quitar(eventId)
-  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/guests`)
   return { status: 'success', message: (await tr())('Enlace general quitado: ya no abre. Las invitaciones que salieron de él siguen.', 'General link removed: it no longer opens. Invitations created from it remain.') }
 }
 

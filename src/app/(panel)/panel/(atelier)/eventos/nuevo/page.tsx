@@ -10,7 +10,7 @@ export default async function NewEventPage() {
   const actor = await requireSession()
   if (!puedeCrearEventos(actor)) notFound()
   // El admin crea desde «Crear › Evento para un cliente»: un solo camino, con el cliente y el plan (16 oct).
-  if (isAdmin(actor)) redirect('/panel/admin/eventos?crear=evento')
+  if (isAdmin(actor)) redirect('/dashboard/admin/events?crear=evento')
   const t = await tr()
 
   return (

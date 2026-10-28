@@ -60,7 +60,7 @@ export default async function AsistentePage() {
               {t('No pudimos leer los planes. La base no responde; vuelve a intentarlo en un momento.', 'We could not read the plans. The database is not responding; try again in a moment.')}
             </p>
           ) : (
-            <AjustesDelAsistente config={config} urlDeSiri={`${env.SITE_URL.replace(/\/$/, '')}/panel/luxury/siri`} planes={planes.value.filter((p) => p.isActive).map((p) => ({ slug: p.slug, nombre: p.es?.name ?? p.slug }))} />
+            <AjustesDelAsistente config={config} urlDeSiri={`${env.SITE_URL.replace(/\/$/, '')}/dashboard/luxury/siri`} planes={planes.value.filter((p) => p.isActive).map((p) => ({ slug: p.slug, nombre: p.es?.name ?? p.slug }))} />
           )}
         </section>
       </div>

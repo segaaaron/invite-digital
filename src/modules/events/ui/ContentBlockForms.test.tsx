@@ -276,9 +276,9 @@ describe('ContentBlockForms', () => {
   // Con cronograma del día, los momentos no se escriben dos veces.
   it('con cronograma, el itinerario lleva al cronograma en vez de pedir los momentos', () => {
     render(
-      <ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" itinerarioDesde="/panel/eventos/b/planner/cronograma" media={SIN_IMAGENES} sections={['itinerary']} />,
+      <ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" itinerarioDesde="/dashboard/events/b/planner/schedule" media={SIN_IMAGENES} sections={['itinerary']} />,
     )
-    expect(screen.getByRole('link', { name: 'Ir al cronograma', hidden: true })).toHaveAttribute('href', '/panel/eventos/b/planner/cronograma')
+    expect(screen.getByRole('link', { name: 'Ir al cronograma', hidden: true })).toHaveAttribute('href', '/dashboard/events/b/planner/schedule')
     expect(screen.queryByRole('button', { name: /Añadir momento/, hidden: true })).toBeNull()
   })
 

@@ -97,7 +97,7 @@ export default async function AdminPage() {
             : d.entregaHasta === null
               ? t('En diseño.', 'In design.')
               : `${atrasado ? t('Atrasado: era para el', 'Late: it was due') : t('Se entrega el', 'Due')} ${diaDelEvento(d.entregaHasta, locale)}.`,
-        href: `/panel/eventos/${d.slug}/configuracion#diseno`,
+        href: `/dashboard/events/${d.slug}/setup#diseno`,
         accion: t('Ver', 'View'),
         desde: 0,
       }
@@ -201,7 +201,7 @@ export default async function AdminPage() {
                 const pct = tally ? (tally.expectedHeads === 0 ? 0 : Math.round((tally.headsInside / tally.expectedHeads) * 100)) : e.personas === 0 ? 0 : Math.round((e.personasRespondieron / e.personas) * 100)
                 return (
                   <li className={i === 0 ? '' : 'border-t border-line-panel'} key={e.slug}>
-                    <Link className="flex items-center gap-4.5 py-4.5 text-ink no-underline" href={`/panel/admin/eventos?evento=${e.slug}`}>
+                    <Link className="flex items-center gap-4.5 py-4.5 text-ink no-underline" href={`/dashboard/admin/events?evento=${e.slug}`}>
                       <span className="w-[54px] shrink-0 text-center">
                         <span className="block font-display text-[38px] leading-[0.95] font-medium">{formatoDia(locale).format(new Date(`${e.eventDate}T00:00:00Z`))}</span>
                         <span className="text-[12.5px] text-ink-mute">{e.dias === 0 ? t('hoy', 'today') : formatoSemana(locale).format(new Date(`${e.eventDate}T00:00:00Z`)).replace('.', '')}</span>
@@ -217,20 +217,20 @@ export default async function AdminPage() {
                       </span>
                     </Link>
                     {/* El día de la fiesta, cada ingreso repinta el recuento sin recargar. */}
-                    {tally === undefined ? null : <EnVivo modo="auto" oculto tipos={['ingreso']} url={`/panel/admin/en-vivo/${e.slug}`} />}
+                    {tally === undefined ? null : <EnVivo modo="auto" oculto tipos={['ingreso']} url={`/dashboard/admin/live/${e.slug}`} />}
                   </li>
                 )
               })}
             </ol>
           )}
-          <Link className="mt-1 inline-flex min-h-11 items-center text-[14px]" href="/panel/admin/eventos/calendario">
+          <Link className="mt-1 inline-flex min-h-11 items-center text-[14px]" href="/dashboard/admin/events/calendar">
             {t('Ver el calendario', 'See the calendar')}
           </Link>
         </section>
       </div>
 
       {/* En el celular, el mes en una tarjeta esmeralda (maqueta M01). */}
-      <Link className="block rounded-[16px] bg-shell-deep bg-[radial-gradient(140%_80%_at_0%_0%,var(--color-shell)_0%,var(--color-shell-deep)_65%)] p-5.5 text-shell-ink no-underline min-[768px]:hidden" href="/panel/admin/ingresos">
+      <Link className="block rounded-[16px] bg-shell-deep bg-[radial-gradient(140%_80%_at_0%_0%,var(--color-shell)_0%,var(--color-shell-deep)_65%)] p-5.5 text-shell-ink no-underline min-[768px]:hidden" href="/dashboard/admin/revenue">
         <span className="block text-[14px] text-gold-light">{t('Cobrado en', 'Collected in')} {nombreDelMes}</span>
         <span className="mt-1 block font-display text-[38px] leading-tight font-medium">{cobrado === null ? '—' : bs(cobrado)}</span>
         <span className="block text-[14px] text-shell-ink/85">
@@ -245,7 +245,7 @@ export default async function AdminPage() {
           <h2 className="flex-[0_0_140px] font-display text-[24px] font-medium capitalize" id="mes">
             {nombreDelMes}
           </h2>
-          <Link className="flex-[1_1_180px] border-l border-line-panel pl-7 text-ink no-underline" href="/panel/admin/ingresos">
+          <Link className="flex-[1_1_180px] border-l border-line-panel pl-7 text-ink no-underline" href="/dashboard/admin/revenue">
             <span className="block text-[13.5px] text-ink-mute">{t('Cobrado', 'Collected')}</span>
             <span className="block font-display text-[34px] leading-[1.15] font-medium">{cobrado === null ? '—' : bs(cobrado)}</span>
             <span className={`block text-[13px] ${cambio !== null && cambio >= 0 ? 'text-pill-ok-ink' : 'text-ink-mute'}`}>

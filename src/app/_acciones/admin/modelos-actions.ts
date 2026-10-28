@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { MAX_AUDIO_UPLOAD_BYTES } from '@/shared/audio/audio'
@@ -51,9 +51,9 @@ export async function uploadShowcaseMusicAction(
   }
 
   refrescar()
-  revalidatePath('/panel/admin/modelos')
+  revalidarRuta('/dashboard/admin/designs')
   // Sin esto el modelo seguiría mudo hasta que caducara la caché de su página.
-  revalidatePath('/modelos', 'layout')
+  revalidarRuta('/modelos', 'layout')
   invalidarLaWeb('modelos')
   return { status: 'success', message: t('Ese modelo ya suena en la web.', 'That design now plays on the website.') }
 }
@@ -72,8 +72,8 @@ export async function renameShowcaseSongAction(_previous: AdminActionState, form
     return { status: 'error', message: result.error.kind === 'storage_failure' ? t('No pudimos guardar el nombre.', 'We couldn’t save the name.') : traducir(result.error.detail, t) }
   }
 
-  revalidatePath('/panel/admin/modelos')
-  revalidatePath('/modelos', 'layout')
+  revalidarRuta('/dashboard/admin/designs')
+  revalidarRuta('/modelos', 'layout')
   invalidarLaWeb('modelos')
   return { status: 'success', message: t('Nombre guardado. El reproductor del modelo ya lo dice.', 'Name saved. The design’s player now shows it.') }
 }
@@ -93,8 +93,8 @@ export async function removeShowcaseMusicAction(
   }
 
   refrescar()
-  revalidatePath('/panel/admin/modelos')
-  revalidatePath('/modelos', 'layout')
+  revalidarRuta('/dashboard/admin/designs')
+  revalidarRuta('/modelos', 'layout')
   invalidarLaWeb('modelos')
   return { status: 'success', message: t('Ese modelo se quedó sin música.', 'That design no longer has music.') }
 }
@@ -111,7 +111,7 @@ export async function setTemplatePublishedAction(_previous: AdminActionState, fo
     return { status: 'error', message: hecho.error.kind === 'storage_failure' ? t('No pudimos cambiarlo. Vuelve a intentarlo.', 'We couldn’t change it. Try again.') : traducir(hecho.error.detail, t) }
   }
 
-  revalidatePath('/panel/admin/modelos')
+  revalidarRuta('/dashboard/admin/designs')
   invalidarLaWeb('catalogo')
   return { status: 'success', message: publicar ? t('Publicado en la web.', 'Published on the website.') : t('Retirado de la web.', 'Removed from the website.') }
 }

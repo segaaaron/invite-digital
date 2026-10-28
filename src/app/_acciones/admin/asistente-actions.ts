@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin, asistente } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { validarConfig } from '@/modules/asistente'
@@ -28,6 +28,6 @@ export async function guardarAsistenteAction(_previo: AsistenteState, formData: 
     return { status: 'error', message: t('No pudimos guardar. Vuelve a intentarlo en un momento.', 'We couldn’t save. Try again in a moment.') }
   }
   await admin.record(actor, { action: 'asistente.ajustes', subject: 'asistente', detail: `${config.planes.join(', ') || 'ningún plan'} · ${config.mensajesPorMes} mensajes · ${config.presupuestoUsd} USD` })
-  revalidatePath('/panel/admin/asistente')
+  revalidarRuta('/dashboard/admin/assistant')
   return { status: 'success', message: t('Guardado.', 'Saved.') }
 }

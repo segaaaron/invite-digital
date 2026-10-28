@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin, events, plans } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { leerEstilo } from '@/modules/events/domain/estilo'
@@ -37,6 +37,6 @@ export async function guardarEstiloAction(_previo: EstiloState, formData: FormDa
 
   await events.estilo.guardar(eventId, estilo)
   if (isAdmin(actor)) await admin.record(actor, { action: 'evento.invitacion', subject: eventSlug, detail: 'estilo' })
-  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/setup`)
   return { status: 'success', message: t('Estilo guardado. Mira cómo queda a la derecha.', 'Style saved. See how it looks on the right.') }
 }

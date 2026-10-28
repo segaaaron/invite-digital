@@ -59,7 +59,7 @@ const LUGARES: readonly (readonly [RegExp, Par])[] = [
   [/^catalog\//, ['Catálogo', 'Catalog']],
   [/^shared\/audio/, ['Música (procesado)', 'Music (processing)']],
   [/^shared\/db/, ['Base de datos', 'Database']],
-  [/\/panel/, ['Panel', 'Panel']],
+  [/\/dashboard/, ['Panel', 'Panel']],
   [/locale|sitemap|^composition\/web|^(route|page):\//, ['Web pública', 'Public website']],
 ]
 

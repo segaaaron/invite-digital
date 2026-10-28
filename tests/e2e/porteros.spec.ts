@@ -39,7 +39,7 @@ test.afterAll(async () => {
 })
 
 async function sumarPortero(gestor: import('@playwright/test').Page, slug: string, nombre: string) {
-  await gestor.goto(`/panel/eventos/${slug}/equipo`)
+  await gestor.goto(`/dashboard/events/${slug}/team`)
   await gestor.getByLabel('Nombre').fill(nombre)
   await gestor.getByRole('button', { name: 'Sumar a recepción' }).click()
   const aviso = gestor.getByRole('status').filter({ hasText: 'ya puede entrar' })
@@ -80,8 +80,8 @@ test('un portero entra con su PIN, registra una llegada, no sale de la puerta y 
   await portero.getByRole('button', { name: 'Cerrar' }).click()
 
   // No sale de la puerta: el panel le pide iniciar sesión.
-  await portero.goto(`/panel/eventos/${HOY}/invitados`)
-  await expect(portero).toHaveURL(/\/panel\/entrar/)
+  await portero.goto(`/dashboard/events/${HOY}/guests`)
+  await expect(portero).toHaveURL(/\/dashboard\/login/)
 
   // El anfitrión ve quién registró la llegada.
   await gestor.reload()
@@ -133,7 +133,7 @@ test('fuera del día del evento el acceso no abre, ni con el PIN correcto', asyn
 
 test('un plan sin puerta no ofrece porteros', async ({ browser }) => {
   const gestor = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
-  await gestor.goto(`/panel/eventos/${SIN_PUERTA}/equipo`)
+  await gestor.goto(`/dashboard/events/${SIN_PUERTA}/team`)
   await expect(gestor.getByText(/no incluye pases con QR ni personal de recepción/)).toBeVisible()
   await expect(gestor.getByRole('button', { name: 'Sumar a recepción' })).toHaveCount(0)
 })

@@ -31,9 +31,9 @@ export const sessionCookieOptions = (expiresAt: Date) =>
  */
 /** Adonde se manda a quien todavía usa la contraseña que le escribió otro. */
 /** Pantalla propia, fuera del panel: con la provisional no se entra a ninguna otra. */
-const CAMBIAR_CONTRASENA = '/panel/nueva-contrasena'
+const CAMBIAR_CONTRASENA = '/dashboard/new-password'
 /** La cuenta de quien entró. En modo soporte no se toca, y tampoco la pantalla de arriba. */
-const CUENTA = '/panel/cuenta'
+const CUENTA = '/dashboard/account'
 
 /**
  * **Una vez por petición** (`cache` de React): la carcasa y la página la piden las dos, y cada
@@ -43,7 +43,7 @@ const CUENTA = '/panel/cuenta'
 export const requireSession = cache(leerSesion)
 
 /** La ruta del Atajo de Siri: la **única** donde la sesión puede llegar como `Authorization: Bearer` (la llave). */
-export const RUTA_DE_SIRI = '/panel/luxury/siri'
+export const RUTA_DE_SIRI = '/dashboard/luxury/siri'
 
 /** La llave de Siri del encabezado, solo en su ruta: en cualquier otra, la sesión es la cookie y nada más. */
 export const llaveDelEncabezado = (ruta: string, autorizacion: string | null): string | null =>
@@ -56,12 +56,12 @@ async function leerSesion(): Promise<Actor> {
   const token = jar.get(SESSION_COOKIE)?.value ?? llaveDelEncabezado(ruta, cabeceras.get('authorization'))
   const result = await identity.authenticateSession(token)
 
-  if (isErr(result)) redirect('/panel/entrar')
+  if (isErr(result)) redirect('/dashboard/login')
 
   const fila = await identity.actorOf(result.value.userId)
   // Sesión válida cuyo usuario ya no existe: lo borró el admin mientras miraba. Vuelve a
   // la puerta en vez de seguir con un actor a medias.
-  if (fila === null) redirect('/panel/entrar')
+  if (fila === null) redirect('/dashboard/login')
   const usuario = aActor(fila)
 
   // Modo soporte: el admin actúa como el cliente. Solo se consulta si la sesión lo tiene.
@@ -164,7 +164,7 @@ export const soloParaMirar = (actor: Actor, eventDate: string, ahora = new Date(
 
 /** La pantalla desde la que se pulsó (sin `?panel=…`: el diálogo se cierra), o el resumen del evento. */
 async function pantallaDeVuelta(slug: string): Promise<string> {
-  const base = `/panel/eventos/${slug}`
+  const base = `/dashboard/events/${slug}`
   const desde = (await headers()).get('referer')
   if (desde === null) return base
   try {

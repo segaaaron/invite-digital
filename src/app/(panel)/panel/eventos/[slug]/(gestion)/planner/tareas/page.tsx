@@ -86,7 +86,7 @@ export default async function TareasPage({
     cronograma: momentos.length > 0,
     recepcion: recepcion.length > 0,
   }
-  const base = `/panel/eventos/${event.value.slug}/planner/tareas`
+  const base = `/dashboard/events/${event.value.slug}/planner/tasks`
   // Una tarea no lleva a una sección que el plan no trae: el atajo se quita y la tarea queda.
   const capacidad = await plans.allowanceFor(eventId)
   const fuera = new Set(isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value))
@@ -94,7 +94,7 @@ export default async function TareasPage({
     const atajo = atajoDeTarea(titulo)
     return atajo === null || fuera.has(atajo.ruta) ? null : atajo
   }
-  const raiz = `/panel/eventos/${event.value.slug}`
+  const raiz = `/dashboard/events/${event.value.slug}`
   // La tarea resuelta en su pantalla cuenta como hecha también para el avance y los filtros.
   const conApp = todas.map((t) => (t.doneAt === null && resueltaEnLaApp(t.title, ya) ? { ...t, doneAt: new Date(0), doneBy: null } : t))
   const vista = (t: (typeof conApp)[number]): TareaVista => {

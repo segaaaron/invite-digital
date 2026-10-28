@@ -58,11 +58,11 @@ export async function enterAsClientAction(input: { eventId: string; clientUserId
   }
 
   const sessionId = await sesionActual()
-  if (sessionId === null) return { status: 'ok', href: '/panel/entrar' }
+  if (sessionId === null) return { status: 'ok', href: '/dashboard/login' }
 
   await identity.support.open({ sessionId, adminUserId: actor.userId, adminEmail: actor.email, clientUserId: input.clientUserId, eventId: evento.value.id, reason: 'Entrada del admin' })
   await admin.record(actor, { action: 'soporte.entrada', subject: evento.value.slug, detail: `como ${como}` })
-  return { status: 'ok', href: `/panel/eventos/${evento.value.slug}` }
+  return { status: 'ok', href: `/dashboard/events/${evento.value.slug}` }
 }
 
 /** Como quién actuó el admin: el correo del cliente, o el anfitrión de un evento sin cliente. */
@@ -78,7 +78,7 @@ export async function leaveSupportAction(): Promise<Navegar> {
 
   const elAdmin: Actor = { userId: actor.soporte.adminUserId, email: actor.soporte.adminEmail, role: 'admin', mustChangePassword: false }
   await admin.record(elAdmin, { action: 'soporte.salida', subject: null, detail: `como ${comoQuien(actor)}` })
-  return { status: 'ok', href: '/panel/admin/eventos' }
+  return { status: 'ok', href: '/dashboard/admin/events' }
 }
 
 /**

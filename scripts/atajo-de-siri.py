@@ -5,7 +5,7 @@ El Atajo de Siri «Luxury» (8 de octubre), generado y firmado en una Mac:
     python3 scripts/atajo-de-siri.py https://luxuryatelier.net public/siri/Luxury.shortcut
 
 Cuatro acciones: la llave (se pregunta al instalarlo), Dictar texto, Obtener contenido de URL (POST a
-/panel/luxury/siri con `Authorization: Bearer <llave>` y JSON `texto`) y Leer texto. Se firma con
+/dashboard/luxury/siri con `Authorization: Bearer <llave>` y JSON `texto`) y Leer texto. Se firma con
 `shortcuts sign --mode anyone` (hace falta macOS con sesión de iCloud): sin firma, iOS no lo importa.
 """
 import plistlib
@@ -44,7 +44,7 @@ acciones = [
         'WFWorkflowActionIdentifier': 'is.workflow.actions.downloadurl',
         'WFWorkflowActionParameters': {
             'UUID': RESPUESTA,
-            'WFURL': f'{sitio}/panel/luxury/siri',
+            'WFURL': f'{sitio}/dashboard/luxury/siri',
             'WFHTTPMethod': 'POST',
             'ShowHeaders': True,
             'WFHTTPHeaders': diccionario([('Authorization', texto(f'Bearer {HUECO}', {'{7, 1}': salida_de(LLAVE, 'Texto')}))]),

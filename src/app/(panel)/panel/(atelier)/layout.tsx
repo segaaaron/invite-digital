@@ -53,7 +53,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
   // Un cliente con varios eventos elige cuál organizar: fuera de un evento su barra es solo «Tu cuenta» (E32).
   const variosEventos = actor.role === 'cliente' && listed !== null && !isErr(listed) && listed.value.length > 1
   const sections = variosEventos
-    ? [{ label: t('Tu cuenta', 'Your account'), items: [{ href: '/panel', label: t('Mis eventos', 'My events'), icon: 'eventos' as const }, { href: '/panel/cuenta', label: t('Mi cuenta', 'My account'), icon: 'equipo' as const }] }]
+    ? [{ label: t('Tu cuenta', 'Your account'), items: [{ href: '/dashboard', label: t('Mis eventos', 'My events'), icon: 'eventos' as const }, { href: '/dashboard/account', label: t('Mi cuenta', 'My account'), icon: 'equipo' as const }] }]
     : panelNav(activo?.slug ?? null, {
     pedidos: insignias.pedidos,
     consultas: insignias.consultas,

@@ -51,8 +51,8 @@ export default async function MesaDelPlannerPage() {
   const proximos = filas.filter((f) => f.evento.eventDate >= hoy)
   const pasados = filas.filter((f) => f.evento.eventDate < hoy)
   const vencen = filas.flatMap((f) => [
-    ...f.tareas.map(({ t: tarea, estado }) => ({ clave: `t-${tarea.id}`, evento: f.evento, texto: tarea.title, tipo: t('Tarea', 'Task'), vence: tarea.dueDate!, atrasada: estado === 'atrasada', href: `/panel/eventos/${f.evento.slug}/planner/tareas` })),
-    ...f.pagos.map((g) => ({ clave: `g-${g.id}`, evento: f.evento, texto: `${g.concepto} · ${formatAmount(g.amountCents, DEFAULT_CURRENCY)}`, tipo: t('Pago', 'Payment'), vence: g.dueDate!, atrasada: g.dueDate! < hoy, href: `/panel/eventos/${f.evento.slug}/planner/presupuesto` })),
+    ...f.tareas.map(({ t: tarea, estado }) => ({ clave: `t-${tarea.id}`, evento: f.evento, texto: tarea.title, tipo: t('Tarea', 'Task'), vence: tarea.dueDate!, atrasada: estado === 'atrasada', href: `/dashboard/events/${f.evento.slug}/planner/tasks` })),
+    ...f.pagos.map((g) => ({ clave: `g-${g.id}`, evento: f.evento, texto: `${g.concepto} · ${formatAmount(g.amountCents, DEFAULT_CURRENCY)}`, tipo: t('Pago', 'Payment'), vence: g.dueDate!, atrasada: g.dueDate! < hoy, href: `/dashboard/events/${f.evento.slug}/planner/budget` })),
   ]).sort((a, b) => (a.vence < b.vence ? -1 : 1))
 
   return (
@@ -66,7 +66,7 @@ export default async function MesaDelPlannerPage() {
               const faltan = diasEntre(hoy, f.evento.eventDate)
               return (
                 <li className="border-b border-line-panel last:border-none" key={f.evento.id}>
-                  <Link className="flex items-center justify-between gap-3 py-3 hover:text-ink" href={`/panel/eventos/${f.evento.slug}`}>
+                  <Link className="flex items-center justify-between gap-3 py-3 hover:text-ink" href={`/dashboard/events/${f.evento.slug}`}>
                     <span className="flex min-w-0 flex-col">
                       <span className="truncate text-[14px] text-ink">{f.evento.title}</span>
                       <span className="text-[12px] text-ink-mute">

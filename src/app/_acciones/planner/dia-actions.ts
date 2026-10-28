@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { events, planner, plans } from '@/app/composition/container'
 import { fiestaDeTema } from '@/modules/events'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
@@ -48,7 +48,7 @@ async function fiestaDe(actor: Awaited<ReturnType<typeof requireSession>>, event
 async function responder(resultado: PlannerResult, eventSlug: string, fd?: FormData): Promise<DiaActionState> {
   const t = await tr()
   if (!resultado.ok) return { status: 'error', message: traducir(resultado.mensaje, t), ...(fd ? { valores: valoresDe(fd) } : {}) }
-  revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
+  revalidarRuta(`/dashboard/events/${eventSlug}`, 'layout')
   return { status: 'success' }
 }
 
@@ -118,7 +118,7 @@ export async function emitVendorLinkAction(_previo: DiaActionState, fd: FormData
   if (corte) return corte
   const emitido = await planner.dia.emitVendorLink(eventId, campo(fd, 'vendorId'))
   if (!emitido.ok) return { status: 'error', message: traducir(emitido.mensaje, t) }
-  revalidatePath(`/panel/eventos/${eventSlug}/planner/proveedores`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/planner/vendors`)
   return { status: 'success', enlace: `${env.SITE_URL.replace(/\/+$/, '')}/v/${emitido.token}` }
 }
 

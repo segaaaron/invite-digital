@@ -30,7 +30,7 @@ export type CatalogEntry = {
    * Si la web lo vende. **Por defecto sí**; `false` lo deja registrado y portado pero
    * **retirado del escaparate**: el seed lo inserta sin publicar, así que no sale en el
    * catálogo, ni en la página de su fiesta, ni en el mapa del sitio. El admin lo asigna a
-   * un evento desde el panel y lo publica cuando quiera desde `/panel/admin/modelos`, y
+   * un evento desde el panel y lo publica cuando quiera desde `/dashboard/admin/designs`, y
    * el seed no lo vuelve a retirar —`isPublished` no se toca al actualizar—.
    */
   readonly publicar?: boolean

@@ -24,7 +24,7 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic'
 
 const alta = (locale: Locale) => new Intl.DateTimeFormat(INTL[locale], { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/La_Paz' })
-const BASE = '/panel/admin/usuarios'
+const BASE = '/dashboard/admin/users'
 
 /**
  * **El equipo**: quien trabaja en el panel —administradores y ateliers—. Los clientes ya no salen
@@ -108,7 +108,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
       {clientes === 0 ? null : (
         <p className="mt-4 text-[13.5px] text-ink-mute">
           {plural(clientes, t('cuenta de cliente vive', 'client account lives'), t('cuentas de cliente viven', 'client accounts live'))} {t('en', 'in')}{' '}
-          <Link className="text-ink underline underline-offset-4" href="/panel/admin/clientes">
+          <Link className="text-ink underline underline-offset-4" href="/dashboard/admin/clients">
             {t('Clientes', 'Clients')}
           </Link>
           {t(', junto a su evento.', ', next to their event.')}

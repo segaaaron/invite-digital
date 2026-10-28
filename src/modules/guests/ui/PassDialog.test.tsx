@@ -5,7 +5,7 @@ import { PassDialog } from './PassDialog'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }))
 
 const props = {
-  closeHref: '/panel/eventos/boda/invitados',
+  closeHref: '/dashboard/events/boda/guests',
   eventTitle: 'Marcia & Ricardo',
   eventMeta: '18 de octubre de 2026',
   venue: 'Hacienda Los Álamos',

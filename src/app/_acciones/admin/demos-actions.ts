@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { redirect } from 'next/navigation'
 import { admin, events, guests, plans } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
@@ -137,13 +137,13 @@ export async function crearDemoAction(_previo: DemoActionState, formData: FormDa
   // ya, o el admin lee «bórrala» y no encuentra qué borrar hasta que recargue a mano.
   if (isErr(invitado)) {
     registrarFallo('admin/demos-actions', 'no se pudo crear el invitado de la demo', invitado.error.kind, invitado.error.detail)
-    revalidatePath('/panel/admin/demos')
+    revalidarRuta('/dashboard/admin/demos')
     return { status: 'error', message: t('La demo quedó creada, pero sin invitación. Bórrala en la lista y vuelve a crearla.', 'The demo was created but without an invitation. Delete it from the list and create it again.') }
   }
 
   const enlace = await enlaceDeLaDemo(evento.value.id)
   if (enlace.estado !== 'listo') {
-    revalidatePath('/panel/admin/demos')
+    revalidarRuta('/dashboard/admin/demos')
     return {
       status: 'error',
       message:
@@ -153,14 +153,14 @@ export async function crearDemoAction(_previo: DemoActionState, formData: FormDa
     }
   }
 
-  revalidatePath('/panel/admin/demos')
+  revalidarRuta('/dashboard/admin/demos')
   /**
    * **Y directo a escribirla.** Una pantalla intermedia con el enlace dejaba la edición escondida detrás de
    * un segundo botón, y lo primero que se hace con una demo es ponerle los nombres y la música del cliente
    * (20 oct, el usuario la buscó cuatro veces y no la encontró). El enlace no se pierde: está en su fila de
    * Demos, con WhatsApp y correo, cuando ya tenga algo que mandar.
    */
-  redirect(`/panel/eventos/${evento.value.slug}/configuracion?vista=invitacion`)
+  redirect(`/dashboard/events/${evento.value.slug}/setup?vista=invitacion`)
 }
 
 
@@ -201,6 +201,6 @@ export async function borrarDemoAction(_previo: DemoActionState, formData: FormD
     return { status: 'error', message: t('No pudimos borrar la demo. Inténtalo en un momento.', 'We couldn’t delete the demo. Try again in a moment.') }
   }
 
-  revalidatePath('/panel/admin/demos')
+  revalidarRuta('/dashboard/admin/demos')
   return { status: 'success', message: t('Demo borrada.', 'Demo deleted.') }
 }

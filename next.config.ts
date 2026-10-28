@@ -108,7 +108,12 @@ const nextConfig: NextConfig = {
         // evento con clics tenía el micrófono prohibido, y Chrome contestaba «denegado» sin preguntar; el
         // escáner, al que se llega con `router.push` desde Ingreso, tenía la cámara prohibida; y el del portero
         // (`/p/<token>/puerta`) no la tuvo nunca. Chrome sigue pidiendo permiso a la persona.
-        source: '/panel/:path*',
+        //
+        // **Va en inglés** (27 de octubre): esto se compara con la dirección **que pide el navegador**, no con
+        // la carpeta a la que el proxy la reescribe. Al pasar el panel a `/dashboard/...` dejó de casar y todo
+        // el panel se quedó con la política de arriba —`microphone=()`—, así que Luxury contestaba «permite el
+        // micrófono» y Chrome ni preguntaba. `/panel/...` ya solo devuelve un 308, no documentos.
+        source: '/dashboard/:path*',
         headers: [{ key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' }],
       },
       {

@@ -15,5 +15,5 @@ export default async function ConsultasRedirige({ searchParams }: { searchParams
   const etapa = estado === undefined ? undefined : ETAPA[estado]
   if (etapa !== undefined) params.set('etapa', etapa)
   if (id !== undefined) params.set('consulta', id)
-  permanentRedirect(`/panel/admin/ventas?${params.toString()}`)
+  permanentRedirect(`/dashboard/admin/sales?${params.toString()}`)
 }

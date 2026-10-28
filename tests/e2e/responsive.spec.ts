@@ -159,7 +159,7 @@ for (const tamano of ANCHOS) {
 
     for (const [nombre, ruta] of VISTAS) {
       // `load`, no `networkidle`: la campana y las novedades en vivo dejan su conexión abierta (ver abajo).
-      await page.goto(`/panel/eventos/${SLUG}${ruta}`)
+      await page.goto(`/dashboard/events/${SLUG}${ruta}`)
       await page.waitForLoadState('load')
 
       const fuera = await page.evaluate(cortados)
@@ -181,7 +181,7 @@ for (const tamano of ANCHOS) {
  * Las vistas del atelier que no cuelgan de un evento. Van aparte porque no llevan `slug`
  * en la ruta, no porque importen menos.
  */
-const VISTAS_ATELIER = [['ayuda', '/panel/ayuda']] as const
+const VISTAS_ATELIER = [['ayuda', '/dashboard/help']] as const
 
 /** Las del administrador, que necesitan su propia sesión: a un atelier le dan 404. */
 const VISTAS_ADMIN = [
@@ -189,32 +189,32 @@ const VISTAS_ADMIN = [
   // cliente y un evento: es del admin, y a un atelier le responde 404. La vista sigue
   // siendo la que más estira el documento —referencias en monoespaciada y el nombre del
   // fichero que subió el cliente—, así que se mide igual, solo que con la sesión correcta.
-  ['pedidos', '/panel/pedidos'],
-  ['admin · hoy', '/panel/admin'],
-  ['admin · consultas', '/panel/admin/consultas'],
+  ['pedidos', '/dashboard/orders'],
+  ['admin · hoy', '/dashboard/admin'],
+  ['admin · consultas', '/dashboard/admin/inquiries'],
   // El tablero de seis etapas: en el teléfono se apilan; en escritorio se desplaza dentro de sí.
-  ['admin · ventas', '/panel/admin/ventas'],
-  ['admin · clientes', '/panel/admin/clientes'],
-  ['admin · eventos', '/panel/admin/eventos'],
+  ['admin · ventas', '/dashboard/admin/sales'],
+  ['admin · clientes', '/dashboard/admin/clients'],
+  ['admin · eventos', '/dashboard/admin/events'],
   // El alta abierta: cinco campos en dos columnas que en un teléfono tienen que apilarse.
-  ['admin · eventos · alta', '/panel/admin/eventos?crear=evento'],
-  ['admin · calendario', '/panel/admin/eventos/calendario'],
-  ['admin · ventas', '/panel/admin/ventas'],
-  ['admin · ventas · lista', '/panel/admin/ventas?vista=lista'],
-  ['admin · ventas · cotizador', '/panel/admin/ventas?crear=cotizacion'],
-  ['admin · clientes', '/panel/admin/clientes'],
-  ['admin · mensajes y agenda', '/panel/admin/mensajes'],
-  ['admin · ingresos', '/panel/admin/ingresos'],
-  ['admin · planes', '/panel/admin/planes'],
-  ['admin · extras', '/panel/admin/extras'],
-  ['admin · modelos', '/panel/admin/modelos'],
-  ['admin · la web', '/panel/admin/web'],
-  ['admin · usuarios', '/panel/admin/usuarios'],
+  ['admin · eventos · alta', '/dashboard/admin/events?crear=evento'],
+  ['admin · calendario', '/dashboard/admin/events/calendar'],
+  ['admin · ventas', '/dashboard/admin/sales'],
+  ['admin · ventas · lista', '/dashboard/admin/sales?vista=lista'],
+  ['admin · ventas · cotizador', '/dashboard/admin/sales?crear=cotizacion'],
+  ['admin · clientes', '/dashboard/admin/clients'],
+  ['admin · mensajes y agenda', '/dashboard/admin/messages'],
+  ['admin · ingresos', '/dashboard/admin/revenue'],
+  ['admin · planes', '/dashboard/admin/plans'],
+  ['admin · extras', '/dashboard/admin/extras'],
+  ['admin · modelos', '/dashboard/admin/designs'],
+  ['admin · la web', '/dashboard/admin/web'],
+  ['admin · usuarios', '/dashboard/admin/users'],
   // El alta abierta: el rol en tarjetas, que en un teléfono se apilan.
-  ['admin · usuarios · alta', '/panel/admin/usuarios?crear=persona'],
-  ['admin · mi cuenta', '/panel/cuenta'],
-  ['admin · cobros', '/panel/admin/pagos'],
-  ['admin · auditoría', '/panel/admin/auditoria'],
+  ['admin · usuarios · alta', '/dashboard/admin/users?crear=persona'],
+  ['admin · mi cuenta', '/dashboard/account'],
+  ['admin · cobros', '/dashboard/admin/payments'],
+  ['admin · auditoría', '/dashboard/admin/audit'],
 ] as const
 
 /**
@@ -228,7 +228,7 @@ test('la puerta del panel no desborda en ningún ancho', async ({ browser }) => 
 
   for (const tamano of ANCHOS) {
     await page.setViewportSize({ width: tamano.width, height: tamano.height })
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.waitForLoadState('networkidle')
 
     const fuera = await page.evaluate(cortados)

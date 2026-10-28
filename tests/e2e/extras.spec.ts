@@ -25,7 +25,7 @@ test('el admin pone a la venta +3 porteros, el evento lo pide y al aprobarse pue
 
   // 1. El admin lo pone a la venta.
   const admin = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
-  await admin.goto('/panel/admin/extras')
+  await admin.goto('/dashboard/admin/extras')
   // La tabla de la maqueta: cada extra se edita desde su «Editar».
   await admin.getByRole('button', { name: 'Editar +3 porteros' }).click()
   const extra = admin.getByRole('form', { name: 'Extra +3 porteros' })
@@ -35,7 +35,7 @@ test('el admin pone a la venta +3 porteros, el evento lo pide y al aprobarse pue
 
   // 2. Quien lleva el evento lo pide y se queda en el panel, con el diálogo para pagar (E71).
   const atelier = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
-  await atelier.goto(`/panel/eventos/${SLUG}/extras`)
+  await atelier.goto(`/dashboard/events/${SLUG}/extras`)
   await atelier.getByRole('button', { name: 'Pedir +3 porteros' }).click()
   await expect(atelier).toHaveURL(/\/extras\?pedido=[A-Z0-9]{8}$/, { timeout: 60_000 })
   const ref = atelier.url().split('=').pop()!
@@ -44,7 +44,7 @@ test('el admin pone a la venta +3 porteros, el evento lo pide y al aprobarse pue
 
   // 3. Con el comprobante subido, el admin aprueba sin pedir acceso de cliente.
   await sql`update orders set status = 'proof_submitted' where public_ref = ${ref}`
-  await admin.goto(`/panel/admin/ventas?venta=p-${ref}`)
+  await admin.goto(`/dashboard/admin/sales?venta=p-${ref}`)
   const tarjeta = admin.locator('section[aria-labelledby="ficha-de-venta"]')
   // Un extra no crea evento: no pide el correo del cliente.
   await expect(tarjeta.getByLabel(/Correo del cliente/)).toHaveCount(0)
@@ -57,7 +57,7 @@ test('el admin pone a la venta +3 porteros, el evento lo pide y al aprobarse pue
     .toBe(1)
 
   // 4. El evento, con el plan Atelier, ahora admite tres porteros.
-  await atelier.goto(`/panel/eventos/${SLUG}/equipo`)
+  await atelier.goto(`/dashboard/events/${SLUG}/team`)
   await expect(atelier.getByText('0 de 3')).toBeVisible({ timeout: 15_000 })
 })
 
@@ -68,16 +68,16 @@ test('el Día D solo se ofrece sobre Gala, y pedirlo dos veces lleva al mismo pe
   const atelier = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
 
   // Atelier no lo ve: le regalaría proveedores, cronograma y cortejo.
-  await atelier.goto(`/panel/eventos/${SLUG_ATELIER}/extras`)
+  await atelier.goto(`/dashboard/events/${SLUG_ATELIER}/extras`)
   await expect(atelier.getByRole('heading', { name: 'Extras' })).toBeVisible()
   await expect(atelier.getByRole('button', { name: /^Pedir Día D/ })).toHaveCount(0)
 
   // Gala sí; ya pedido, la tarjeta dice que espera el pago y la barra lleva al mismo pedido (maqueta E41).
-  await atelier.goto(`/panel/eventos/${SLUG_FIRMA}/extras`)
+  await atelier.goto(`/dashboard/events/${SLUG_FIRMA}/extras`)
   await atelier.getByRole('button', { name: /^Pedir Día D/ }).click()
   await expect(atelier).toHaveURL(/\/extras\?pedido=[A-Z0-9]{8}$/, { timeout: 60_000 })
   const primero = atelier.url().split('=').pop()!
-  await atelier.goto(`/panel/eventos/${SLUG_FIRMA}/extras`)
+  await atelier.goto(`/dashboard/events/${SLUG_FIRMA}/extras`)
   await expect(atelier.getByRole('button', { name: /^Pedir Día D/ })).toHaveCount(0)
   await expect(atelier.getByRole('region', { name: `Pedido ${primero}` }).getByRole('link', { name: 'Subir comprobante' })).toHaveAttribute('href', `?pedido=${primero}`)
   const [fila] = await sql<{ n: number }[]>`select count(*)::int as n from orders o join events e on e.id = o.event_id where e.slug = ${SLUG_FIRMA} and o.addon_slug = 'dia-d'`

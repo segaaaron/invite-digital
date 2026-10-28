@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { redirect } from 'next/navigation'
 import { planner } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
@@ -39,7 +39,7 @@ export async function saveCitaAction(_previo: AgendaActionState, fd: FormData): 
     notes: campo(fd, 'notes'),
   })
   if (!resultado.ok) return { status: 'error', message: traducir(resultado.mensaje, t), valores: valoresDe(fd) }
-  revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
+  revalidarRuta(`/dashboard/events/${eventSlug}`, 'layout')
   return { status: 'success' }
 }
 
@@ -51,7 +51,7 @@ export async function removeCitaAction(_previo: AgendaActionState, fd: FormData)
   await requireEventAccess(actor, { eventId, eventSlug, section: 'planner' })
   const resultado = await planner.dia.removeCita(eventId, campo(fd, 'citaId'))
   if (!resultado.ok) return { status: 'error', message: traducir(resultado.mensaje, t) }
-  revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
+  revalidarRuta(`/dashboard/events/${eventSlug}`, 'layout')
   return { status: 'success' }
 }
 
@@ -87,11 +87,11 @@ export async function marcarEnLaAgendaAction(_previo: AgendaActionState, fd: For
   const resultado =
     clase === 'tarea' ? await planner.marcarTarea(eventId, id, hecha, actor.email) : clase === 'pago' ? await planner.setPaymentPaid(eventId, id, hecha) : { ok: false as const, mensaje: t('Esto no se marca desde la agenda.', 'This isn’t checked off from the calendar.') }
   if (!resultado.ok) return { status: 'error', message: traducir(resultado.mensaje, t) }
-  revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
+  revalidarRuta(`/dashboard/events/${eventSlug}`, 'layout')
   // Navega la acción, no el botón: la fila marcada sale de «Atrasado» y su botón se desmonta antes de poder
   // navegar. Solo dentro de la agenda de este evento: `despues` llega del navegador.
   const despues = campo(fd, 'despues')
-  if (despues.startsWith(`/panel/eventos/${eventSlug}/planner/agenda?`)) redirect(despues)
+  if (despues.startsWith(`/dashboard/events/${eventSlug}/planner/agenda?`)) redirect(despues)
   return { status: 'success' }
 }
 
@@ -108,6 +108,6 @@ export async function reprogramarEnLaAgendaAction(_previo: AgendaActionState, fd
   const resultado =
     clase === 'tarea' ? await planner.reprogramarTarea(eventId, id, dia) : clase === 'pago' ? await planner.reprogramarPago(eventId, id, dia) : { ok: false as const, mensaje: t('Esto se cambia en su pantalla.', 'This is changed on its own screen.') }
   if (!resultado.ok) return { status: 'error', message: traducir(resultado.mensaje, t), valores: valoresDe(fd) }
-  revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
+  revalidarRuta(`/dashboard/events/${eventSlug}`, 'layout')
   return { status: 'success' }
 }

@@ -115,7 +115,7 @@ export function Cotizador({
             <Copiar texto={estado.enlace}>{t('Copiar el enlace', 'Copy the link')}</Copiar>
           </div>
         </div>
-        <Link className="text-[13px] text-ink underline underline-offset-4" href={`/panel/admin/ventas?venta=p-${estado.ref}`} scroll={false}>
+        <Link className="text-[13px] text-ink underline underline-offset-4" href={`/dashboard/admin/sales?venta=p-${estado.ref}`} scroll={false}>
           {t('Ver la venta', 'See the sale')}
         </Link>
       </div>
@@ -252,7 +252,7 @@ export function Cotizador({
         // El aviso junto al botón de enviar, no solo arriba en Ventas (16 oct).
         <PanelAlert tone="error">
           {t('Faltan tus datos de cobro: quien la reciba no verá a dónde pagar.', 'Your payment details are missing: whoever receives it won’t see where to pay.')}{' '}
-          <Link className="inline-flex min-h-11 items-center font-medium underline underline-offset-4" href="/panel/admin/pagos">
+          <Link className="inline-flex min-h-11 items-center font-medium underline underline-offset-4" href="/dashboard/admin/payments">
             {t('Cargarlos', 'Add them')}
           </Link>
         </PanelAlert>

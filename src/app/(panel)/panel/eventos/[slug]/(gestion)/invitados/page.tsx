@@ -131,7 +131,7 @@ export default async function InvitadosPage({
   const limite = isErr(capacidad) ? null : capacidad.value.maxGuestGroups
 
   const enlaceGeneral = await guests.general.leer(event.value.id)
-  const base = `/panel/eventos/${event.value.slug}/invitados`
+  const base = `/dashboard/events/${event.value.slug}/guests`
   // El enlace de cada invitación, guardado cifrado: el envío y el pase lo vuelven a enseñar.
   const [enlaces, codigos] = await Promise.all([guests.enlaces(event.value.id), guests.codigos(event.value.id)])
   const enlaceDe = (groupId: string) => {
@@ -220,7 +220,7 @@ export default async function InvitadosPage({
           {t('Añadir', 'Add')}
         </Link>
       </AccionDeLaIsla>
-      <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
+      <EnVivo modo="aviso" tipos={['rsvp']} url={`/dashboard/events/${event.value.slug}/live`} />
 
       {/* «+ Añadir invitado» abre el diálogo de la maqueta, con sus nueve campos. */}
       {abierto === 'alta' ? (

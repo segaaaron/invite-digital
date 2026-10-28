@@ -60,7 +60,7 @@ describe('enterAsClientAction', () => {
 
   it('sin motivo: abre en su sesión, lo deja en la auditoría y devuelve el evento (navega el navegador, no `redirect`)', async () => {
     const { enterAsClientAction } = await import('@/app/_acciones/admin/support-actions')
-    expect(await enterAsClientAction({ eventId: 'e1', clientUserId: 'c1' })).toEqual({ status: 'ok', href: '/panel/eventos/boda-ana' })
+    expect(await enterAsClientAction({ eventId: 'e1', clientUserId: 'c1' })).toEqual({ status: 'ok', href: '/dashboard/events/boda-ana' })
     expect(open).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 'ses1', adminUserId: 'a1', clientUserId: 'c1', eventId: 'e1' }))
     expect(record).toHaveBeenCalledWith(expect.objectContaining({ userId: 'a1' }), { action: 'soporte.entrada', subject: 'boda-ana', detail: 'como novios@x.bo' })
     expect(redirect).not.toHaveBeenCalled()
@@ -78,7 +78,7 @@ describe('leaveSupportAction', () => {
   it('en modo soporte, cierra, registra como el admin y vuelve a la cartera', async () => {
     requireSession.mockResolvedValue({ userId: 'c1', email: 'novios@x.bo', role: 'cliente', mustChangePassword: false, soporte: { id: 'sp1', adminUserId: 'a1', adminEmail: 'admin@x.bo' } })
     const { leaveSupportAction } = await import('@/app/_acciones/admin/support-actions')
-    expect(await leaveSupportAction()).toEqual({ status: 'ok', href: '/panel/admin/eventos' })
+    expect(await leaveSupportAction()).toEqual({ status: 'ok', href: '/dashboard/admin/events' })
     expect(close).toHaveBeenCalledWith('ses1', expect.any(Date))
     expect(record).toHaveBeenCalledWith(expect.objectContaining({ userId: 'a1', role: 'admin' }), expect.objectContaining({ action: 'soporte.salida' }))
   })

@@ -25,7 +25,7 @@ test.afterAll(async () => {
 })
 
 test('un proveedor con precio nace con su partida, entra al cronograma y ve su parte con su enlace', async ({ page, browser }) => {
-  await page.goto(`/panel/eventos/${SLUG}/planner/proveedores?panel=proveedor`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/vendors?panel=proveedor`)
   await page.getByLabel('Servicio').fill('DJ')
   await page.getByLabel('Empresa').fill('Beat')
   await page.getByLabel('Precio (Bs) · crea su partida').fill('3500')
@@ -41,7 +41,7 @@ test('un proveedor con precio nace con su partida, entra al cronograma y ve su p
   expect(partida).toEqual({ concept: 'DJ · Beat', contracted: 3_500_00 })
 
   // El cronograma empieza vacío: el momento se suma a mano, en su modal, con el DJ y su canción.
-  await page.goto(`/panel/eventos/${SLUG}/planner/cronograma?momento=nuevo`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/schedule?momento=nuevo`)
   const modal = page.getByRole('dialog', { name: 'Añadir un momento' })
   await modal.getByLabel('Hora', { exact: true }).selectOption('20:00')
   await modal.getByLabel('Momento').fill('Vals con el papá')
@@ -55,7 +55,7 @@ test('un proveedor con precio nace con su partida, entra al cronograma y ve su p
   await expect(vals).toContainText('En la invitación')
 
   // Su enlace, una vez.
-  await page.goto(`/panel/eventos/${SLUG}/planner/proveedores`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/vendors`)
   const tarjeta = page.getByRole('listitem', { name: 'DJ' })
   await tarjeta.getByText('Compartirle su ficha del día').click()
   await tarjeta.getByRole('button', { name: 'Crear el enlace de DJ' }).click()
@@ -73,7 +73,7 @@ test('un proveedor con precio nace con su partida, entra al cronograma y ve su p
 })
 
 test('el cortejo de XV suma un chambelán con su talla y un ensayo del vals', async ({ page }) => {
-  await page.goto(`/panel/eventos/${SLUG}/planner/cortejo?panel=miembro`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/procession?panel=miembro`)
   await expect(page.getByLabel('Papel').first().locator('option')).toHaveText(['Padrino', 'Chambelán', 'Corte de honor'])
   await page.getByLabel('Papel').first().selectOption('chambelan')
   await page.getByLabel('Nombre').first().fill('Diego Rojas')
@@ -82,7 +82,7 @@ test('el cortejo de XV suma un chambelán con su talla y un ensayo del vals', as
   const diego = page.getByRole('listitem', { name: 'Diego Rojas' })
   await expect(diego).toContainText('talla M', { timeout: 15_000 })
 
-  await page.goto(`/panel/eventos/${SLUG}/planner/cortejo?panel=ensayo`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/procession?panel=ensayo`)
   await elegirFecha(page, 'Fecha y hora', '2027-04-10')
   await page.getByLabel('Hora', { exact: true }).last().selectOption('19:00')
   await page.getByRole('checkbox', { name: 'Diego Rojas' }).check()
@@ -94,14 +94,14 @@ test('el cortejo de XV suma un chambelán con su talla y un ensayo del vals', as
 })
 
 test('el Día D dice quién falta por llegar y marca al DJ', async ({ page }) => {
-  await page.goto(`/panel/eventos/${SLUG}/dia-d`)
+  await page.goto(`/dashboard/events/${SLUG}/event-day`)
   await expect(page.getByRole('heading', { name: 'Día D' })).toBeVisible()
   await page.getByRole('button', { name: 'Llegó DJ' }).click()
   await expect(page.getByText('Llegaron todos.')).toBeVisible({ timeout: 15_000 })
 })
 
 test('un contrato en PDF se guarda privado y se descarga como adjunto, nunca en línea', async ({ page, browser }) => {
-  await page.goto(`/panel/eventos/${SLUG}/planner/documentos`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/documents`)
   // Se suelta en la tarjeta del proveedor —o se toca para elegir— y sube solo, sin formulario.
   await page.getByRole('region', { name: 'Subir un documento' }).locator('input[type=file]').setInputFiles({ name: 'contrato-dj.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\n%contrato del DJ\n') })
   const enlace = page.getByRole('link', { name: 'contrato-dj.pdf' })
@@ -121,6 +121,6 @@ test('un contrato en PDF se guarda privado y se descarga como adjunto, nunca en 
 
 test('con el plan Atelier, proveedores dice qué plan los trae y el servidor no guarda', async ({ page }) => {
   await seedInvitation({ slug: 'planner-dia-atelier-e2e', plan: 'atelier' })
-  await page.goto('/panel/eventos/planner-dia-atelier-e2e/planner/proveedores')
+  await page.goto('/dashboard/events/planner-dia-atelier-e2e/planner/vendors')
   await expect(page.getByText('Los proveedores, el cronograma y el cortejo vienen con Gala e Imperial.')).toBeVisible()
 })

@@ -15,7 +15,7 @@ test('con contraseña, la invitación no enseña nada hasta escribirla', async (
   // 1. El atelier la protege.
   const atelier = await browser.newContext({ storageState: AUTH_STATE })
   const panel = await atelier.newPage()
-  await panel.goto(`/panel/eventos/${SLUG}/configuracion`)
+  await panel.goto(`/dashboard/events/${SLUG}/setup`)
   await panel.getByRole('radio', { name: /protegida con contraseña/i }).check()
   await panel.getByLabel(/contraseña de acceso/i).fill('lasflores2027')
   await panel.getByRole('button', { name: 'Guardar privacidad' }).click()

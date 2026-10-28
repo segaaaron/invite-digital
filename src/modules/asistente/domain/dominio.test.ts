@@ -96,7 +96,7 @@ describe('reglas', () => {
     expect(r.indexOf('CONTEXTO (datos')).toBeGreaterThan(r.indexOf('EJEMPLOS'))
     // Lo fijo no cambia de un evento a otro: es lo que OpenAI cobra en caché.
     expect(r.slice(0, r.indexOf('CONTEXTO (datos'))).not.toContain('boda-ana')
-    expect(r).toContain('/panel/eventos/boda-ana/')
+    expect(r).toContain('/dashboard/events/boda-ana/')
   })
 
   it('responde en el idioma del aparato, y si la persona escribe en otro, en el suyo; lo fijo no cambia', () => {
@@ -229,7 +229,7 @@ describe('registrar invitados por voz (9 oct)', () => {
 describe('ir a una pantalla (9 oct: «no me lleva a invitados»)', () => {
   it('solo pantallas que existen', () => {
     expect(interpretarLlamada('ir_a', '{"pantalla":"invitados"}')).toMatchObject({ ok: true })
-    expect(interpretarLlamada('ir_a', '{"pantalla":"/panel/admin"}')).toMatchObject({ ok: false })
+    expect(interpretarLlamada('ir_a', '{"pantalla":"/dashboard/admin"}')).toMatchObject({ ok: false })
   })
 })
 

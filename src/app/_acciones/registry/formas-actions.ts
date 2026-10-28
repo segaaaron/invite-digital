@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { plans, registry } from '@/app/composition/container'
 import { hayFormas } from '@/modules/registry'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
@@ -66,6 +66,6 @@ export async function guardarFormasDeRegalarAction(_previo: FormasState, formDat
     }
   }
 
-  revalidatePath(`/panel/eventos/${texto(formData, 'eventSlug')}/regalos`)
+  revalidarRuta(`/dashboard/events/${texto(formData, 'eventSlug')}/gifts`)
   return { status: 'success', message: t('Guardado. Ya lo ven tus invitados en la invitación.', 'Saved. Your guests can now see it on the invitation.') }
 }

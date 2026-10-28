@@ -1,7 +1,7 @@
 import { act, fireEvent, render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-let ruta = '/panel/admin'
+let ruta = '/dashboard/admin'
 vi.mock('next/navigation', () => ({ usePathname: () => ruta, useSearchParams: () => new URLSearchParams() }))
 const { BarraDeCarga } = await import('./BarraDeCarga')
 
@@ -16,23 +16,23 @@ const enlace = (href: string, extra: Record<string, string> = {}) => {
 }
 
 beforeEach(() => {
-  ruta = '/panel/admin'
-  window.history.replaceState(null, '', '/panel/admin')
+  ruta = '/dashboard/admin'
+  window.history.replaceState(null, '', '/dashboard/admin')
   document.body.innerHTML = ''
 })
 
 describe('BarraDeCarga', () => {
   it('aparece al pulsar un enlace interno y se va al llegar; volver atrás no la cuelga', () => {
     const { container, rerender } = render(<BarraDeCarga />)
-    fireEvent.click(enlace('/panel/admin/ventas'))
+    fireEvent.click(enlace('/dashboard/admin/sales'))
     expect(container.querySelector('.barra-de-carga')).not.toBeNull()
 
-    ruta = '/panel/admin/ventas'
+    ruta = '/dashboard/admin/sales'
     window.history.replaceState(null, '', ruta)
     rerender(<BarraDeCarga />)
     expect(container.querySelector('.barra-de-carga')).toBeNull()
 
-    ruta = '/panel/admin'
+    ruta = '/dashboard/admin'
     window.history.replaceState(null, '', ruta)
     act(() => rerender(<BarraDeCarga />))
     expect(container.querySelector('.barra-de-carga')).toBeNull()
@@ -40,10 +40,10 @@ describe('BarraDeCarga', () => {
 
   it('no aparece para la misma página, otra pestaña, un sitio externo o con ⌘', () => {
     const { container } = render(<BarraDeCarga />)
-    fireEvent.click(enlace('/panel/admin#algo'))
-    fireEvent.click(enlace('/panel/admin/ventas', { target: '_blank' }))
+    fireEvent.click(enlace('/dashboard/admin#algo'))
+    fireEvent.click(enlace('/dashboard/admin/sales', { target: '_blank' }))
     fireEvent.click(enlace('https://otro.bo/x'))
-    fireEvent.click(enlace('/panel/admin/ventas'), { metaKey: true })
+    fireEvent.click(enlace('/dashboard/admin/sales'), { metaKey: true })
     expect(container.querySelector('.barra-de-carga')).toBeNull()
   })
 })

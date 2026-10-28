@@ -24,7 +24,7 @@ describe('SignInForm', () => {
 
     expect(screen.getByRole('link', { name: /olvidaste tu contraseña/i })).toHaveAttribute(
       'href',
-      '/panel/recuperar',
+      '/dashboard/recover',
     )
   })
 })

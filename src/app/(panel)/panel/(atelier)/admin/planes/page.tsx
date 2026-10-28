@@ -59,7 +59,7 @@ export default async function AdminPlanesPage({ searchParams }: { searchParams: 
                     <a
                       aria-current={activo ? 'true' : undefined}
                       className={`flex min-w-0 flex-[1_1_220px] flex-col rounded-[16px] bg-bg-raised p-5.5 text-ink no-underline transition-colors ${activo ? 'border-[1.5px] border-shell-deep' : 'border border-line-panel hover:border-gold'} ${plan.isActive ? '' : 'opacity-60'}`}
-                      href={`/panel/admin/planes?plan=${plan.slug}`}
+                      href={`/dashboard/admin/plans?plan=${plan.slug}`}
                       key={plan.slug}
                     >
                       <span className="flex items-center justify-between gap-2">

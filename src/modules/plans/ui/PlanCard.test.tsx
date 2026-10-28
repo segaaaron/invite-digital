@@ -47,16 +47,16 @@ describe('PlanCard', () => {
   })
 
   it('el plan actual no ofrece nada que pulsar', () => {
-    render(<PlanCard name="Firma 3D" changeHref="/panel/eventos/boda/plan?plan=atelier" current plan={atelier} />)
+    render(<PlanCard name="Firma 3D" changeHref="/dashboard/events/boda/plan?plan=atelier" current plan={atelier} />)
 
     expect(screen.queryByRole('link', { name: /cambiar a/i })).not.toBeInTheDocument()
   })
 
   it('los demás llevan a pedir el cambio, con su plan ya elegido', () => {
-    render(<PlanCard name="Firma 3D" changeHref="/panel/eventos/boda/plan?plan=atelier" current={false} plan={atelier} />)
+    render(<PlanCard name="Firma 3D" changeHref="/dashboard/events/boda/plan?plan=atelier" current={false} plan={atelier} />)
 
     expect(screen.getByRole('link', { name: /cambiar a/i }).getAttribute('href')).toBe(
-      '/panel/eventos/boda/plan?plan=atelier',
+      '/dashboard/events/boda/plan?plan=atelier',
     )
   })
 

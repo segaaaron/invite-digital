@@ -3,7 +3,7 @@ import robots from './robots'
 
 it('bloquea el panel y las páginas con token', () => {
   const [rule] = robots().rules as Array<{ disallow: string[] }>
-  expect(rule?.disallow).toEqual(expect.arrayContaining(['/panel', '/i/', '/compartir/', '/api', '/p/', '/v/']))
+  expect(rule?.disallow).toEqual(expect.arrayContaining(['/dashboard', '/i/', '/compartir/', '/api', '/p/', '/v/']))
 })
 
 it('deja leer la invitación a quien arma la vista previa del enlace en WhatsApp', () => {
@@ -12,5 +12,5 @@ it('deja leer la invitación a quien arma la vista previa del enlace en WhatsApp
   expect(vistaPrevia?.userAgent).toEqual(expect.arrayContaining(['WhatsApp', 'facebookexternalhit']))
   expect(vistaPrevia?.allow).toContain('/i/')
   expect(vistaPrevia?.disallow).not.toContain('/i/')
-  expect(vistaPrevia?.disallow).toContain('/panel')
+  expect(vistaPrevia?.disallow).toContain('/dashboard')
 })

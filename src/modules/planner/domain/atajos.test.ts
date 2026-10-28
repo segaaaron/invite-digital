@@ -16,13 +16,13 @@ const nada: LoQueYaHay = {
 describe('atajoDeTarea', () => {
   // Una tarea que dice «Contratar DJ» y no lleva a ninguna parte obliga a buscar dónde se hace.
   it('cada tarea de la plantilla lleva a la pantalla donde se resuelve', () => {
-    expect(atajoDeTarea('Contratar DJ')).toEqual({ ruta: '/planner/proveedores', texto: 'Ir a Proveedores' })
-    expect(atajoDeTarea('Definir el presupuesto y quién aporta')?.ruta).toBe('/planner/presupuesto')
-    expect(atajoDeTarea('Terminar la invitación')?.ruta).toBe('/configuracion')
-    expect(atajoDeTarea('Repartir las invitaciones')?.ruta).toBe('/invitados')
-    expect(atajoDeTarea('Elegir a los chambelanes y la corte de honor')?.ruta).toBe('/planner/cortejo')
-    expect(atajoDeTarea('Horarios con los proveedores')?.ruta).toBe('/planner/cronograma')
-    expect(atajoDeTarea('Sumar al personal de recepción y mandarle su acceso')?.ruta).toBe('/equipo')
+    expect(atajoDeTarea('Contratar DJ')).toEqual({ ruta: '/planner/vendors', texto: 'Ir a Proveedores' })
+    expect(atajoDeTarea('Definir el presupuesto y quién aporta')?.ruta).toBe('/planner/budget')
+    expect(atajoDeTarea('Terminar la invitación')?.ruta).toBe('/setup')
+    expect(atajoDeTarea('Repartir las invitaciones')?.ruta).toBe('/guests')
+    expect(atajoDeTarea('Elegir a los chambelanes y la corte de honor')?.ruta).toBe('/planner/procession')
+    expect(atajoDeTarea('Horarios con los proveedores')?.ruta).toBe('/planner/schedule')
+    expect(atajoDeTarea('Sumar al personal de recepción y mandarle su acceso')?.ruta).toBe('/team')
     expect(atajoDeTarea('Comprar las ligas')).toBeNull()
   })
 })

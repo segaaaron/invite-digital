@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin, plans } from '@/app/composition/container'
 import { leerExtra } from '@/modules/plans'
 import { requireAdmin } from '@/app/_acciones/sesion'
@@ -85,7 +85,7 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
     return { status: 'error', message: traducir(guardado.error.detail, t), valores }
   }
 
-  revalidatePath('/panel/admin/planes')
+  revalidarRuta('/dashboard/admin/plans')
   refrescar()
   invalidarLaWeb('catalogo')
   return { status: 'success', message: t('Plan guardado. La web ya enseña los cambios.', 'Plan saved. The website now shows the changes.') }
@@ -109,7 +109,7 @@ export async function saveExtraAction(_previous: AdminActionState, formData: For
   if (!(await plans.updateExtra(slug, leido.valor))) return { status: 'error', message: t('Ese extra ya no existe.', 'That extra no longer exists.'), valores }
 
   await admin.record(actor, { action: 'extra.editado', subject: slug, detail: `${leido.valor.name} · ${leido.valor.priceCents / 100} · ${leido.valor.isActive ? 'a la venta' : 'apagado'}` })
-  revalidatePath('/panel/admin/extras')
+  revalidarRuta('/dashboard/admin/extras')
   refrescar()
   invalidarLaWeb('extras')
   return { status: 'success', message: t('Extra guardado.', 'Extra saved.') }

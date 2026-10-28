@@ -76,15 +76,15 @@ describe('EmptyState', () => {
 
 describe('LoadMoreLink', () => {
   it('dice cuántos quedan en su nombre accesible y no se pinta si no queda nada', () => {
-    const { rerender } = render(<LoadMoreLink href="/panel/pedidos?n=40" noun="pedidos" remaining={5} />)
+    const { rerender } = render(<LoadMoreLink href="/dashboard/orders?n=40" noun="pedidos" remaining={5} />)
     const enlace = screen.getByRole('link', { name: 'Ver 5 pedidos más' })
-    expect(enlace).toHaveAttribute('href', '/panel/pedidos?n=40')
-    rerender(<LoadMoreLink href="/panel/pedidos?n=40" noun="pedidos" remaining={0} />)
+    expect(enlace).toHaveAttribute('href', '/dashboard/orders?n=40')
+    rerender(<LoadMoreLink href="/dashboard/orders?n=40" noun="pedidos" remaining={0} />)
     expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('sin total conocido, dice «Ver más»', () => {
-    render(<LoadMoreLink href="/panel/pedidos?n=40" noun="pedidos" />)
+    render(<LoadMoreLink href="/dashboard/orders?n=40" noun="pedidos" />)
     expect(screen.getByRole('link', { name: 'Ver más pedidos' })).toBeInTheDocument()
   })
 })
@@ -115,7 +115,7 @@ describe('Field con ayuda y error', () => {
 describe('PanelButton en los bordes', () => {
   it('un enlace deshabilitado no navega y lo dice', () => {
     render(
-      <PanelButton disabled href="/panel/pedidos">
+      <PanelButton disabled href="/dashboard/orders">
         Abrir
       </PanelButton>,
     )

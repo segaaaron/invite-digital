@@ -6,5 +6,5 @@ import { redirect } from 'next/navigation'
  */
 export default async function EstadisticasUnidas({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  redirect(`/panel/eventos/${slug}#invitacion`)
+  redirect(`/dashboard/events/${slug}#invitacion`)
 }

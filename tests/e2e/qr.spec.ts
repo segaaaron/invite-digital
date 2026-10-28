@@ -24,7 +24,7 @@ test('un código apunta a nosotros, redirige, cuenta y se le cambia el destino s
             (select id from plans where slug = 'imperial'))
   `
 
-  await page.goto(`/panel/eventos/${SLUG}/qr`)
+  await page.goto(`/dashboard/events/${SLUG}/qr`)
   await page.getByLabel('Para qué es').fill('Mesa de regalos')
   await page.getByLabel('A dónde lleva').fill('/es/colecciones')
   await page.getByRole('button', { name: '+ Crear código' }).click()

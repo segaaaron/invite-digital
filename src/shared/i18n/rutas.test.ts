@@ -16,7 +16,7 @@ describe('cada idioma con sus direcciones (14 oct)', () => {
     expect(rutaPublica('/modelos/musica/boda-bot')).toBe('/modelos/musica/boda-bot')
     expect(rutaPublica('/es/bodas')).toBe('/es/bodas')
     expect(rutaPublica('/en')).toBe('/en')
-    expect(rutaPublica('/panel/eventos/x')).toBe('/panel/eventos/x')
+    expect(rutaPublica('/dashboard/events/x')).toBe('/dashboard/events/x')
   })
 
   it('pública → interna (lo que reescribe el proxy), y la de un idioma no vale en el otro', () => {

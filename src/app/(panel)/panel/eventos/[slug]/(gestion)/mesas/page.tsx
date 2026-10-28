@@ -68,7 +68,7 @@ export default async function MesasPage({
 
   const { tables, zones, unseated, totalConfirmed } = seating.value
   const asignados = tables.reduce((suma, mesa) => suma + mesa.taken, 0)
-  const base = `/panel/eventos/${event.value.slug}/mesas`
+  const base = `/dashboard/events/${event.value.slug}/tables`
   // El carril más largo es el del menú más pedido: las barras se comparan entre sí.
   const comensalesMaximos = menus.reduce((max, linea) => Math.max(max, linea.count), 0)
   const enTarjetas = vista === 'tarjetas'
@@ -109,7 +109,7 @@ export default async function MesasPage({
           <PanelButton href={`${base}?panel=zona`} size="sm">
             <PlusIcon className="size-4" /> {t('Elemento del salón', 'Venue item')}
           </PanelButton>
-          <PanelButton href={`/panel/eventos/${event.value.slug}/mesas/imprimir`} size="sm">
+          <PanelButton href={`/dashboard/events/${event.value.slug}/tables/print`} size="sm">
             {t('Imprimir plan', 'Print plan')}
           </PanelButton>
         </div>
@@ -198,7 +198,7 @@ export default async function MesasPage({
             <FloorPlan
               eventId={event.value.id}
               eventSlug={event.value.slug}
-              exits={[{ href: `/panel/eventos/${event.value.slug}`, label: t('Volver al evento', 'Back to the event') }]}
+              exits={[{ href: `/dashboard/events/${event.value.slug}`, label: t('Volver al evento', 'Back to the event') }]}
               mesaPrincipal={vocabulario.mesaPrincipal}
               tables={tables}
               unseated={unseated}

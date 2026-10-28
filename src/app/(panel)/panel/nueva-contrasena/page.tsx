@@ -22,7 +22,7 @@ export default async function NuevaContrasenaPage() {
   const t = await tr()
   const actor = await requireSession()
   // Quien ya eligió la suya no tiene nada que hacer aquí.
-  if (!actor.mustChangePassword) redirect('/panel')
+  if (!actor.mustChangePassword) redirect('/dashboard')
 
   return (
     <PuertaConFoto>

@@ -16,7 +16,7 @@ const filas = [
   fila({ clave: 'tio', invitacionId: 'tio', personaId: 'tio', nombre: 'Luis Peña', invitacion: 'Luis Peña', estado: 'no_viene' as const, mesa: null, codigo: 'TPENA' }),
 ]
 
-const pinta = () => render(<ControlDeIngreso escanerHref="/puerta" eventId="e1" eventSlug="xv" filas={filas} recepcion={{ gestionarHref: '/equipo', personas: [{ id: 'p1', nombre: 'Carla Mena', puerta: 'Puerta norte', registradas: 4 }] }} />)
+const pinta = () => render(<ControlDeIngreso escanerHref="/door" eventId="e1" eventSlug="xv" filas={filas} recepcion={{ gestionarHref: '/team', personas: [{ id: 'p1', nombre: 'Carla Mena', puerta: 'Puerta norte', registradas: 4 }] }} />)
 const personas = () => within(screen.getByRole('table', { name: 'Ingresos' })).getAllByRole('row').filter((l) => l.hasAttribute('aria-label')).map((l) => l.getAttribute('aria-label'))
 /** Una invitación de varias personas nace plegada: se despliega para llegar a cada persona. */
 const desplegar = () => fireEvent.click(screen.getByRole('button', { name: /Familia Rojas/, expanded: false }))
@@ -41,7 +41,7 @@ describe('ControlDeIngreso', () => {
     const recepcion = screen.getByRole('region', { name: 'Recepción' })
     expect(recepcion).toHaveTextContent('Carla Mena')
     expect(recepcion).toHaveTextContent('Puerta norte, 4 ingresos')
-    expect(within(recepcion).getByRole('link', { name: 'Sumar o quitar personal' })).toHaveAttribute('href', '/equipo')
+    expect(within(recepcion).getByRole('link', { name: 'Sumar o quitar personal' })).toHaveAttribute('href', '/team')
   })
 
   it('buscar encuentra en todas las listas, y el VIP se ve', () => {

@@ -132,14 +132,14 @@ export function frasesListas(texto: string): { frases: string[]; resto: string }
 /** Las pantallas del panel por su nombre: un enlace leído en voz alta no dice nada. */
 const PANTALLAS: Record<'es' | 'en', Record<string, string>> = {
   es: {
-    invitados: 'Invitados', mesas: 'Mesas', regalos: 'Regalos', mensajes: 'Mensajes', configuracion: 'Mi invitación', 'vista-previa': 'Ver mi invitación',
-    checkin: 'Ingreso al evento', equipo: 'Equipo', extras: 'Extras', 'dia-d': 'Día D', tareas: 'Plan de tareas', presupuesto: 'Presupuesto',
-    agenda: 'Agenda', proveedores: 'Proveedores', cronograma: 'Cronograma', cortejo: 'Cortejo', documentos: 'Documentos',
+    guests: 'Invitados', tables: 'Mesas', gifts: 'Regalos', messages: 'Mensajes', setup: 'Mi invitación', preview: 'Ver mi invitación',
+    'check-in': 'Ingreso al evento', team: 'Equipo', extras: 'Extras', 'event-day': 'Día D', tasks: 'Plan de tareas', budget: 'Presupuesto',
+    agenda: 'Agenda', vendors: 'Proveedores', schedule: 'Cronograma', procession: 'Cortejo', documents: 'Documentos',
   },
   en: {
-    invitados: 'Guests', mesas: 'Tables', regalos: 'Gifts', mensajes: 'Messages', configuracion: 'My invitation', 'vista-previa': 'See my invitation',
-    checkin: 'Event check-in', equipo: 'Team', extras: 'Extras', 'dia-d': 'Big day', tareas: 'Task plan', presupuesto: 'Budget',
-    agenda: 'Calendar', proveedores: 'Vendors', cronograma: 'Schedule', cortejo: 'Wedding party', documentos: 'Documents',
+    guests: 'Guests', tables: 'Tables', gifts: 'Gifts', messages: 'Messages', setup: 'My invitation', preview: 'See my invitation',
+    'check-in': 'Event check-in', team: 'Team', extras: 'Extras', 'event-day': 'Big day', tasks: 'Task plan', budget: 'Budget',
+    agenda: 'Calendar', vendors: 'Vendors', schedule: 'Schedule', procession: 'Wedding party', documents: 'Documents',
   },
 }
 
@@ -165,9 +165,9 @@ export function paraLeer(texto: string): string {
   const idioma = idiomaDelTexto(texto, 'es')
   return texto
     // El enlace con su nombre al lado se diría dos veces («Agenda (Agenda)»): queda el nombre.
-    .replace(/\[([^\]]+)\]\(\/panel\/[^)]*\)/g, '$1')
-    .replace(/\s*\(\/panel\/eventos\/[^)\s]+\)/g, '')
-    .replace(/\/panel\/eventos\/[^/\s]+(?:\/planner)?\/?([a-z-]*)[^\s,.;:)]*/g, (_, p: string) => PANTALLAS[idioma][p] ?? (idioma === 'es' ? 'el panel' : 'the panel'))
+    .replace(/\[([^\]]+)\]\(\/dashboard\/[^)]*\)/g, '$1')
+    .replace(/\s*\(\/dashboard\/events\/[^)\s]+\)/g, '')
+    .replace(/\/dashboard\/events\/[^/\s]+(?:\/planner)?\/?([a-z-]*)[^\s,.;:)]*/g, (_, p: string) => PANTALLAS[idioma][p] ?? (idioma === 'es' ? 'el panel' : 'the panel'))
     // Los teléfonos, ya sin enlaces: las cifras de un enlace no son un teléfono.
     .replace(/\+?(?<![\d.,\w])\d(?: ?\d){6,14}(?![\d.,:-]?\d)/g, telefonoParaLeer)
     .replace(/[*_#`]/g, '')

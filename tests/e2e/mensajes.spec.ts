@@ -29,7 +29,7 @@ test('el invitado firma el libro, se le agradece, y él ve la respuesta', async 
   await expect(page.getByRole('status').filter({ hasText: 'Te esperamos' }).first()).toBeVisible()
 
   // 2. El libro de firmas lo muestra: sin «leído» ni «destacado», solo las palabras y quién las dejó.
-  await page.goto(`/panel/eventos/${SLUG}/mensajes`)
+  await page.goto(`/dashboard/events/${SLUG}/messages`)
   await expect(page.getByText('Qué ganas de celebrar con ustedes.')).toBeVisible()
   await expect(page.getByRole('button', { name: /Marcar leído|Destacar/ })).toHaveCount(0)
   // Dice si viene, y cuántas quedan por agradecer.
@@ -46,7 +46,7 @@ test('el invitado firma el libro, se le agradece, y él ve la respuesta', async 
     .toBe('Gracias, los esperamos con muchas ganas.')
 
   // Agradecida, sale del filtro «Sin agradecer».
-  await page.goto(`/panel/eventos/${SLUG}/mensajes?filtro=sin-agradecer`)
+  await page.goto(`/dashboard/events/${SLUG}/messages?filtro=sin-agradecer`)
   await expect(page.getByText('Nada por agradecer')).toBeVisible()
 
   // 4. El invitado recarga su enlace y ve la respuesta.

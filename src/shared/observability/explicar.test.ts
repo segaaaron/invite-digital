@@ -23,11 +23,11 @@ describe('explicarFallo', () => {
   })
 
   it('un fallo del navegador dice la pantalla; uno de un módulo, el servicio', () => {
-    const voz = explicarFallo({ servicio: 'navegador', mensaje: 'Voz de Luxury: el micrófono se cerró sin oír nada', detalle: 'Mozilla/5.0 (iPhone…)', ruta: '/panel/eventos/x/invitados' })
+    const voz = explicarFallo({ servicio: 'navegador', mensaje: 'Voz de Luxury: el micrófono se cerró sin oír nada', detalle: 'Mozilla/5.0 (iPhone…)', ruta: '/dashboard/events/x/guests' })
     expect(voz.titulo).toBe('La voz de Luxury: el micrófono se cerró sin oír nada')
     expect(voz.donde).toBe('Panel')
     expect(voz.pista).toContain('no oyó a nadie')
-    const correo = explicarFallo({ servicio: 'orders/actions', mensaje: 'no se pudo enviar por correo el acceso del pedido EKPKW93K', detalle: '', ruta: '/panel/admin/ventas' })
+    const correo = explicarFallo({ servicio: 'orders/actions', mensaje: 'no se pudo enviar por correo el acceso del pedido EKPKW93K', detalle: '', ruta: '/dashboard/admin/sales' })
     expect(correo).toEqual({ titulo: 'No se pudo enviar por correo el acceso del pedido EKPKW93K', donde: 'Ventas y pedidos', pista: expect.stringContaining('Resend') })
   })
 

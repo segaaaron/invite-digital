@@ -1,7 +1,7 @@
 'use server'
 
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { randomBytes } from 'node:crypto'
-import { revalidatePath } from 'next/cache'
 import { admin, events, notifications } from '@/app/composition/container'
 import { canManageStaff, createCredential } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -86,7 +86,7 @@ async function darDeAlta(
     await contacto(existente.id)
     // Ya tenía cuenta: se le avisa, pero **sin contraseña dentro** — no se le ha tocado.
     const avisado = membership === 'cliente' ? await avisarPorCorreo(contexto.eventId, email, null) : false
-    revalidatePath(`/panel/eventos/${contexto.eventSlug}/configuracion`)
+    revalidarRuta(`/dashboard/events/${contexto.eventSlug}/setup`)
     return {
       status: 'success',
       message: t(`${email} ya tenía cuenta: se le dio acceso ${queVe}.${avisado ? ' Le avisamos por correo.' : ''}`, `${email} already had an account: they were given access ${queVe}.${avisado ? ' We let them know by email.' : ''}`),
@@ -110,7 +110,7 @@ async function darDeAlta(
   const avisado =
     membership === 'cliente' ? await avisarPorCorreo(contexto.eventId, credencial.value.email, credencial.value.password) : false
 
-  revalidatePath(`/panel/eventos/${contexto.eventSlug}/configuracion`)
+  revalidarRuta(`/dashboard/events/${contexto.eventSlug}/setup`)
   return {
     status: 'success',
     message: avisado
@@ -164,6 +164,6 @@ export async function removeDoorStaffAction(_previous: StaffActionState, formDat
 
   await events.staff.remove(contexto.eventId, texto(formData, 'userId'))
 
-  revalidatePath(`/panel/eventos/${contexto.eventSlug}/configuracion`)
+  revalidarRuta(`/dashboard/events/${contexto.eventSlug}/setup`)
   return { status: 'success' }
 }

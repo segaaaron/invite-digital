@@ -32,7 +32,7 @@ test('los datos de cobro se editan sin desplegar y llegan a la página del pedid
   const seguimiento = cliente.url()
 
   // --- El admin los carga.
-  await page.goto('/panel/admin/pagos')
+  await page.goto('/dashboard/admin/payments')
   await page.getByLabel('Banco', { exact: true }).fill('Banco de prueba')
   await page.getByLabel('Titular de la cuenta').fill('Atelier de prueba SRL')
   await page.getByLabel('Número de cuenta').fill('9876543210')
@@ -58,7 +58,7 @@ const PNG = Buffer.from(
 )
 
 test('el QR de cobro se sube y queda servido para quien va a pagar (13 oct, sin cobertura hasta hoy)', async ({ page, browser }) => {
-  await page.goto('/panel/admin/pagos')
+  await page.goto('/dashboard/admin/payments')
   await page.getByLabel('Elegir imagen del QR').setInputFiles({ name: 'qr-banco.png', mimeType: 'image/png', buffer: PNG })
   await page.getByRole('button', { name: /^(Subir QR|Cambiar imagen)$/ }).click()
   await expect(page.getByRole('img', { name: 'QR de cobro cargado' })).toBeVisible()

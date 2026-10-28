@@ -28,11 +28,11 @@ test.describe('registro de fallos', () => {
   test.use({ storageState: ADMIN_AUTH_STATE })
 
   test('un fallo del navegador llega al registro con su causa, y «ya está arreglado» lo borra', async ({ page }) => {
-    const r = await page.request.post('/api/fallos', { data: { mensaje: MENSAJE, pila: `Error: ${MENSAJE}\n    at guardar (bloque.tsx:12:3)`, ruta: '/panel/eventos/x/configuracion' } })
+    const r = await page.request.post('/api/fallos', { data: { mensaje: MENSAJE, pila: `Error: ${MENSAJE}\n    at guardar (bloque.tsx:12:3)`, ruta: '/dashboard/events/x/setup' } })
     expect(r.status()).toBe(204)
     expect((await page.request.post('/api/fallos', { data: { nada: 1 } })).status()).toBe(400)
 
-    await page.goto('/panel/admin/fallos?dias=1&origen=navegador')
+    await page.goto('/dashboard/admin/errors?dias=1&origen=navegador')
     // La tarjeta de la maqueta: qué pasó y dónde a la vista, el significado y la pila plegados.
     const fila = page.getByRole('listitem').filter({ hasText: MENSAJE })
     await expect(fila).toBeVisible()
@@ -41,7 +41,7 @@ test.describe('registro de fallos', () => {
     // El primero de la lista ya viene abierto (maqueta); los demás se abren.
     const significado = fila.locator('details').first()
     if (!(await significado.evaluate((d) => (d as HTMLDetailsElement).open))) await significado.locator('> summary').click()
-    await expect(fila).toContainText('/panel/eventos/x/configuracion')
+    await expect(fila).toContainText('/dashboard/events/x/setup')
     await fila.getByText('Detalle técnico', { exact: true }).click()
     await expect(fila.getByText(/bloque\.tsx:12:3/)).toBeVisible()
     await fila.getByRole('button', { name: 'Ya está arreglado' }).click()
@@ -56,7 +56,7 @@ test.describe('guardar la invitación no pierde nada', () => {
     await seedInvitation({ slug: SLUG })
     await sql`update events set theme_key = 'boda' where slug = ${SLUG}`
     await escribirInvitacion(SLUG)
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
 
     const recepcion = await abrirSeccion(page, 'Recepción')
     const largo = `https://www.google.com/maps/place/Sal%C3%B3n+Los+Ceibos/@-17.7833,-63.1821,17z/data=${'!3m1!4b1!4m6!3m5'.repeat(20)}`
@@ -79,7 +79,7 @@ test.describe('guardar la invitación no pierde nada', () => {
 
   test('cada sección del editor se guarda y responde: «Guardado» o el motivo, nunca silencio', async ({ page }) => {
     await sql`update events set theme_key = 'boda-ed' where slug = ${SLUG}`
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
     const tarjetas = page.locator('form[id^="bloque-"]')
     const n = await tarjetas.count()
     expect(n).toBeGreaterThan(8)
@@ -100,7 +100,7 @@ test.describe('guardar la invitación no pierde nada', () => {
   test('código de vestimenta: un detalle de un párrafo se guarda entero y el campo no deja pasar del tope', async ({ page }) => {
     // Editorial pide el detalle (no todos los diseños lo pintan).
     await sql`update events set theme_key = 'boda-ed' where slug = ${SLUG}`
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/dashboard/events/${SLUG}/setup`)
     const vestimenta = await abrirSeccion(page, 'Código de vestimenta')
     const detalle = vestimenta.getByLabel('Detalle', { exact: true })
     await detalle.fill('Traje oscuro y vestido largo. '.repeat(17))

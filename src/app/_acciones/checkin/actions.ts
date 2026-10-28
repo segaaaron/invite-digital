@@ -4,7 +4,7 @@
 // personal de puerta puede llamar. Cualquier acción del panel que no diga su sección
 // hereda `full`, y `full` deniega a un puerta — el olvido cae del lado seguro.
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { checkin, guests, plans, venue } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -71,7 +71,7 @@ export async function recordScansAction(input: {
     throw new Error(result.error.kind)
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/door`)
   return result.value
 }
 
@@ -109,7 +109,7 @@ export async function checkInByGroupAction(input: {
     throw new Error(result.error.kind)
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/door`)
   return result.value
 }
 
@@ -139,7 +139,7 @@ export async function adjustArrivalAction(input: {
     return { status: 'error', kind: result.error.kind }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/door`)
   return { status: 'success' }
 }
 
@@ -158,7 +158,7 @@ export async function voidArrivalAction(input: {
     return { status: 'error', kind: result.error.kind }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/door`)
   return { status: 'success' }
 }
 
@@ -174,7 +174,7 @@ export async function undoCheckInAction(input: { eventId: string; eventSlug: str
     return { status: 'error', kind: result.error.kind }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/checkin`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/check-in`)
   return { status: 'success' }
 }
 
@@ -246,8 +246,8 @@ export async function registrarSinPaseAction(_previo: SinPaseState, formData: Fo
     return { status: 'error', message: t(`${nombre} quedó en la lista, pero no se pudo marcar su ingreso. Regístralo desde la lista.`, `${nombre} was added to the list, but their check-in couldn’t be marked. Record it from the list.`) }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/checkin`)
-  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
-  revalidatePath(`/panel/eventos/${eventSlug}/mesas`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/check-in`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/guests`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/tables`)
   return { status: 'success', message: t(`${nombre} entró${invitacion === groupId ? ' como acompañante' : ''}.`, `${nombre} checked in${invitacion === groupId ? ' as a companion' : ''}.`) }
 }

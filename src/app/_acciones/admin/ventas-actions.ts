@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin, leads, orders, plans } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { etiquetaDeMotivo, parseMotivo } from '@/modules/leads/domain/pipeline'
@@ -27,7 +27,7 @@ export type VentaActionState = { status: 'idle' } | { status: 'success'; message
 
 /** Cambia algo que se ve en Hoy, Ventas, Clientes e Ingresos: las cuatro a la vez. */
 function revalidarVentas() {
-  for (const ruta of ['/panel/admin', '/panel/admin/ventas', '/panel/admin/clientes', '/panel/admin/ingresos']) revalidatePath(ruta)
+  for (const ruta of ['/dashboard/admin', '/dashboard/admin/sales', '/dashboard/admin/clients', '/dashboard/admin/revenue']) revalidarRuta(ruta)
 }
 
 /** La página del pedido del cliente: datos de cobro, el monto exacto y su comprobante. */

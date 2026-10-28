@@ -1,7 +1,7 @@
 'use server'
 
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { after } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { admin, avisos, diseno, events, type ResultadoDePaso } from '@/app/composition/container'
 import { requireAdmin, requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
@@ -36,8 +36,8 @@ async function eventoDe(eventId: string) {
 }
 
 function refrescar(slug: string | undefined) {
-  if (slug !== undefined) revalidatePath(`/panel/eventos/${slug}`, 'layout')
-  revalidatePath('/panel/admin')
+  if (slug !== undefined) revalidarRuta(`/dashboard/events/${slug}`, 'layout')
+  revalidarRuta('/dashboard/admin')
 }
 
 export async function enviarADisenoAction(_previo: DisenoState, formData: FormData): Promise<DisenoState> {
@@ -58,7 +58,7 @@ export async function enviarADisenoAction(_previo: DisenoState, formData: FormDa
   avisarAlAdmin({
     asunto: `${evento?.title ?? 'Un cliente'} envió sus datos para diseñar`,
     lineas: ['Su invitación entra en diseño. Mira la fecha de entrega en su ficha.'],
-    ruta: `/panel/eventos/${evento?.slug ?? ''}/configuracion?vista=invitacion`,
+    ruta: `/dashboard/events/${evento?.slug ?? ''}/setup?vista=invitacion`,
   })
   refrescar(evento?.slug)
   return { status: 'success', message: t('Recibimos tus datos. Te avisamos cuando tu invitación esté lista para revisar.', 'We received your details. We’ll let you know when your invitation is ready to review.') }
@@ -81,7 +81,7 @@ export async function pedirCambiosAction(_previo: DisenoState, formData: FormDat
   avisarAlAdmin({
     asunto: `${evento?.title ?? 'Un cliente'} pidió cambios`,
     lineas: [mensaje.slice(0, 140)],
-    ruta: `/panel/eventos/${evento?.slug ?? ''}/configuracion?vista=invitacion`,
+    ruta: `/dashboard/events/${evento?.slug ?? ''}/setup?vista=invitacion`,
   })
   refrescar(evento?.slug)
   return { status: 'success', message: t('Recibimos tus cambios. Te avisamos con la nueva versión.', 'We received your changes. We’ll let you know with the new version.') }
@@ -99,7 +99,7 @@ export async function aprobarVersionAction(_previo: DisenoState, formData: FormD
   avisarAlAdmin({
     asunto: `${evento?.title ?? 'Un cliente'} aprobó su invitación`,
     lineas: ['Falta el saldo para que pueda repartirla.'],
-    ruta: `/panel/admin/eventos?evento=${evento?.slug ?? ''}`,
+    ruta: `/dashboard/admin/events?evento=${evento?.slug ?? ''}`,
   })
   refrescar(evento?.slug)
   return { status: 'success', message: t('¡Aprobada! En cuanto registremos el saldo, ya puedes repartirla.', 'Approved! As soon as we record the balance, you can send it out.') }

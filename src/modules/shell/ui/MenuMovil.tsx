@@ -16,7 +16,7 @@ import { useT } from '@/shared/i18n/idioma-navegador'
 export { ABRIR_MENU } from '@/shared/design/ui/panel/avisos-del-panel'
 
 /** Pantallas fuera de la barra: la isla dice dónde estás igual. */
-const FUERA_DE_LA_BARRA: Readonly<Record<string, readonly [string, string]>> = { '/panel/cuenta': ['Mi cuenta', 'My account'], '/panel/ayuda': ['Ayuda', 'Help'] }
+const FUERA_DE_LA_BARRA: Readonly<Record<string, readonly [string, string]>> = { '/dashboard/account': ['Mi cuenta', 'My account'], '/dashboard/help': ['Ayuda', 'Help'] }
 
 const Trazo = ({ d }: { d: string }) => (
   <svg aria-hidden className="size-5.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
                     aria-current={activa ? 'page' : undefined}
                     className={`flex min-h-[68px] items-center gap-3.5 rounded-[14px] px-2.5 py-1.5 text-ink no-underline ${activa ? 'bg-pill-maybe' : ''}`}
                     // En el celular, Ajustes abre su lista (M26), no la primera pestaña.
-                    href={item.href === '/panel/admin/usuarios' ? '/panel/admin/ajustes' : item.href}
+                    href={item.href === '/dashboard/admin/users' ? '/dashboard/admin/settings' : item.href}
                     key={item.href}
                     onClick={cerrar}
                   >
@@ -193,7 +193,7 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
           ))}
 
           {user.soporte ? null : (
-            <Link className="mt-3 flex min-h-[68px] items-center gap-3.5 rounded-[14px] px-2.5 py-1.5 text-ink no-underline" href="/panel/cuenta" onClick={cerrar}>
+            <Link className="mt-3 flex min-h-[68px] items-center gap-3.5 rounded-[14px] px-2.5 py-1.5 text-ink no-underline" href="/dashboard/account" onClick={cerrar}>
               <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full border border-line-panel bg-bg-raised text-shell-deep">
                 <svg aria-hidden className="size-[19px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.4" viewBox="0 0 24 24">
                   <circle cx="12" cy="8" r="3.5" />

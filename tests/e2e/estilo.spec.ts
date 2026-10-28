@@ -32,11 +32,11 @@ test.describe('colores y letra', () => {
     await sql`update events set theme_key = 'boda-bot', plan_id = (select id from plans where slug = ${PLAN}) where slug = ${SLUG}`
     ctx = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.81' } })
     page = await ctx.newPage()
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(CUENTA.email)
     await page.getByLabel('Contraseña').fill(CUENTA.password)
     await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page).toHaveURL(/\/panel\/eventos\//)
+    await expect(page).toHaveURL(/\/dashboard\/events\//)
   })
 
   test.afterAll(async () => {
@@ -48,7 +48,7 @@ test.describe('colores y letra', () => {
   })
 
   test('sin el plan, la tarjeta lo dice', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
+    await page.goto(`/dashboard/events/${SLUG}/settings`)
     await expect(page.getByText(/En Gala e Imperial eliges el color/)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Guardar colores y letra' })).toHaveCount(0)
   })

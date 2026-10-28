@@ -39,7 +39,7 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     // 1. El **admin** aprueba desde la ficha de la venta. El contacto del pedido es un correo:
     // no pide nada más —la contraseña provisional se genera sola y le llega por correo—.
     const atelier = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
-    await atelier.goto(`/panel/admin/ventas?venta=p-${REFERENCIA}`)
+    await atelier.goto(`/dashboard/admin/sales?venta=p-${REFERENCIA}`)
     const ficha = atelier.locator('section[aria-labelledby="ficha-de-venta"]')
     await ficha.getByRole('button', { name: 'Aprobar pago' }).click()
 
@@ -51,13 +51,13 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
 
     // 3. El admin ve la ficha de la boda nueva, no sus datos: esos son del cliente.
     const slug = `evento-${REFERENCIA.toLowerCase()}`
-    await atelier.goto(`/panel/eventos/${slug}/configuracion`)
+    await atelier.goto(`/dashboard/events/${slug}/setup`)
     await expect(atelier.getByRole('heading', { name: 'Detalles' })).toBeVisible()
-    expect((await atelier.goto(`/panel/eventos/${slug}/planner/tareas`))?.status()).toBe(404)
+    expect((await atelier.goto(`/dashboard/events/${slug}/planner/tasks`))?.status()).toBe(404)
 
     // Sin proveedor de correo (como aquí), la contraseña provisional no le llegó: el admin la
     // restablece en la ficha y la ve **una vez**, para pasársela por WhatsApp.
-    await atelier.goto(`/panel/eventos/${slug}/configuracion#acceso`)
+    await atelier.goto(`/dashboard/events/${slug}/setup#acceso`)
     // Se confirma en su diálogo (maqueta E66).
     await atelier.getByRole('button', { name: 'Restablecer acceso' }).click()
     await atelier.getByRole('button', { name: 'Restablecer y enviar correo' }).click()
@@ -68,29 +68,29 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     //
     // La que escribió el admin viajó por correo, así que nace **provisional**: el panel no
     // se abre hasta que la cambien. Aterrizar aquí y no en la boda es lo correcto.
-    await page.goto('/panel/entrar')
+    await page.goto('/dashboard/login')
     await page.getByLabel('Correo').fill(CORREO)
     await page.getByLabel('Contraseña').fill(CLAVE)
     await page.getByRole('button', { name: 'Entrar' }).click()
     // Su pantalla propia, fuera del panel: con la provisional no se entra a ninguna otra.
-    await expect(page).toHaveURL(/\/panel\/nueva-contrasena$/)
+    await expect(page).toHaveURL(/\/dashboard\/new-password$/)
 
     const SUYA = 'la-que-eligen-los-novios-1'
     await page.getByLabel('Tu contraseña nueva').fill(SUYA)
     await page.getByRole('button', { name: 'Guardar y entrar' }).click()
 
     // Entran directo a su boda, sin volver a escribirla.
-    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${slug}(/configuracion)?$`), { timeout: 20_000 })
+    await expect(page).toHaveURL(new RegExp(`/dashboard/events/${slug}(/setup)?$`), { timeout: 20_000 })
 
     // Lo suyo sí; lo del atelier, no.
-    await page.goto(`/panel/eventos/${slug}/invitados`)
+    await page.goto(`/dashboard/events/${slug}/guests`)
     // Con el nivel: «Invitados» es el `h1` de la cabecera **y** el `h2` de la tarjeta, y
     // sin acotarlo el locator casa con los dos.
     await expect(page.getByRole('heading', { name: 'Invitados', level: 1 })).toBeVisible()
     // Su invitación **sí** se abre: es donde escribe sus textos y elige la canción que
     // sube. Esta línea exigía 404 hasta que el acceso del cliente pasó a incluirla; lo que
     // sigue siendo del atelier son las tarjetas de dentro, no la pantalla.
-    expect((await page.goto(`/panel/eventos/${slug}/configuracion`))?.status()).toBe(200)
+    expect((await page.goto(`/dashboard/events/${slug}/setup`))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Detalles' })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Mi invitación', level: 1 })).toBeVisible()
 
@@ -101,11 +101,11 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     expect(diseno!.theme).toBe(DISENO)
 
     // Sin tareas de ejemplo: el plan se crea cuando el anfitrión lo pide.
-    await page.goto(`/panel/eventos/${slug}/planner/tareas`)
+    await page.goto(`/dashboard/events/${slug}/planner/tasks`)
     await expect(page.getByRole('button', { name: 'Crear el plan con la plantilla' })).toBeVisible()
 
     // Y el plan sigue fuera, que es lo que de verdad es del atelier.
-    expect((await page.goto(`/panel/eventos/${slug}/plan`))?.status()).toBe(404)
+    expect((await page.goto(`/dashboard/events/${slug}/plan`))?.status()).toBe(404)
   } finally {
     // Se limpia aunque falle: si no, la siguiente ejecución encuentra la boda ya creada y
     // la aprobación respondería «ya estaba creada» — verde por el motivo equivocado.

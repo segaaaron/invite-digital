@@ -47,7 +47,7 @@ const bloque = async (seccion: string) =>
   (await sql<{ b: Record<string, string> | null }[]>`select blocks->${seccion} as b from event_content c join events e on e.id = c.event_id where e.slug = ${SLUG}`)[0]?.b ?? null
 
 test('una foto de 24 MB en la galería se reduce, se sube, se guarda sola y la invitación la usa', async ({ page }) => {
-  await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+  await page.goto(`/dashboard/events/${SLUG}/setup`)
   // «Mascarada» pinta una foto: la del arco (la portada es el arte del diseño y no se toca).
   const portada = await abrirSeccion(page, 'Galería')
   await portada.getByRole('button', { name: 'Subir una fotografía' }).click()
@@ -66,7 +66,7 @@ test('una foto de 24 MB en la galería se reduce, se sube, se guarda sola y la i
 })
 
 test('una canción de más de 10 MB sube sin tumbar la página', async ({ page }) => {
-  await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+  await page.goto(`/dashboard/events/${SLUG}/setup`)
   const cancion = await abrirSeccion(page, 'Canción')
   await cancion.getByRole('button', { name: 'Subir la canción' }).click()
   const dialogo = page.locator('dialog[open]')
@@ -79,17 +79,17 @@ test('una canción de más de 10 MB sube sin tumbar la página', async ({ page }
 })
 
 test('si el servidor falla al guardar, el aviso sale en la tarjeta y la página sigue entera', async ({ page }) => {
-  await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+  await page.goto(`/dashboard/events/${SLUG}/setup`)
   const portada = await abrirSeccion(page, 'Portada y nombres')
   // El servidor responde 500 a la acción de guardar, como cuando algo se rompe de verdad.
-  await page.route(`**/panel/eventos/${SLUG}/configuracion`, (ruta) => (ruta.request().method() === 'POST' ? ruta.fulfill({ status: 500, body: 'fallo' }) : ruta.continue()))
+  await page.route(`**/dashboard/events/${SLUG}/setup`, (ruta) => (ruta.request().method() === 'POST' ? ruta.fulfill({ status: 500, body: 'fallo' }) : ruta.continue()))
   await portada.getByRole('button', { name: 'Guardar' }).click()
   await expect(portada.getByRole('alert')).toContainText('No se pudo guardar: se cortó la conexión o el servidor no respondió')
   await expect(page.getByText("This page couldn't load")).toHaveCount(0)
   await expect(page.getByText('Algo no salió bien')).toHaveCount(0)
   // Se puede seguir: la barra y las demás secciones siguen ahí, y al volver el servidor, guarda.
   await expect(page.getByRole('navigation').first()).toBeVisible()
-  await page.unroute(`**/panel/eventos/${SLUG}/configuracion`)
+  await page.unroute(`**/dashboard/events/${SLUG}/setup`)
   await portada.getByRole('button', { name: 'Guardar' }).click()
   // «Guardar y seguir» pliega la sección; el aviso flota (E64).
   await expect(portada.getByText('Guardado.')).toBeVisible()

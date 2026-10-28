@@ -27,7 +27,7 @@ test.afterAll(async () => {
 })
 
 test('el admin da acceso al cliente desde la ficha de un evento sin cliente', async ({ page }) => {
-  await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+  await page.goto(`/dashboard/events/${SLUG}/setup`)
   // «Dar acceso al cliente» abre su diálogo (maqueta E34).
   await page.getByRole('button', { name: 'Dar acceso al cliente' }).first().click()
   await page.getByLabel('Correo del cliente').fill(CORREO)

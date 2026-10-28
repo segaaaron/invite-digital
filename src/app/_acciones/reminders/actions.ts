@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { reminders } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -49,6 +49,6 @@ export async function markReminderSentAction(input: {
     }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/guests`)
   return { status: 'success' }
 }

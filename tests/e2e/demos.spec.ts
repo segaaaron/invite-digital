@@ -24,7 +24,7 @@ test.afterAll(async () => {
  * el enlace se recoge después de su fila, que es donde vive para mandarlo.
  */
 async function armarDemo(page: Page, titulo: string): Promise<string> {
-  await page.goto('/panel/admin/demos')
+  await page.goto('/dashboard/admin/demos')
   await page.getByRole('link', { name: /nueva demo/i }).first().click()
   const panel = page.getByRole('dialog', { name: 'Nueva demo' })
   await panel.getByLabel('Nombre de la fiesta').fill(titulo)
@@ -35,7 +35,7 @@ async function armarDemo(page: Page, titulo: string): Promise<string> {
   await expect(page.getByRole('heading', { name: 'Escribir la invitación' })).toBeVisible()
 
   // Su fila, por el título: en la lista hay más demos de otras pruebas y la primera no es la de esta.
-  await page.goto('/panel/admin/demos')
+  await page.goto('/dashboard/admin/demos')
   return page.getByRole('listitem').filter({ hasText: titulo }).getByLabel('Enlace de la demo').inputValue()
 }
 
@@ -61,7 +61,7 @@ test('se edita como una invitación de verdad: textos, fotos y música, sin plan
   // Lo que el usuario pidió y no tenía (20 oct): «Editarla» llevaba a la ficha administrativa del evento,
   // donde no hay ni música ni textos, y la demo nacía sin plan, así que media pantalla salía con «tu plan
   // no la incluye». Una demo enseña lo que vendemos: va con el plan más completo.
-  await page.goto('/panel/admin/demos')
+  await page.goto('/dashboard/admin/demos')
   await page.getByRole('link', { name: /nueva demo/i }).first().click()
   const panel = page.getByRole('dialog', { name: 'Nueva demo' })
   await panel.getByLabel('Nombre de la fiesta').fill('Demo e2e editable')
@@ -81,7 +81,7 @@ test('la vista previa del panel enseña la misma cinta que verá el cliente', as
   // El admin no tenía por qué abrir el enlace para ver la marca de agua: antes la cinta solo salía en la
   // invitación de verdad, y desde el panel parecía que no existía.
   await armarDemo(page, 'Demo e2e cinta')
-  await page.goto('/panel/admin/demos')
+  await page.goto('/dashboard/admin/demos')
   await page.getByRole('link', { name: /verla/i }).first().click()
 
   await expect(page.getByText(/demostraci[óo]n de/i)).toBeVisible()
@@ -91,10 +91,10 @@ test('la vista previa del panel enseña la misma cinta que verá el cliente', as
 test('no se cuela en la cartera de eventos, y sí sale en Demos', async ({ page }) => {
   await armarDemo(page, 'Demo e2e cartera')
 
-  await page.goto('/panel/admin/eventos')
+  await page.goto('/dashboard/admin/events')
   await expect(page.getByText('Demo e2e cartera')).toHaveCount(0)
 
-  await page.goto('/panel/admin/demos')
+  await page.goto('/dashboard/admin/demos')
   // Exacto: el texto también aparece dentro del diálogo de borrar, que vive oculto en la misma fila.
   await expect(page.getByText('Demo e2e cartera', { exact: true }).first()).toBeVisible()
 })

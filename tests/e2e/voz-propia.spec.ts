@@ -44,7 +44,7 @@ test('en Chrome de iPhone, Luxury oye lo dicho con su propio dictado y responde'
   page.on('console', (m) => {
     if (m.type() === 'error') fallos.push(m.text())
   })
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/dashboard/events/${SLUG}/guests`)
   // Como en la segunda visita: con el Service Worker ya al mando (en la primera se instala después de cargar).
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined))
   await page.reload()
@@ -75,7 +75,7 @@ test('en Chrome de iPhone, Luxury oye lo dicho con su propio dictado y responde'
   // El worker del dictado lleva su propia CSP; la página, la de siempre (sin `unsafe-eval`).
   const worker = await page.request.get('/vosk/vosk-worker-0.0.8.js')
   expect(worker.headers()['content-security-policy']).toContain("'unsafe-eval'")
-  const pagina = await page.request.get(`/panel/eventos/${SLUG}/invitados`)
+  const pagina = await page.request.get(`/dashboard/events/${SLUG}/guests`)
   expect(pagina.headers()['content-security-policy']).not.toMatch(/script-src[^;]*'unsafe-eval'/)
 })
 
@@ -84,7 +84,7 @@ test('en Chrome de iPhone se le habla sin abrir el chat y responde en la tarjeta
   await page.addInitScript(() => {
     window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => void setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 20)
   })
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/dashboard/events/${SLUG}/guests`)
   await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
   const tarjeta = page.getByRole('status').filter({ has: page.getByRole('button', { name: /^(Cancelar|Callar|Cerrar)$/ }) })
   await expect(tarjeta).toContainText(/Faltan por responder|Ya respondieron todos/, { timeout: 60_000 })

@@ -63,7 +63,7 @@ export type Hoy = {
   readonly total: number
 }
 
-const VENTAS = '/panel/admin/ventas'
+const VENTAS = '/dashboard/admin/sales'
 
 /** Los avisos de una etapa, sueltos o resumidos en uno que abre la lista de esa etapa. */
 function deEtapa(
@@ -153,7 +153,7 @@ export function componerHoy(
       etiqueta: e.salud.tono === 'risk' ? 'En riesgo' : 'Atención',
       titulo: e.title,
       detalle: e.salud.alertas.length > 1 ? `${e.salud.texto} · y ${e.salud.alertas.length - 1} más` : e.salud.texto,
-      href: `/panel/admin/eventos?evento=${e.slug}`,
+      href: `/dashboard/admin/events?evento=${e.slug}`,
       accion: 'Ver',
       desde: Date.parse(`${e.eventDate}T00:00:00Z`),
     }))
@@ -166,7 +166,7 @@ export function componerHoy(
       etiqueta: 'Cambio de plan',
       titulo: c.eventTitle,
       detalle: `Pide pasar a ${c.planSlug} · ${hace(diasDesde(c.createdAt))}`,
-      href: `/panel/eventos/${c.eventSlug}/configuracion`,
+      href: `/dashboard/events/${c.eventSlug}/setup`,
       accion: 'Decidir',
       desde: c.createdAt.getTime(),
     }))
@@ -177,13 +177,13 @@ export function componerHoy(
   for (const e of input.eventos) {
     const dias = diasEntre(hoy, e.eventDate)
     if (input.extrasALaVenta.has('dia_d') && e.plannerSuite === 'completo' && dias >= 15 && dias <= 60) {
-      oportunidades.push({ clave: `op-diad:${e.slug}`, tono: 'ok', etiqueta: 'Oportunidad', titulo: e.title, detalle: `Faltan ${dias} días: el Día D ordena proveedores y horarios`, href: `/panel/admin/eventos?evento=${e.slug}`, accion: 'Ofrecer', desde: dias })
+      oportunidades.push({ clave: `op-diad:${e.slug}`, tono: 'ok', etiqueta: 'Oportunidad', titulo: e.title, detalle: `Faltan ${dias} días: el Día D ordena proveedores y horarios`, href: `/dashboard/admin/events?evento=${e.slug}`, accion: 'Ofrecer', desde: dias })
     }
     if (input.extrasALaVenta.has('mas_grupos') && e.maxGrupos !== null && dias >= 0 && e.grupos >= e.maxGrupos * 0.85) {
-      oportunidades.push({ clave: `op-grupos:${e.slug}`, tono: 'ok', etiqueta: 'Oportunidad', titulo: e.title, detalle: `Lleva ${e.grupos} de ${e.maxGrupos} invitaciones: ofrécele más`, href: `/panel/admin/eventos?evento=${e.slug}`, accion: 'Ofrecer', desde: dias })
+      oportunidades.push({ clave: `op-grupos:${e.slug}`, tono: 'ok', etiqueta: 'Oportunidad', titulo: e.title, detalle: `Lleva ${e.grupos} de ${e.maxGrupos} invitaciones: ofrécele más`, href: `/dashboard/admin/events?evento=${e.slug}`, accion: 'Ofrecer', desde: dias })
     }
     if (dias <= -1 && dias >= -7) {
-      oportunidades.push({ clave: `op-gracias:${e.slug}`, tono: 'ok', etiqueta: 'Gracias', titulo: e.title, detalle: `Fue ${hace(-dias)}: pídele su opinión y un testimonio`, href: `/panel/admin/eventos?evento=${e.slug}`, accion: 'Escribir', desde: -dias })
+      oportunidades.push({ clave: `op-gracias:${e.slug}`, tono: 'ok', etiqueta: 'Gracias', titulo: e.title, detalle: `Fue ${hace(-dias)}: pídele su opinión y un testimonio`, href: `/dashboard/admin/events?evento=${e.slug}`, accion: 'Escribir', desde: -dias })
     }
   }
 
@@ -197,7 +197,7 @@ export function componerHoy(
       titulo: o.title,
       detalle: o.comment === null ? `Opinó ${hace(diasDesde(o.answeredAt))}, sin comentario` : `«${o.comment.slice(0, 90)}${o.comment.length > 90 ? '…' : ''}»`,
       // Con permiso, a la ficha de su cliente: ahí se publica de un toque.
-      href: o.allowPublish && o.rating >= 4 ? `/panel/admin/clientes?evento=${o.slug}` : `/panel/admin/eventos?evento=${o.slug}`,
+      href: o.allowPublish && o.rating >= 4 ? `/dashboard/admin/clients?evento=${o.slug}` : `/dashboard/admin/events?evento=${o.slug}`,
       accion: o.allowPublish && o.rating >= 4 ? 'Publicar' : 'Ver',
       desde: -o.answeredAt.getTime(),
     }))

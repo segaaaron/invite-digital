@@ -1,8 +1,8 @@
 'use server'
 
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { loQueSePerderia } from '@/modules/events'
 
-import { revalidatePath } from 'next/cache'
 import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { admin, events as eventUseCases, guests, plans } from '@/app/composition/container'
@@ -79,7 +79,7 @@ export async function createEventAction(_previous: EventActionState, formData: F
   // suya, y borrarla la borra.
   await sembrarContenido(result.value.id)
 
-  revalidatePath('/panel')
+  revalidarRuta('/dashboard')
   return { status: 'success', message: '' }
 }
 
@@ -130,7 +130,7 @@ export async function renombrarEventoAction(_previous: RenombrarState, formData:
     registrarFallo('events/actions', 'no se pudo renombrar el evento', hecho.error.kind, hecho.error.detail)
     return { status: 'error', message: t('No se pudo guardar el nombre. Vuelve a intentarlo en un momento.', 'The name couldn’t be saved. Try again in a moment.') }
   }
-  revalidatePath('/panel', 'layout')
+  revalidarRuta('/dashboard', 'layout')
   return { status: 'success', message: t('Nombre guardado.', 'Name saved.') }
 }
 
@@ -164,8 +164,8 @@ export async function updateEventAction(_previous: EventActionState, formData: F
     await sembrarContenido(result.value.id)
   }
 
-  revalidatePath('/panel')
-  revalidatePath(`/panel/eventos/${result.value.slug}`)
+  revalidarRuta('/dashboard')
+  revalidarRuta(`/dashboard/events/${result.value.slug}`)
   return { status: 'success', message: '' }
 }
 
@@ -197,7 +197,7 @@ export async function deleteEventAction(
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  redirect('/panel')
+  redirect('/dashboard')
 }
 
 export type UnlockState = { status: 'idle' } | { status: 'error'; message: string }
@@ -319,7 +319,7 @@ export async function setEventPrivacyAction(_previous: PrivacyState, formData: F
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/setup`)
   return { status: 'success' }
 }
 
@@ -348,7 +348,7 @@ export async function setEventCurrencyAction(input: {
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/regalos`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/gifts`)
   return { status: 'success' }
 }
 
@@ -463,7 +463,7 @@ export async function saveContentBlockAction(
   }
 
   if (isAdmin(actor)) await admin.record(actor, { action: 'evento.invitacion', subject: eventSlug, detail: aGuardar.map(([s]) => s).join(', ') })
-  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/setup`)
   return { status: 'success' }
 }
 
@@ -498,7 +498,7 @@ export async function aplicarTextosDelAsistenteAction(input: { eventId: string; 
     }
   }
   if (isAdmin(actor)) await admin.record(actor, { action: 'evento.invitacion', subject: input.eventSlug, detail: bloques.map(([s]) => s).join(', ') })
-  revalidatePath(`/panel/eventos/${input.eventSlug}/configuracion`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/setup`)
   return { status: 'success' }
 }
 
@@ -564,7 +564,7 @@ export async function ponerFotoDelAsistenteAction(input: {
     return { status: 'error', message: t('No se pudo guardar. Vuelve a intentarlo.', 'It couldn’t be saved. Try again.') }
   }
   if (isAdmin(actor)) await admin.record(actor, { action: 'evento.invitacion', subject: input.eventSlug, detail: section })
-  revalidatePath(`/panel/eventos/${input.eventSlug}/configuracion`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/setup`)
   return { status: 'success', donde }
 }
 
@@ -626,7 +626,7 @@ export async function uploadMediaAction(
     await eventUseCases.saveContentBlock(eventId, 'music', { ...(actual.music ?? {}), ...resultado.cancion, audioMediaId: resultado.id })
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/setup`)
   return { status: 'success', mediaId: resultado.id }
 }
 
@@ -651,7 +651,7 @@ export async function removeMediaAction(_previo: ContentActionState, formData: F
   const resultado = await eventUseCases.media.remove(eventId, campo(formData, 'mediaId'), enUso)
   if (!resultado.ok) return { status: 'error', message: resultado.error }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/setup`)
   return { status: 'success' }
 }
 
@@ -718,6 +718,6 @@ export async function uploadGuestPhotoAction(_previo: GuestPhotoState, formData:
   // `photo_limit` es el tope de las fotos del atelier; el invitado no lo pasa y no llega aquí.
   if (!resultado.ok) return { status: 'error', message: resultado.error === 'photo_limit' ? 'too_many' : resultado.error }
 
-  revalidatePath(`/i/${token}/fotos`)
+  revalidarRuta(`/i/${token}/fotos`)
   return { status: 'success', message: '' }
 }

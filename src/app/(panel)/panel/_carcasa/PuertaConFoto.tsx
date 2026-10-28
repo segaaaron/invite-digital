@@ -42,10 +42,28 @@ export function PuertaConFoto({ children, frase = false, pie = false }: { childr
         ) : null}
       </section>
 
-      <section className="relative -mt-6 flex flex-col items-center justify-between gap-10 rounded-t-[24px] bg-bg px-5 pt-8 pb-8 min-[860px]:mt-0 min-[860px]:rounded-none min-[860px]:px-10 min-[860px]:pt-0">
-        <span aria-hidden className="hidden min-[860px]:block" />
-        <div className="flex w-full max-w-[360px] flex-col gap-7">{children}</div>
-        {pie ? <p className="text-center text-[13px] text-ink-mute">
+      <section className="relative -mt-6 flex flex-col items-center justify-between gap-10 overflow-hidden rounded-t-[24px] bg-bg px-5 pt-8 pb-8 min-[860px]:mt-0 min-[860px]:rounded-none min-[860px]:px-10 min-[860px]:pt-0">
+        {/*
+          El marfil estaba plano, como una hoja en blanco. Ahora tiene la luz que tiene el resto
+          de la marca: dos focos de oro muy velados —uno alto a la derecha, otro bajo a la
+          izquierda— y el sello en marca de agua. Es fondo, no decoración: ni mueve el formulario
+          ni se lleva un clic.
+        */}
+        {/*
+          Los focos y el sello van **pintados**, no puestos: eran tres cajas que se salían de la
+          pantalla por el borde (`-right-[22%]`). Recortadas se veían igual, pero en un teléfono
+          chico eso es contenido fuera de la ventana sin forma de llegar a él, y `responsive.spec`
+          lo caza a propósito. Como fondo de una capa `inset-0` el efecto es el mismo —el degradado
+          y el sello siguen saliéndose por el borde— y no hay ninguna caja que sobresalga.
+        */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(62vh_62vh_at_112%_-16%,rgb(var(--color-gold-rgb)/0.16),transparent),radial-gradient(54vh_54vh_at_-14%_116%,rgb(var(--color-gold-rgb)/0.09),transparent)]" />
+          <div className="absolute inset-0 bg-[url(/site/marca/sello-la-144-59259035.avif)] bg-no-repeat opacity-[0.05] mix-blend-multiply [background-position:112%_88%] [background-size:46%_auto] max-[859px]:hidden" />
+          <div className="absolute inset-y-0 left-0 w-px bg-linear-to-b from-transparent via-gold/25 to-transparent max-[859px]:hidden" />
+        </div>
+        <span aria-hidden className="relative hidden min-[860px]:block" />
+        <div className="relative flex w-full max-w-[360px] flex-col gap-7">{children}</div>
+        {pie ? <p className="relative text-center text-[13px] text-ink-mute">
           <T en="Luxury Atelier, digital invitations handmade in Bolivia" es="Luxury Atelier, invitaciones digitales hechas a mano en Bolivia" />
         </p> : <span aria-hidden />}
       </section>

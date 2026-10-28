@@ -84,7 +84,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
       <PanelHeader
         actions={
           // Un `<a>` normal y no `next/link`: es una descarga de un route handler, no una página.
-          <a className={botonClases()} download href="/panel/admin/ingresos/csv">
+          <a className={botonClases()} download href="/dashboard/admin/revenue/csv">
             {t('Descargar CSV', 'Download CSV')}
           </a>
         }
@@ -103,7 +103,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
           <Link
             aria-current={vista === v.key ? 'page' : undefined}
             className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[13.5px] font-medium no-underline max-[859px]:min-h-11 ${vista === v.key ? 'border-shell-deep bg-shell-deep text-shell-ink' : 'border-line-panel-strong bg-bg-raised text-ink hover:border-gold'}`}
-            href={v.key === 'cobro' ? '/panel/admin/ingresos' : `/panel/admin/ingresos?vista=${v.key}`}
+            href={v.key === 'cobro' ? '/dashboard/admin/revenue' : `/dashboard/admin/revenue?vista=${v.key}`}
             key={v.key}
           >
             {traducir(v.label, t)}
@@ -174,7 +174,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
             {i.ultimos.map((p) => (
               <li className="border-t border-line-panel first:border-none" key={p.ref}>
                 {/* En el celular: nombre e importe arriba; referencia, plan y fecha debajo. */}
-                <Link className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-0.5 py-3 transition-colors hover:bg-bg-sunken/50 min-[700px]:grid-cols-[6rem_minmax(0,1fr)_auto_7rem]" href={`/panel/admin/ventas?venta=p-${p.ref}`}>
+                <Link className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-0.5 py-3 transition-colors hover:bg-bg-sunken/50 min-[700px]:grid-cols-[6rem_minmax(0,1fr)_auto_7rem]" href={`/dashboard/admin/sales?venta=p-${p.ref}`}>
                   <span className="order-3 font-codigo text-[12px] tracking-[0.15em] text-ink-mute min-[700px]:order-none">{p.ref}</span>
                   <span className="order-1 min-w-0 truncate text-[14px] text-ink min-[700px]:order-none">
                     {p.customerName}
@@ -188,7 +188,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
           </ul>
         )}
       </PanelCard>
-          <a className={`${botonClases()} w-full min-[768px]:hidden`} download href="/panel/admin/ingresos/csv">
+          <a className={`${botonClases()} w-full min-[768px]:hidden`} download href="/dashboard/admin/revenue/csv">
             {t('Descargar CSV', 'Download CSV')}
           </a>
         </div>

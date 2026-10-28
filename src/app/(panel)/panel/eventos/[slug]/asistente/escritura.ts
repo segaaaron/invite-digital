@@ -112,7 +112,7 @@ function idsDe(valor: unknown): unknown {
 
 async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promise<unknown> {
   const base = { eventId: evento.id, eventSlug: evento.slug }
-  const ruta = (r: string) => `/panel/eventos/${evento.slug}${r}`
+  const ruta = (r: string) => `/dashboard/events/${evento.slug}${r}`
 
   switch (llamada.nombre) {
     case 'registrar_invitados': {
@@ -122,7 +122,7 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
       return {
         ...(r.creadas > 0 ? { hecho: `${r.creadas === 1 ? '1 invitación' : `${r.creadas} invitaciones`} · ${r.personas === 1 ? '1 persona' : `${r.personas} personas`} en la lista` } : {}),
         ...(ya.length > 0 ? { ya_estaban: ya } : {}),
-        enlace: ruta('/invitados'),
+        enlace: ruta('/guests'),
       }
     }
 
@@ -157,13 +157,13 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
           if (Object.keys(parche).length === 0 && o.telefono === null) pasos.push({ ok: false, fallo: 'Editar: no venía nada que cambiar' })
         }
       }
-      return informe(pasos, ruta('/invitados'))
+      return informe(pasos, ruta('/guests'))
     }
 
     case 'escribir_invitacion': {
       // La acción valida con `esquemaDeTextos`, que descarta el `nombre` de la herramienta.
       const r = await aplicarTextosDelAsistenteAction({ ...base, textos: llamada })
-      if (r.status === 'success') return { hecho: 'Textos guardados en Mi invitación', enlace: ruta('/configuracion') }
+      if (r.status === 'success') return { hecho: 'Textos guardados en Mi invitación', enlace: ruta('/setup') }
       return { error: r.status === 'error' && r.message === 'texto_largo' ? `Un texto es demasiado largo (${r.campo ?? ''}, máximo ${r.maximo ?? ''}).` : 'No se pudieron guardar los textos.' }
     }
 
@@ -203,7 +203,7 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
           else pasos.push(await paso(`«${t!.title}» marcada ${quiereHecha ? 'hecha' : 'pendiente'}`, () => toggleTaskAction({ status: 'idle' }, formulario({ ...base, taskId: t!.id }))))
         }
       }
-      return informe(pasos, ruta('/planner/tareas'))
+      return informe(pasos, ruta('/planner/tasks'))
     }
 
     case 'gestionar_presupuesto': {
@@ -282,7 +282,7 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
         }
         partidas = await planner.listBudget(evento.id)
       }
-      return informe(pasos, ruta('/planner/presupuesto'))
+      return informe(pasos, ruta('/planner/budget'))
     }
 
     case 'gestionar_cronograma': {
@@ -321,7 +321,7 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
           ),
         )
       }
-      return informe(pasos, ruta('/planner/cronograma'))
+      return informe(pasos, ruta('/planner/schedule'))
     }
 
     case 'gestionar_agenda': {
@@ -414,7 +414,7 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
           ),
         )
       }
-      return informe(pasos, ruta('/planner/proveedores'))
+      return informe(pasos, ruta('/planner/vendors'))
     }
 
     case 'gestionar_mesas': {
@@ -460,7 +460,7 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
             break
         }
       }
-      return informe(pasos, ruta('/mesas'))
+      return informe(pasos, ruta('/tables'))
     }
 
     case 'gestionar_regalos': {
@@ -520,18 +520,18 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
             break
         }
       }
-      return informe(pasos, ruta('/regalos'))
+      return informe(pasos, ruta('/gifts'))
     }
 
     case 'agradecer_mensajes': {
       const pasos: Paso[] = []
       for (const a of llamada.agradecimientos) pasos.push(await paso('Mensaje agradecido', () => replyAction({ ...base, responseId: a.mensaje_id, text: a.respuesta })))
-      return informe(pasos, ruta('/mensajes'))
+      return informe(pasos, ruta('/messages'))
     }
 
     case 'registrar_ingreso': {
       const r = await paso('Ingreso registrado', () => checkInByGroupAction({ ...base, groupId: llamada.invitacion_id, scanId: randomUUID(), arrivedCount: llamada.personas, scannedAtMs: Date.now() }))
-      return informe([r], ruta('/checkin'))
+      return informe([r], ruta('/check-in'))
     }
 
     case 'opciones_de_invitacion': {
@@ -580,7 +580,7 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
         )
       }
       if (pasos.length === 0) return { error: 'No me dijiste qué cambiar.' }
-      return informe(pasos, ruta('/configuracion'))
+      return informe(pasos, ruta('/setup'))
     }
 
     case 'estilo_de_invitacion': {
@@ -600,7 +600,7 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
         { status: 'idle', message: '' },
         formulario({ ...base, acento: acento ?? hoy.acento ?? '', caligrafia: caligrafia ?? hoy.caligrafia ?? '', titulares: titulares ?? hoy.titulares ?? '' }),
       ).catch(() => null)
-      return r?.status === 'success' ? { hecho: 'Estilo guardado', enlace: ruta('/configuracion') } : { error: r?.message ?? 'No se pudo guardar el estilo.', este_diseno_admite: opciones }
+      return r?.status === 'success' ? { hecho: 'Estilo guardado', enlace: ruta('/setup') } : { error: r?.message ?? 'No se pudo guardar el estilo.', este_diseno_admite: opciones }
     }
 
     case 'gestionar_cortejo': {
@@ -625,28 +625,28 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
             ),
           )
       }
-      return informe(pasos, ruta('/planner/cortejo'))
+      return informe(pasos, ruta('/planner/procession'))
     }
 
     case 'gestionar_recepcion': {
-      if (llamada.accion === 'quitar') return informe([await paso('Quitado de recepción: su enlace ya no abre', () => removePorterAction({ status: 'idle' }, formulario({ ...base, porterId: llamada.recepcion_id! })))], ruta('/equipo'))
+      if (llamada.accion === 'quitar') return informe([await paso('Quitado de recepción: su enlace ya no abre', () => removePorterAction({ status: 'idle' }, formulario({ ...base, porterId: llamada.recepcion_id! })))], ruta('/team'))
       const r = await addPorterAction({ status: 'idle' }, formulario({ ...base, name: llamada.persona!, phone: llamada.whatsapp ?? '', gate: llamada.puerta ?? '' })).catch(() => null)
       if (r?.status !== 'created') return { error: r?.status === 'error' ? r.message : 'No se pudo sumar a recepción.' }
-      return { hecho: `${r.nombre} está en recepción`, enlace_de_la_puerta: r.enlace, pin: r.pin, nota: 'Funciona el día del evento. Dale el enlace y el PIN tal cual.', enlace: ruta('/equipo') }
+      return { hecho: `${r.nombre} está en recepción`, enlace_de_la_puerta: r.enlace, pin: r.pin, nota: 'Funciona el día del evento. Dale el enlace y el PIN tal cual.', enlace: ruta('/team') }
     }
 
     case 'sumar_planner': {
       const r = await addTeamMemberAction({ status: 'idle' }, formulario({ ...base, kind: 'planner', email: llamada.correo })).catch(() => null)
       if (r?.status !== 'success') return { error: r?.status === 'error' ? r.message : 'No se pudo dar el acceso.' }
-      return { hecho: r.message, ...(r.password === undefined ? {} : { contrasena_provisional: r.password }), enlace: ruta('/equipo') }
+      return { hecho: r.message, ...(r.password === undefined ? {} : { contrasena_provisional: r.password }), enlace: ruta('/team') }
     }
 
     case 'deshacer_ingreso':
-      return informe([await paso('Ingreso deshecho', () => undoCheckInAction({ ...base, groupId: llamada.invitacion_id, personId: llamada.persona_id }))], ruta('/checkin'))
+      return informe([await paso('Ingreso deshecho', () => undoCheckInAction({ ...base, groupId: llamada.invitacion_id, personId: llamada.persona_id }))], ruta('/check-in'))
 
     case 'poner_foto': {
       const r = await ponerFotoDelAsistenteAction({ ...base, fotoId: llamada.foto_id, donde: llamada.donde, casilla: llamada.casilla, rotulo: llamada.rotulo })
-      return r.status === 'success' ? { hecho: `Foto puesta en ${r.donde}`, enlace: ruta('/configuracion') } : { error: r.message }
+      return r.status === 'success' ? { hecho: `Foto puesta en ${r.donde}`, enlace: ruta('/setup') } : { error: r.message }
     }
 
     case 'qr_de_transferencia': {
@@ -669,12 +669,12 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
       return {
         hecho: 'QR de la transferencia guardado y transferencia encendida',
         ...(hoy.banco === null || hoy.cuenta === null ? { falta: 'el banco, el titular y el número de cuenta para que se vea completa' } : {}),
-        enlace: ruta('/regalos'),
+        enlace: ruta('/gifts'),
       }
     }
 
     case 'borrar_documento':
-      return informe([await paso('Documento borrado', () => removeDocumentAction({ status: 'idle' }, formulario({ ...base, documentId: llamada.documento_id })))], ruta('/planner/documentos'))
+      return informe([await paso('Documento borrado', () => removeDocumentAction({ status: 'idle' }, formulario({ ...base, documentId: llamada.documento_id })))], ruta('/planner/documents'))
 
     case 'gestionar_ensayos': {
       const pasos: Paso[] = []
@@ -685,7 +685,7 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
           pasos.push(await paso(`Ensayo agendado el ${o.fecha_hora!.replace('T', ' a las ')}`, () => saveRehearsalAction({ status: 'idle' }, formulario({ ...base, date: o.fecha_hora!, place: o.lugar ?? '', notes: o.nota ?? '', asistentes }))))
         }
       }
-      return informe(pasos, ruta('/planner/cortejo'))
+      return informe(pasos, ruta('/planner/procession'))
     }
 
     case 'gestionar_encargo': {
@@ -702,12 +702,12 @@ async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promis
                   ...Object.fromEntries(Object.entries(o.respuestas ?? {}).flatMap(([pregunta, valor]) => (valor === null ? [] : [[`brief_${pregunta}`, valor]]))),
                 }),
               ).catch(() => null)
-      return r?.status === 'success' ? { hecho: r.message, enlace: ruta('/configuracion') } : { error: r?.message ?? 'No se pudo hacer ahora.' }
+      return r?.status === 'success' ? { hecho: r.message, enlace: ruta('/setup') } : { error: r?.message ?? 'No se pudo hacer ahora.' }
     }
 
     case 'quitar_planner': {
       const r = await removeTeamMemberAction({ status: 'idle' }, formulario({ ...base, userId: llamada.usuario_id })).catch(() => null)
-      return r?.status === 'success' ? { hecho: r.message, enlace: ruta('/equipo') } : { error: r?.status === 'error' ? r.message : 'No se pudo quitar.' }
+      return r?.status === 'success' ? { hecho: r.message, enlace: ruta('/team') } : { error: r?.status === 'error' ? r.message : 'No se pudo quitar.' }
     }
 
     case 'pedir_extra': {

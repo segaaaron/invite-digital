@@ -20,7 +20,7 @@ test('un evento de XV crea su plan con la plantilla, cierra una tarea y la ve en
   // error. Así que salen en «Esta semana» y «Atrasadas» queda vacía.
   await sql`update events set theme_key = 'xv-isabelle', event_date = (now() + interval '20 days')::date, rsvp_deadline = (now() + interval '10 days')::date where slug = ${eventSlug}`
 
-  await page.goto(`/panel/eventos/${eventSlug}/planner/tareas`)
+  await page.goto(`/dashboard/events/${eventSlug}/planner/tasks`)
   await page.getByRole('button', { name: 'Crear el plan con la plantilla' }).click()
 
   const vals = page.getByRole('listitem', { name: 'Empezar los ensayos del vals' })
@@ -30,14 +30,14 @@ test('un evento de XV crea su plan con la plantilla, cierra una tarea y la ve en
   await vals.getByRole('button', { name: 'Marcar hecha «Empezar los ensayos del vals»' }).click()
   await expect(vals.getByRole('button', { name: 'Reabrir «Empezar los ensayos del vals»' })).toBeVisible()
 
-  await page.goto(`/panel/eventos/${eventSlug}/planner/tareas?filtro=atrasadas`)
+  await page.goto(`/dashboard/events/${eventSlug}/planner/tasks?filtro=atrasadas`)
   await expect(page.getByText('Nada en este filtro')).toBeVisible()
 
-  await page.goto(`/panel/eventos/${eventSlug}/planner/tareas?filtro=semana`)
+  await page.goto(`/dashboard/events/${eventSlug}/planner/tasks?filtro=semana`)
   await expect(page.getByRole('listitem', { name: 'Empezar los ensayos del vals' })).toHaveCount(0)
   await expect(page.getByRole('listitem', { name: 'Reservar el salón' })).toBeVisible()
 
-  await page.goto(`/panel/eventos/${eventSlug}`)
+  await page.goto(`/dashboard/events/${eventSlug}`)
   // «Esta semana» del resumen (maqueta E21) trae lo que vence, tareas incluidas (las cinco primeras).
   const semana = page.locator('section[aria-labelledby="semana-titulo"]')
   await expect(semana.getByRole('listitem').filter({ hasText: /Vence el/ }).first()).toBeVisible()
@@ -49,7 +49,7 @@ test('el presupuesto suma una partida de un padrino, su pago y lo marca pagado',
   const { eventSlug } = await seedInvitation({ slug: 'planner-boda-e2e' })
   await sql`update events set theme_key = 'boda-bot' where slug = ${eventSlug}`
 
-  await page.goto(`/panel/eventos/${eventSlug}/planner/presupuesto?panel=partida`)
+  await page.goto(`/dashboard/events/${eventSlug}/planner/budget?panel=partida`)
   await page.getByLabel('Concepto').fill('Torta de tres pisos')
   await page.getByLabel('Categoría').selectOption('torta')
   await page.getByLabel('Previsto (Bs)').fill('mil quinientos')

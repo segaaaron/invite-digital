@@ -9,12 +9,12 @@ vi.mock('@/shared/db/client', () => ({ pg: { listen: () => Promise.resolve() } }
 const { GET } = await import('./route')
 const { repartir } = await import('@/shared/db/cambios-en-vivo')
 
-const pedir = (control: AbortController) => GET(new Request('http://x/panel/eventos/boda/en-vivo', { signal: control.signal }), { params: Promise.resolve({ slug: 'boda' }) })
+const pedir = (control: AbortController) => GET(new Request('http://x/dashboard/events/boda/live', { signal: control.signal }), { params: Promise.resolve({ slug: 'boda' }) })
 const noEsSuyo = err({ kind: 'not_found', detail: '' })
 
 beforeEach(() => vi.clearAllMocks())
 
-describe('GET /panel/eventos/[slug]/en-vivo', () => {
+describe('GET /dashboard/events/[slug]/live', () => {
   it('sin acceso al evento, 404: como un evento ajeno', async () => {
     getFor.mockResolvedValue(noEsSuyo)
     const respuesta = await pedir(new AbortController())

@@ -258,7 +258,7 @@ export function NuevaBodaForm({
           {estado.status === 'success' ? (
             <PanelAlert tone="ok">
               {estado.message}{' '}
-              <Link className="underline underline-offset-4" href={`/panel/eventos/${estado.eventSlug}/configuracion`}>
+              <Link className="underline underline-offset-4" href={`/dashboard/events/${estado.eventSlug}/setup`}>
                 {t('Abrir el evento', 'Open the event')}
               </Link>
             </PanelAlert>

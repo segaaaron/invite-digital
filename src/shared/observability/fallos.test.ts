@@ -40,7 +40,7 @@ describe('registro de fallos', () => {
   it('guarda qué pasó (con los %s rellenados) y por qué (la pila y la causa), y el admin lo lee agrupado', async () => {
     const causa = new Error('conexión rechazada')
     const error = new Error('insert falló', { cause: causa })
-    await guardarFallo({ servicio: SERVICIO, partes: ['No se pudo guardar el bloque %s:', 'reception', error], ruta: '/panel/eventos/x/configuracion', accion: 'abc' })
+    await guardarFallo({ servicio: SERVICIO, partes: ['No se pudo guardar el bloque %s:', 'reception', error], ruta: '/dashboard/events/x/setup', accion: 'abc' })
     await guardarFallo({ servicio: SERVICIO, partes: ['No se pudo guardar el bloque %s:', 'reception', error], ruta: null, accion: null })
 
     const tipo = (await tiposDeFallo(1, 'servidor')).find((t) => t.servicio === SERVICIO)

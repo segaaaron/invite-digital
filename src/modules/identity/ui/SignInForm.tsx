@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState, useId, useState } from 'react'
+import { useActionState, useId, useRef, useState } from 'react'
 import { EyeIcon, EyeOffIcon } from '@/shared/design/ui/icons'
 import { signInAction, type SignInActionState } from '@/app/_acciones/identity/actions'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import type { T } from '@/shared/i18n/t'
 import { useT } from '@/shared/i18n/idioma-navegador'
+import { RUTAS } from '@/shared/rutas/panel'
 
 const INITIAL: SignInActionState = { status: 'idle', message: '' }
 
@@ -35,14 +36,74 @@ export function SignInForm() {
   const errorId = useId()
   // Arranca oculta: enseñarla por defecto la dejaría a la vista de quien pasa por detrás.
   const [verContrasena, setVerContrasena] = useState(false)
+  /**
+   * «Entrar» se apaga cuando lo escrito no sirve: correo a medias o contraseña vacía.
+   *
+   * **Solo después de escribir.** Apagarlo también de entrada dejó al usuario encerrado (27 oct):
+   * el gestor de contraseñas rellenó los dos campos sin disparar ningún evento, el botón siguió
+   * gris y no había forma de entrar con los datos correctos delante. Mientras nadie toque nada el
+   * botón está encendido; si al pulsarlo falta algo, el aviso de cada campo lo dice.
+   *
+   * Se mira con `:invalid` y **no** con `checkValidity()`: ese dispara el aviso de cada campo, y
+   * al cargar la pantalla habría pintado los dos errores en rojo sin que nadie escribiera nada.
+   */
+  /**
+   * El velo tiene un suelo de 320 ms. Cuando el servidor contesta en 150 —en local siempre— el
+   * velo aparecía y desaparecía en el mismo parpadeo: se veía un fogonazo y nadie sabía si había
+   * pasado algo. No retiene nada: la respuesta ya llegó, lo único que espera es el ojo.
+   */
+  const [veloMinimo, setVeloMinimo] = useState(false)
+  const esperando = isPending || veloMinimo
+  const formulario = useRef<HTMLFormElement>(null)
+  const [escrito, setEscrito] = useState(false)
+  const [completo, setCompleto] = useState(true)
+  const revisar = () => {
+    setEscrito(true)
+    setCompleto(formulario.current?.querySelector(':invalid') == null)
+  }
   const error = state.status === 'error' && state.message !== '' ? mensajes(t)[state.message] : null
 
   return (
-    <form action={formAction} className="flex w-full flex-col gap-5">
+    <>
+    {/*
+      Mientras el servidor contesta, la pantalla entera espera: un velo sobre todo, el sello y
+      «Entrando…». Antes solo lo decía el botón y los campos seguían tocables, así que se podía
+      escribir encima de un envío en curso o volver a pulsar. `aria-busy` y `role="status"` lo
+      cuentan también a quien no lo ve.
+    */}
+    {esperando ? (
+      <div aria-busy className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-bg/85 backdrop-blur-[3px]" role="status">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="" className="size-14 animate-latido" src="/site/marca/sello-la-144-59259035.avif" />
+        <p className="flex items-center gap-2.5 text-[15px] text-ink">
+          <span aria-hidden className="size-2 animate-latido rounded-full bg-gold" />
+          {t('Entrando…', 'Signing in…')}
+        </p>
+      </div>
+    ) : null}
+    <form
+      action={formAction}
+      className="flex w-full flex-col gap-5"
+      onChange={revisar}
+      onInput={revisar}
+      onSubmit={() => {
+        setVeloMinimo(true)
+        window.setTimeout(() => setVeloMinimo(false), 320)
+      }}
+      ref={formulario}
+    >
       <div className="flex flex-col gap-2">
         <label className={LABEL_CLASS} htmlFor={emailId}>
           {t('Correo', 'Email')}
         </label>
+        {/*
+          El correo se comprueba **al salir del campo**, no al enviar: `checkValidity()` dispara el
+          mismo `invalid` que escucha `ValidacionDeFormularios`, que es quien pinta el mensaje bajo
+          el campo y lo marca. Si está vacío no dice nada todavía —aún lo está escribiendo—.
+
+          Y lleva patrón propio porque `type="email"` da por bueno `ana@correo`: pide un dominio
+          con punto y al menos dos letras detrás. El `title` es lo que se lee si falla.
+        */}
         <input
           autoComplete="username"
           autoFocus
@@ -52,9 +113,15 @@ export function SignInForm() {
           aria-invalid={error !== null}
           className={FIELD_CLASS}
           id={emailId}
+          inputMode="email"
           name="email"
+          onBlur={(evento) => {
+            if (evento.currentTarget.value.trim() !== '') evento.currentTarget.checkValidity()
+          }}
+          pattern="[^@\s]+@[^@\s]+\.[A-Za-z]{2,}"
           placeholder={t('nombre@correo.com', 'name@email.com')}
           required
+          title={t('Escribe un correo válido, como nombre@correo.com.', 'Enter a valid email, like name@email.com.')}
           type="email"
         />
       </div>
@@ -109,22 +176,35 @@ export function SignInForm() {
         </p>
       ) : null}
 
-      <div className="flex items-center justify-between gap-3 text-[14px]">
-        <label className="flex min-h-11 cursor-pointer items-center gap-2.5">
+      {/*
+        Las dos cosas en una línea, y cada una entera: antes la fila repartía el ancho a partes
+        iguales y «en este aparato» y «¿Olvidaste tu contraseña?» caían en dos columnas de dos
+        renglones cada una. Si de verdad no caben, la casilla se queda arriba y el enlace baja.
+      */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-[14px]">
+        <label className="flex min-h-11 cursor-pointer items-center gap-2.5 whitespace-nowrap">
           <input className="size-[18px] accent-[var(--color-shell-deep)]" defaultChecked name="recordarme" type="checkbox" />
           {t('Recordarme', 'Remember me')}<span className="max-[559px]:sr-only">{t(' en este aparato', ' on this device')}</span>
         </label>
-        <Link className="text-gold-deep underline underline-offset-4 hover:text-ink" href="/panel/recuperar">
+        <Link className="whitespace-nowrap text-gold-deep underline underline-offset-4 hover:text-ink" href={RUTAS.recuperar}>
           <span aria-hidden className="min-[560px]:hidden">{t('¿La olvidaste?', 'Forgot it?')}</span>
           <span className="max-[559px]:sr-only">{t('¿Olvidaste tu contraseña?', 'Forgot your password?')}</span>
         </Link>
       </div>
 
+      {/*
+        Mientras comprueba, el botón lo dice: el punto que late del panel —el mismo de
+        `SubmitButton`, que con movimiento reducido se queda quieto— y «Entrando…». Entrar pasa por
+        el servidor y en una conexión lenta la espera se hacía a ciegas: parecía que no se envió.
+      */}
       <button
-        className="mt-1 min-h-13 cursor-pointer rounded-[10px] bg-shell-deep px-7 text-[16px] font-medium text-shell-ink transition-colors hover:bg-sage disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={isPending}
-        type="submit" aria-busy={(isPending) || undefined}>
-        {isPending ? t('Entrando…', 'Signing in…') : t('Entrar', 'Sign in')}
+        aria-busy={esperando || undefined}
+        className="mt-1 flex min-h-13 cursor-pointer items-center justify-center gap-2.5 rounded-[10px] bg-shell-deep px-7 text-[16px] font-medium text-shell-ink transition-colors hover:bg-sage disabled:cursor-wait disabled:opacity-60"
+        disabled={esperando || (escrito && !completo)}
+        type="submit"
+      >
+        {esperando ? <span aria-hidden className="size-2 animate-latido rounded-full bg-current" /> : null}
+        {esperando ? t('Entrando…', 'Signing in…') : t('Entrar', 'Sign in')}
       </button>
 
       {/* Sigue sin haber «crear cuenta», y eso no es un descuido: las altas las hace el
@@ -138,5 +218,6 @@ export function SignInForm() {
         </a>
       </p>
     </form>
+    </>
   )
 }

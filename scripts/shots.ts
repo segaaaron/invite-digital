@@ -8,7 +8,7 @@
  *
  *   pnpm shots                      · los dieciséis modelos a 1440×900
  *   pnpm shots --ancho 390          · los dieciséis en un teléfono
- *   pnpm shots --url /es/colecciones --url /panel  · rutas sueltas
+ *   pnpm shots --url /es/colecciones --url /dashboard  · rutas sueltas
  *   pnpm shots --base http://localhost:3100        · contra otro servidor
  *
  * Va contra el servidor que ya esté levantado —`pnpm dev` en el 3000 por defecto—, así que

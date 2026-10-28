@@ -218,7 +218,7 @@ export default async function ConfiguracionPage({
             <PanelHeader
               actions={
                 <span className="flex gap-2.5 max-[1099px]:hidden">
-                  <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>
+                  <PanelButton href={`/dashboard/events/${event.value.slug}/preview`}>
                     <EyeIcon className="size-4" /> {t('Ver la invitación', 'View the invitation')}
                   </PanelButton>
                   <EntrarComoCliente anfitriones={hostsDelEvento} eventId={event.value.id} variant="primary" />
@@ -231,7 +231,7 @@ export default async function ConfiguracionPage({
         </div>
         {/* En el celular también se ve la invitación: antes solo quedaba «Entrar como el cliente». */}
         <div className="mb-5 grid grid-cols-2 gap-2.5 min-[768px]:max-w-[560px] min-[1100px]:hidden">
-          <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>
+          <PanelButton href={`/dashboard/events/${event.value.slug}/preview`}>
             <EyeIcon className="size-4" /> {t('Ver la invitación', 'View the invitation')}
           </PanelButton>
           <EntrarComoCliente anfitriones={hostsDelEvento} eventId={event.value.id} variant="primary" />
@@ -299,7 +299,7 @@ export default async function ConfiguracionPage({
             ) : null}
             <section aria-label={t('La invitación', 'The invitation')} className={TARJETA}>
               <p className="text-[14px] text-ink-mute">{t('Escribe sus textos, fotos y canción como lo haría el cliente, sin entrar como él. Cada guardado queda en la auditoría.', 'Write its text, photos and song as the client would, without signing in as them. Every save is recorded in the audit log.')}</p>
-              <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion?vista=invitacion`} size="sm">
+              <PanelButton href={`/dashboard/events/${event.value.slug}/setup?vista=invitacion`} size="sm">
                 {t('Escribir la invitación', 'Write the invitation')}
               </PanelButton>
             </section>
@@ -307,7 +307,7 @@ export default async function ConfiguracionPage({
               <section aria-label={t('Diseño por encargo', 'Custom design')} className={TARJETA} id="diseno">
                 <EncargoDelEquipo
                   encargo={encargo}
-                  escribir={`/panel/eventos/${event.value.slug}/configuracion?vista=invitacion`}
+                  escribir={`/dashboard/events/${event.value.slug}/setup?vista=invitacion`}
                   eventId={event.value.id}
                   hoy={hoy}
                   rondas={await encargos.rondas(event.value.id)}
@@ -330,12 +330,12 @@ export default async function ConfiguracionPage({
       <PanelHeader
         actions={
           <>
-            {escribiendo ? <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>{t('Volver a la ficha', 'Back to the record')}</PanelButton> : null}
+            {escribiendo ? <PanelButton href={`/dashboard/events/${event.value.slug}/setup`}>{t('Volver a la ficha', 'Back to the record')}</PanelButton> : null}
             {/* Verla entera, como la abrirá un invitado: el botón principal de la pantalla, no solo el
                 «Pantalla completa» pequeño junto al teléfono, que no se veía (7 de octubre). */}
             {/* Quien no gestiona el evento ya lo tiene arriba, en la barra («Ver mi invitación»). */}
             {contenido === null || !esDelAtelier ? null : (
-              <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`} variant="primary">
+              <PanelButton href={`/dashboard/events/${event.value.slug}/preview`} variant="primary">
                 <EyeIcon className="size-4" /> {t('Ver mi invitación', 'View my invitation')}
               </PanelButton>
             )}
@@ -369,7 +369,7 @@ export default async function ConfiguracionPage({
                 {avance.listas} de {avance.total}
               </span>
             </div>
-            <Link className="inline-flex min-h-11 w-fit items-center text-[16px] font-medium text-gold-deep underline underline-offset-4" href={`/panel/eventos/${event.value.slug}/configuracion${escribiendo ? '?vista=invitacion' : ''}${viendo ? '' : `${escribiendo ? '&' : '?'}ver=1`}`}>
+            <Link className="inline-flex min-h-11 w-fit items-center text-[16px] font-medium text-gold-deep underline underline-offset-4" href={`/dashboard/events/${event.value.slug}/setup${escribiendo ? '?vista=invitacion' : ''}${viendo ? '' : `${escribiendo ? '&' : '?'}ver=1`}`}>
               {viendo ? t('Seguir escribiendo', 'Keep writing') : t('Ver cómo queda', 'See how it looks')}
             </Link>
           </div>
@@ -388,20 +388,20 @@ export default async function ConfiguracionPage({
               decide={decideElEncargo}
               encargo={encargo}
               eventId={event.value.id}
-              extras={`/panel/eventos/${event.value.slug}/extras`}
+              extras={`/dashboard/events/${event.value.slug}/extras`}
               preguntas={
                 isErr(capacidad)
                   ? []
                   : preguntasDelEncargo({ estilo: hasFeature(capacidad.value, 'estilo'), creadoParaTi: hasFeature(capacidad.value, 'plannerTotal') })
               }
-              vistaPrevia={`/panel/eventos/${event.value.slug}/vista-previa`}
+              vistaPrevia={`/dashboard/events/${event.value.slug}/preview`}
             />
           </PanelCard>
         )}
         <ContentBlockForms
             fiesta={fiestaDeCategoria(tema.categorySlug)}
             temaKey={tema.key}
-            {...(conCronograma ? { itinerarioDesde: `/panel/eventos/${event.value.slug}/planner/cronograma` } : {})}
+            {...(conCronograma ? { itinerarioDesde: `/dashboard/events/${event.value.slug}/planner/schedule` } : {})}
             content={contenido}
             ejemplo={tema.defaultContent}
             eventId={event.value.id}
@@ -421,7 +421,7 @@ export default async function ConfiguracionPage({
               estilo={await events.estilo.leer(event.value.id)}
               eventId={event.value.id}
               eventSlug={event.value.slug}
-              mejorar={esDelAtelier ? { href: `/panel/eventos/${event.value.slug}/plan`, label: t('Ver planes', 'See plans') } : null}
+              mejorar={esDelAtelier ? { href: `/dashboard/events/${event.value.slug}/plan`, label: t('Ver planes', 'See plans') } : null}
               titulares={tema.estilo.titulares === undefined ? [] : TITULARES.filter((c) => c.clave !== tema.estilo?.titulares).map((c) => ({ ...c, clase: themeFonts[c.clave].variable, familia: `var(${FONT_VARIABLES[c.clave]})` }))}
             />
           </PanelCard>
@@ -432,7 +432,7 @@ export default async function ConfiguracionPage({
             disponible={esAdmin || (await events.saveTheDate.comprado(event.value.id))}
             eventId={event.value.id}
             eventSlug={event.value.slug}
-            extras={`/panel/eventos/${event.value.slug}/extras`}
+            extras={`/dashboard/events/${event.value.slug}/extras`}
             url={await (async () => {
               const token = await events.saveTheDate.leer(event.value.id)
               return token === null ? null : `${env.SITE_URL.replace(/\/+$/, '')}/guarda/${token}`

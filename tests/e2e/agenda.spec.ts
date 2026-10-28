@@ -26,7 +26,7 @@ test('una cita se agenda desde su día, sale en el mes y en la suscripción del 
   const { token } = await seedInvitation({ slug: SLUG, plan: 'imperial' })
   await escribirInvitacion(SLUG)
 
-  await page.goto(`/panel/eventos/${SLUG}/planner/agenda?mes=2027-04&dia=2027-04-10&cita=nueva`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/agenda?mes=2027-04&dia=2027-04-10&cita=nueva`)
   const dialogo = page.getByRole('dialog', { name: 'Nueva cita' })
   await dialogo.getByLabel('Qué').fill('Degustación del menú')
   await dialogo.getByLabel('Hora').selectOption('16:30')
@@ -79,7 +79,7 @@ test('lo atrasado sale arriba: se marca hecho (con deshacer), se cambia de fecha
   await sql`insert into planner_tasks (event_id, stage, title, due_date) values (${evento!.id}, 'propias', 'Elegir el menú', ${hace(2)}), (${evento!.id}, 'propias', 'Llamar al DJ', ${hace(5)})`
   const tarea = async (titulo: string) => (await sql<{ done_at: Date | null; due_date: string }[]>`select done_at, due_date::text from planner_tasks where event_id = ${evento!.id} and title = ${titulo}`)[0]!
 
-  await page.goto(`/panel/eventos/${SLUG}/planner/agenda`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/agenda`)
   const atrasado = page.locator('section', { has: page.getByRole('heading', { name: 'Atrasado · 2' }) })
   await expect(atrasado).toContainText('Llamar al DJ')
   await expect(atrasado.getByText('Atrasado', { exact: true }).filter({ visible: true })).toHaveCount(2)
@@ -105,7 +105,7 @@ test('lo atrasado sale arriba: se marca hecho (con deshacer), se cambia de fecha
 
   // La leyenda es el filtro: ocultar las tareas las quita de la lista del mes.
   // (La lista del mes en curso empieza hoy: lo de antes está arriba, en «Atrasado».)
-  await page.goto(`/panel/eventos/${SLUG}/planner/agenda?vista=lista&mes=${nuevo.slice(0, 7)}`)
+  await page.goto(`/dashboard/events/${SLUG}/planner/agenda?vista=lista&mes=${nuevo.slice(0, 7)}`)
   const mes = page.locator('section', { has: page.getByRole('navigation', { name: 'Qué se ve en la agenda' }) })
   await expect(mes).toContainText('Llamar al DJ')
   await expect(mes).not.toContainText('Elegir el menú')

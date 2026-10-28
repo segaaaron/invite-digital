@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin, events, guests, plans } from '@/app/composition/container'
 import { faltaParaEnviar } from './puede-invitar'
 import { esquemaDePropuesta } from '@/modules/asistente'
@@ -44,10 +44,10 @@ export async function revokeInvitationAction(
     return { status: 'error', message: result.error.kind }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}`)
+  revalidarRuta(`/dashboard/events/${eventSlug}`)
   // Y la lista de invitados, que es donde se ve y donde vive el botón de devolverla: sin esto
   // quedaba enseñando la invitación como activa hasta la siguiente navegación.
-  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/guests`)
   return { status: 'success' }
 }
 
@@ -116,8 +116,8 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
-  revalidatePath(`/panel/eventos/${eventSlug}`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/guests`)
+  revalidarRuta(`/dashboard/events/${eventSlug}`)
   return { status: 'success', message: t('Invitado añadido.', 'Guest added.') }
 }
 
@@ -137,7 +137,7 @@ export async function addPersonAction(input: {
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/guests`)
   return { status: 'success' }
 }
 
@@ -163,7 +163,7 @@ export async function updatePersonAction(input: {
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/guests`)
   return { status: 'success' }
 }
 
@@ -179,7 +179,7 @@ export async function removePersonAction(input: { eventSlug: string; id: string 
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/guests`)
   return { status: 'success' }
 }
 
@@ -203,7 +203,7 @@ export async function restoreInvitationAction(input: { eventSlug: string; id: st
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/guests`)
   // Si otra pestaña se adelantó, la pantalla lo dice en vez de cantar una devolución que no hizo.
   return result.value === 'ya_estaba'
     ? { status: 'success', message: t('Esta invitación ya no estaba revocada.', 'This invitation was no longer revoked.') }
@@ -227,7 +227,7 @@ export async function reopenRsvpAction(input: { eventSlug: string; id: string })
     return { status: 'error', message: t('No se pudo reabrir la confirmación.', 'The RSVP couldn’t be reopened.') }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/guests`)
   return { status: 'success' }
 }
 
@@ -300,7 +300,7 @@ async function repartir(eventId: string, eventSlug: string, formData: FormData, 
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/guests`)
   return {
     status: 'success',
     groupId,
@@ -368,7 +368,7 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
     return { status: 'error', message: traducir(result.error.detail, t) }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/guests`)
   return {
     status: 'success',
     created: result.value.created,
@@ -408,7 +408,7 @@ export async function setGroupPhoneAction(input: {
     return { status: 'error', message: t('No se pudo guardar el teléfono.', 'The phone couldn’t be saved.') }
   }
 
-  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/guests`)
   return { status: 'success' }
 }
 
@@ -464,7 +464,7 @@ export async function addGuestsFromAssistantAction(input: { eventSlug: string; i
     if (isErr(result)) {
       registrarFallo('guests/actions', 'alta desde el asistente rechazada', result.error.kind, result.error.detail)
       if (creadas > 0) await admin.record(actor, { action: 'asistente.invitados', subject: input.eventSlug, detail: `${creadas} invitaciones` })
-      revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+      revalidarRuta(`/dashboard/events/${input.eventSlug}/guests`)
       return { status: 'error', message: creadas === 0 ? traducir(result.error.detail, t) : t(`Se añadieron ${creadas}; ${principal} no: ${result.error.detail}`, `${creadas} were added; ${principal} was not: ${traducir(result.error.detail, t)}`) }
     }
     creadas += 1
@@ -476,7 +476,7 @@ export async function addGuestsFromAssistantAction(input: { eventSlug: string; i
   }
 
   await admin.record(actor, { action: 'asistente.invitados', subject: input.eventSlug, detail: `${creadas} ${creadas === 1 ? 'invitación' : 'invitaciones'}, ${personas} ${personas === 1 ? 'persona' : 'personas'}` })
-  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
-  revalidatePath(`/panel/eventos/${input.eventSlug}`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}/guests`)
+  revalidarRuta(`/dashboard/events/${input.eventSlug}`)
   return { status: 'success', creadas, personas, yaEstaban }
 }

@@ -63,7 +63,7 @@ export default async function AdminAuditoriaPage({
     if (q !== '') u.set('q', q)
     if (n !== undefined) u.set('n', String(n))
     const cadena = u.toString()
-    return cadena === '' ? '/panel/admin/auditoria' : `/panel/admin/auditoria?${cadena}`
+    return cadena === '' ? '/dashboard/admin/audit' : `/dashboard/admin/audit?${cadena}`
   }
 
   const leido = await admin.audit(tope + 1, { actorEmail: quien, prefijos: prefijosDeGrupo(tipo) ?? undefined, patron })
@@ -75,7 +75,7 @@ export default async function AdminAuditoriaPage({
       <PanelHeader title={t('Auditoría', 'Audit')} pestanas={<PestanasDeAdmin />}
       />
 
-      <form action="/panel/admin/auditoria" className="mb-8 grid gap-3 min-[760px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] min-[760px]:items-end" method="get" role="search">
+      <form action="/dashboard/admin/audit" className="mb-8 grid gap-3 min-[760px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] min-[760px]:items-end" method="get" role="search">
         <label className="flex flex-col gap-2">
           <span className={LABEL_CLASS}>{t('Quién', 'Who')}</span>
           <select className={FIELD_CLASS} defaultValue={quien ?? ''} name="quien">
@@ -106,7 +106,7 @@ export default async function AdminAuditoriaPage({
           <PanelButton type="submit" variant="primary">
             {t('Filtrar', 'Filter')}
           </PanelButton>
-          {filtrando ? <PanelButton href="/panel/admin/auditoria">{t('Quitar filtros', 'Clear filters')}</PanelButton> : null}
+          {filtrando ? <PanelButton href="/dashboard/admin/audit">{t('Quitar filtros', 'Clear filters')}</PanelButton> : null}
         </span>
       </form>
 
@@ -186,13 +186,13 @@ const dia_ = (locale: Locale) => new Intl.DateTimeFormat(INTL[locale], { day: 'n
 /** El sujeto de una fila con su nombre: un evento enlaza a su ficha; un modelo dice cómo se llama. */
 function Sobre({ sujeto, eventos, modelos }: { sujeto: string | null; eventos: ReadonlyMap<string, string>; modelos: ReadonlyMap<string, string> }) {
   if (sujeto === null) return null
-  // Lo hecho en modo soporte guarda la dirección (`/panel/eventos/<slug>/invitados`): se dice con el nombre del evento.
+  // Lo hecho en modo soporte guarda la dirección (`/dashboard/events/<slug>/guests`): se dice con el nombre del evento.
   const ruta = /^\/panel\/eventos\/([^/?#]+)/.exec(sujeto)
   const slug = ruta?.[1] ?? sujeto
   const evento = eventos.get(slug)
   if (evento !== undefined) {
     return (
-      <Link className="text-gold-deep underline underline-offset-4 max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center" href={`/panel/eventos/${slug}/configuracion`}>
+      <Link className="text-gold-deep underline underline-offset-4 max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center" href={`/dashboard/events/${slug}/setup`}>
         {evento}
       </Link>
     )

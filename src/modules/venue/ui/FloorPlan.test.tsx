@@ -38,7 +38,7 @@ const props = {
   eventSlug: 'boda',
   tables: [mesa('t1', 'Mesa 01', 20, 20), mesa('t2', 'Mesa 02', 60, 60)],
   zones: [zona],
-  exits: [{ href: '/panel/eventos/boda', label: 'Volver al evento' }],
+  exits: [{ href: '/dashboard/events/boda', label: 'Volver al evento' }],
 }
 
 /** jsdom da un rect de ceros; sin ancho, el arrastre no puede calcular porcentajes. */
@@ -217,7 +217,7 @@ describe('FloorPlan', () => {
     fireEvent.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     await waitFor(() => expect(moveElementsAction).toHaveBeenCalledTimes(1))
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/panel/eventos/boda'))
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard/events/boda'))
   })
 
   it('«Descartar» desde el modal navega sin guardar', async () => {
@@ -226,7 +226,7 @@ describe('FloorPlan', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Volver al evento' }))
     fireEvent.click(screen.getByRole('button', { name: /descartar y salir/i }))
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/panel/eventos/boda'))
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard/events/boda'))
     expect(moveElementsAction).not.toHaveBeenCalled()
   })
 
@@ -234,7 +234,7 @@ describe('FloorPlan', () => {
     render(<><GuardarPlano /><FloorPlan {...props} /></>)
     fireEvent.click(screen.getByRole('link', { name: 'Volver al evento' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(push).toHaveBeenCalledWith('/panel/eventos/boda')
+    expect(push).toHaveBeenCalledWith('/dashboard/events/boda')
   })
 
   it('registra beforeunload solo mientras hay cambios y lo quita al guardar', async () => {
@@ -322,7 +322,7 @@ describe('FloorPlan · editar una zona desde el plano', () => {
         eventSlug="boda"
         exits={[]}
         tables={[]}
-        zoneEditHrefPrefix="/panel/eventos/boda/mesas?panel=zona&zona="
+        zoneEditHrefPrefix="/dashboard/events/boda/tables?panel=zona&zona="
         zones={[zona]}
       />,
     )
@@ -330,7 +330,7 @@ describe('FloorPlan · editar una zona desde el plano', () => {
     // Una **cadena**, no una función: un componente cliente no recibe funciones del
     // servidor, y hacerlo revienta la página en ejecución sin que el typecheck avise.
     expect(screen.getByRole('link', { name: 'Editar Barra' }).getAttribute('href')).toBe(
-      '/panel/eventos/boda/mesas?panel=zona&zona=z9',
+      '/dashboard/events/boda/tables?panel=zona&zona=z9',
     )
   })
 

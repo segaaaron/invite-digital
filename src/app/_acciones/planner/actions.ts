@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { events, planner } from '@/app/composition/container'
 import { fiestaDeTema } from '@/modules/events'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
@@ -41,7 +41,7 @@ const valoresDe = (fd: FormData): Record<string, string> =>
 async function responder(resultado: PlannerResult, eventSlug: string, fd?: FormData): Promise<PlannerActionState> {
   const t = await tr()
   if (!resultado.ok) return { status: 'error', message: traducir(resultado.mensaje, t), ...(fd ? { valores: valoresDe(fd) } : {}) }
-  revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
+  revalidarRuta(`/dashboard/events/${eventSlug}`, 'layout')
   return { status: 'success' }
 }
 

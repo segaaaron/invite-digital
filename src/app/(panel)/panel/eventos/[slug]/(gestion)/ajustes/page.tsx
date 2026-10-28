@@ -45,10 +45,10 @@ export default async function AjustesDelEventoPage({ params }: { params: Promise
     throw new Error(event.error.detail)
   }
   // Quien gestiona el evento lo configura en su ficha, con el diseño, el plan y los accesos.
-  if (gestionaElEvento(actor, event.value)) redirect(`/panel/eventos/${event.value.slug}/configuracion`)
+  if (gestionaElEvento(actor, event.value)) redirect(`/dashboard/events/${event.value.slug}/setup`)
 
   const tema = themeFor(event.value.themeKey)
-  const base = `/panel/eventos/${event.value.slug}`
+  const base = `/dashboard/events/${event.value.slug}`
   const [capacidad, estilo, preguntas, comprado, token] = await Promise.all([
     plans.allowanceFor(event.value.id),
     events.estilo.leer(event.value.id),
@@ -86,7 +86,7 @@ export default async function AjustesDelEventoPage({ params }: { params: Promise
               «{muestra.replace('…', '').trim()}»
             </blockquote>
             <div className="mt-4">
-              <PanelButton href={`${base}/invitados?panel=envio`}>{t('Ver cómo sale al enviar', 'See how it goes out')}</PanelButton>
+              <PanelButton href={`${base}/guests?panel=envio`}>{t('Ver cómo sale al enviar', 'See how it goes out')}</PanelButton>
             </div>
           </PanelCard>
 

@@ -1,7 +1,7 @@
 'use server'
 
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { randomBytes } from 'node:crypto'
-import { revalidatePath } from 'next/cache'
 import { admin, diseno, events, identity, leads, notifications, orders, plans } from '@/app/composition/container'
 import { redirect } from 'next/navigation'
 import { themeFor } from '@/modules/events/ui/themes/registry'
@@ -41,7 +41,7 @@ export async function reassignEventAction(_previous: AdminActionState, formData:
 
   refrescar()
   // La ficha del evento también lo enseña: sin revalidarla seguía diciendo el responsable viejo.
-  revalidatePath(`/panel/eventos/${evento.value.slug}`, 'layout')
+  revalidarRuta(`/dashboard/events/${evento.value.slug}`, 'layout')
   return { status: 'success', message: t('Responsable cambiado.', 'Owner changed.') }
 }
 
@@ -60,7 +60,7 @@ export async function setEventPlanAction(_previous: AdminActionState, formData: 
   }
 
   refrescar()
-  revalidatePath(`/panel/eventos/${texto(formData, 'eventSlug')}`, 'layout')
+  revalidarRuta(`/dashboard/events/${texto(formData, 'eventSlug')}`, 'layout')
   return { status: 'success', message: t('Plan cambiado.', 'Plan changed.') }
 }
 
@@ -103,7 +103,7 @@ export async function createWeddingForClientAction(
   const fecha = texto(formData, 'eventDate')
   const planSlug = texto(formData, 'planSlug')
   // **Un solo alta** para los dos casos: con el acceso del cliente, o un evento que lleva el
-  // atelier sin darle acceso a nadie (antes era otra pantalla, `/panel/eventos/nuevo`).
+  // atelier sin darle acceso a nadie (antes era otra pantalla, `/dashboard/events/new`).
   const sinAcceso = texto(formData, 'sinAcceso') === 'on'
   const correo = texto(formData, 'clientEmail').trim().toLowerCase()
   // La contraseña provisional **se genera**: nadie la inventa ni la escribe. Le llega por correo
@@ -312,5 +312,5 @@ export async function duplicarEventoAction(_previo: { status: 'idle' | 'error'; 
   }
   await admin.record(actor, { action: 'evento.duplicado', subject: copia.value.slug, detail: `Copia de ${o.slug}` })
   refrescar()
-  redirect(`/panel/eventos/${copia.value.slug}/configuracion`)
+  redirect(`/dashboard/events/${copia.value.slug}/setup`)
 }

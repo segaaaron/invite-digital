@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { redirect } from 'next/navigation'
 import { admin, asistente, diseno, orders, plans } from '@/app/composition/container'
 import { tieneLuxury } from '@/modules/asistente'
@@ -53,7 +53,7 @@ export async function orderExtraAction(_previo: ExtraActionState, fd: FormData):
       { userId: actor.soporte.adminUserId, email: actor.soporte.adminEmail, role: 'admin', mustChangePassword: false },
       { action: 'extra.aplicado', subject: eventSlug || null, detail: `${extra.name} (sin pedido: evento sin cliente)` },
     )
-    revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
+    revalidarRuta(`/dashboard/events/${eventSlug}`, 'layout')
     return { status: 'success', message: t(`${extra.name}: aplicado al evento. Sin cliente no se genera pedido.`, `${extra.name}: applied to the event. Without a client no order is created.`) }
   }
 
@@ -63,5 +63,5 @@ export async function orderExtraAction(_previo: ExtraActionState, fd: FormData):
 
   // `redirect` lanza: va fuera de cualquier try, después de escribir. Se paga sin salir del panel: el diálogo
   // «Pedir el extra» (maqueta E71) con los datos de la transferencia y la subida del comprobante.
-  redirect(`/panel/eventos/${eventSlug}/extras?pedido=${pedido.value.publicRef}`)
+  redirect(`/dashboard/events/${eventSlug}/extras?pedido=${pedido.value.publicRef}`)
 }

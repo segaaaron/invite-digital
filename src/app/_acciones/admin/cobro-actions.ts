@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -37,7 +37,7 @@ export async function savePaymentSettingsAction(
   }
 
   refrescar()
-  revalidatePath('/es/pedido', 'layout')
+  revalidarRuta('/es/pedido', 'layout')
   return { status: 'success', message: t('Datos de cobro guardados.', 'Payment details saved.') }
 }
 
@@ -72,7 +72,7 @@ export async function uploadPaymentQrAction(
   }
 
   refrescar()
-  revalidatePath('/es/pedido', 'layout')
+  revalidarRuta('/es/pedido', 'layout')
   return { status: 'success', message: t('QR de cobro actualizado.', 'Payment QR updated.') }
 }
 

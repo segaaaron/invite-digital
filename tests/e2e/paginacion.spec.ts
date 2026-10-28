@@ -33,7 +33,7 @@ test.afterAll(async () => {
 })
 
 test('la lista de ventas pinta 30 y «Ver más» trae el resto', async ({ page }) => {
-  await page.goto(`/panel/admin/ventas?vista=lista&etapa=esperando_pago&q=${PREFIJO}`)
+  await page.goto(`/dashboard/admin/sales?vista=lista&etapa=esperando_pago&q=${PREFIJO}`)
   const filas = page.getByRole('listitem').filter({ hasText: PREFIJO })
   await expect(filas).toHaveCount(30)
 
@@ -44,7 +44,7 @@ test('la lista de ventas pinta 30 y «Ver más» trae el resto', async ({ page }
 })
 
 test('la cartera pinta 20 bodas, dice cuántas quedan y «Ver más» trae el resto', async ({ page }) => {
-  await page.goto(`/panel/admin/eventos?q=${PREFIJO}`)
+  await page.goto(`/dashboard/admin/events?q=${PREFIJO}`)
   const filas = page.getByRole('listitem').filter({ hasText: 'Boda paginada' })
   await expect(filas).toHaveCount(20)
 

@@ -55,9 +55,9 @@ export default async function ProveedoresPage({ params, searchParams }: { params
   })
   const enlacesIncluidos = !isErr(await plans.requireFeature(event.value.id, 'plannerTotal'))
   const evento = { eventId: event.value.id, eventSlug: event.value.slug }
-  const base = `/panel/eventos/${event.value.slug}/planner`
+  const base = `/dashboard/events/${event.value.slug}/planner`
 
-  const lista = `${base}/proveedores`
+  const lista = `${base}/vendors`
   const contratados = proveedores.filter((p) => p.status !== 'cotizando')
   const cotizando = proveedores.filter((p) => p.status === 'cotizando')
   const visibles = filtro === 'contratados' ? contratados : filtro === 'cotizando' ? cotizando : proveedores

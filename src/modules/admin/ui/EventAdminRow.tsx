@@ -64,7 +64,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
   const conTelefono = event.anfitriones.find((a) => (a.phone ?? '') !== '')
   const whatsapp = conTelefono?.phone ? enlaceWhatsapp(conTelefono.phone, t(`Hola, te escribimos de Luxury Atelier por ${event.title}.`, `Hi, we are writing from Luxury Atelier about ${event.title}.`)) : null
   const fecha = new Date(`${event.eventDate}T00:00:00Z`)
-  const ficha = `/panel/eventos/${event.slug}/configuracion`
+  const ficha = `/dashboard/events/${event.slug}/setup`
   const ratio = event.personas === 0 ? 0 : event.personasRespondieron / event.personas
   const fiesta = event.fiesta === 'xv' ? t('XV años', 'Quinceañera') : event.fiesta === 'cumple' ? t('Cumpleaños', 'Birthday') : t('Boda', 'Wedding')
   const avance =
@@ -133,7 +133,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
           {t('Abrir', 'Open')}
         </Link>
         <MenuDeAcciones etiqueta={t(`Más acciones de ${event.title}`, `More actions for ${event.title}`)}>
-          <Link className={opcionDeMenu()} href={`/panel/eventos/${event.slug}/vista-previa`}>
+          <Link className={opcionDeMenu()} href={`/dashboard/events/${event.slug}/preview`}>
             <EyeIcon className="size-4" /> {t('Ver la invitación', 'See the invitation')}
           </Link>
           {whatsapp === null ? null : (

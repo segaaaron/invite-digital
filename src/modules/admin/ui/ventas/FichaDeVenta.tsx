@@ -231,7 +231,7 @@ async function Principal({
       return slugDelEvento === null ? (
         <Nota>{t('Venta cerrada.', 'Sale closed.')}</Nota>
       ) : (
-        <PanelButton href={`/panel/eventos/${slugDelEvento}/configuracion`} variant="primary">
+        <PanelButton href={`/dashboard/events/${slugDelEvento}/setup`} variant="primary">
           {paso}
         </PanelButton>
       )
@@ -312,7 +312,7 @@ async function ListaDeComprobantes({ comprobantes }: { comprobantes: readonly Co
         <li key={k.id}>
           <a
             className="inline-flex items-center gap-2 rounded-full border border-line-panel-strong bg-white px-3.5 py-1.5 text-[12.5px] text-ink transition-colors hover:border-ink"
-            href={`/panel/pedidos/comprobante/${k.id}`}
+            href={`/dashboard/orders/receipt/${k.id}`}
           >
             {k.originalName}
             <span className="font-mono text-[12px] text-ink-mute">{fechaHora(k.uploadedAt, locale)}</span>

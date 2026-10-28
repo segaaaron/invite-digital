@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin, events, notifications, plans } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -53,7 +53,7 @@ export async function addTeamMemberAction(_previo: TeamActionState, fd: FormData
     registrarFallo('events/team-actions', 'no se pudo avisar por correo a %s:', alta.email, causa)
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/team`)
   const quien = 'planner'
   if (alta.password === null) {
     return { status: 'success', message: t(`${alta.email} ya tenía cuenta: entra como ${quien} con su contraseña de siempre.${avisado ? ' Le avisamos por correo.' : ''}`, `${alta.email} already had an account: they sign in as ${quien} with their usual password.${avisado ? ' We let them know by email.' : ''}`) }
@@ -78,6 +78,6 @@ export async function removeTeamMemberAction(_previo: TeamActionState, fd: FormD
   if (!baja.ok) return { status: 'error', message: baja.mensaje }
 
   await admin.record(actor, { action: 'equipo.baja', subject: eventSlug, detail: campo(fd, 'email') })
-  revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
+  revalidarRuta(`/dashboard/events/${eventSlug}/team`)
   return { status: 'success', message: t('Quitado del equipo. Su cuenta sigue: puede estar en otro evento.', 'Removed from the team. Their account remains: they may be on another event.') }
 }

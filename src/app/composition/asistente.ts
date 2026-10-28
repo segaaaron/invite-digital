@@ -89,7 +89,7 @@ export const SECCION_DE_LA_HERRAMIENTA: Partial<Record<string, EventSection>> = 
 
 function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Date, escribir: Escritor, abre: AbreSeccion, dicho: string, destinos?: readonly string[]): Ejecutor {
   const hoy = fechaEnBolivia(ahora)
-  const ruta = (r: string) => `/panel/eventos/${evento.slug}${r}`
+  const ruta = (r: string) => `/dashboard/events/${evento.slug}${r}`
   return async (llamada) => {
     if (ESCRITURAS.has(llamada.nombre)) {
       // Lo celebrado queda para mirar (8 de octubre; sin excepciones desde el 13): no se cambia nada.
@@ -145,7 +145,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
           invitaciones_que_respondieron: t?.groupsResponded ?? null,
           invitaciones_sin_responder: t?.groupsPending ?? null,
           visitas_a_la_invitacion: isErr(visitas) ? null : visitas.value.total,
-          enlaces: { invitados: ruta('/invitados'), resumen: ruta('') },
+          enlaces: { invitados: ruta('/guests'), resumen: ruta('') },
         }
       }
       case 'buscar_invitados': {
@@ -198,9 +198,9 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
         // Sin nadie con esa ortografía, quien suena igual (un dictado: «Peres» por «Pérez»), avisado como parecido.
         if (filas.length === 0 && buscado !== '') {
           const parecidos = todas.filter((f) => (llamada.estado === null || f.estado === llamada.estado) && coincide(`${f.nombre} ${f.invitacion}`, buscado, { porSonido: true }))
-          if (parecidos.length > 0) return { total: parecidos.length, personas: parecidos.slice(0, 40), nota: 'Nadie con esa ortografía exacta; estas personas suenan igual (puede ser un dictado).', enlace: ruta('/invitados') }
+          if (parecidos.length > 0) return { total: parecidos.length, personas: parecidos.slice(0, 40), nota: 'Nadie con esa ortografía exacta; estas personas suenan igual (puede ser un dictado).', enlace: ruta('/guests') }
         }
-        return { total: filas.length, personas: filas.slice(0, 40), enlace: ruta('/invitados') }
+        return { total: filas.length, personas: filas.slice(0, 40), enlace: ruta('/guests') }
       }
       case 'tareas': {
         const tareas = (await planner.listTasks(evento.id)).map((t) => ({ t, estado: estadoDeTarea(t, hoy) }))
@@ -211,7 +211,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
           total_de_tareas: tareas.length,
           hechas: tareas.filter((x) => x.estado === 'hecha').length,
           tareas: elegidas.slice(0, 40).map(({ t, estado }) => ({ tarea_id: t.id, tarea: t.title, vence: t.dueDate, estado, responsable: t.assignee })),
-          enlace: ruta('/planner/tareas'),
+          enlace: ruta('/planner/tasks'),
         }
       }
       case 'presupuesto': {
@@ -237,23 +237,23 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
           pagos_que_vencen: pagosQueVencen(partidas, hoy).map((g) => ({ concepto: g.concepto, importe: bs(g.amountCents), vence: g.dueDate })),
           // Para `proponer_partidas`: la clave de cada categoría de esta fiesta.
           categorias_disponibles: categoriasDe(fiestaDeTema(evento.themeKey)).map((c) => ({ clave: c.clave, nombre: c.nombre })),
-          enlace: ruta('/planner/presupuesto'),
+          enlace: ruta('/planner/budget'),
         }
       }
       case 'proveedores': {
         if (!hasFeature(capacidad, 'plannerCompleto')) return { error: 'El plan de este evento no incluye proveedores.' }
         const proveedores = await planner.dia.listVendors(evento.id)
-        return { proveedores: proveedores.map((v) => ({ proveedor_id: v.id, servicio: v.service, empresa: v.company, contacto: v.contactName, whatsapp: v.whatsapp, estado: NOMBRE_DE_ESTADO[v.status], llega: v.arrivalTime })), enlace: ruta('/planner/proveedores') }
+        return { proveedores: proveedores.map((v) => ({ proveedor_id: v.id, servicio: v.service, empresa: v.company, contacto: v.contactName, whatsapp: v.whatsapp, estado: NOMBRE_DE_ESTADO[v.status], llega: v.arrivalTime })), enlace: ruta('/planner/vendors') }
       }
       case 'cronograma': {
         if (!hasFeature(capacidad, 'plannerCompleto')) return { error: 'El plan de este evento no incluye el cronograma.' }
         const momentos = await planner.dia.listMoments(evento.id)
-        return { momentos: momentos.map((m) => ({ momento_id: m.id, hora: m.startsAt, momento: m.title, lugar: m.place, sale_en_la_invitacion: m.enInvitacion })), enlace: ruta('/planner/cronograma') }
+        return { momentos: momentos.map((m) => ({ momento_id: m.id, hora: m.startsAt, momento: m.title, lugar: m.place, sale_en_la_invitacion: m.enInvitacion })), enlace: ruta('/planner/schedule') }
       }
       case 'ir_a': {
         // Lo que el plan o la fiesta no traen da 404: se le dice al modelo en vez de mandar a la persona allí.
         const destino = PANTALLAS_DEL_EVENTO[llamada.pantalla]
-        if (destino === '/planner/cortejo' && TIPOS_DE_CORTEJO[fiestaDeTema(evento.themeKey)].length === 0) return { error: 'Esta fiesta no tiene cortejo.' }
+        if (destino === '/planner/procession' && TIPOS_DE_CORTEJO[fiestaDeTema(evento.themeKey)].length === 0) return { error: 'Esta fiesta no tiene cortejo.' }
         if (seccionesFueraDelPlan(capacidad).includes(destino.split('?')[0]!)) return { error: 'El plan de este evento no trae esa pantalla.' }
         // Lo que su papel no abre (Equipo para el co-anfitrión…) tampoco: el modelo no puede creer que la abrió.
         if (destinos !== undefined && !destinos.includes(ruta(destino).split('?')[0]!)) return { error: 'Esa pantalla no está en tu panel.' }
@@ -311,7 +311,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
           diseno: disenoParaRedactar(evento.themeKey),
           nota: 'Lo que está en null no se escribió: la invitación enseña ahí el ejemplo del diseño. «por_llenar» son las secciones de este diseño sin nada escrito, en su orden.',
           opciones: await opcionesDeInvitacion(evento.id),
-          enlace: ruta('/configuracion'),
+          enlace: ruta('/setup'),
         }
       }
       case 'preparar_envio':
@@ -359,7 +359,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
             reparto: repartoDeMesas(sinMesa.map((i) => ({ invitacion: i.invitacion, lugares: lugaresDe(i) }))),
           },
           zonas: salon.value.zones.map((z) => ({ zona_id: z.id, zona: z.label, tipo: z.kind })),
-          enlace: ruta('/mesas'),
+          enlace: ruta('/tables'),
         }
       }
       case 'regalos': {
@@ -370,7 +370,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
         return {
           regalos: mesa.value.gifts.map((g) => ({ regalo_id: g.id, regalo: g.name, precio: bs(g.priceCents), tienda: g.store, estado: ESTADO[g.status] ?? g.status })),
           fondos: mesa.value.funds.map((f) => ({ fondo_id: f.fund.id, fondo: f.fund.name, meta: bs(f.fund.goalCents), descripcion: f.fund.description })),
-          enlace: ruta('/regalos'),
+          enlace: ruta('/gifts'),
         }
       }
       case 'mensajes': {
@@ -387,7 +387,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
             texto: textoDeTercero(m.body),
             agradecido: m.reply !== null,
           })),
-          enlace: ruta('/mensajes'),
+          enlace: ruta('/messages'),
         }
       }
       case 'cortejo': {
@@ -397,7 +397,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
         return {
           cortejo: miembros.map((m) => ({ miembro_id: m.id, tipo: m.kind, nombre: m.name, whatsapp: m.whatsapp, apadrina: m.sponsors, confirmado: m.confirmed })),
           ensayos: ensayos.map((e) => ({ ensayo_id: e.id, dia: fechaEnBolivia(e.date), hora: hora(e.date), lugar: e.place, asistentes: e.asistentes.map((id) => nombreDe.get(id) ?? '').filter(Boolean) })),
-          enlace: ruta('/planner/cortejo'),
+          enlace: ruta('/planner/procession'),
         }
       }
       case 'recepcion': {
@@ -406,7 +406,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
           planner: equipo.filter((m) => m.membership === 'planner').map((m) => ({ usuario_id: m.userId, correo: m.email, nombre: m.fullName })),
           recepcion: lista.map((p) => ({ recepcion_id: p.id, nombre: p.name, whatsapp: p.phone, puerta: p.gate, ingresos_registrados: actividad[p.id]?.registradas ?? 0 })),
           cupo_del_plan: capacidad.maxDoorPorters,
-          enlace: ruta('/equipo'),
+          enlace: ruta('/team'),
         }
       }
       case 'puerta': {
@@ -425,7 +425,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
             .slice(0, 10)
             .map((a) => ({ invitacion_id: a.guestGroupId, invitacion: etiqueta.get(a.guestGroupId) ?? '', quienes: Object.keys(a.personas).map((id) => nombres[id] ?? '').filter(Boolean), hora: hora(a.arrivedAt), personas: a.arrivedCount })),
           vip_por_llegar: Object.entries(personas).flatMap(([grupo, lista]) => lista.filter((x) => x.vip === true && !dentro.has(x.id)).map((x) => ({ nombre: x.fullName, invitacion_id: grupo }))),
-          enlace: ruta('/checkin'),
+          enlace: ruta('/check-in'),
         }
       }
       case 'encargo': {
@@ -439,7 +439,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
           entrega_hasta: d.entregaHasta,
           preguntas: preguntasDelEncargo({ estilo: hasFeature(capacidad, 'estilo'), creadoParaTi: hasFeature(capacidad, 'plannerTotal') }),
           ya_respondido: d.brief ?? null,
-          enlace: ruta('/configuracion'),
+          enlace: ruta('/setup'),
         }
       }
       case 'documentos': {
@@ -447,7 +447,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
         const [docs, proveedores] = await Promise.all([planner.dia.listDocuments(evento.id), planner.dia.listVendors(evento.id)])
         return {
           documentos: docs.map((d) => ({ documento_id: d.id, tipo: d.kind, nombre: d.originalName, proveedor: proveedores.find((v) => v.id === d.vendorId)?.service ?? null })),
-          enlace: ruta('/planner/documentos'),
+          enlace: ruta('/planner/documents'),
         }
       }
       case 'extras': {

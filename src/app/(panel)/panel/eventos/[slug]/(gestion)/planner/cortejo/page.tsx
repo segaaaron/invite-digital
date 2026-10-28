@@ -54,7 +54,7 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
     .map((x) => ({ ...x, cuando: mayuscula(diaYHora(t('es-BO', 'en-US')).format(x.date).replace(',', '').replace(/ (\d+:\d+)$/, ', $1')) }))
   const evento = { eventId: event.value.id, eventSlug: event.value.slug }
 
-  const base = `/panel/eventos/${event.value.slug}/planner/cortejo`
+  const base = `/dashboard/events/${event.value.slug}/planner/procession`
   const enEdicion = miembro === undefined ? undefined : miembros.find((m) => m.id === miembro)
   const proximo = ensayos[0]
   const avisar =

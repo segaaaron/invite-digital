@@ -38,7 +38,7 @@ export default async function DocumentosPage({ params }: { params: Promise<{ slu
     peso: peso(d.byteSize),
     vendorId: d.vendorId,
     esImagen: d.contentType.startsWith('image/'),
-    href: `/panel/eventos/${event.value.slug}/documentos/${d.id}`,
+    href: `/dashboard/events/${event.value.slug}/documents/${d.id}`,
   }))
 
   return (

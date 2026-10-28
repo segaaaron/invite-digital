@@ -6,12 +6,12 @@ import { ADMIN, ADMIN_AUTH_STATE, ATELIER, AUTH_STATE } from './fixtures/atelier
 const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 })
 
 async function entrar(page: import('@playwright/test').Page, quien: { email: string; password: string }, destino: string) {
-  await page.goto('/panel/entrar')
+  await page.goto('/dashboard/login')
   await page.getByLabel('Correo').fill(quien.email)
   await page.getByLabel('Contraseña').fill(quien.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
   // Entrar cae en el resumen del evento activo; sin ningún evento, en la bandeja.
-  await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+|\/admin)?$/)
+  await expect(page).toHaveURL(/\/dashboard(\/events\/[a-z0-9-]+|\/admin)?$/)
 
   await page.context().storageState({ path: destino })
 }

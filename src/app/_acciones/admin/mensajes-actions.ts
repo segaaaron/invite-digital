@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { MENSAJES } from '@/modules/admin/domain/mensajes'
@@ -24,6 +24,6 @@ export async function guardarMensajesAction(_previo: MensajesState, formData: Fo
     registrarFallo('admin/mensajes-actions', 'guardarMensajesAction', guardado.error.detail)
     return { status: 'error', message: t('No pudimos guardar. Vuelve a intentarlo en un momento.', 'We couldn’t save. Try again in a moment.') }
   }
-  for (const ruta of ['/panel/admin/mensajes', '/panel/admin/ventas', '/panel/admin/eventos/calendario']) revalidatePath(ruta)
+  for (const ruta of ['/dashboard/admin/messages', '/dashboard/admin/sales', '/dashboard/admin/events/calendar']) revalidarRuta(ruta)
   return { status: 'success', message: t('Guardado.', 'Saved.') }
 }

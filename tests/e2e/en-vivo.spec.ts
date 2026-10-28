@@ -42,7 +42,7 @@ test('el invitado confirma y los novios lo ven en su lista sin recargar', async 
   const { token, eventSlug } = await seedInvitation({ slug: 'en-vivo-rsvp-e2e', plan: 'imperial' })
 
   const novios = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
-  await novios.goto(`/panel/eventos/${eventSlug}/invitados`)
+  await novios.goto(`/dashboard/events/${eventSlug}/guests`)
   // La conexión abierta no se pinta (16 oct: la píldora tapaba contenido); se espera por su marca.
   await expect(novios.locator('[data-en-vivo="en-vivo"]')).toHaveCount(1, { timeout: 10_000 })
   await expect(novios.getByRole('button', { name: /novedad/ })).toHaveCount(0)
@@ -66,7 +66,7 @@ test('lo que registra otra puerta aparece solo en «Ingreso al evento»', async 
   const eventSlug = PUERTA
 
   const recepcion = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
-  await recepcion.goto(`/panel/eventos/${eventSlug}/checkin`)
+  await recepcion.goto(`/dashboard/events/${eventSlug}/check-in`)
   await expect(recepcion.locator('[data-en-vivo="en-vivo"]')).toHaveCount(1, { timeout: 10_000 })
   await expect(recepcion.getByRole('tab', { name: /^Dentro 0$/ })).toBeVisible()
 

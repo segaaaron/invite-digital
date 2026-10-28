@@ -65,7 +65,7 @@ export function RielTablet() {
       className="fixed inset-y-0 left-0 z-40 hidden w-[92px] flex-col items-center gap-1 overflow-y-auto bg-shell-deep bg-[radial-gradient(160%_50%_at_0%_0%,var(--color-shell)_0%,var(--color-shell-deep)_60%)] px-2 pt-[max(env(safe-area-inset-top),14px)] pb-4 text-shell-soft min-[768px]:max-[1279px]:flex print:hidden"
     >
       {evento === null ? (
-        <Link aria-label={t('Ir al inicio', 'Go home')} className="mb-3" href={entradas[0]?.item.href ?? '/panel'}>
+        <Link aria-label={t('Ir al inicio', 'Go home')} className="mb-3" href={entradas[0]?.item.href ?? '/dashboard'}>
           <SelloLA size={44} />
         </Link>
       ) : evento.portada ? (

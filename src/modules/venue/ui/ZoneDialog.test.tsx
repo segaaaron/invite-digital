@@ -22,7 +22,7 @@ beforeEach(() => {
   })
 })
 
-const props = { eventId: 'e1', eventSlug: 'boda', closeHref: '/panel/eventos/boda/mesas' }
+const props = { eventId: 'e1', eventSlug: 'boda', closeHref: '/dashboard/events/boda/tables' }
 
 describe('ZoneDialog', () => {
   it('ofrece los ocho elementos del salón de la maqueta', () => {
@@ -70,6 +70,6 @@ describe('ZoneDialog', () => {
     render(<ZoneDialog {...props} />)
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
     expect(addZoneAction).not.toHaveBeenCalled()
-    expect(push).toHaveBeenCalledWith('/panel/eventos/boda/mesas')
+    expect(push).toHaveBeenCalledWith('/dashboard/events/boda/tables')
   })
 })

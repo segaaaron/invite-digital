@@ -66,12 +66,12 @@ test.afterAll(async () => {
 })
 
 test('equipo: da de alta a una persona, la hace administradora y le quita el rol, y la borra', async ({ page }) => {
-  await page.goto('/panel/admin/usuarios?crear=persona')
+  await page.goto('/dashboard/admin/users?crear=persona')
   await page.getByLabel('Correo').fill(EQUIPO)
   await page.getByRole('button', { name: 'Crear usuario' }).click()
   await expect.poll(async () => (await sql`select role from users where email = ${EQUIPO}`)[0]?.role).toBe('atelier')
 
-  await page.goto('/panel/admin/usuarios')
+  await page.goto('/dashboard/admin/users')
   const fila = page.getByRole('listitem').filter({ hasText: EQUIPO })
   await fila.getByLabel(`Más acciones de ${EQUIPO}`).click()
   await fila.getByRole('button', { name: 'Hacer administrador' }).click()
@@ -90,7 +90,7 @@ test('equipo: da de alta a una persona, la hace administradora y le quita el rol
 })
 
 test('rechazar un comprobante lo rechaza con su motivo y su nota: no termina aprobando', async ({ page }) => {
-  await page.goto(`/panel/admin/ventas?venta=p-${PEDIDO.ref}`)
+  await page.goto(`/dashboard/admin/sales?venta=p-${PEDIDO.ref}`)
   const ficha = page.locator('section[aria-labelledby="ficha-de-venta"]')
   await ficha.getByRole('button', { name: 'Rechazar', exact: true }).click()
   const dialogo = page.locator('dialog[open]')
@@ -106,7 +106,7 @@ test('rechazar un comprobante lo rechaza con su motivo y su nota: no termina apr
 })
 
 test('editar un plan guarda su precio y sus días en línea', async ({ page }) => {
-  await page.goto(`/panel/admin/planes?plan=${PLAN}`)
+  await page.goto(`/dashboard/admin/plans?plan=${PLAN}`)
   const editor = page.getByRole('form', { name: `Plan Plan prueba ${S}` })
   await editor.getByLabel('Precio', { exact: true }).fill('512')
   await editor.getByLabel('En línea tras la fiesta').fill('75')
@@ -117,14 +117,14 @@ test('editar un plan guarda su precio y sus días en línea', async ({ page }) =
 })
 
 test('el admin cambia el plan del evento desde su ficha', async ({ page }) => {
-  await page.goto(`/panel/eventos/${EVENTO}/configuracion`)
+  await page.goto(`/dashboard/events/${EVENTO}/setup`)
   await page.getByLabel('Plan del evento').selectOption('gala')
   await page.getByRole('button', { name: 'Cambiar plan' }).click()
   await expect.poll(async () => (await sql`select p.slug from events e join plans p on p.id = e.plan_id where e.slug = ${EVENTO}`)[0]?.slug).toBe('gala')
 })
 
 test('borra la cuenta de un cliente desde su ficha', async ({ page }) => {
-  await page.goto(`/panel/admin/clientes?q=${encodeURIComponent(CLIENTE.email)}`)
+  await page.goto(`/dashboard/admin/clients?q=${encodeURIComponent(CLIENTE.email)}`)
   await page.getByRole('region', { name: 'Lista de clientes' }).getByRole('link', { name: new RegExp(CLIENTE.nombre) }).click()
   const ficha = page.locator('section[aria-labelledby="ficha-de-cliente"]')
   // Lo destructivo va plegado, dentro de «Sus eventos, referidos y cuenta».
@@ -135,7 +135,7 @@ test('borra la cuenta de un cliente desde su ficha', async ({ page }) => {
 })
 
 test('borrar un evento pide escribir su nombre, y entonces lo borra', async ({ page }) => {
-  await page.goto(`/panel/eventos/${EVENTO}/configuracion`)
+  await page.goto(`/dashboard/events/${EVENTO}/setup`)
   await page.getByRole('button', { name: 'Borrar evento' }).click()
   const dialogo = page.locator('dialog[open]')
   const confirmar = dialogo.getByRole('button', { name: 'Borrar para siempre' })

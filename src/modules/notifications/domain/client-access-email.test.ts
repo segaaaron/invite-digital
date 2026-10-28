@@ -5,7 +5,7 @@ const BASE = {
   email: 'novios@ejemplo.bo',
   password: 'una-contrasena-larga',
   eventTitle: 'Boda de Ana y Beto',
-  panelUrl: 'https://luxuryatelier.net/panel/entrar',
+  panelUrl: 'https://luxuryatelier.net/dashboard/login',
   whatsapp: '+59170000000',
   siteUrl: 'https://luxuryatelier.net',
 }
@@ -15,7 +15,7 @@ describe('clientAccessEmail', () => {
     const correo = clientAccessEmail(BASE)
 
     expect(correo.subject).toContain('Boda de Ana y Beto')
-    expect(correo.text).toContain('https://luxuryatelier.net/panel/entrar')
+    expect(correo.text).toContain('https://luxuryatelier.net/dashboard/login')
     expect(correo.text).toContain('novios@ejemplo.bo')
     expect(correo.text).toContain('una-contrasena-larga')
   })

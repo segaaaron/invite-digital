@@ -19,7 +19,7 @@ beforeEach(() => {
 const props = {
   eventId: 'e1',
   eventSlug: 'boda',
-  closeHref: '/panel/eventos/boda/invitados',
+  closeHref: '/dashboard/events/boda/guests',
 }
 
 describe('GuestDialog', () => {
@@ -66,7 +66,7 @@ describe('GuestDialog', () => {
     // Cerrar **y** navegar: solo navegar deja el modal encima de la lista, y con él la
     // página bloqueada hasta que Next termina la transición.
     expect(HTMLDialogElement.prototype.close).toHaveBeenCalled()
-    expect(push).toHaveBeenCalledWith('/panel/eventos/boda/invitados')
+    expect(push).toHaveBeenCalledWith('/dashboard/events/boda/guests')
   })
 })
 
@@ -77,6 +77,6 @@ describe('GuestDialog · cerrar con Escape', () => {
 
     // Sin esto, la dirección se queda en `?panel=alta` y el botón «+ Añadir invitado»
     // deja de navegar: no pasa nada al pulsarlo hasta que se recarga a mano.
-    expect(push).toHaveBeenCalledWith('/panel/eventos/boda/invitados')
+    expect(push).toHaveBeenCalledWith('/dashboard/events/boda/guests')
   })
 })

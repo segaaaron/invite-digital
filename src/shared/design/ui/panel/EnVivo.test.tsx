@@ -55,7 +55,7 @@ describe('EnVivo', () => {
   })
 
   it('en el panel (aviso), no repinta solo: enseña «N novedades · Ver» y actualiza al pulsar', () => {
-    render(<EnVivo modo="aviso" tipos={['rsvp']} url="/panel/eventos/boda/en-vivo" />)
+    render(<EnVivo modo="aviso" tipos={['rsvp']} url="/dashboard/events/boda/live" />)
     act(() => {
       FuenteFalsa.ultima!.onopen?.()
       FuenteFalsa.ultima!.avisar('rsvp')

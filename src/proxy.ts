@@ -3,6 +3,7 @@ import { NONCE_HEADER, PATHNAME_HEADER } from '@/shared/config/headers'
 import { isLocale } from '@/shared/i18n/locales'
 import { negotiateLocale } from '@/shared/i18n/negotiate'
 import { rutaInterna, rutaPublica } from '@/shared/i18n/rutas'
+import { rutaInternaDelPanel, rutaPublicaDelPanel } from '@/shared/rutas/panel'
 import { buildContentSecurityPolicy, createNonce } from '@/shared/security/csp'
 
 /**
@@ -63,12 +64,31 @@ export function proxy(request: NextRequest) {
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
     esFicheroPublico(pathname) ||
-    DESCARGA_PRIVADA.test(pathname) ||
     // Next pone la imagen al compartir con su carpeta interna (`/en/bodas/opengraph-image-…`): se sirve ahí, sin
     // mudarla, para que WhatsApp y Facebook no tengan que seguir un 308.
     pathname.includes('/opengraph-image')
   ) {
     return NextResponse.next()
+  }
+
+  // La descarga privada se reconoce por su ruta **interna** (de puertas afuera llega en inglés) y
+  // se sirve **sin** la política de la página: lleva la suya, `sandbox`, y pisarla dejaría un PDF
+  // ejecutando guion en el origen del panel. Lo único que necesita del proxy es la traducción.
+  const descarga = rutaInternaDelPanel(pathname)
+  if (DESCARGA_PRIVADA.test(descarga)) {
+    return descarga === pathname ? NextResponse.next() : NextResponse.rewrite(new URL(descarga + request.nextUrl.search, request.url))
+  }
+
+  // El panel vive en inglés de puertas afuera (`rutas/panel.ts`): `/dashboard/...` se sirve desde
+  // su carpeta en español, y la dirección vieja (`/panel/...`, la de los correos ya enviados y los
+  // marcadores) se muda para siempre a la nueva.
+  const panelInterno = rutaInternaDelPanel(pathname)
+  if (panelInterno !== pathname) return withCsp(request, panelInterno)
+  const panelPublico = rutaPublicaDelPanel(pathname)
+  if (panelPublico !== pathname) {
+    const url = request.nextUrl.clone()
+    url.pathname = panelPublico
+    return NextResponse.redirect(url, 308)
   }
 
   // Cada idioma con sus direcciones (`rutas.ts`): la pública se sirve desde su carpeta, y la vieja

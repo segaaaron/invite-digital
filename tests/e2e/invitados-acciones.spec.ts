@@ -31,7 +31,7 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   await createGuestGroup(page, SLUG, 'Familia Rojas Peña', 4)
   await createGuestGroup(page, SLUG, 'Padrinos', 2)
 
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/dashboard/events/${SLUG}/guests`)
   // Cuatro personas: la invitación nace plegada y sus personas no están en el DOM hasta abrirla.
   await desplegarInvitacion(page, 'Familia Rojas Peña')
   // La fila de la **persona**, no la cabecera de su familia (nombre, «N personas», envío), que
@@ -46,7 +46,7 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   await page.getByLabel('Email').fill('ana@ejemplo.com')
   await page.getByRole('button', { name: 'Guardar', exact: true }).click()
 
-  await page.waitForURL(/invitados$/)
+  await page.waitForURL(/guests$/)
   // Sale en la cabecera de su familia (que se renombra con ella) y en su fila: basta una.
   await expect(page.getByText('Ana Lucía Vega Rojas').first()).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Sin gluten' })).toBeVisible()
@@ -62,7 +62,7 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   await page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Ana Lucía Vega Rojas' }) }).getByRole('link', { name: /^Editar a / }).click()
   await page.getByLabel('Invitado VIP').check()
   await page.getByRole('button', { name: 'Guardar', exact: true }).click()
-  await page.waitForURL(/invitados$/)
+  await page.waitForURL(/guests$/)
 
   const [trasVip] = await sql<{ email: string | null; vip: boolean }[]>`
     select email, vip from guest_people where full_name = 'Ana Lucía Vega Rojas'`
@@ -79,7 +79,7 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
 
   // --- Borrar: pregunta primero, y el segundo clic sí se la lleva.
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/dashboard/events/${SLUG}/guests`)
   await desplegarInvitacion(page, 'Ana Lucía Vega Rojas')
   const suFila = page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Ana Lucía Vega Rojas' }) })
   await suFila.getByRole('button', { name: /^Eliminar a / }).click()
@@ -96,7 +96,7 @@ test('mover a alguien a una invitación llena le suma el cupo, y la de origen pa
   // Su propia invitación de un solo cupo, ya ocupado: el estado que deje el otro test no
   // puede decidir si este prueba algo o no.
   await createGuestGroup(page, SLUG, 'Grupo lleno', 1)
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/dashboard/events/${SLUG}/guests`)
 
   // «Padrinos» son dos personas: su invitación va plegada.
   await desplegarInvitacion(page, 'Padrinos')
@@ -106,7 +106,7 @@ test('mover a alguien a una invitación llena le suma el cupo, y la de origen pa
   const llena = await invitacion.locator('option', { hasText: 'Grupo lleno' }).getAttribute('value')
   await invitacion.selectOption(llena)
   await page.getByRole('button', { name: 'Guardar', exact: true }).click()
-  await page.waitForURL(/invitados$/)
+  await page.waitForURL(/guests$/)
 
   const [destino] = await sql<{ seats: number }[]>`select seats from guest_groups where id = ${llena!}`
   expect(destino?.seats).toBe(2)

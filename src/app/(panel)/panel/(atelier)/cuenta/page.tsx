@@ -105,7 +105,7 @@ export default async function CuentaPage() {
             {t('Luxury con Siri', 'Luxury with Siri')}
           </h2>
           <p className="max-w-[68ch] text-[14px] text-ink-mute">{t('Háblale a Luxury sin abrir el panel: «Oye Siri, Luxury», y te responde en voz alta. En iPhone, con la app Atajos.', 'Talk to Luxury without opening the panel: “Hey Siri, Luxury”, and it answers out loud. On iPhone, with the Shortcuts app.')}</p>
-          <LuxuryConSiri atajo={(await asistente.config()).atajoDeSiri} url={`${env.SITE_URL.replace(/\/$/, '')}/panel/luxury/siri`} />
+          <LuxuryConSiri atajo={(await asistente.config()).atajoDeSiri} url={`${env.SITE_URL.replace(/\/$/, '')}/dashboard/luxury/siri`} />
         </section>
       ) : null}
     </div>

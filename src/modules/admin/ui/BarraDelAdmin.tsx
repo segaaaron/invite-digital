@@ -37,7 +37,7 @@ export function BarraDelAdmin({
       {evento === undefined ? (
         <IslaDelAdmin menu={menu} />
       ) : (
-        <Link className="flex min-w-0 flex-1 items-center gap-2 text-ink no-underline min-[768px]:hidden" href="/panel/admin/eventos">
+        <Link className="flex min-w-0 flex-1 items-center gap-2 text-ink no-underline min-[768px]:hidden" href="/dashboard/admin/events">
           <span aria-hidden className="grid size-11 shrink-0 place-items-center">
             <ArrowLeftIcon className="size-5" />
           </span>
@@ -53,7 +53,7 @@ export function BarraDelAdmin({
           <RutaDelAdmin hoy={hoy} />
         ) : (
           <nav aria-label={t('Ruta', 'Path')} className="flex items-center gap-2 text-[14px]">
-            <Link className="inline-flex min-h-11 items-center text-ink-mute no-underline hover:text-ink" href="/panel/admin/eventos">
+            <Link className="inline-flex min-h-11 items-center text-ink-mute no-underline hover:text-ink" href="/dashboard/admin/events">
               {t('Eventos', 'Events')}
             </Link>
             <span aria-hidden>/</span>

@@ -34,11 +34,11 @@ test.describe('el diseño por encargo', () => {
 
     clienteCtx = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.7' } })
     cliente = await clienteCtx.newPage()
-    await cliente.goto('/panel/entrar')
+    await cliente.goto('/dashboard/login')
     await cliente.getByLabel('Correo').fill(CUENTA.email)
     await cliente.getByLabel('Contraseña').fill(CUENTA.password)
     await cliente.getByRole('button', { name: 'Entrar' }).click()
-    await expect(cliente).toHaveURL(/\/panel\/eventos\//)
+    await expect(cliente).toHaveURL(/\/dashboard\/events\//)
 
     equipoCtx = await browser.newContext({ storageState: ADMIN_AUTH_STATE })
     equipo = await equipoCtx.newPage()
@@ -58,17 +58,17 @@ test.describe('el diseño por encargo', () => {
   const pasos = () => cliente.locator('section').filter({ has: cliente.getByRole('heading', { name: 'Tu invitación, paso a paso' }) })
 
   test('el cliente manda sus datos y entra en diseño con fecha de entrega', async () => {
-    await cliente.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await cliente.goto(`/dashboard/events/${SLUG}/setup`)
     await pasos().getByRole('button', { name: 'Enviar mis datos para diseñar' }).click()
     // La acción revalida y la tarjeta vuelve con el paso nuevo: eso es lo que se espera.
     await expect(pasos().getByText('Te la entregamos hasta el', { exact: false })).toBeVisible()
   })
 
   test('el equipo lo ve en Hoy y le envía la versión', async () => {
-    await equipo.goto('/panel/admin')
+    await equipo.goto('/dashboard/admin')
     // En Hoy (maqueta E01) el diseño por entregar es un aviso más de la lista.
     await expect(equipo.getByText('El diseño de Boda con acceso de cliente')).toBeVisible()
-    await equipo.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await equipo.goto(`/dashboard/events/${SLUG}/setup`)
     await equipo.getByRole('button', { name: 'Versión lista: avisar al cliente' }).click()
     await expect(equipo.getByText('Versión enviada, la está revisando')).toBeVisible()
   })

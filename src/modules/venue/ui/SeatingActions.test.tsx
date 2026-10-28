@@ -7,7 +7,7 @@ vi.mock('@/app/_acciones/venue/actions', () => ({ autoAssignAction }))
 
 beforeEach(() => autoAssignAction.mockClear())
 
-const props = { addHref: '/panel/eventos/boda/mesas?panel=mesa', eventId: 'e1', eventSlug: 'boda', unseatedCount: 2 }
+const props = { addHref: '/dashboard/events/boda/tables?panel=mesa', eventId: 'e1', eventSlug: 'boda', unseatedCount: 2 }
 
 describe('SeatingActions', () => {
   it('reparte lo que falta y cuenta lo que quedó fuera', async () => {

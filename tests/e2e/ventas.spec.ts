@@ -30,7 +30,7 @@ test.afterAll(async () => {
 
 test('la consulta y su pedido son una sola venta: una fila, una ficha con su recorrido y la decisión', async ({ page }) => {
   // La lista con su ficha al lado (maqueta E02): cada fila dice su etapa.
-  await page.goto('/panel/admin/ventas')
+  await page.goto('/dashboard/admin/sales')
   const lista = page.getByRole('region', { name: 'Lista de ventas' })
   const ficha = page.locator('section[aria-labelledby="ficha-de-venta"]')
   // La misma persona (mismo teléfono) no sale dos veces: su consulta va dentro de su pedido.
@@ -50,12 +50,12 @@ test('la consulta y su pedido son una sola venta: una fila, una ficha con su rec
   const [whatsapp] = await Promise.all([page.waitForEvent('popup'), ficha.getByRole('button', { name: /Contactar/ }).click()])
   await whatsapp.close()
   await expect.poll(async () => (await sql<{ status: string }[]>`select status from consultation_requests where email = ${correoSuelta}`)[0]?.status).toBe('contacted')
-  await page.goto('/panel/admin/ventas?etapa=consultas')
+  await page.goto('/dashboard/admin/sales?etapa=consultas')
   await expect(lista.getByRole('link', { name: new RegExp(suelta) })).toContainText('Contactada')
 })
 
 test('clientes junta la consulta y el pedido de la misma persona, y ⌘K lleva a su venta', async ({ page }) => {
-  await page.goto(`/panel/admin/clientes?q=${encodeURIComponent(correo)}`)
+  await page.goto(`/dashboard/admin/clients?q=${encodeURIComponent(correo)}`)
   await page.getByRole('region', { name: 'Lista de clientes' }).getByRole('link', { name: new RegExp(nombre) }).click()
   // La ficha del cliente, al lado de la lista (maqueta E04).
   const ficha = page.locator('section[aria-labelledby="ficha-de-cliente"]')
@@ -69,6 +69,6 @@ test('clientes junta la consulta y el pedido de la misma persona, y ⌘K lleva a
   await buscador.getByRole('searchbox').fill(ref)
   await page.keyboard.press('Enter')
   await buscador.getByRole('link', { name: new RegExp(ref) }).first().click()
-  await expect(page).toHaveURL(new RegExp(`/panel/admin/ventas\\?venta=p-${ref}`))
+  await expect(page).toHaveURL(new RegExp(`/dashboard/admin/sales\\?venta=p-${ref}`))
   await expect(page.locator('section[aria-labelledby="ficha-de-venta"]').getByRole('heading', { name: nombre })).toBeVisible()
 })

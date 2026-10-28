@@ -149,7 +149,7 @@ describe('leer mientras llega', () => {
   })
 
   it('lo que se lee no lleva enlaces del panel ni marcas', () => {
-    expect(paraLeer('Míralo en /panel/eventos/boda-ana/invitados, **ya** está.')).toBe('Míralo en Invitados, ya está.')
+    expect(paraLeer('Míralo en /dashboard/events/boda-ana/guests, **ya** está.')).toBe('Míralo en Invitados, ya está.')
     expect(paraLeer('- Ana\n- Luis')).toBe('Ana. Luis')
   })
 })
@@ -180,8 +180,8 @@ describe('el dictado de iPhone (9 oct: «repite agenda o cita dos veces»)', () 
     expect(unirResultados(['77', '77', ' 12 34'])).toBe('77 77 12 34')
   })
   it('un enlace con su nombre se lee una vez', () => {
-    expect(paraLeer('Está en [Agenda](/panel/eventos/b/agenda).')).toBe('Está en Agenda.')
-    expect(paraLeer('Está en Agenda (/panel/eventos/b/agenda).')).toBe('Está en Agenda.')
+    expect(paraLeer('Está en [Agenda](/dashboard/events/b/agenda).')).toBe('Está en Agenda.')
+    expect(paraLeer('Está en Agenda (/dashboard/events/b/agenda).')).toBe('Está en Agenda.')
   })
 })
 
@@ -196,7 +196,7 @@ describe('un teléfono se lee de dos en dos (9 oct: «me lo dices con números g
     expect(paraLeer('Es el 70012345')).toBe('Es el 70, 0, 1, 23, 45')
   })
   it('las cifras de un enlace y una lista de números no se leen como teléfono (QA 9 oct)', () => {
-    expect(paraLeer('Está en /panel/eventos/boda/planner/agenda?cita=3f12345678-ab.')).toBe('Está en Agenda.')
+    expect(paraLeer('Está en /dashboard/events/boda/planner/agenda?cita=3f12345678-ab.')).toBe('Está en Agenda.')
     expect(paraLeer('Mesas de 120 150 200 personas.')).toBe('Mesas de 120 150 200 personas.')
   })
   it('montos, horas y fechas se leen como siempre', () => {

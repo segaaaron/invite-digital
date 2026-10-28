@@ -40,7 +40,7 @@ export function checkReleaseReadiness(config: ReleaseConfig): string[] {
     blockers.push(`WhatsApp sigue siendo el marcador ${PLACEHOLDERS.whatsapp}: todos los botones de precio llevan a un número que no existe.`)
   }
   if (config.whatsapp.trim() === '') {
-    blockers.push('No hay WhatsApp configurado en «La web» (/panel/admin/web): los botones de contacto remiten al formulario y la ayuda no tiene a quién escribir.')
+    blockers.push('No hay WhatsApp configurado en «La web» (/dashboard/admin/web): los botones de contacto remiten al formulario y la ayuda no tiene a quién escribir.')
   }
 
   if (config.email.trim().toLowerCase() === PLACEHOLDERS.email) {
@@ -64,17 +64,17 @@ export function checkReleaseReadiness(config: ReleaseConfig): string[] {
   const pago = [config.payment.bank, config.payment.accountHolder, config.payment.accountNumber]
   if (pago.some((dato) => dato.trim() === '')) {
     blockers.push(
-      'Faltan los datos de transferencia del Plan B: cárgalos en /panel/admin/pagos, o un pedido no podrá pagarse.',
+      'Faltan los datos de transferencia del Plan B: cárgalos en /dashboard/admin/payments, o un pedido no podrá pagarse.',
     )
   }
 
   // Se cobra, se guardan teléfonos y restricciones alimentarias (dato de salud) de invitados y
   // Luxury envía nombres a OpenAI: sin estas dos páginas no se vende.
   if (!config.legal.privacidad) {
-    blockers.push('La política de privacidad no está publicada: escríbela y publícala en /panel/admin/web.')
+    blockers.push('La política de privacidad no está publicada: escríbela y publícala en /dashboard/admin/web.')
   }
   if (!config.legal.terminos) {
-    blockers.push('Los términos y condiciones no están publicados (reserva, saldo, rondas, días en línea): publícalos en /panel/admin/web.')
+    blockers.push('Los términos y condiciones no están publicados (reserva, saldo, rondas, días en línea): publícalos en /dashboard/admin/web.')
   }
 
   blockers.push(...checkPassword(config.postgresPassword))

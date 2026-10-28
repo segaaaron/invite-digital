@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { headers } from 'next/headers'
 import { enSegundoPlano } from '@/shared/http/en-segundo-plano'
 import { avisos, guests, plans, registry } from '@/app/composition/container'
@@ -28,7 +28,7 @@ const fallo = (error: { kind: string; detail: string }): RegistryActionResult =>
   message: error.detail,
 })
 
-const refreshPanel = (slug: string) => revalidatePath(`/panel/eventos/${slug}/regalos`)
+const refreshPanel = (slug: string) => revalidarRuta(`/dashboard/events/${slug}/gifts`)
 
 /**
  * La mesa de regalos solo la traen algunos planes. La comprobación va aquí, en la
@@ -318,7 +318,7 @@ export async function claimGiftAction(input: { token: string; giftId: string }):
     await avisos.delEvento(grupo.value.eventId, (ev) => avisoDeRegalo({ ...ev, invitado: grupo.value.label, regalo: regalo.name }))
   })
 
-  revalidatePath(`/i/${input.token}`)
+  revalidarRuta(`/i/${input.token}`)
   return { ok: true }
 }
 
@@ -337,6 +337,6 @@ export async function releaseGiftAction(input: { token: string; giftId: string }
     return { ok: false, kind: result.error.kind, message: result.error.kind }
   }
 
-  revalidatePath(`/i/${input.token}`)
+  revalidarRuta(`/i/${input.token}`)
   return { ok: true }
 }

@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { qr } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -21,7 +21,7 @@ const texto = (formData: FormData, clave: string): string => {
   return typeof valor === 'string' ? valor : ''
 }
 
-const refrescar = (eventSlug: string) => revalidatePath(`/panel/eventos/${eventSlug}/qr`)
+const refrescar = (eventSlug: string) => revalidarRuta(`/dashboard/events/${eventSlug}/qr`)
 
 export async function createQrCodeAction(_previous: QrActionState, formData: FormData): Promise<QrActionState> {
   const t = await tr()
