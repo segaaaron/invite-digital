@@ -15,6 +15,7 @@ import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
 import { Portada, type DisenoDePortada } from '@/sections/portada/Portada'
 import type { ColumnaDeComparativa } from '@/sections/portada/Comparativa'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { submitConsultationAction } from '@/app/_acciones/leads/actions'
 
 // Se pinta por petición, no se prerenderiza: lee Postgres, y la imagen se construye en CI,
 // donde la base no existe. Las consultas van por índice y a una base de la misma red.
@@ -176,6 +177,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         disenos={alternados}
         locale={locale}
         planes={plans}
+        registrarConsulta={submitConsultationAction}
         reservas={reservas}
         textosComparativa={textosComparativa}
         whatsapp={sitio.whatsapp.replace(/\D/g, '')}

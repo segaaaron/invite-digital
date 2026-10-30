@@ -21,6 +21,8 @@ export function Reserva({ dictionary, locale, planes, reservaCents }: Props) {
   const p = dictionary.portada.reserva
   const conReserva = (texto: string) => (reservaCents === null ? texto : texto.replace('{reserva}', formatMoney({ cents: reservaCents, currency: planes[0]?.price.currency ?? 'BOB' }, locale)))
   const destacado = planes.find((plan) => plan.highlighted) ?? planes[1] ?? planes[0]
+  // El día de hoy en UTC, que es como el dominio compara las fechas (`startOfUtcDay`).
+  const hoy = new Date().toISOString().slice(0, 10)
 
   return (
     <div hidden id="reserva">
@@ -38,7 +40,9 @@ export function Reserva({ dictionary, locale, planes, reservaCents }: Props) {
 
         <label className="campo">
           <span>{p.nombres}</span>
-          <input autoComplete="name" name="nombres" required type="text" />
+          {/* Los topes son los del dominio: lo que no cabe se rechaza en el servidor y la consulta
+              se perdería, con el cliente creyendo que la mandó. */}
+          <input autoComplete="name" maxLength={80} minLength={2} name="nombres" required type="text" />
         </label>
 
         <div className="fila2">
@@ -52,13 +56,15 @@ export function Reserva({ dictionary, locale, planes, reservaCents }: Props) {
           </label>
           <label className="campo">
             <span>{p.fecha}</span>
-            <input name="fecha" required type="date" />
+            {/* Una fecha pasada la rechaza el dominio (`past_event_date`): mejor que el calendario
+                no deje elegirla. */}
+            <input min={hoy} name="fecha" required type="date" />
           </label>
         </div>
 
         <label className="campo">
           <span>{p.telefono}</span>
-          <input inputMode="tel" name="tel" required type="tel" />
+          <input inputMode="tel" maxLength={32} name="tel" required type="tel" />
         </label>
 
         <span className="campo-k">{p.plan}</span>

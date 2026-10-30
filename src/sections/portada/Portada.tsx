@@ -52,6 +52,11 @@ type Props = {
   }
   /** El WhatsApp del atelier, solo dígitos. Vacío: el formulario no se enseña. */
   readonly whatsapp: string
+  /** Guarda la consulta del sobre antes de abrir WhatsApp. La pone la página. */
+  readonly registrarConsulta: (
+    previo: { readonly status: 'idle'; readonly message: '' },
+    datos: FormData,
+  ) => Promise<{ readonly status: 'idle' | 'success' | 'error'; readonly message: string }>
 }
 
 /**
@@ -64,7 +69,7 @@ type Props = {
  * los iconos que se dibujan, la pila de postales, el sobre de la reserva—; si el JavaScript no
  * llega, la página se lee entera igual.
  */
-export function Portada({ locale, dictionary, disenos, abanico, planes, reservas, columnas, textosComparativa, whatsapp }: Props) {
+export function Portada({ locale, dictionary, disenos, abanico, planes, reservas, columnas, textosComparativa, whatsapp, registrarConsulta }: Props) {
   const p = dictionary.portada
   const rutaDelModelo = (clave: string) => rutaDe(locale, 'modelos', `/${clave}`)
   const primero = disenos[0]
@@ -417,6 +422,7 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
 
       <PortadaVida
         disenos={disenos}
+        registrarConsulta={registrarConsulta}
         tiras={TIRAS}
         palabras={{
           boda: { cat: p.disenos.titulo, cat2: p.disenos.tituloIt, tel: p.movil.titulo, tel2: p.movil.tituloIt },

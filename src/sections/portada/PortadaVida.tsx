@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { consultaDelSobre } from '@/modules/leads'
 import type { Locale } from '@/shared/i18n/locales'
 import type { DisenoDePortada } from './Portada'
 
@@ -16,6 +17,30 @@ type Props = {
     readonly planes: readonly { readonly nombre: string; readonly precio: number }[]
     readonly locale: Locale
   }
+  /**
+   * La Server Action que guarda la consulta del sobre. Llega como prop desde la página: las
+   * secciones no importan acciones (lo corta `boundaries/dependencies`), y una acción sí viaja
+   * del servidor a un componente de cliente.
+   */
+  readonly registrarConsulta: (
+    previo: { readonly status: 'idle'; readonly message: '' },
+    datos: FormData,
+  ) => Promise<{ readonly status: 'idle' | 'success' | 'error'; readonly message: string }>
+}
+
+/**
+ * Lo que el navegador no puede registrar solo. La acción del sobre se dispara sin esperarla —la
+ * ventana de WhatsApp tiene que abrirse dentro del clic—, así que un rechazo o una caída se
+ * perderían: esto los manda al mismo registro que lee el admin en Ajustes › Registro de fallos,
+ * por la ruta pública que ya existe para los fallos del navegador.
+ */
+function avisarAlRegistro(mensaje: string): void {
+  void fetch('/api/fallos', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ mensaje, ruta: window.location.pathname }),
+    keepalive: true,
+  }).catch(() => undefined)
 }
 
 /**
@@ -29,7 +54,13 @@ type Props = {
  * `gsap` y `lenis` se cargan dentro del efecto, no arriba: así no viajan en el JavaScript del
  * servidor ni bloquean la primera pintura.
  */
-export function PortadaVida({ disenos, tiras, palabras, reserva }: Props) {
+export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsulta }: Props) {
+  // La acción llega del servidor en cada payload: en las dependencias del efecto, una referencia
+  // nueva desmontaría y reconstruiría toda la portada. Aquí dentro se lee siempre la última.
+  const registrarConsultaRef = useRef(registrarConsulta)
+  useEffect(() => {
+    registrarConsultaRef.current = registrarConsulta
+  }, [registrarConsulta])
   useEffect(() => {
     let vivo = true
     const limpiar: (() => void)[] = []
@@ -638,10 +669,7 @@ export function PortadaVida({ disenos, tiras, palabras, reserva }: Props) {
           // hace un GET a la misma página con los nombres y el teléfono en la dirección: datos del
           // cliente en el historial y en los registros del proxy, y nadie los recibe.
           e.preventDefault()
-          if (reserva.whatsapp === '') {
-            $('.nota.aviso', form)?.removeAttribute('hidden')
-            return
-          }
+          const sinNumero = reserva.whatsapp === ''
           const d = new FormData(form)
           const cruda = String(d.get('fecha') ?? '')
           const idioma = reserva.locale === 'en' ? 'en-US' : 'es-BO'
@@ -652,14 +680,51 @@ export function PortadaVida({ disenos, tiras, palabras, reserva }: Props) {
             .replace('{fecha}', cuando)
             .replace('{plan}', String(d.get('plan') ?? ''))
             .replace('{telefono}', String(d.get('tel') ?? ''))
-          const ventana = window.open(`https://wa.me/${reserva.whatsapp}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener')
+          // **La consulta se guarda siempre, y antes de abrir el chat.** El sobre solo abría
+          // WhatsApp, así que desde la portada nueva ninguna consulta llegaba al panel y Ventas,
+          // su contador y el embudo medían una fuente vacía. Va **delante** de la comprobación
+          // del número: sin WhatsApp configurado es cuando más falta hace tener sus datos, porque
+          // el cliente no tiene por dónde escribir.
+          //
+          // No se espera la respuesta: abrir la ventana tiene que seguir dentro del clic —si no,
+          // el navegador la bloquea— y lo que el cliente vino a hacer es escribir. Lo que sí se
+          // mira es **cómo acabó**: si se rechaza o no llega, va al registro de fallos por su
+          // propia ruta pública, porque desde aquí no hay servidor que lo anote.
+          const consulta = new FormData()
+          // El mensaje de WhatsApp ya trae la fiesta, la fecha y el plan escritos: se guarda igual
+          // que se manda, para que en Ventas se lea lo mismo que el cliente envió.
+          const campos = consultaDelSobre({
+            nombres: String(d.get('nombres') ?? ''),
+            tel: String(d.get('tel') ?? ''),
+            fecha: cruda,
+            mensaje: texto,
+            locale: reserva.locale,
+          })
+          Object.entries(campos).forEach(([clave, valor]) => consulta.set(clave, valor))
+          void registrarConsultaRef
+            .current({ status: 'idle', message: '' }, consulta)
+            .then((fin) => {
+              if (fin.status === 'error') avisarAlRegistro(`la consulta del sobre se rechazó: ${fin.message}`)
+            })
+            .catch((causa: unknown) => avisarAlRegistro(`la consulta del sobre no llegó: ${String(causa)}`))
+
+          const aviso = $('.nota.aviso', form)
+          if (sinNumero) {
+            aviso?.removeAttribute('hidden')
+            return
+          }
+          // Sin `noopener`: con él, `window.open` devuelve `null` **aunque la ventana se abra**
+          // (así está escrito en la especificación), y entonces el aviso de «no pudimos abrir
+          // WhatsApp» salía siempre, el sobre no se cerraba y el cliente volvía a enviar. El
+          // aislamiento se consigue igual cortando el `opener` a mano.
+          const ventana = window.open(`https://wa.me/${reserva.whatsapp}?text=${encodeURIComponent(texto)}`, '_blank')
           // Si el navegador bloquea la ventana, el sobre se queda abierto y el aviso lo dice: antes
           // no pasaba nada y el cliente creía haber escrito.
-          const aviso = $('.nota.aviso', form)
           if (ventana === null) {
             aviso?.removeAttribute('hidden')
             return
           }
+          ventana.opener = null
           aviso?.setAttribute('hidden', '')
           cerrarSobre()
           form.reset()

@@ -1,4 +1,5 @@
 export type { Consultation, ConsultationInput } from './domain/consultation'
+export { consultaDelSobre, type CamposDelSobre } from './domain/consulta-del-sobre'
 export type { LeadError, LeadErrorKind } from './domain/errors'
 export type { ConsultationRepository } from './application/ports'
 export { buildWhatsAppLink, fillPlanMessage } from './domain/whatsapp-link'
