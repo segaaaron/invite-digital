@@ -895,6 +895,9 @@ footer::before{content:'';position:absolute;right:-6%;bottom:0;width:min(38%,520
    quedaba sin aire y con el subrayado de oro de los enlaces de columna. */
 .pie-res .cta-pill{padding:13px 24px;color:var(--p-blanco)}
 .pie-res .cta-pill::after{content:none}
+/* Los iconos redondos de las redes también son enlaces dentro de `.pie-col`: heredaban ese
+   mismo subrayado de oro y al pasar por encima aparecía una raya cruzando bajo el círculo. */
+.pie-redes a::after{content:none}
 /* El aviso del sobre: solo se ve si el mensaje no pudo salir. */
 .sobre-form .nota.aviso{color:var(--brillo);border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
 
