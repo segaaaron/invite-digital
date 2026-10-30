@@ -3,7 +3,7 @@
 import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
 import { admin, leads, orders, plans } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
-import { etiquetaDeMotivo, parseMotivo } from '@/modules/leads/domain/pipeline'
+import { etiquetaDeMotivo, parseMotivo, type InboxErrorKind } from '@/modules/leads/domain/pipeline'
 import { rellenar } from '@/modules/admin/domain/mensajes'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { env } from '@/shared/config/env'
@@ -38,16 +38,46 @@ const enlaceDelPedido = (ref: string) => `${env.SITE_URL.replace(/\/$/, '')}/es/
  * constancia —la consulta pasa a contactada y queda su primera respuesta—. Si ya no estaba
  * nueva, no hay nada que mover y no es un error.
  */
-export async function contactarVentaAction(formData: FormData): Promise<void> {
+export async function contactarVentaAction(_previo: VentaActionState, formData: FormData): Promise<VentaActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
   const id = campo(formData, 'consultaId')
   const movida = await leads.move({ id, to: 'contacted', note: '', eventId: '' })
   if (isErr(movida)) {
+    // Ya no estaba nueva: el mensaje salió igual y no hay nada que mover. No es un fallo, pero
+    // **la tarjeta que se está mirando es vieja**: sin revalidar seguiría diciendo «nueva» y el
+    // admin volvería a pulsar para siempre.
+    if (movida.error.kind === 'invalid_transition') {
+      revalidarVentas()
+      return { status: 'success', message: t('Ya estaba contactada: no hacía falta anotarla.', 'It was already contacted: no need to record it.') }
+    }
     if (movida.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'contactarVentaAction', movida.error.detail)
-    return
+    return { status: 'error', message: mensajeDeMovida(t, movida.error.kind) }
   }
   await admin.record(actor, { action: 'consulta.estado', subject: movida.value.name, detail: 'Nueva → Contactada' })
   revalidarVentas()
+  return { status: 'success', message: t('Anotado: la consulta queda contactada.', 'Recorded: the inquiry is now contacted.') }
+}
+
+/**
+ * Lo que se le dice al admin cuando la consulta no se pudo mover. El mensaje ya salió por
+ * WhatsApp o por correo —lo abrió el navegador en el clic—, así que lo que falta es la
+ * constancia, y eso es exactamente lo que dice.
+ */
+function mensajeDeMovida(t: Awaited<ReturnType<typeof tr>>, kind: InboxErrorKind): string {
+  switch (kind) {
+    case 'conflict':
+      return t('Alguien cambió esta consulta mientras la mirabas. Recarga la página.', 'Someone changed this inquiry while you were looking at it. Reload the page.')
+    case 'not_found':
+      return t('Esta consulta ya no existe.', 'This inquiry no longer exists.')
+    case 'invalid_transition':
+      return t('Esta consulta ya no está donde estaba. Recarga la página.', 'This inquiry is no longer where it was. Reload the page.')
+    case 'missing_note':
+      return t('Falta el motivo.', 'The reason is missing.')
+    case 'storage_failure':
+      // Un `kind` nuevo tiene que romper aquí la compilación, no acabar en «vuelve a intentarlo».
+      return t('El mensaje salió, pero no pudimos anotarlo. Vuelve a intentarlo.', 'The message went out, but we couldn’t record it. Try again.')
+  }
 }
 
 export type CotizacionState =
@@ -125,15 +155,23 @@ export async function cotizarAction(_previo: CotizacionState, formData: FormData
 }
 
 /** Deja constancia de que se recordó el pago: el WhatsApp lo abrió el navegador en el clic. */
-export async function recordarPagoAction(formData: FormData): Promise<void> {
+export async function recordarPagoAction(_previo: VentaActionState, formData: FormData): Promise<VentaActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
   const recordado = await orders.remind(campo(formData, 'orderId'))
   if (isErr(recordado)) {
     if (recordado.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'recordarPagoAction', recordado.error.detail)
-    return
+    return {
+      status: 'error',
+      message:
+        recordado.error.kind === 'wrong_status'
+          ? t('Este pedido ya no espera un pago: no se anotó el recordatorio.', 'This order is no longer awaiting payment: the reminder was not recorded.')
+          : t('El mensaje salió, pero no pudimos anotar el recordatorio. Vuelve a intentarlo.', 'The message went out, but we couldn’t record the reminder. Try again.'),
+    }
   }
   await admin.record(actor, { action: 'pedido.recordado', subject: recordado.value.customerName, detail: recordado.value.publicRef })
   revalidarVentas()
+  return { status: 'success', message: t('Anotado: queda constancia del recordatorio.', 'Recorded: the reminder is on file.') }
 }
 
 /** El saldo de un pedido con anticipo, recibido: queda cobrado entero. */
@@ -190,13 +228,21 @@ export async function perderVentaAction(_previo: VentaActionState, formData: For
 }
 
 /** Reabrir una consulta perdida: quien dijo que no vuelve a escribir. Se retoma contactada. */
-export async function reabrirVentaAction(formData: FormData): Promise<void> {
+export async function reabrirVentaAction(_previo: VentaActionState, formData: FormData): Promise<VentaActionState> {
+  const t = await tr()
   const actor = await requireAdmin()
   const movida = await leads.move({ id: campo(formData, 'consultaId'), to: 'contacted', note: '', eventId: '' })
   if (isErr(movida)) {
     if (movida.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'reabrirVentaAction', movida.error.detail)
-    return
+    return {
+      status: 'error',
+      message:
+        movida.error.kind === 'invalid_transition'
+          ? t('Esta consulta ya no está perdida.', 'This inquiry is no longer lost.')
+          : mensajeDeMovida(t, movida.error.kind),
+    }
   }
   await admin.record(actor, { action: 'consulta.estado', subject: movida.value.name, detail: 'Perdida → Contactada' })
   revalidarVentas()
+  return { status: 'success', message: t('Venta reabierta: vuelve a estar contactada.', 'Sale reopened: it is contacted again.') }
 }

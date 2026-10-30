@@ -35,11 +35,16 @@ export async function guardarNotaClienteAction(_previo: ClienteActionState, form
 }
 
 /** El código de referido de un evento del cliente: el que ya tenía, o uno nuevo. */
-export async function generarReferidoAction(formData: FormData): Promise<void> {
+export async function generarReferidoAction(_previo: ClienteActionState, formData: FormData): Promise<ClienteActionState> {
+  const t = await tr()
   await requireAdmin()
   const creado = await admin.ensureReferralCode(campo(formData, 'eventId'))
-  if (isErr(creado)) registrarFallo('admin/clientes-actions', 'generarReferidoAction', creado.error.detail)
+  if (isErr(creado)) {
+    registrarFallo('admin/clientes-actions', 'generarReferidoAction', creado.error.detail)
+    return { status: 'error', message: t('No pudimos crear su código. Vuelve a intentarlo.', 'We couldn’t create their code. Try again.') }
+  }
   revalidarRuta('/dashboard/admin/clients')
+  return { status: 'success', message: t('Código de recomendación creado.', 'Referral code created.') }
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

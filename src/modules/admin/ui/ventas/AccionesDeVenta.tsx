@@ -10,6 +10,8 @@ import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import { traducir } from '@/shared/i18n/en-ingles'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
+const INICIAL: VentaActionState = { status: 'idle' }
+
 /**
  * **Abre y anota a la vez**: el WhatsApp, el correo o el enlace se abre en el mismo clic —Safari
  * bloquea la ventana si se abre después de un `await`— y la acción deja constancia detrás
@@ -26,7 +28,7 @@ export function AbrirYAnotar({
 }: {
   href: string
   children: ReactNode
-  accion: (formData: FormData) => Promise<void>
+  accion: (previo: VentaActionState, datos: FormData) => Promise<VentaActionState>
   campos: Readonly<Record<string, string>>
   variante?: 'primary' | 'default'
   /** `mailto:` no abre pestaña: se navega en la misma. */
@@ -34,27 +36,48 @@ export function AbrirYAnotar({
 }) {
   const t = useT()
   const [pendiente, empezar] = useTransition()
+  // **Lo que pasó con la constancia.** El mensaje ya salió por el navegador; si la anotación no
+  // entra —la consulta ya no existe, alguien la movió, la base falló— se dice aquí. Antes la
+  // acción devolvía `void` y el botón se quedaba igual que si todo hubiera ido bien.
+  const [estado, setEstado] = useState<VentaActionState>(INICIAL)
   return (
-    <button
-      aria-busy={pendiente}
-      className={botonClases(variante)}
-      disabled={pendiente}
-      onClick={() => {
-        if (externo) window.open(href, '_blank', 'noopener,noreferrer')
-        else window.location.href = href
-        const datos = new FormData()
-        for (const [k, v] of Object.entries(campos)) datos.set(k, v)
-        empezar(() => accion(datos))
-      }}
-      type="button"
-    >
-      {children}
-      {externo ? <span className="sr-only">{t(' (se abre en una pestaña nueva)', ' (opens in a new tab)')}</span> : null}
-    </button>
+    <div className="flex flex-col items-start gap-2">
+      <button
+        aria-busy={pendiente}
+        className={botonClases(variante)}
+        disabled={pendiente}
+        onClick={() => {
+          // Sin `noopener`: con él `window.open` devuelve `null` aunque la ventana se abra, y no
+          // habría forma de distinguir «abierta» de «bloqueada». El aislamiento se consigue igual
+          // cortando el `opener` en cuanto se tiene la ventana.
+          const ventana = externo ? window.open(href, '_blank') : null
+          if (externo && ventana === null) {
+            // Nada salió: no se anota. Antes se anotaba «contactada» con el mensaje sin enviar.
+            setEstado({ status: 'error', message: t('El navegador bloqueó la ventana: no se escribió nada, así que no se anotó.', 'The browser blocked the window: nothing was sent, so nothing was recorded.') })
+            return
+          }
+          if (ventana !== null) ventana.opener = null
+          if (!externo) window.location.href = href
+          const datos = new FormData()
+          for (const [k, v] of Object.entries(campos)) datos.set(k, v)
+          // El aviso del clic anterior se va al pulsar, y la promesa se devuelve dentro de la
+          // transición: así `pendiente` sigue siendo cierto hasta que la acción termina y el
+          // botón no admite un segundo clic a mitad.
+          setEstado(INICIAL)
+          empezar(async () => {
+            setEstado(await sinCaerse(accion)(INICIAL, datos))
+          })
+        }}
+        type="button"
+      >
+        {children}
+        {externo ? <span className="sr-only">{t(' (se abre en una pestaña nueva)', ' (opens in a new tab)')}</span> : null}
+      </button>
+      <ActionFeedback errorsOnly state={estado} />
+    </div>
   )
 }
 
-const INICIAL: VentaActionState = { status: 'idle' }
 
 /**
  * **Una sola salida para una venta que no sigue**: el motivo de la lista y la nota. Con pedido

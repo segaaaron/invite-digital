@@ -15,6 +15,7 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { BRAND } from '@/shared/config/brand'
 import { env } from '@/shared/config/env'
 import { CheckIcon, MailIcon, SearchIcon, WhatsAppIcon, ArrowLeftIcon } from '@/shared/design/ui/icons'
+import { AccionConAviso } from '@/shared/design/ui/panel/AccionConAviso'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { nombreDeFiesta, type FiestaDeLista } from '@/shared/design/ui/panel/lista'
@@ -401,12 +402,11 @@ async function Ficha({
                     })()}
                     {codigo === undefined ? (
                       e.id === null ? null : (
-                        <form action={generarReferidoAction}>
-                          <input name="eventId" type="hidden" value={e.id} />
+                        <AccionConAviso accion={generarReferidoAction} campos={{ eventId: e.id }}>
                           <button className="text-[12.5px] text-ink-soft underline underline-offset-4 hover:text-ink" type="submit">
                             {t('Darle su código de recomendación', 'Give them their referral code')}
                           </button>
-                        </form>
+                        </AccionConAviso>
                       )
                     ) : (
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px]">

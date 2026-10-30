@@ -5,6 +5,7 @@ import { contactarVentaAction, reabrirVentaAction, recordarPagoAction } from '@/
 import { OrderDecision } from '@/modules/orders'
 import { etiquetaDeMotivo } from '@/modules/leads'
 import { CheckIcon, WhatsAppIcon, MailIcon } from '@/shared/design/ui/icons'
+import { AccionConAviso } from '@/shared/design/ui/panel/AccionConAviso'
 import { MenuDeAcciones, opcionDeMenu } from '@/shared/design/ui/panel/lista'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { diaDelEvento, fechaHora, hace } from '@/shared/format/fecha'
@@ -237,12 +238,11 @@ async function Principal({
       )
     case 'perdida':
       return c === null ? null : (
-        <form action={reabrirVentaAction}>
-          <input name="consultaId" type="hidden" value={c.id} />
+        <AccionConAviso accion={reabrirVentaAction} campos={{ consultaId: c.id }}>
           <PanelButton type="submit" variant="primary">
             {paso}
           </PanelButton>
-        </form>
+        </AccionConAviso>
       )
     case 'cancelada':
       return <Nota>{t(`Pedido cancelado${p?.producto ? ` · ${p.producto}` : ''}.`, `Order cancelled${p?.producto ? ` · ${p.producto}` : ''}.`)}</Nota>

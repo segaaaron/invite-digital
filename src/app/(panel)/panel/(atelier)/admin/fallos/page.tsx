@@ -3,6 +3,7 @@ import { requireAdmin } from '@/app/_acciones/sesion'
 import { borrarTipoDeFalloAction } from '@/app/_acciones/admin/fallos-actions'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PestanasDeAdmin } from '@/modules/admin'
+import { AccionConAviso } from '@/shared/design/ui/panel/AccionConAviso'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { CheckIcon } from '@/shared/design/ui/icons'
@@ -105,12 +106,11 @@ export default async function FallosPage({ searchParams }: { searchParams: Promi
                       {f.veces > 1 ? t(` (la primera ${hace(f.primero, ahora, locale)})`, ` (the first ${hace(f.primero, ahora, locale)})`) : ''}.
                     </p>
                   </div>
-                  <form action={borrarTipoDeFalloAction}>
-                    <input name="huella" type="hidden" value={f.huella} />
+                  <AccionConAviso accion={borrarTipoDeFalloAction} campos={{ huella: f.huella }}>
                     <button className="min-h-[38px] cursor-pointer rounded-[10px] border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink hover:border-gold max-[859px]:min-h-11" type="submit">
                       {t('Ya está arreglado', 'It is fixed')}
                     </button>
-                  </form>
+                  </AccionConAviso>
                 </div>
                 <details className="group mt-3.5" open={n === 0}>
                   <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-[14px] text-gold-deep [&::-webkit-details-marker]:hidden">
