@@ -7,7 +7,7 @@ import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, rotuloDeRol } from '@/modules/shell/ui/nav'
 import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
-import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
+import { SalidaDeSoporte, SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { MenuCrearMovil } from '@/modules/admin/ui/MenuCrear'
 import { MenuMovil } from '@/modules/shell/ui/MenuMovil'
 import { BarraDelAdmin } from '@/modules/admin'
@@ -65,7 +65,10 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
         admin ? (
           <BarraDelAdmin campana={campana} hoy={diaLargo(new Date(), locale)} menu={<MenuMovil crear={<MenuCrearMovil />} />} />
         ) : (
-          <BarraSuperior izquierda={nombre === null ? undefined : <span className="text-[15px] text-ink-soft">{t('Hola', 'Hi')}, {nombre.split(' ')[0]}</span>}>{campana}</BarraSuperior>
+          <BarraSuperior izquierda={nombre === null ? undefined : <span className="text-[15px] text-ink-soft">{t('Hola', 'Hi')}, {nombre.split(' ')[0]}</span>}>
+            {campana}
+            {actor.soporte === undefined ? null : <SalidaDeSoporte />}
+          </BarraSuperior>
         )
       }
       brandSub={admin ? 'ADMINISTRACIÓN' : 'PANEL'}

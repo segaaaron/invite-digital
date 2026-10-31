@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CheckIcon } from '@/shared/design/ui/icons'
+import { CheckIcon, DotsIcon } from '@/shared/design/ui/icons'
 import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
@@ -122,7 +122,9 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
 
   return (
     <li aria-label={tarea.title} className="group/fila relative border-b border-line-panel py-3.5">
-      <div className="flex items-center gap-3">
+      {/* Hueco a la derecha para el botón de editar: iba suelto bajo la fecha, como una leyenda gris
+          suelta en medio de la fila (30 oct). */}
+      <div className="flex items-center gap-3 min-[768px]:pr-14">
         {tarea.porLaApp ? (
           <span className="grid size-11 shrink-0 place-items-center" title={t('Resuelta en su pantalla', 'Solved on its screen')}>
             <span className="grid size-6 place-items-center rounded-[6px] bg-ink-mute text-white">
@@ -151,9 +153,11 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
 
       {tarea.porLaApp ? null : (
         <details className="group ml-14">
-          {/* En escritorio aparece al pasar por la fila, sin sumarle alto; en el celular, siempre a la vista. */}
-          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-[13px] text-ink-mute underline-offset-4 hover:text-ink hover:underline min-[860px]:absolute min-[860px]:right-0 min-[860px]:bottom-0 [&::-webkit-details-marker]:hidden">
-            {t('Editar, mover o quitar', 'Edit, move or remove')}
+          {/* En escritorio, un botón al final de la fila, como los de la lista de invitados; en el celular,
+              con sus palabras debajo, que es donde hay sitio. */}
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-[13px] text-ink-mute underline-offset-4 hover:text-ink hover:underline min-[768px]:absolute min-[768px]:top-2.5 min-[768px]:right-0 min-[768px]:size-11 min-[768px]:justify-center min-[768px]:rounded-[10px] min-[768px]:border min-[768px]:border-line-panel-strong min-[768px]:bg-bg-raised min-[768px]:text-ink-soft min-[768px]:no-underline min-[768px]:hover:border-gold min-[768px]:hover:text-shell-deep [&::-webkit-details-marker]:hidden">
+            <DotsIcon className="hidden size-4 min-[768px]:block" />
+            <span className="min-[768px]:sr-only">{t('Editar, mover o quitar', 'Edit, move or remove')}</span>
           </summary>
           <div className="mt-3 flex flex-col gap-3 pb-1">
             <form action={guardar} className="flex flex-col gap-3">

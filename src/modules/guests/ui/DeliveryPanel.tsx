@@ -424,7 +424,7 @@ export function DeliveryPanel({
         </div>
 
         <div aria-hidden className="h-1.5 overflow-hidden rounded-full bg-line-panel">
-          <div className="h-full rounded-full bg-shell-deep transition-[width]" style={{ width: `${total === 0 ? 0 : (hechas / total) * 100}%` }} />
+          <div className="h-full rounded-full bg-gold transition-[width]" style={{ width: `${total === 0 ? 0 : (hechas / total) * 100}%` }} />
         </div>
 
         <div className="flex gap-6 border-b border-line-panel" role="tablist">
@@ -489,13 +489,18 @@ export function DeliveryPanel({
                       type="button"
                     >
                       <Iniciales chico nombre={fila.label} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[15px] leading-snug font-medium [overflow-wrap:anywhere]">{fila.label}</span>
-                        <span className="block truncate text-[13px] text-ink-mute">
-                          {fila.seats ?? 1} {(fila.seats ?? 1) === 1 ? t('persona', 'person') : t('personas', 'people')}, {telefono === '' ? t('sin teléfono', 'no phone') : telefono}
+                      {/* El nombre manda y va entero en su línea: con la insignia al lado le quedaban 85 px de los 260
+                          de la columna y «Miguel Saravia y Sra.» se partía en tres renglones (30 oct). La insignia baja
+                          a la segunda línea, delante de los cupos y el teléfono, que son lo que puede recortarse. */}
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="truncate text-[15px] leading-snug font-medium">{fila.label}</span>
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          {estado === null ? null : <Pill tone={estado.tone}>{estado.text}</Pill>}
+                          <span className="min-w-0 truncate text-[13px] text-ink-mute">
+                            {fila.seats ?? 1} {(fila.seats ?? 1) === 1 ? t('persona', 'person') : t('personas', 'people')} · {telefono === '' ? t('sin teléfono', 'no phone') : telefono}
+                          </span>
                         </span>
                       </span>
-                      {estado === null ? null : <Pill tone={estado.tone}>{estado.text}</Pill>}
                     </button>
                   </li>
                 )

@@ -14,11 +14,11 @@ import { useT } from '@/shared/i18n/idioma-navegador'
  */
 export function SeatViewToggle({ base, current }: { base: string; current: 'mapa' | 'tarjetas' }) {
   const t = useT()
-  const chip = (clave: 'mapa' | 'tarjetas', texto: ReactNode) => (
+  const segmento = (clave: 'mapa' | 'tarjetas', texto: ReactNode) => (
     <Link
       aria-current={current === clave ? 'page' : undefined}
-      className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[13.5px] font-medium whitespace-nowrap transition-colors max-[859px]:min-h-11 ${
-        current === clave ? 'border-shell-deep bg-shell-deep text-shell-ink' : 'border-line-panel-strong bg-bg-raised text-ink hover:border-gold'
+      className={`inline-flex min-h-9 items-center rounded-[var(--radius-pill)] px-3.5 text-[13.5px] font-medium whitespace-nowrap transition-colors max-[859px]:min-h-11 ${
+        current === clave ? 'bg-ink text-white' : 'text-ink-soft hover:text-ink'
       }`}
       href={clave === 'mapa' ? base : `${base}?vista=tarjetas`}
     >
@@ -27,10 +27,13 @@ export function SeatViewToggle({ base, current }: { base: string; current: 'mapa
   )
 
   return (
-    <div className="flex flex-wrap gap-2">
+    // **Un solo carril con dos segmentos**, como el de la agenda (`SegmentedTabs`). Eran dos píldoras sueltas, y
+    // justo debajo hay otra fila de píldoras —los invitados sin mesa—: dos filas iguales no decían cuál cambia
+    // lo que se mira y cuál es un dato (30 oct).
+    <div aria-label={t('Cómo se ve el salón', 'How the venue looks')} className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] border border-line-panel-strong bg-bg-raised p-1" role="group">
       {/* En el celular, «mapa» abre la lista de mesas (el plano se arma en la computadora): lo dice así. */}
-      {chip('mapa', <><span className="max-[767px]:hidden">{t('Vista de mapa', 'Map view')}</span><span className="min-[768px]:hidden">{t('Lista de mesas', 'Table list')}</span></>)}
-      {chip('tarjetas', t('Vista de tarjetas', 'Card view'))}
+      {segmento('mapa', <><span className="max-[767px]:hidden">{t('Vista de mapa', 'Map view')}</span><span className="min-[768px]:hidden">{t('Lista de mesas', 'Table list')}</span></>)}
+      {segmento('tarjetas', t('Vista de tarjetas', 'Card view'))}
     </div>
   )
 }

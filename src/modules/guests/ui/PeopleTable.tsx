@@ -136,7 +136,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
         </button>
       </span>
     ) : (
-      <span className="flex justify-end gap-1.5">
+      // Ancho fijo de tres iconos (40 px cada uno, 6 de hueco): una fila con dos y otra con tres empujaban
+      // el botón de la invitación a una x distinta, y la columna entera salía en escalera (30 oct).
+      <span className="flex w-[132px] justify-end gap-1.5">
         {conPase ? (
           <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={t(`Ver el pase de ${fila.fullName}`, `View ${fila.fullName}’s pass`)}>
             <QrIcon />
@@ -151,7 +153,17 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
       </span>
     )
 
-  /** El botón de la invitación: enviarla si no salió, recordarla si salió y nadie contestó. */
+  /**
+   * El botón de la invitación: enviarla si no salió, recordarla si salió y nadie contestó.
+   *
+   * Va en un hueco de ancho fijo aunque no haya botón. Sin él, las filas tenían «Enviar», «Recordar» o nada y
+   * los iconos de al lado empezaban en una x distinta en cada una: la columna de acciones bajaba en escalera
+   * (30 oct, con la lista de un evento de verdad delante).
+   */
+  const huecoDelBoton = (primera: PersonRowView) => (
+    <span className="inline-flex w-[112px] shrink-0 justify-end max-[1365px]:w-[104px]">{botonDeInvitacion(primera)}</span>
+  )
+
   const botonDeInvitacion = (primera: PersonRowView) =>
     (primera.sentAt ?? null) === null ? (
       <PanelButton href={`${base}?panel=envio`} size="sm" variant="primary">
@@ -226,7 +238,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                 const todas = todasDe(primera.groupId)
                 const familia = todas.length > 1
                 return (
-                  <tbody className="group/invitacion" key={primera.groupId}>
+                  <tbody key={primera.groupId}>
                     {familia ? (
                       <tr>
                         <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3">
@@ -246,13 +258,15 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                         <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3 [font-variant-numeric:tabular-nums]">{primera.tableLabel ?? '—'}</td>
                         <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3 text-right whitespace-nowrap">
                           <span className="inline-flex items-center gap-1.5">
-                            {botonDeInvitacion(primera)}
-                            <IconLink href={`${base}?panel=pase&persona=${primera.id}`} label={t(`Ver el pase de ${primera.groupLabel}`, `View ${primera.groupLabel}’s pass`)}>
-                              <QrIcon />
-                            </IconLink>
-                            <IconLink href={`${base}?panel=invitacion&grupo=${primera.groupId}`} label={t(`Editar la invitación ${primera.groupLabel}`, `Edit the ${primera.groupLabel} invitation`)}>
-                              <PenIcon />
-                            </IconLink>
+                            {huecoDelBoton(primera)}
+                            <span className="flex w-[132px] justify-end gap-1.5">
+                              <IconLink href={`${base}?panel=pase&persona=${primera.id}`} label={t(`Ver el pase de ${primera.groupLabel}`, `View ${primera.groupLabel}’s pass`)}>
+                                <QrIcon />
+                              </IconLink>
+                              <IconLink href={`${base}?panel=invitacion&grupo=${primera.groupId}`} label={t(`Editar la invitación ${primera.groupLabel}`, `Edit the ${primera.groupLabel} invitation`)}>
+                                <PenIcon />
+                              </IconLink>
+                            </span>
                           </span>
                         </td>
                       </tr>
@@ -284,8 +298,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                         <td className="border-b border-line-panel px-3.5 py-3.25 [font-variant-numeric:tabular-nums]">{fila.tableLabel ?? '—'}</td>
                         <td className="border-b border-line-panel px-3.5 py-3.25 text-right whitespace-nowrap">
                           <span className="inline-flex items-center gap-1.5">
-                            {familia ? null : botonDeInvitacion(fila)}
-                            <span className={familia ? 'opacity-0 transition-opacity group-hover/invitacion:opacity-100 focus-within:opacity-100' : ''}>{accionesDePersona(fila, !familia)}</span>
+                            {familia ? null : huecoDelBoton(fila)}
+                            {accionesDePersona(fila, !familia)}
                           </span>
                         </td>
                       </tr>

@@ -457,7 +457,9 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
               {versiones.length === 0 ? (
                 <p className="text-[13px] text-ink-mute">{t('Todavía no se ha guardado ningún cambio.', 'No change has been saved yet.')}</p>
               ) : (
-                <ul className="flex flex-col">
+                // Con su propio desplazamiento: cada guardado deja una versión, y a los pocos días la lista
+                // medía dos mil píxeles contra los quinientos de la columna de al lado (30 oct).
+                <ul className="flex max-h-[460px] flex-col overflow-y-auto overscroll-contain">
                   {versiones.map((v, i) => (
                     <VersionRow actual={i === 0} base={base} key={v.id} version={v} />
                   ))}
@@ -525,11 +527,16 @@ function VersionRow({ version, actual, base }: { version: VersionView; actual: b
   const t = useT()
   const [estado, restaurar, restaurando] = useActionState(sinCaerse(restoreSiteVersionAction), INICIAL)
   const bloques = [...new Set(version.campos.map((c) => traducir(BLOQUES[c]?.titulo ?? c, t)))]
+  const queCambio = bloques.length > 0 ? bloques.join(' · ') : version.actorEmail === 'Valores iniciales' ? t('Punto de partida', 'Starting point') : t('Restauración', 'Restore')
   return (
     <li className="flex flex-col gap-2 border-t border-line-panel py-3 first:border-none">
       <div className="flex items-start justify-between gap-3">
         <span className="flex min-w-0 flex-col">
-          <span className="text-[13px] text-ink">{version.fecha}</span>
+          {/* Qué se tocó, junto a la fecha: iba en una línea suelta bajo el botón y se leía como el
+              encabezado de la versión siguiente (30 oct). */}
+          <span className="text-[13px] text-ink">
+            {version.fecha} · {queCambio}
+          </span>
           <span className="truncate text-[12px] text-ink-mute">{version.actorEmail}</span>
         </span>
         {actual ? (
@@ -542,7 +549,6 @@ function VersionRow({ version, actual, base }: { version: VersionView; actual: b
           </form>
         )}
       </div>
-      <span className="text-[12px] text-ink-soft">{bloques.length > 0 ? bloques.join(' · ') : version.actorEmail === 'Valores iniciales' ? t('Punto de partida, antes del primer cambio', 'Starting point, before the first change') : t('Restauración', 'Restore')}</span>
       {estado.status === 'error' ? (
         <PanelAlert tone="error">
           {estado.message}

@@ -26,7 +26,13 @@ export function PanelHeader({
   actions?: ReactNode
   /** Las acciones de vez en cuando (exportar, importar…), en la fila con las demás, también en el celular. */
   menu?: ReactNode
-  /** Si todas las acciones se esconden en el celular (van a la barra de abajo o flotan): ahí no se deja su fila vacía. */
+  /**
+   * Si todas las acciones se esconden **en el celular** (van a la isla junto al título): ahí no se deja su fila vacía.
+   *
+   * El corte es 768, el mismo al que la isla deja de pintarse. Estaba en 859 y entre 768 y 859 —un iPad de pie—
+   * no se veía **ninguna**: ni la fila, escondida aquí, ni la isla, escondida desde 768. En Invitados eso dejaba
+   * la tableta sin «Añadir invitado» (30 oct).
+   */
   accionesSoloEnEscritorio?: boolean
   /** Las pestañas de la sección (maqueta: bajo el título, subrayadas). */
   pestanas?: ReactNode
@@ -61,7 +67,7 @@ export function PanelHeader({
       {/* En el celular, las acciones en **una sola fila que se desliza**, sin estirarse ni apilarse: cuatro
           botones a lo ancho ocupaban medio teléfono antes de la lista (6 de octubre). */}
       {actions || menu ? (
-        <div className={`${accionesSoloEnEscritorio ? 'max-[859px]:hidden ' : ''}-mx-4 flex w-[calc(100%+32px)] flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] *:shrink-0 max-[559px]:[mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] min-[560px]:mx-0 min-[560px]:w-auto min-[560px]:flex-wrap min-[560px]:overflow-visible min-[560px]:px-0 min-[560px]:pb-0 min-[560px]:gap-2.5 [&::-webkit-scrollbar]:hidden`}>
+        <div className={`${accionesSoloEnEscritorio ? 'max-[767px]:hidden ' : ''}-mx-4 flex w-[calc(100%+32px)] flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] *:shrink-0 max-[559px]:[mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] min-[560px]:mx-0 min-[560px]:w-auto min-[560px]:flex-wrap min-[560px]:overflow-visible min-[560px]:px-0 min-[560px]:pb-0 min-[560px]:gap-2.5 [&::-webkit-scrollbar]:hidden`}>
           {actions}
           {/* Lo de vez en cuando (importar, exportar) también a la vista y con texto: el «⋯ Más» lo escondía (v2.1). */}
           {menu ? <div className="contents">{menu}</div> : null}

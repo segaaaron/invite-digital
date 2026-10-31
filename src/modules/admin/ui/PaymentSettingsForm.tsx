@@ -101,7 +101,9 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
         <SubmitButton className="w-fit self-end" variant="primary" pending={guardando} pendingLabel={t('Guardando…', 'Saving…')}>{t('Guardar datos', 'Save details')}</SubmitButton>
       </form>
 
-      <form action={subir} aria-labelledby={`${id}-qr`} className="flex min-w-0 flex-[1_1_260px] flex-col gap-3">
+      {/* En su tarjeta, como los datos de transferencia: suelto sobre el papel, al lado de una tarjeta,
+          parecía que la pantalla se había quedado a medio hacer (30 oct). */}
+      <form action={subir} aria-labelledby={`${id}-qr`} className="flex min-w-0 flex-[1_1_260px] flex-col gap-3 rounded-[16px] border border-line-panel bg-bg-raised p-7 max-[559px]:p-5">
         <h2 className="font-display text-[24px] font-medium" id={`${id}-qr`}>
           {t('QR de cobro', 'Payment QR')}
         </h2>
@@ -116,7 +118,8 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
           </p>
         </Ayuda>
 
-        <div className="grid aspect-square w-full max-w-[200px] place-items-center rounded-[16px] border border-line-panel bg-bg-raised p-4">
+        {/* El hueco, más hundido que la tarjeta que lo rodea: con el mismo papel se perdía el borde. */}
+        <div className="grid aspect-square w-full max-w-[200px] place-items-center rounded-[16px] border border-line-panel bg-bg p-4">
           {settings.hasQrImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img alt={t('QR de cobro cargado', 'Uploaded payment QR')} className="size-full object-contain" src="/qr-de-cobro" />

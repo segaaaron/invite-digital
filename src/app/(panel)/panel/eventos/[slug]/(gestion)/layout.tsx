@@ -13,7 +13,7 @@ import { PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { panelNav, rotuloDeRol } from '@/modules/shell/ui/nav'
 import { idiomaDeLaPeticion, tr } from '@/shared/i18n/idioma-servidor'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
-import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
+import { SalidaDeSoporte, SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { MenuCrearMovil } from '@/modules/admin/ui/MenuCrear'
 import { MenuMovil } from '@/modules/shell/ui/MenuMovil'
 import { BarraDelAdmin } from '@/modules/admin'
@@ -128,6 +128,7 @@ export default async function EventoLayout({
             izquierda={cuentaAtras(fiesta, event.value.eventDate, new Date(), locale)}
           >
             {campana}
+            {actor.soporte === undefined ? null : <SalidaDeSoporte />}
           </BarraSuperior>
         )
       }

@@ -2,9 +2,9 @@
 
 import { useActionState } from 'react'
 import { botonClases, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { UploadIcon } from '@/shared/design/ui/icons'
+import { GiftIcon, UploadIcon } from '@/shared/design/ui/icons'
 import { type ExtraActionState, orderExtraAction } from '@/app/_acciones/plans/extra-actions'
-import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { ActionFeedback, EmptyState, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import { useT } from '@/shared/i18n/idioma-navegador'
 
@@ -70,7 +70,14 @@ export function ExtrasCard({
         </p>
       ) : null}
       {tarjetas.length === 0 ? (
-        <p className="text-[14px] text-ink-mute">{t('Ahora mismo no hay extras a la venta.', 'There are no extras for sale right now.')}</p>
+        // Con su `EmptyState`, como el resto del panel: una línea gris suelta sobre el papel dejaba la
+        // pantalla con el título y nada más, y parecía que no había cargado (30 oct).
+        <EmptyState
+          compact
+          description={t('Cuando el atelier publique alguno, aparecerá aquí para pedirlo.', 'When the atelier publishes one, it will show up here to order.')}
+          icon={<GiftIcon />}
+          title={t('Ahora mismo no hay extras a la venta', 'There are no extras for sale right now')}
+        />
       ) : (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-5">
           {tarjetas.map((tj) => (

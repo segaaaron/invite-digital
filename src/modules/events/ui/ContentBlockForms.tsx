@@ -295,7 +295,8 @@ function Acordeon({ sections: todas, content, ejemplo, hechos, ...resto }: Props
       {/* El avance arriba, a lo ancho (E08). En el celular lo pinta la cabecera de la página (M11). */}
       <div className="flex items-center gap-4 max-[1023px]:hidden">
         <div aria-hidden className="h-1.5 flex-1 overflow-hidden rounded-full bg-line-panel">
-          <div className="h-full rounded-full bg-shell-deep transition-[width]" style={{ width: `${(hechos / Math.max(1, enOrden.length)) * 100}%` }} />
+          {/* En latón, no en tinta: al completarse, una barra negra a lo ancho se leía como una raya tachando el título (30 oct). */}
+          <div className="h-full rounded-full bg-gold transition-[width]" style={{ width: `${(hechos / Math.max(1, enOrden.length)) * 100}%` }} />
         </div>
         <p className="shrink-0 text-[15px] font-medium [font-variant-numeric:tabular-nums]">{t(`${hechos} de ${enOrden.length} listas`, `${hechos} of ${enOrden.length} done`)}</p>
       </div>

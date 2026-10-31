@@ -182,7 +182,10 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
         </PanelCard>
       ) : null}
 
-      <div className="grid items-start gap-4.5 min-[1200px]:grid-cols-[minmax(0,1fr)_360px]">
+      {/* El calendario y lo del día, lado a lado; lo que no cambia con el mes —avisos y suscripción— va debajo,
+          en dos columnas. Antes los cuatro iban en la columna de la derecha: bajaba el doble que el calendario y
+          quedaba media pantalla en blanco a su izquierda (30 oct). En «Lista» no hay columna derecha. */}
+      <div className={`grid items-start gap-4.5 ${vista === 'mes' ? 'min-[1200px]:grid-cols-[minmax(0,1fr)_360px]' : ''}`}>
         <PanelCard
           action={
             <div className="flex flex-wrap items-center gap-2">
@@ -227,9 +230,8 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
           )}
         </PanelCard>
 
-        <div className="flex flex-col gap-4.5 min-[1200px]:sticky min-[1200px]:top-6">
-          {vista === 'mes' ? (
-            <>
+        {vista !== 'mes' ? null : (
+          <div className="flex flex-col gap-4.5 min-[1200px]:sticky min-[1200px]:top-6">
               <PanelCard title={t('Hoy', 'Today')}>
                 <ListaDeAgenda
                   accion={(e) => marcar(e, trasMarcar(null))}
@@ -243,8 +245,11 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
               <PanelCard title={t('Lo que viene', 'Coming up')}>
                 <ListaDeAgenda enlace={enlace} entradas={proximas} hoy={hoy} vacio={{ titulo: t('Nada en los próximos 14 días', 'Nothing in the next 14 days') }} />
               </PanelCard>
-            </>
-          ) : null}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4.5 grid items-start gap-4.5 min-[900px]:grid-cols-2">
           <PanelCard title={t('Avisos', 'Notifications')}>
             <div className="flex flex-col gap-3 text-[13px] leading-relaxed text-ink-soft">
               <p>{t('Cada mañana a las 8:00 te aviso lo de hoy y de mañana —tareas, pagos, citas, ensayos y el cierre de confirmaciones—, lo que se atrasó y cuánto falta para tu evento.', 'Every morning at 8:00 I let you know what’s on today and tomorrow —tasks, payments, appointments, rehearsals and the RSVP deadline—, what’s overdue and how long until your event.')}</p>
@@ -254,7 +259,6 @@ export default async function AgendaPage({ params, searchParams }: { params: Pro
           <PanelCard title={t('En tu teléfono', 'On your phone')}>
             <SuscripcionAlCalendario evento={evento} />
           </PanelCard>
-        </div>
       </div>
     </>
   )

@@ -11,7 +11,7 @@ import { useT } from '@/shared/i18n/idioma-navegador'
  * El nombre del evento en el panel. El que nace de un pedido se llama como quien compró: aquí el
  * cliente lo cambia por el de la fiesta. No toca el enlace, el diseño ni la fecha.
  */
-export function NombreDelEvento({ eventId, title }: { eventId: string; title: string }) {
+export function NombreDelEvento({ eventId, title, nota }: { eventId: string; title: string; /** Lo que la pantalla quiera añadir bajo la ayuda: va con ella, no suelto tras el botón. */ nota?: string }) {
   const t = useT()
   const [estado, accion, pendiente] = useActionState<RenombrarState, FormData>(sinCaerse(renombrarEventoAction), { status: 'idle', message: '' })
   const id = useId()
@@ -24,6 +24,9 @@ export function NombreDelEvento({ eventId, title }: { eventId: string; title: st
         <input className={FIELD_CLASS} defaultValue={title} id={id} maxLength={160} name="title" placeholder={t('XV de Amanda', 'Amanda’s Quince')} required type="text" />
         <span className="text-[12px] text-ink-mute">{t('Solo lo ves tú y tu equipo. Tus invitados ven los nombres de la portada.', 'Only you and your team see it. Your guests see the names on the cover.')}</span>
       </label>
+      {/* Las dos aclaraciones, juntas y del mismo tamaño: una iba antes del botón y la otra después, y el botón
+          quedaba flotando entre dos letras chicas distintas (30 oct). */}
+      {nota === undefined ? null : <p className="-mt-1 text-[12px] text-ink-mute">{nota}</p>}
       <ActionFeedback state={estado} />
       <div>
         <SubmitButton pending={pendiente}>{t('Guardar nombre', 'Save name')}</SubmitButton>
