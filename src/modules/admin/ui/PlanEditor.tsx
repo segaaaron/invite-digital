@@ -25,6 +25,7 @@ export type PlanEditorView = {
   readonly includesGuestbook: boolean
   readonly includesGiftWays: boolean
   readonly includesStyle: boolean
+  readonly includesReminders: boolean
   readonly maxDoorPorters: number
   readonly maxCohosts: number | null
   readonly maxHiredPlanners: number | null
@@ -58,6 +59,7 @@ const funciones = (t: T) =>
     { name: 'includesGuestbook', label: t('Libro de firmas', 'Guestbook'), description: t('Los invitados dejan un mensaje al confirmar. Apagado, quien ya tiene mensajes los conserva.', 'Guests leave a message when they RSVP. Off, whoever already has messages keeps them.') },
     { name: 'includesGiftWays', label: t('Lluvia de sobres y QR de transferencia', 'Envelope gifts and transfer QR'), description: t('Las formas de regalar en la invitación. Apagado, quien ya las configuró las conserva.', 'The ways to give in the invitation. Off, whoever already set them up keeps them.') },
     { name: 'includesStyle', label: t('Colores y letra a su gusto', 'Their own colours and fonts'), description: t('El cliente elige el color de acento y la caligrafía de su diseño. Apagado, quien ya los eligió los conserva.', 'The client picks the accent colour and script of their design. Off, whoever already chose them keeps them.') },
+    { name: 'includesReminders', label: t('Recordatorios', 'Reminders'), description: t('La cola del panel que dice a quién escribir hoy, con el mensaje listo. Apagado, el plan reparte y recuerda a mano.', 'The dashboard queue that says who to write to today, with the message ready. Off, the plan sends and follows up by hand.') },
     { name: 'guestPhotos', label: t('Fotos de los invitados', 'Guest photos'), description: t('Cada invitado sube sus fotos desde su invitación.', 'Each guest uploads their photos from their invitation.') },
     { name: 'eventPassword', label: t('Invitación con contraseña', 'Password-protected invitation'), description: t('La invitación pide una contraseña antes de abrirse.', 'The invitation asks for a password before opening.') },
     { name: 'csvImport', label: t('Importar la lista desde Excel (CSV)', 'Import the list from Excel (CSV)'), description: t('Cargar todos los invitados de una vez.', 'Load all guests at once.') },

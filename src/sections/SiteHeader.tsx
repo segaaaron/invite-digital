@@ -3,11 +3,17 @@
 import { useEffect, useState } from 'react'
 import { SELLO } from '@/sections/portada/sello'
 import { CloseIcon } from '@/shared/design/ui/icons'
+import { ICONO_WHATSAPP } from './icono-whatsapp'
 import { BRAND } from '@/shared/config/brand'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
 
-type Props = { locale: Locale; dictionary: Dictionary }
+type Props = {
+  locale: Locale
+  dictionary: Dictionary
+  /** El WhatsApp del atelier, ya como enlace. Nulo: no hay número cargado y no se enseña. */
+  whatsapp: string | null
+}
 
 /**
  * La cabecera de la maqueta «mix»: el sello con el nombre, las cinco entradas, la píldora que
@@ -20,7 +26,7 @@ type Props = { locale: Locale; dictionary: Dictionary }
  * El `.claro` de la maqueta (la barra sobre un fondo oscuro) queda fuera: el estreno es de lino
  * claro, y la clase ahí dejaría la marca invisible.
  */
-export function SiteHeader({ locale, dictionary }: Props) {
+export function SiteHeader({ locale, dictionary, whatsapp }: Props) {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [solida, setSolida] = useState(false)
   const { pie, nav } = dictionary.portada
@@ -36,12 +42,14 @@ export function SiteHeader({ locale, dictionary }: Props) {
   // La cabecera sale en toda la web, no solo en la portada: las anclas van con el idioma delante
   // para que también funcionen desde colecciones o desde un pedido.
   const inicio = `/${locale}`
+  // Los nombres claros del documento de correcciones (30 oct): «La noche» y «La puerta» dejan de
+  // ser entradas del menú y se quedan como títulos dentro de su sección.
   const enlaces = [
     { href: `${inicio}#disenos`, label: nav.disenos },
-    { href: `${inicio}#noche`, label: nav.noche },
-    { href: `${inicio}#movil`, label: nav.invitacion },
-    { href: `${inicio}#puerta`, label: nav.puerta },
-    { href: `${inicio}#planes`, label: nav.planes },
+    { href: `${inicio}#pasos`, label: nav.comoFunciona },
+    { href: `${inicio}#noche`, label: nav.queIncluye },
+    { href: `${inicio}#planes`, label: nav.precios },
+    { href: `${inicio}#faq`, label: nav.preguntas },
   ]
 
   return (
@@ -102,7 +110,7 @@ export function SiteHeader({ locale, dictionary }: Props) {
           </button>
         </div>
         <nav className="mm-enlaces">
-          {[...enlaces, { href: `${inicio}#faq`, label: pie.preguntas }].map((enlace, i) => (
+          {enlaces.map((enlace, i) => (
             <a href={enlace.href} key={enlace.href} onClick={() => setMenuAbierto(false)}>
               <span className="mm-n">{String(i + 1).padStart(2, '0')}</span>
               {enlace.label}
@@ -110,7 +118,12 @@ export function SiteHeader({ locale, dictionary }: Props) {
           ))}
         </nav>
         <div className="mm-pie">
-          <span className="mm-oficio">{pie.oficio}</span>
+          {whatsapp === null ? <span className="mm-oficio">{pie.oficio}</span> : (
+            <a className="mm-wa" href={whatsapp} onClick={() => setMenuAbierto(false)} rel="noopener" target="_blank">
+              {ICONO_WHATSAPP}
+              {pie.whatsapp}
+            </a>
+          )}
           <a className="cta-pill" href={`${inicio}#cierre`} onClick={() => setMenuAbierto(false)}>
             {nav.cta}
           </a>

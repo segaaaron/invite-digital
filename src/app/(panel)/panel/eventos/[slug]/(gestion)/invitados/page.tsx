@@ -13,11 +13,12 @@ import { GuestDialog } from '@/modules/guests/ui/GuestDialog'
 import { EditPersonDialog } from '@/modules/guests/ui/EditPersonDialog'
 import { EditarInvitacion } from '@/modules/guests/ui/EditarInvitacion'
 import { PassDialog } from '@/modules/guests/ui/PassDialog'
-import { canAddGroup } from '@/modules/plans'
+import { canAddGroup, hasFeature } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import type { GuestGroupRowView } from '@/modules/guests/ui/invitation-row'
 import { requireSession } from '@/app/_acciones/sesion'
+import { registrarFallo } from '@/shared/observability/fallos'
 import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
@@ -119,16 +120,27 @@ export default async function InvitadosPage({
         respondedAt: respuestaDeGrupo.get(persona.guestGroupId) ?? null,
       }))
 
+  const capacidad = await plans.allowanceFor(event.value.id)
+  if (isErr(capacidad)) {
+    // Sin la capacidad esta pantalla esconde el tope de invitaciones, el importar y la cola de
+    // recordatorios **como si el plan no los trajera**. Un fallo de la base se leía igual que un
+    // plan pequeño, y en el registro no quedaba nada.
+    registrarFallo('panel/invitados', 'no se pudo leer el plan del evento', capacidad.error.kind, capacidad.error.detail)
+  }
+  const limite = isErr(capacidad) ? null : capacidad.value.maxGuestGroups
+  // **Los recordatorios son del plan** (`0101`): sin ellos no se calcula la cola —es una consulta
+  // menos— y la pantalla no ofrece «Recordar». La acción tiene su propia puerta.
+  const conRecordatorios = !isErr(capacidad) && hasFeature(capacidad.value, 'reminders')
+
   // La cola de recordatorios del día. Si la lectura falla, la tarjeta lo dice: una cola
   // vacía afirmaría que no hay nadie por recordar, que es lo contrario de lo que pasó.
-  const cola = await reminders.due({
-    id: event.value.id,
-    locale: event.value.locale,
-    rsvpDeadline: new Date(`${event.value.rsvpDeadline}T00:00:00Z`),
-  })
-
-  const capacidad = await plans.allowanceFor(event.value.id)
-  const limite = isErr(capacidad) ? null : capacidad.value.maxGuestGroups
+  const cola = conRecordatorios
+    ? await reminders.due({
+        id: event.value.id,
+        locale: event.value.locale,
+        rsvpDeadline: new Date(`${event.value.rsvpDeadline}T00:00:00Z`),
+      })
+    : null
 
   const enlaceGeneral = await guests.general.leer(event.value.id)
   const base = `/dashboard/events/${event.value.slug}/guests`
@@ -333,7 +345,7 @@ export default async function InvitadosPage({
         ) : null}
 
         {/* Recordar (E55): uno por uno, por WhatsApp; lo que se anota sale de la cola. Lo abre «Recordar» de cada fila. */}
-        {panel === 'recordar' ? (
+        {panel === 'recordar' && cola !== null ? (
           <PanelDialog
             closeHref={base}
             descripcion={t('Uno por uno, por WhatsApp. Te vamos marcando a quién ya le escribiste.', 'One by one, via WhatsApp. We mark who you’ve already written to.')}
@@ -460,7 +472,7 @@ export default async function InvitadosPage({
               />
             </div>
           ) : (
-            <PeopleTable eventSlug={event.value.slug} rows={filasPersona} />
+            <PeopleTable eventSlug={event.value.slug} recordatorios={conRecordatorios} rows={filasPersona} />
           )}
         </section>
 

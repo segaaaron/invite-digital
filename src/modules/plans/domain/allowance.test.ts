@@ -59,6 +59,14 @@ describe('remainingGroups', () => {
 })
 
 describe('hasFeature', () => {
+  // Los recordatorios nacieron encendidos (`0101`) para que ninguna fila vieja —ni ningún evento
+  // ya vendido— se quedara sin la cola de un día para otro.
+  it('los recordatorios: sin decirlo el plan, vienen; apagados, no', () => {
+    expect(hasFeature(atelier, 'reminders')).toBe(true)
+    expect(hasFeature({ ...atelier, reminders: false }, 'reminders')).toBe(false)
+    expect(hasFeature({ ...atelier, reminders: true }, 'reminders')).toBe(true)
+  })
+
   it('libro de firmas y formas de regalar: sin decirlo el plan, vienen (como hasta ahora); apagados, no', () => {
     expect(hasFeature(atelier, 'guestbook')).toBe(true)
     expect(hasFeature(atelier, 'giftWays')).toBe(true)

@@ -30,6 +30,7 @@ const columnas = {
   includesGuestbook: plans.includesGuestbook,
   includesGiftWays: plans.includesGiftWays,
   includesStyle: plans.includesStyle,
+  includesReminders: plans.includesReminders,
 }
 
 export const createDrizzlePlanReader = (database: DbExecutor): PlanReader => ({

@@ -17,6 +17,7 @@ const NOMBRE: Record<PlanFeature, string> = {
   guestbook: 'el libro de firmas',
   giftWays: 'la lluvia de sobres y el QR de transferencia',
   estilo: 'los colores y la letra a tu gusto',
+  reminders: 'los recordatorios',
 }
 
 const desdeFila = capacidadDePlan

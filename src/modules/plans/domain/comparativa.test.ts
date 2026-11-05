@@ -25,6 +25,9 @@ const TEXTOS: TextosComparativa = {
     tareas: 'Tareas y presupuesto',
     plannerCompleto: 'Proveedores y cronograma',
     plannerTotal: 'Día D',
+    recordatorios: 'Recordatorios',
+    rondas: 'Rondas',
+    entrega: 'Lista en',
     enLinea: 'En línea tras el evento',
     modelo: 'Cambiar de modelo',
   },
@@ -65,6 +68,28 @@ describe('filasComparativas', () => {
     expect(de('Día D')).toEqual(['No', 'Sí'])
     expect(de('En línea tras el evento')).toEqual(['60 días', '365 días'])
     expect(de('Cambiar de modelo')).toEqual(['No', 'Siempre'])
+  })
+
+  // Las tres filas que el documento del 30 oct sumó a la tabla. Las dos de la entrega salen de la
+  // base —la tarjeta del plan pinta esos mismos números—, y los recordatorios de su bandera.
+  it('la entrega y los recordatorios salen de los datos del plan, no de un texto', () => {
+    const conEncargo: Allowance = { ...atelier, correctionRounds: 2, deliveryDays: 3, reminders: false }
+    const imperial: Allowance = { ...alta, correctionRounds: 5, deliveryDays: 5, reminders: true }
+    const filas = filasComparativas([conEncargo, imperial], TEXTOS)
+    const de = (etiqueta: string) => filas.find((f) => f.etiqueta === etiqueta)?.valores.map((v) => v.texto)
+
+    expect(de('Rondas')).toEqual(['2', '5'])
+    expect(de('Lista en')).toEqual(['3 días', '5 días'])
+    expect(de('Recordatorios')).toEqual(['No', 'Sí'])
+  })
+
+  // Un plan de autoservicio no tiene rondas ni plazo: la celda dice que no, no un número inventado.
+  it('sin rondas ni días de entrega, la entrega queda marcada como no incluida', () => {
+    const filas = filasComparativas([atelier], TEXTOS)
+    const celda = (etiqueta: string) => filas.find((f) => f.etiqueta === etiqueta)?.valores[0]
+
+    expect(celda('Rondas')).toEqual({ texto: 'No', incluido: false })
+    expect(celda('Lista en')).toEqual({ texto: 'No', incluido: false })
   })
 
   // Lo que no trae se marca apagado: la tabla se lee por columnas y el «no» tiene que verse.

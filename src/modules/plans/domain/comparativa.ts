@@ -26,6 +26,17 @@ export type TextosComparativa = {
 type FilasDeComparativa = {
     /** Lo que traen todos: portada, cuenta regresiva, mapa, cronograma, vestimenta y música. */
     basicos: string
+    /**
+     * «Sugerencia de regalos»: la traen **los tres planes** y aun así se compara (documento del
+     * 30 oct), porque la tarjeta de Atelier la promete y la tabla la dejaba en blanco.
+     */
+    sugerencia: string
+    /** Rondas de corrección del diseño por encargo. Sin rondas, el plan es de autoservicio. */
+    rondas: string
+    /** «Lista en»: los días que tarda la primera versión. */
+    entrega: string
+    /** «Recordatorios: a quién escribir hoy», la cola del panel. Es un límite del plan (`0101`). */
+    recordatorios: string
     confirmacion: string
     lista: string
     pases: string
@@ -37,7 +48,11 @@ type FilasDeComparativa = {
     secciones: string
     /** El panel descargable: la lista de invitados que se exporta (va con importar/descargar). */
     panel: string
-    /** Número de mesa + QR de acceso: mesas y puerta a la vez. */
+    /**
+     * Número de mesa + QR de acceso, las dos cosas en una fila. **Ya no la escribe ningún
+     * diccionario**: el documento del 30 oct la reparte entre `mesas` y `puerta`. Se queda porque
+     * la tabla la sabe pintar si alguien vuelve a pedirla.
+     */
     mesaQr: string
     album: string
     /** Los detalles inspirados en su evento: lo que hacemos en el plan de todo el día. */
@@ -77,6 +92,10 @@ export type GrupoDeComparativa = 'invitacion' | 'regalos' | 'control' | 'entrega
 
 const GRUPO: Record<keyof FilasDeComparativa, GrupoDeComparativa> = {
   basicos: 'invitacion',
+  sugerencia: 'regalos',
+  rondas: 'entrega',
+  entrega: 'entrega',
+  recordatorios: 'control',
   confirmacion: 'control',
   lista: 'control',
   pases: 'control',
@@ -121,8 +140,16 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
     v === null ? { texto: t.sinLimite, incluido: true } : v <= 0 ? { texto: t.no, incluido: false } : { texto: t.hasta.replace('{n}', String(v)), incluido: true }
 
   const todos = (): CeldaComparativa => siNo(true)
+  /** Un número del encargo (rondas, días). Nulo o cero: el plan no lo trae. */
+  const cuenta = (v: number | null | undefined, texto: (n: number) => string): CeldaComparativa =>
+    v === null || v === undefined || v <= 0 ? { texto: t.no, incluido: false } : { texto: texto(v), incluido: true }
+
   const celdas: Record<keyof FilasDeComparativa, (a: Allowance) => CeldaComparativa> = {
     basicos: todos,
+    sugerencia: todos,
+    rondas: (a) => cuenta(a.correctionRounds, (n) => String(n)),
+    entrega: (a) => cuenta(a.deliveryDays, (n) => t.dias.replace('{n}', String(n))),
+    recordatorios: (a) => siNo(hasFeature(a, 'reminders')),
     confirmacion: todos,
     lista: todos,
     pases: todos,
@@ -142,7 +169,11 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
     contrasena: (a) => siNo(a.eventPassword),
     csv: (a) => siNo(a.csvImport),
     mesas: (a) => siNo(a.seating),
-    regalos: (a) => siNo(a.registry),
+    // **Las dos banderas.** La etiqueta del 30 oct junta la lista de tiendas (`registry`) con la
+    // lluvia de sobres y el QR (`giftWays`), y las dos se cortan por separado en el servidor
+    // (`requireFeature('registry')` y `requireFeature('giftWays')`). Leyendo solo una, un plan con
+    // lista y sin sobres salía con ✓ al lado de «lluvia de sobres».
+    regalos: (a) => siNo(a.registry && hasFeature(a, 'giftWays')),
     formas: (a) => siNo(hasFeature(a, 'giftWays')),
     libro: (a) => siNo(hasFeature(a, 'guestbook')),
     estilo: (a) => siNo(hasFeature(a, 'estilo')),

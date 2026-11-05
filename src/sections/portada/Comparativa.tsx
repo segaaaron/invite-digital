@@ -19,11 +19,12 @@ export type ColumnaDeComparativa = {
 type Props = {
   readonly dictionary: Dictionary
   readonly columnas: readonly ColumnaDeComparativa[]
-  /** Los textos de las filas, ya filtrados por quien sabe si Luxury se vende. */
+  /** Los textos de las filas, ya elegidas y ordenadas por quien pinta la tabla. */
   readonly textos: TextosComparativa & {
     readonly feature: string
     readonly grupos: Record<GrupoDeComparativa, string>
     readonly todosIncluyen: string
+    readonly extra: string
   }
 }
 
@@ -38,18 +39,19 @@ type Props = {
  */
 export function Comparativa({ dictionary, columnas, textos }: Props) {
   const p = dictionary.portada
-  const todas = filasComparativas(
+  const filas = filasComparativas(
     columnas.map((c) => c.limites),
     textos,
   )
-  // Lo que traen **todos igual** sube al recuadro de arriba: en la tabla sería una fila de ✓
-  // repetidos, y lo que se viene a ver aquí es la diferencia.
-  // `[].every(...)` es `true`: sin columnas, **todas** las filas subirían al recuadro y la tabla
-  // prometería lo que ningún plan trae. Por eso la fila necesita valores para contar como común.
-  const iguales = (fila: (typeof todas)[number]) => fila.valores.length > 0 && fila.valores.every((c) => c.incluido && c.texto === fila.valores[0]?.texto)
-  const deTodos = todas.filter(iguales)
-  const filas = todas.filter((fila) => !iguales(fila))
-  const celda = (texto: string, incluido: boolean): ReactNode => {
+  // «Envíos ilimitados» solo entra en el recuadro mientras **ningún plan tenga tope**. Con un tope
+  // cargado en el admin, la línea sale de aquí y el tope se compara en la tabla, fila a fila.
+  const conTope = columnas.some((c) => c.limites.maxGuestGroups !== null)
+  const incluyen = conTope
+    ? p.comparativa.incluyenItems
+    : [...p.comparativa.incluyenItems.slice(0, 4), p.comparativa.enviosIlimitados, ...p.comparativa.incluyenItems.slice(4)]
+  const celda = (texto: string, incluido: boolean, clave: string): ReactNode => {
+    // Luxury Planner no es un «no»: el plan que no lo trae lo puede sumar desde su panel.
+    if (!incluido && clave === 'luxury') return <span className="plus">{textos.extra}</span>
     if (texto === '✓' || (incluido && texto === '')) return <span className="y">✓</span>
     if (texto === '—' || texto === '') return <span className="n">—</span>
     if (texto.startsWith('+')) return <span className="plus">{texto}</span>
@@ -65,9 +67,16 @@ export function Comparativa({ dictionary, columnas, textos }: Props) {
         <div className="sechead">
           <div className="eyebrow">{p.comparativa.titulo}</div>
         </div>
+        {/* Lo que traen **todos** los planes: una lista con checks, no un párrafo con puntos
+            (documento del 30 oct). Se escribe en el diccionario y no se deduce de la tabla,
+            porque hay filas que van en los dos sitios. */}
         <div className="allinc">
-          <div className="k">{textos.todosIncluyen}</div>
-          <p>{deTodos.map((f) => f.etiqueta).join(' · ')}</p>
+          <div className="k">{p.comparativa.incluyen}</div>
+          <ul className="allinc-lista">
+            {incluyen.map((linea) => (
+              <li key={linea}>{linea}</li>
+            ))}
+          </ul>
         </div>
         <div className="tablewrap">
           <table>
@@ -98,7 +107,7 @@ export function Comparativa({ dictionary, columnas, textos }: Props) {
                       <td>{fila.etiqueta}</td>
                       {fila.valores.map((valor, i) => (
                         <td key={columnas[i]?.nombre ?? i} className={columnas[i]?.destacado === true ? 'hi' : undefined}>
-                          {celda(valor.texto, valor.incluido)}
+                          {celda(valor.texto, valor.incluido, fila.clave)}
                         </td>
                       ))}
                     </tr>
@@ -107,6 +116,14 @@ export function Comparativa({ dictionary, columnas, textos }: Props) {
               })}
             </tbody>
           </table>
+        </div>
+        {/* Un botón por plan al final de la tabla: quien compara aquí ya está eligiendo. */}
+        <div className="tabla-cta">
+          {columnas.map((c) => (
+            <a className={c.destacado ? 'cta-pill' : 'btn-linea'} href="#cierre" key={c.nombre}>
+              {p.planes.elegir.replace('{plan}', c.nombre)}
+            </a>
+          ))}
         </div>
       </div>
     </section>

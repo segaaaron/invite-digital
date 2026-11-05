@@ -173,9 +173,9 @@ nav.top{z-index:90}
 #estreno .abanico{position:absolute;left:50%;top:78%;transform-style:preserve-3d;width:0;height:0}
 #estreno .cabeza{position:relative;z-index:3;padding-top:clamp(132px,18vh,190px);text-align:center}
 #estreno .eyebrow{color:var(--gold)}
-#estreno h2{font-size:clamp(34px,6vw,92px);line-height:1.02;margin-top:18px;color:var(--tinta)}
-#estreno h2 .l{display:block;overflow:hidden;padding-bottom:.1em}
-#estreno h2 .l>span{display:inline-block}
+#estreno h1{font-size:clamp(34px,6vw,92px);line-height:1.02;margin-top:18px;color:var(--tinta)}
+#estreno h1 .l{display:block;overflow:hidden;padding-bottom:.1em}
+#estreno h1 .l>span{display:inline-block}
 #estreno .it{color:var(--gold)}
 #estreno .lead{color:var(--faint);margin:22px auto 0;max-width:52ch}
 /* las portadas: sombra de papel sobre tela, no de pantalla negra */
@@ -549,10 +549,15 @@ img.lista{animation:revela .7s ease forwards}
 #pasos h2{font-size:clamp(32px,4.9vw,68px);margin-top:14px}
 .vine{position:relative;max-width:940px;margin:clamp(40px,7vh,70px) auto 0}
 .vine svg.stem{position:absolute;left:50%;top:0;height:100%;width:120px;transform:translateX(-50%);overflow:visible;opacity:.55}
-.st{display:grid;grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr);align-items:center;
+.st{display:grid;grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr);align-items:start;
   margin-bottom:clamp(34px,6vh,72px)}
 .st:nth-child(odd) .txt{grid-column:1;text-align:right}
 .st:nth-child(even) .txt{grid-column:3;text-align:left}
+/* **El número y su texto, en la misma fila.** Cada paso pone su columna (1 o 3) pero no su fila, y
+   la colocación automática de CSS no retrocede: cuando el texto va delante y ocupa la columna 3, el
+   número ya no cabe en esa fila y cae a la siguiente. De ahí que el 2 y el 5 salieran despegados de
+   su título (documento del 30 oct). Con la fila escrita, los cinco quedan a la altura de su título. */
+.st .txt,.st .dot{grid-row:1}
 .st .dot{grid-column:2;width:62px;height:62px;margin:0 auto;border-radius:50%;background:var(--ink);
   border:1px solid var(--gold);display:grid;place-items:center;font-family:var(--serif);font-size:25px;
   color:var(--gold);position:relative;z-index:2}
@@ -585,7 +590,7 @@ img.lista{animation:revela .7s ease forwards}
 .card .before s{opacity:.72}
 .card .before em{font-style:normal;font-size:11px;letter-spacing:.14em;text-transform:uppercase;border:1px solid rgba(155,122,46,.4);color:var(--gold-d);padding:3px 8px;border-radius:999px}
 .card .price{font-family:var(--serif);font-size:clamp(40px,5.2vw,62px);color:var(--gold-d);line-height:1.05;margin-top:4px}
-.card .price span{font-size:14px;color:var(--faint-l);font-family:var(--sans)}
+.card .price span{font-size:14px;color:var(--faint-l);font-family:var(--sans);margin-left:7px}
 .card .res{font-size:11.5px;color:var(--gold-d);margin-top:5px}
 .card .desc{font-size:13px;color:var(--faint-l);margin-top:15px;padding-top:15px;border-top:1px solid var(--line-l);text-align:left}
 .feats{text-align:left;margin-top:16px;font-size:13px}
@@ -626,7 +631,7 @@ img.lista{animation:revela .7s ease forwards}
 .env .antes em{font-style:normal;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
   border:1px solid rgba(184,134,11,.45);color:var(--gold);padding:4px 9px;border-radius:999px}
 .env .price{font-family:var(--serif);font-size:clamp(38px,4.6vw,56px);color:var(--gold);line-height:1.04;margin-top:6px}
-.env .price span{font-size:13px;color:var(--faint-l);font-family:var(--sans);margin-left:4px}
+.env .price span{font-size:13px;color:var(--faint-l);font-family:var(--sans);margin-left:7px}
 .env .res{font-size:11.5px;color:var(--gold);margin-top:5px}
 .env .desc{font-size:13px;color:var(--faint-l);margin-top:17px;padding-top:16px;border-top:1px solid var(--line-l);text-align:left;line-height:1.6}
 .env .feats{text-align:left;margin:16px 0 0;padding:0;display:block;font-size:13px}
@@ -940,4 +945,67 @@ body:has(#estreno) nav.top{position:fixed;inset:0 0 auto}
   .pie-redes a{width:44px;height:44px}
   .pie-bar .legal a,.pie-ms{padding-block:12px}
   .chip{padding-block:16px}
+}
+
+
+/* ================================================================================
+   Lo que pidió el documento de correcciones del 30 de octubre
+   ================================================================================ */
+
+/* ---------- el botón de contorno: el hermano discreto de .cta-pill ---------- */
+.btn-linea{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border:1px solid var(--line);
+  border-radius:999px;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--tinta);
+  background:transparent;transition:.4s}
+.btn-linea:hover{border-color:var(--brillo);color:var(--brillo)}
+.btn-linea-claro{border-color:rgba(255,253,248,.4);color:var(--p-nacar-alto);margin-top:clamp(22px,3vh,32px)}
+.btn-linea-claro:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ---------- el estreno: los dos botones y la línea del precio ---------- */
+#estreno .botones{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:clamp(26px,4vh,38px)}
+.estreno-nota{margin-top:16px;font-size:12px;letter-spacing:.1em;color:var(--faint);text-align:center}
+@media (max-width:420px){#estreno .botones{gap:10px}#estreno .botones a{padding-inline:18px}}
+
+/* ---------- qué incluye: de qué planes es cada tarjeta ---------- */
+.f12-plan{margin-top:12px;align-self:flex-start;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold-d);border:1px solid rgba(155,122,46,.4);border-radius:999px;padding:3px 9px;white-space:nowrap}
+
+/* ---------- las celebraciones: cada postal lleva a sus diseños ---------- */
+.postal-ver{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-d)}
+.postal-ver:hover{color:var(--brillo)}
+
+/* ---------- la entrada: la línea sobre los números y el botón al plan ---------- */
+.panel-en-vivo{margin-top:clamp(18px,3vh,28px);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--champagne)}
+
+/* ---------- cómo funciona: el botón del final ---------- */
+.pasos-cta{display:flex;justify-content:center;margin-top:clamp(16px,3vh,34px)}
+
+/* ---------- la comparativa: la lista con checks y los botones del final ---------- */
+.allinc-lista{list-style:none;margin:0;padding:0;display:grid;gap:7px;
+  grid-template-columns:repeat(auto-fit,minmax(248px,1fr))}
+.allinc-lista li{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--faint);line-height:1.5}
+.allinc-lista li::before{content:'✓';color:var(--gold-d);font-size:11px;line-height:1.5;flex:none}
+.tabla-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:clamp(26px,4vh,42px)}
+
+/* ---------- las preguntas: el cierre con WhatsApp ---------- */
+.faq-cierre{display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;
+  margin-top:clamp(28px,4vh,44px)}
+.faq-cierre span{font-size:14px;color:var(--faint)}
+
+/* ---------- el cierre: la placa debajo del texto, centrada ---------- */
+.crow.sola{padding-right:0}
+.placa-centro{position:relative;right:auto;top:auto;transform:none;margin-top:clamp(28px,4vh,42px)}
+.cierre-wa{display:block;margin-top:16px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.72)}
+.cierre-wa:hover{color:var(--gold)}
+
+/* ---------- el menú del celular: WhatsApp a la vista ---------- */
+.mm-wa{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 18px;
+  border:1px solid rgba(155,122,46,.4);border-radius:999px;font-size:11.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gold-d)}
+.mm-wa svg{width:17px;height:17px;fill:currentColor;flex:none}
+
+/* ---------- el pie: que el botón flotante no roce «MS Tech Stack» ---------- */
+@media (hover:none){
+  footer{padding-bottom:calc(var(--wa-alto) + var(--wa-borde) * 2 + 16px + env(safe-area-inset-bottom,0px))}
 }

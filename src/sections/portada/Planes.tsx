@@ -46,10 +46,16 @@ function conAcento(texto: string) {
   return partes.map((parte, i) => (i % 2 === 1 ? <em key={`${parte}-${String(i)}`}>{parte}</em> : parte))
 }
 
+/** Lo que tarda y lo que dura, por `slug`. Sale de la base: los mismos números que la tabla. */
+export type EntregaDePlan = { readonly rondas: number | null; readonly dias: number | null; readonly onlineDays: number }
+
 type Props = {
   readonly dictionary: Dictionary
   readonly locale: Locale
   readonly planes: readonly Plan[]
+  readonly entregas: Readonly<Record<string, EntregaDePlan>>
+  /** El trozo con el precio de Luxury Planner, ya escrito por quien leyó los extras. */
+  readonly extraLuxury: string
   /** La reserva de cada plan por su `slug`, en centavos. La fija el admin. */
   readonly reservas: Readonly<Record<string, number>>
 }
@@ -62,11 +68,14 @@ type Props = {
  * Los precios, los nombres, las frases y lo que incluye cada plan **salen del admin**, nunca
  * escritos aquí: cambiar un precio es una decisión comercial, no un despliegue.
  */
-export function Planes({ dictionary, locale, planes, reservas }: Props) {
+export function Planes({ dictionary, locale, planes, reservas, entregas, extraLuxury }: Props) {
   const p = dictionary.portada
   const reservaMinima = Object.values(reservas).sort((a, b) => a - b)[0]
   const conReserva = (texto: string, cents: number | undefined) =>
-    cents === undefined ? texto.replace(' con {reserva}', '').replace('{reserva}', '') : texto.replace('{reserva}', formatMoney({ cents, currency: planes[0]?.price.currency ?? 'BOB' }, locale))
+    (cents === undefined ? texto.replace(' con {reserva}', '').replace('{reserva}', '') : texto.replace('{reserva}', formatMoney({ cents, currency: planes[0]?.price.currency ?? 'BOB' }, locale))).replace(
+      '{luxury}',
+      extraLuxury,
+    )
 
   return (
     <section id="planes">
@@ -81,7 +90,20 @@ export function Planes({ dictionary, locale, planes, reservas }: Props) {
         <div className="envs">
           {planes.map((plan, i) => {
             const bloques = enBloques(plan.features)
-            const pildoras = bloques.filter((b) => b.pildoras).flatMap((b) => b.lineas)
+            // **La entrega sale de la base**, no de la lista: son los mismos números que compara la
+            // tabla. Un plan que no esté entre los activos se queda con lo que diga su lista.
+            const entrega = entregas[plan.slug]
+            const deLaBase =
+              entrega === undefined
+                ? []
+                : [
+                    ...(entrega.rondas !== null && entrega.rondas > 0 ? [p.planes.rondas.replace('{n}', String(entrega.rondas))] : []),
+                    ...(entrega.dias !== null && entrega.dias > 0 ? [p.planes.lista.replace('{n}', String(entrega.dias))] : []),
+                    entrega.onlineDays >= 180 && entrega.onlineDays % 30 === 0
+                      ? p.planes.enLineaMeses.replace('{n}', String(entrega.onlineDays / 30))
+                      : p.planes.enLineaDias.replace('{n}', String(entrega.onlineDays)),
+                  ].map((texto) => ({ texto, exclusivo: false }))
+            const pildoras = deLaBase.length > 0 ? deLaBase : bloques.filter((b) => b.pildoras).flatMap((b) => b.lineas)
             const listas = bloques.filter((b) => !b.pildoras)
             const ahorro = plan.priceBeforeCents !== null && plan.priceBeforeCents > plan.price.cents ? plan.priceBeforeCents - plan.price.cents : null
             const reserva = reservas[plan.slug]

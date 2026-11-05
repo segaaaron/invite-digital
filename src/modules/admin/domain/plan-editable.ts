@@ -47,6 +47,8 @@ export type PlanCrudo = {
   includesGuestbook?: boolean
   includesGiftWays?: boolean
   includesStyle?: boolean
+  /** La cola de recordatorios del panel. Ausente: encendida, como fue siempre. */
+  includesReminders?: boolean
   highlighted: boolean
   isActive: boolean
   es: TextoPlan

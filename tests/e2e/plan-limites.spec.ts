@@ -94,3 +94,21 @@ test('un plan sin libro ni formas de regalar: el panel lo dice y la invitación 
     await sql`delete from plans where slug = ${PLAN}`
   }
 })
+
+/**
+ * Los recordatorios son del plan desde `0101`: la web los vende como exclusivos de Imperial y el
+ * panel tiene que cortarlos igual. Sin ellos no hay cola, ni botón que lleve a una cola que no se
+ * abre; la acción de marcar «ya le avisé» tiene su propia puerta.
+ */
+test('un plan sin recordatorios no abre la cola ni ofrece recordar', async ({ page }) => {
+  const { eventSlug } = await seedInvitation({ slug: 'plan-recordatorios-e2e', plan: 'atelier' })
+  try {
+    await page.goto(`/dashboard/events/${eventSlug}/guests?panel=recordar`)
+    await expect(page.getByRole('heading', { name: 'Invitados', exact: true })).toBeVisible()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    // Ningún camino a la cola: ni el botón de la lista, ni el de la tableta, ni el del celular.
+    await expect(page.locator('a[href*="panel=recordar"]')).toHaveCount(0)
+  } finally {
+    await deleteEvent(eventSlug)
+  }
+})

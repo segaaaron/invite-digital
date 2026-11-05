@@ -781,6 +781,7 @@ const FUNCIONES: Readonly<Record<string, string>> = {
   'importar la lista de invitados': 'importing the guest list', 'proveedores, cronograma y cortejo': 'vendors, schedule and wedding party',
   'el Día D y los enlaces para proveedores': 'D-Day and vendor links', 'el libro de firmas': 'the guestbook',
   'la lluvia de sobres y el QR de transferencia': 'the envelope shower and the transfer QR', 'los colores y la letra a tu gusto': 'colors and lettering of your choice',
+  'los recordatorios': 'reminders',
 }
 
 const ESTADOS_DE_CONSULTA: Readonly<Record<string, string>> = { nueva: 'new', contactada: 'contacted', ganada: 'won', perdida: 'lost' }

@@ -31,7 +31,7 @@ describe('PlanComparison', () => {
     expect(screen.getByRole('columnheader', { name: /Alta Costura/ })).toBeInTheDocument()
     const fotos = screen.getByRole('row', { name: /galería de fotos/i })
     expect(within(fotos).getAllByRole('cell').map((c) => c.textContent)).toEqual(['8', '20'])
-    const qr = screen.getByRole('row', { name: /qr de acceso/i })
+    const qr = screen.getByRole('row', { name: /pase qr de acceso/i })
     expect(within(qr).getAllByRole('cell').map((c) => c.textContent)).toEqual(['–', '✓'])
   })
 

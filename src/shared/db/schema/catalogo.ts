@@ -71,6 +71,11 @@ export const plans = pgTable('plans', {
   includesGuestbook: boolean('includes_guestbook').notNull().default(true),
   includesGiftWays: boolean('includes_gift_ways').notNull().default(true),
   includesStyle: boolean('includes_style').notNull().default(false),
+  /**
+   * Los recordatorios del panel («a quién escribir hoy»), por plan (`0101`). Encendidos por
+   * defecto para no quitárselos a ningún evento ya vendido; el admin los apaga donde no van.
+   */
+  includesReminders: boolean('includes_reminders').notNull().default(true),
   /** Rondas de corrección del diseño por encargo (`0081`). Nulas: el plan es de autoservicio. */
   correctionRounds: smallint('correction_rounds'),
   /** Días para entregar la primera versión. Nulos: autoservicio. */

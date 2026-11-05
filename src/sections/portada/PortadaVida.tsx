@@ -93,7 +93,7 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
           .to('#pre .s, #pre .cap', { autoAlpha: 0, scale: 0.92, duration: 0.32 }, '+=.42')
           .to('#pre .half.l', { xPercent: -100, duration: 0.95, ease: 'expo.inOut' }, '-=.08')
           .to('#pre .half.r', { xPercent: 100, duration: 0.95, ease: 'expo.inOut', onComplete: () => (pre.style.display = 'none') }, '<')
-          .fromTo('#estreno h2 .l > span', { yPercent: 115 }, { yPercent: 0, duration: 1.15, stagger: 0.1, ease: 'power3.out' }, '<.3')
+          .fromTo('#estreno h1 .l > span', { yPercent: 115 }, { yPercent: 0, duration: 1.15, stagger: 0.1, ease: 'power3.out' }, '<.3')
           .fromTo('#estreno .eyebrow', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.8 }, '<')
           .fromTo('#estreno .lead', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8 }, '<.5')
       } else if (pre !== null) {
@@ -231,7 +231,10 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
         if (items.length === 0) return
         paso = 360 / items.length
         const ancho = items[0]?.el.offsetWidth ?? 160
-        R = Math.round((ancho * 1.2) / (2 * Math.tan(Math.PI / items.length)))
+        // **Con menos de tres cartas la fórmula no vale**: `tan(π)` es ~0 y el radio se dispara a
+        // trillones (la carta se va de la pantalla), y `tan(π/2)` es enorme y lo deja en cero (las
+        // dos cartas encimadas). Con una, el anillo es la carta; con dos, medio ancho de separación.
+        R = items.length < 2 ? 0 : items.length === 2 ? Math.round(ancho * 0.7) : Math.round((ancho * 1.2) / (2 * Math.tan(Math.PI / items.length)))
         // La posición es la cadena de la maqueta —`rotateY` y después `translateZ`, en ese orden:
         // gsap compone al revés y apilaría todas las cartas en el centro—. Lo que sí hace falta es
         // **borrarle a gsap lo que recuerda** de la vuelta anterior: allí las cartas se crean de
@@ -475,10 +478,27 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
         if (mover && lenis) lenis.scrollTo('#disenos', { duration: 1.5 })
       }
 
+      /**
+       * **Cumpleanos es un filtro, no un mundo.** Los dos mundos (boda y XV) tienen piel, invitacion
+       * en el telefono y fondo de la puerta; los cumpleanos todavia no, asi que su chip solo filtra
+       * el anillo y la pagina se queda en el neutro. Cuando haya piel de cumpleanos, pasa a ser un
+       * mundo mas y entra en `elegirMundo`.
+       */
+      function soloFiltrar(f: string) {
+        filtro = f
+        mundo = null
+        delete document.documentElement.dataset.mundo
+        $$('.chip').forEach((ch2) => ch2.classList.toggle('on', (ch2 as HTMLElement).dataset.f === f))
+        construirAnillo()
+        verPuerta(null)
+        ScrollTrigger.refresh()
+      }
+
       $$<HTMLElement>('.chip').forEach((ch) => {
         escuchar(ch, 'click', () => {
           const f = ch.dataset.f
           if (f === 'todos' || f === 'xv' || f === 'boda') elegirMundo(f, false)
+          else if (f !== undefined && f !== '') soloFiltrar(f)
         })
       })
 
@@ -742,7 +762,10 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
         colocarAbanico()
         if (items.length === 0) return
         const ancho = items[0]?.el.offsetWidth ?? 160
-        R = Math.round((ancho * 1.2) / (2 * Math.tan(Math.PI / items.length)))
+        // **Con menos de tres cartas la fórmula no vale**: `tan(π)` es ~0 y el radio se dispara a
+        // trillones (la carta se va de la pantalla), y `tan(π/2)` es enorme y lo deja en cero (las
+        // dos cartas encimadas). Con una, el anillo es la carta; con dos, medio ancho de separación.
+        R = items.length < 2 ? 0 : items.length === 2 ? Math.round(ancho * 0.7) : Math.round((ancho * 1.2) / (2 * Math.tan(Math.PI / items.length)))
         items.forEach((it, i) => {
           it.el.style.transform = `rotateY(${String(i * paso)}deg) translateZ(${String(R)}px)`
         })

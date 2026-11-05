@@ -43,6 +43,17 @@ export type Allowance = {
   readonly giftWays?: boolean
   /** Acento y letra a elección (`0088`, Gala o más). Sin decirlo, no: es lo nuevo. */
   readonly estilo?: boolean
+  /**
+   * La cola de recordatorios del panel (`0101`). Sin decirlo, **viene**: es como fue siempre, y
+   * así una fila vieja o un plan de prueba no se queda sin ella por omisión.
+   */
+  readonly reminders?: boolean
+  /**
+   * Diseño por encargo (`0081`): rondas de corrección y días hasta la primera versión. Nulos o
+   * ausentes: el plan es de autoservicio y la comparativa lo deja en blanco.
+   */
+  readonly correctionRounds?: number | null
+  readonly deliveryDays?: number | null
 }
 
 /**
@@ -65,7 +76,7 @@ export type PlannerSuite = 'esencial' | 'completo' | 'total'
 export const PLANNER_SUITES: readonly PlannerSuite[] = ['esencial', 'completo', 'total']
 
 /** Las funciones que un plan puede incluir o no. Las dos del planner salen de su nivel. */
-export type PlanFeature = 'seating' | 'registry' | 'checkin' | 'guestPhotos' | 'eventPassword' | 'csvImport' | 'plannerCompleto' | 'plannerTotal' | 'guestbook' | 'giftWays' | 'estilo'
+export type PlanFeature = 'seating' | 'registry' | 'checkin' | 'guestPhotos' | 'eventPassword' | 'csvImport' | 'plannerCompleto' | 'plannerTotal' | 'guestbook' | 'giftWays' | 'estilo' | 'reminders'
 
 /** Umbral del aviso: por debajo no se dice nada, chocar sin verlo venir es peor. */
 export const WARNING_RATIO = 0.8
@@ -100,7 +111,7 @@ export const hasFeature = (allowance: Allowance, feature: PlanFeature): boolean 
     ? allowance.plannerSuite !== 'esencial'
     : feature === 'plannerTotal'
       ? allowance.plannerSuite === 'total'
-      : feature === 'guestbook' || feature === 'giftWays'
+      : feature === 'guestbook' || feature === 'giftWays' || feature === 'reminders'
         ? allowance[feature] !== false
         : feature === 'estilo'
           ? allowance.estilo === true

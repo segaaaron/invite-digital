@@ -37,6 +37,8 @@ export type PlanRow = {
   readonly includesGuestbook?: boolean
   readonly includesGiftWays?: boolean
   readonly includesStyle?: boolean
+  /** La cola de recordatorios del panel (`0101`). Ausente: viene, como fue siempre. */
+  readonly includesReminders?: boolean
 }
 
 export type PlanChangeStatus = 'pending' | 'applied' | 'rejected'

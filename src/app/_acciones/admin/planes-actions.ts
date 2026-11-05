@@ -72,6 +72,7 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
     includesGuestbook: marcado('includesGuestbook'),
     includesGiftWays: marcado('includesGiftWays'),
     includesStyle: marcado('includesStyle'),
+    includesReminders: marcado('includesReminders'),
     highlighted: marcado('highlighted'),
     isActive: marcado('isActive'),
     es: textoDe('es'),

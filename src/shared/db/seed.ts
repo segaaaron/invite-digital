@@ -25,7 +25,7 @@ const PLANS = [
     highlighted: false,
     order: 1,
     limits: { maxGuestGroups: null, seating: false, registry: false, checkin: false, doorPorters: 0, cohosts: 1, hiredPlanners: 0, galleryPhotos: 5, guestPhotos: false, eventPassword: false, csvImport: false, onlineDays: 60, designChange: 'ninguno', plannerSuite: 'esencial' },
-    encargo: { depositFixedCents: 10000, correctionRounds: 2, deliveryDays: 3, guestbook: false, giftWays: false, style: false },
+    encargo: { depositFixedCents: 10000, correctionRounds: 2, deliveryDays: 3, guestbook: false, giftWays: false, style: false, reminders: false },
     es: {
       name: 'Atelier',
       tagline: 'Elige tu diseño',
@@ -46,7 +46,7 @@ const PLANS = [
     highlighted: true,
     order: 2,
     limits: { maxGuestGroups: null, seating: false, registry: true, checkin: false, doorPorters: 0, cohosts: 3, hiredPlanners: 1, galleryPhotos: 10, guestPhotos: false, eventPassword: true, csvImport: false, onlineDays: 90, designChange: 'antes_de_repartir', plannerSuite: 'completo' },
-    encargo: { depositFixedCents: 10000, correctionRounds: 3, deliveryDays: 3, guestbook: true, giftWays: true, style: true },
+    encargo: { depositFixedCents: 10000, correctionRounds: 4, deliveryDays: 3, guestbook: true, giftWays: true, style: true, reminders: false },
     es: {
       name: 'Gala',
       tagline: 'Hazlo tuyo',
@@ -68,7 +68,7 @@ const PLANS = [
     order: 3,
     // `null` es sin límite. No es cero.
     limits: { maxGuestGroups: null, seating: true, registry: true, checkin: true, doorPorters: 10, cohosts: null, hiredPlanners: null, galleryPhotos: 20, guestPhotos: true, eventPassword: true, csvImport: true, onlineDays: 180, designChange: 'siempre', plannerSuite: 'total' },
-    encargo: { depositFixedCents: 10000, correctionRounds: 5, deliveryDays: 5, guestbook: true, giftWays: true, style: true },
+    encargo: { depositFixedCents: 10000, correctionRounds: 5, deliveryDays: 5, guestbook: true, giftWays: true, style: true, reminders: true },
     es: {
       name: 'Imperial',
       tagline: 'Creado para ti',
@@ -146,6 +146,7 @@ async function seed() {
         includesGuestbook: p.encargo.guestbook,
         includesGiftWays: p.encargo.giftWays,
         includesStyle: p.encargo.style,
+        includesReminders: p.encargo.reminders,
       })
       // **Solo siembra lo que falta.** Precio, límites y funciones se editan desde
       // `/dashboard/admin/plans`, y este seed corre en cada despliegue: con el `update` de

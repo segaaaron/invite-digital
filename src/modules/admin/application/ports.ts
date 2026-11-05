@@ -157,6 +157,8 @@ export type PlanAdminRow = {
   readonly includesGuestbook: boolean
   readonly includesGiftWays: boolean
   readonly includesStyle: boolean
+  /** La cola de recordatorios del panel (`0101`). */
+  readonly includesReminders: boolean
   /** Diseño por encargo: rondas y días de entrega. Nulos: autoservicio. */
   readonly correctionRounds: number | null
   readonly deliveryDays: number | null

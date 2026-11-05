@@ -6,6 +6,9 @@ import { enlaceWhatsapp } from '@/shared/whatsapp'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
 import { rutaDe } from '@/shared/i18n/rutas'
+import { ICONO_WHATSAPP } from './icono-whatsapp'
+import { enlaceDeFiesta } from './fiestas'
+import type { Fiesta } from '@/shared/i18n/dictionary'
 
 /** Lo que el pie necesita de «La web», ya en el idioma de la página. */
 export type PieDelSitio = {
@@ -21,13 +24,6 @@ export type PieDelSitio = {
   readonly privacidadPublicada: boolean
   readonly terminosPublicados: boolean
 }
-
-/** El icono de WhatsApp de la maqueta, tal cual: va en el teléfono del pie y en el corro de redes. */
-const ICONO_WHATSAPP = (
-  <svg aria-hidden="true" viewBox="0 0 24 24">
-    <path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.3-1.39a9.86 9.86 0 004.74 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-7A9.82 9.82 0 0012.04 2zm0 18.15h-.01a8.2 8.2 0 01-4.18-1.15l-.3-.18-3.1.81.83-3.03-.2-.31a8.16 8.16 0 01-1.25-4.39c0-4.54 3.7-8.23 8.24-8.23 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.82c0 4.54-3.69 8.24-8.26 8.24zm4.52-6.17c-.25-.13-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.54.06-.25-.13-1.05-.39-2-1.23a7.4 7.4 0 01-1.37-1.71c-.15-.25-.02-.38.11-.5.11-.11.25-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.44-.06-.12-.56-1.35-.77-1.84-.2-.49-.4-.42-.55-.43h-.48c-.16 0-.42.06-.64.3-.22.25-.84.82-.84 2s.86 2.32.98 2.48c.12.17 1.69 2.58 4.1 3.62.57.24 1.02.39 1.37.5.58.18 1.1.16 1.52.1.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.47-.29z" />
-  </svg>
-)
 
 /** Las tres redes del corro, con el dibujo de la maqueta. El enlace sale de «La web». */
 /**
@@ -78,7 +74,7 @@ const REDES: readonly { readonly clave: 'instagram' | 'facebook' | 'tiktok'; rea
  * **Sin ubicación** (decisión del usuario): ni ciudad, ni país, ni dirección; `sitio` las sigue
  * trayendo porque las usa el marcado `LocalBusiness`, pero el pie no las pinta.
  */
-export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dictionary: Dictionary; sitio: PieDelSitio }) {
+export function SiteFooter({ locale, dictionary, sitio, fiestas }: { locale: Locale; dictionary: Dictionary; sitio: PieDelSitio; fiestas: readonly Fiesta[] }) {
   const year = new Date().getUTCFullYear()
   const { pie, cierre } = dictionary.portada
   const inicio = `/${locale}`
@@ -90,13 +86,16 @@ export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dict
     .split('. ')
     .filter((frase) => !frase.includes('{reserva}'))
     .join('. ')
+  // Solo las celebraciones con algún diseño a la venta: ofrecer lo que no se puede abrir fue
+  // justo lo que el documento del 30 oct vino a corregir.
+  const celebraciones = pie.celebraciones.filter((celebracion) => fiestas.includes(celebracion.fiesta))
+  // Los mismos nombres que el menú (documento del 30 oct), y las preguntas entre ellos.
   const anclas = [
     { href: `${inicio}#disenos`, label: pie.enlaces.disenos },
-    { href: `${inicio}#noche`, label: pie.enlaces.noche },
-    { href: `${inicio}#movil`, label: pie.enlaces.invitacion },
-    { href: `${inicio}#puerta`, label: pie.enlaces.puerta },
-    { href: `${inicio}#pasos`, label: pie.enlaces.pasos },
-    { href: `${inicio}#planes`, label: pie.enlaces.planes },
+    { href: `${inicio}#pasos`, label: pie.enlaces.comoFunciona },
+    { href: `${inicio}#noche`, label: pie.enlaces.queIncluye },
+    { href: `${inicio}#planes`, label: pie.enlaces.precios },
+    { href: `${inicio}#faq`, label: pie.enlaces.preguntas },
   ]
 
   return (
@@ -129,8 +128,8 @@ export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dict
           )}
         </div>
 
-        <nav aria-label={pie.columnaGala} className="pie-col">
-          <h5>{pie.columnaGala}</h5>
+        <nav aria-label={pie.columnaExplorar} className="pie-col">
+          <h5>{pie.columnaExplorar}</h5>
           {anclas.map((ancla) => (
             <a href={ancla.href} key={ancla.href}>
               {ancla.label}
@@ -138,15 +137,21 @@ export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dict
           ))}
         </nav>
 
+        {/* Sin ninguna celebración con diseño a la venta no se pinta ni el título: una columna
+            con su encabezado y nada debajo parece un error de la página. */}
+        {celebraciones.length === 0 ? null : (
         <nav aria-label={pie.columnaCelebraciones} className="pie-col">
           <h5>{pie.columnaCelebraciones}</h5>
-          {pie.celebraciones.map((celebracion) => (
-            <a href={`${inicio}#historias`} key={celebracion}>
-              {celebracion}
+          {/* Cada celebración lleva a sus diseños, no todas al mismo sitio (documento del 30 oct), y
+              solo sale la que tiene algún diseño a la venta: ofrecer lo que no se puede abrir fue
+              justo lo que el documento vino a corregir. */}
+          {celebraciones.map((celebracion) => (
+            <a href={enlaceDeFiesta(locale, celebracion.fiesta)} key={celebracion.nombre}>
+              {celebracion.nombre}
             </a>
           ))}
-          <a href={`${inicio}#faq`}>{pie.preguntas}</a>
         </nav>
+        )}
 
         <div className="pie-col pie-res">
           <h5>{pie.columnaFecha}</h5>

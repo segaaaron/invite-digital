@@ -701,6 +701,20 @@
       "when": 1792120400000,
       "tag": "0100_precio_de_lanzamiento",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1792124000000,
+      "tag": "0101_recordatorios_por_plan",
+      "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1792127600000,
+      "tag": "0102_rondas_de_gala",
+      "breakpoints": true
     }
   ]
 }

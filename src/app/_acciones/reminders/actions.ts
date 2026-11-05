@@ -1,12 +1,13 @@
 'use server'
 
 import { revalidarRuta } from '@/shared/cache/revalidar-ruta'
-import { reminders } from '@/app/composition/container'
+import { plans, reminders } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { ReminderKind } from '@/modules/reminders/domain/due'
 import { registrarFallo } from '@/shared/observability/fallos'
 import { tr } from '@/shared/i18n/idioma-servidor'
+import { traducir } from '@/shared/i18n/en-ingles'
 
 export type ReminderActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
 
@@ -28,6 +29,20 @@ export async function markReminderSentAction(input: {
   const t = await tr()
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
+  // La cola es del plan (`0101`): la pantalla ya no la enseña sin él, y esto lo cierra de verdad.
+  // Una Server Action es un extremo HTTP público; esconder el botón no protege de nadie.
+  const permitido = await plans.requireFeature(input.eventId, 'reminders')
+  if (isErr(permitido)) {
+    // **«Su plan no lo trae» y «la base no contestó» no son lo mismo.** `requireFeature` devuelve
+    // también `storage_failure`, y leerlo todo como lo primero le decía al atelier una mentira
+    // —con el botón muerto y sin una línea en el registro— cada vez que Postgres fallaba.
+    if (permitido.error.kind !== 'feature_not_included') {
+      registrarFallo('reminders/actions', 'no se pudo comprobar el plan del evento', permitido.error.kind, permitido.error.detail)
+      return { status: 'error', message: t('No pudimos comprobar tu plan. Inténtalo en un momento.', 'We couldn’t check your plan. Try again in a moment.') }
+    }
+    // El detalle dice **a qué plan hay que subir al cliente**; sin él el atelier se queda sin salida.
+    return { status: 'error', message: traducir(permitido.error.detail, t) }
+  }
 
   const result = await reminders.markSent({
     eventId: input.eventId,

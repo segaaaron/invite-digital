@@ -19,15 +19,19 @@ test.afterAll(async () => {
   await sql.end({ timeout: 5 })
 })
 
+// **El precio se comprueba con `toBeAttached`, no con `toBeVisible`.** Los sobres de los planes
+// entran con la animación de la maqueta (`.env .front` nace en `autoAlpha: 0`), así que al cargar
+// `/es` el importe está pintado pero oculto hasta que la sección se acerca. Lo que esta prueba
+// mide es **qué precio sirvió la caché**, no cuándo aparece.
 test('un cambio por fuera del admin no se ve: la portada lee de la caché', async ({ page }) => {
   await page.goto('/es')
-  await expect(page.getByText('Bs 690').first()).toBeVisible()
+  await expect(page.getByText('Bs 690').first()).toBeAttached()
 
   const [antes] = await sql<{ price: number }[]>`select price_cents as price from plans where slug = 'gala'`
   await sql`update plans set price_cents = 77700 where slug = 'gala'`
   try {
     await page.goto('/es')
-    await expect(page.getByText('Bs 690').first()).toBeVisible()
+    await expect(page.getByText('Bs 690').first()).toBeAttached()
     await expect(page.getByText('Bs 777')).toHaveCount(0)
   } finally {
     await sql`update plans set price_cents = ${antes!.price} where slug = 'gala'`

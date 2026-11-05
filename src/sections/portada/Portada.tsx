@@ -1,11 +1,12 @@
 import { formatMoney, type Plan } from '@/modules/catalog'
 import { CloseIcon } from '@/shared/design/ui/icons'
-import type { Dictionary } from '@/shared/i18n/dictionary'
+import type { Dictionary, Fiesta } from '@/shared/i18n/dictionary'
 import type { Locale } from '@/shared/i18n/locales'
 import { rutaDe } from '@/shared/i18n/rutas'
+import { enlaceDeFiesta } from '@/sections/fiestas'
 import { Comparativa, type ColumnaDeComparativa } from './Comparativa'
 import { ICONOS_DE_LA_NOCHE, ICONOS_DEL_MOVIL } from './iconos'
-import { Planes } from './Planes'
+import { Planes, type EntregaDePlan } from './Planes'
 import { Reserva } from './Reserva'
 import { PortadaVida } from './PortadaVida'
 import { SELLO } from './sello'
@@ -15,18 +16,23 @@ import type { TextosComparativa, GrupoDeComparativa } from '@/modules/plans'
 export type DisenoDePortada = {
   readonly clave: string
   readonly nombre: string
-  readonly fiesta: 'boda' | 'xv'
+  readonly fiesta: Fiesta
   readonly portada: string
 }
 
-/** Las seis postales: la foto sale del catálogo, el texto del diccionario. */
+/**
+ * Las postales: la foto sale del catálogo, el texto del diccionario.
+ *
+ * **Son cinco, no seis**: la de graduaciones se cayó con el documento de correcciones del 30 de
+ * octubre, que pide no ofrecer una celebración sin ningún diseño que abrir. Vuelve en cuanto haya
+ * un diseño de graduación, con su foto y su fila en el diccionario.
+ */
 const FOTOS_DE_POSTALES = [
   '/site/colecciones/bodas-1.avif',
   '/site/colecciones/bodas-2.avif',
   '/site/colecciones/xv-1.avif',
   '/site/colecciones/xv-2.avif',
   '/site/portada/cumple-1.webp',
-  '/site/colecciones/graduacion-1.avif',
 ] as const
 
 /** Las tiras de la invitación que se reproduce sola dentro del teléfono. */
@@ -44,11 +50,16 @@ type Props = {
   readonly abanico: readonly DisenoDePortada[]
   readonly planes: readonly Plan[]
   readonly reservas: Readonly<Record<string, number>>
+  /** Lo que tarda y lo que dura cada plan, de la base. */
+  readonly entregas: Readonly<Record<string, EntregaDePlan>>
+  /** Los trozos de frase que dependen del precio de un extra, ya escritos (o vacíos). */
+  readonly extras: { readonly luxury: string; readonly dias: string }
   readonly columnas: readonly ColumnaDeComparativa[]
   readonly textosComparativa: TextosComparativa & {
     readonly feature: string
     readonly grupos: Record<GrupoDeComparativa, string>
     readonly todosIncluyen: string
+    readonly extra: string
   }
   /** El WhatsApp del atelier, solo dígitos. Vacío: el formulario no se enseña. */
   readonly whatsapp: string
@@ -69,13 +80,52 @@ type Props = {
  * los iconos que se dibujan, la pila de postales, el sobre de la reserva—; si el JavaScript no
  * llega, la página se lee entera igual.
  */
-export function Portada({ locale, dictionary, disenos, abanico, planes, reservas, columnas, textosComparativa, whatsapp, registrarConsulta }: Props) {
+export function Portada({ locale, dictionary, disenos, abanico, planes, reservas, entregas, extras, columnas, textosComparativa, whatsapp, registrarConsulta }: Props) {
   const p = dictionary.portada
   const rutaDelModelo = (clave: string) => rutaDe(locale, 'modelos', `/${clave}`)
   const primero = disenos[0]
   const laReserva = reservaEnPalabras(reservas, planes, locale)
-  const conReserva = (texto: string) => texto.replace('{reserva}', laReserva)
+  // Un solo sitio donde se rellenan los huecos de las frases: la reserva y los dos extras.
+  //
+  // **Sin reserva cargada en el admin se cae el trozo, no el importe a secas**: «Reserve con » o
+  // «la reserva de  por transferencia» es peor que la frase sin esa parte. Es lo que ya hacía la
+  // tarjeta del plan, y aquí faltaba.
+  const conReserva = (texto: string) =>
+    (laReserva === ''
+      ? texto.replace(' con {reserva}', '').replace(' de {reserva}', '').replace('{reserva}', '').replace(/ {2,}/g, ' ').replace(' .', '.')
+      : texto.replace('{reserva}', laReserva)
+    )
+      .replace('{luxury}', extras.luxury)
+      .replace('{extraDias}', extras.dias)
   const reservaCents = Object.values(reservas).length === 0 ? null : Math.min(...Object.values(reservas))
+  // **Lo que la página ofrece es lo que puede abrir**: las celebraciones sin ningún diseño a la
+  // venta no salen ni en la cinta, ni en las postales, ni en los filtros. El documento del 30 oct
+  // lo pide para graduaciones y cumpleaños; aquí lo decide el catálogo, no una lista a mano.
+  const conDiseno = (fiesta: Fiesta) => disenos.some((d) => d.fiesta === fiesta)
+  const celebraciones = dictionary.portada.pie.celebraciones.filter((c) => conDiseno(c.fiesta))
+  const postales = p.historias.postales.map((postal, i) => ({ postal, foto: FOTOS_DE_POSTALES[i] })).filter(({ postal }) => conDiseno(postal.fiesta))
+  // Los filtros del anillo, en el orden del documento. «Todos» va fijo delante.
+  const FILTROS = [
+    { fiesta: 'boda' as const, label: p.disenos.bodas },
+    { fiesta: 'xv' as const, label: p.disenos.xv },
+    { fiesta: 'cumple' as const, label: p.disenos.cumple },
+  ]
+  // «Desde {precio} · Lista en 3 a 5 días · Reserve con {reserva}»: el precio más bajo del admin.
+  const desde = planes.length === 0 ? '' : formatMoney(planes.reduce((a, b) => (a.price.cents <= b.price.cents ? a : b)).price, locale)
+  // Sin reserva cargada en el admin **se cae solo ese trozo**, no la línea entera: el precio sí
+  // estaba y desaparecía con él. Es lo mismo que ya hace el pie con su frase.
+  const notaDelEstreno =
+    desde === ''
+      ? ''
+      : conReserva(
+          p.estreno.nota
+            .replace('{precio}', desde)
+            .split(' · ')
+            .filter((trozo) => laReserva !== '' || !trozo.includes('{reserva}'))
+            .join(' · '),
+        )
+  // El WhatsApp del atelier para los dos enlaces nuevos: las preguntas y el cierre.
+  const enlaceDeWhatsapp = whatsapp === '' ? null : `https://wa.me/${whatsapp}`
 
   return (
     <>
@@ -111,24 +161,38 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
         )}
         <div className="wrap cabeza">
           <span className="eyebrow">{p.estreno.eyebrow}</span>
-          <h2>
+          {/* **Es el `<h1>` de la página.** Estuvo como `<h2>` y la portada se quedó sin título
+              para Google y para quien la lee con lector de pantalla. */}
+          <h1>
             <span className="l">
               <span>{p.estreno.titulo}</span>
             </span>
             <span className="l">
               <span className="it">{p.estreno.tituloIt}</span>
             </span>
-          </h2>
+          </h1>
           <p className="lead">{p.estreno.lead}</p>
+          <div className="botones">
+            <a className="btn-linea" href="#disenos">
+              {p.estreno.verDisenos}
+            </a>
+            {planes.length === 0 ? null : (
+              <a className="cta-pill" href="#cierre">
+                {p.estreno.reservar}
+              </a>
+            )}
+          </div>
+          {/* El precio y la reserva salen del admin: sin ellos la línea no se pinta, nunca se inventan. */}
+          {notaDelEstreno === '' ? null : <p className="estreno-nota">{notaDelEstreno}</p>}
         </div>
       </section>
 
       <div className="ribbon">
         <div className="track" id="ribbon">
           {[0, 1, 2, 3, 4, 5].flatMap((vuelta) =>
-            p.cinta.map((palabra) => (
-              <span key={`${String(vuelta)}-${palabra}`} className="par">
-                <span>{palabra}</span>
+            celebraciones.map((celebracion) => (
+              <span key={`${String(vuelta)}-${celebracion.nombre}`} className="par">
+                <span>{celebracion.nombre}</span>
                 <b>✦</b>
               </span>
             )),
@@ -149,13 +213,17 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
               <button className="chip on" data-f="todos" type="button">
                 {p.disenos.todos}
               </button>
-              <button className="chip" data-f="xv" type="button">
-                {p.disenos.xv}
-              </button>
-              <button className="chip" data-f="boda" type="button">
-                {p.disenos.bodas}
-              </button>
+              {FILTROS.map((filtro) => (
+                // Solo se enseña el filtro de una fiesta **si hay diseños de esa fiesta**: un
+                // filtro que no devuelve nada es peor que no tenerlo (documento del 30 oct).
+                conDiseno(filtro.fiesta) ? (
+                  <button key={filtro.fiesta} className="chip" data-f={filtro.fiesta} type="button">
+                    {filtro.label}
+                  </button>
+                ) : null
+              ))}
             </div>
+            <p className="lead lead-centrada">{p.disenos.lead}</p>
           </div>
         </div>
         <div data-cursor="arrastre" id="ring">
@@ -216,13 +284,15 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
                 </svg>
                 <h4>{item.titulo}</h4>
                 <p>{item.texto}</p>
+                <span className="f12-plan">{item.plan}</span>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== UNA GALA PARA CADA HISTORIA ===== */}
+      {/* ===== UNA INVITACIÓN PARA CADA CELEBRACIÓN ===== */}
+      {postales.length === 0 ? null : (
       <section id="historias">
         <div className="wrap">
           <div className="sechead">
@@ -234,20 +304,24 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
         </div>
         <div id="pila">
           <div className="pilainner" id="pilainner">
-            {p.historias.postales.map((postal, i) => (
+            {postales.map(({ postal, foto }) => (
               <article key={postal.titulo} className="postal">
                 <div className="marco">
-                  <img alt="" decoding="async" loading="lazy" src={FOTOS_DE_POSTALES[i]} />
+                  <img alt="" decoding="async" loading="lazy" src={foto} />
                 </div>
                 <div className="pie">
                   <b>{postal.titulo}</b>
                   <span>{postal.pie}</span>
+                  <a className="postal-ver" href={enlaceDeFiesta(locale, postal.fiesta)}>
+                    {postal.enlace} →
+                  </a>
                 </div>
               </article>
             ))}
           </div>
         </div>
       </section>
+      )}
 
       <div className="costura">
         <div className="s" />
@@ -310,6 +384,7 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
                 {p.puerta.titulo} <span className="it">{p.puerta.tituloIt}</span>
               </h2>
               <p className="lead">{p.puerta.lead}</p>
+              <p className="panel-en-vivo">{p.puerta.panel}</p>
               <div className="contador">
                 <div>
                   <strong data-count="74">0</strong>
@@ -324,6 +399,11 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
                   <span>{p.puerta.mesas}</span>
                 </div>
               </div>
+              {planes.length === 0 ? null : (
+                <a className="btn-linea btn-linea-claro" href="#planes">
+                  {p.puerta.verPlan} →
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -363,10 +443,17 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
               )
             })}
           </div>
+          {planes.length === 0 ? null : (
+            <div className="pasos-cta">
+              <a className="cta-pill" href="#cierre">
+                {p.pasos.cta}
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
-      {planes.length === 0 ? null : <Planes dictionary={dictionary} locale={locale} planes={planes} reservas={reservas} />}
+      {planes.length === 0 ? null : <Planes dictionary={dictionary} entregas={entregas} extraLuxury={extras.luxury} locale={locale} planes={planes} reservas={reservas} />}
 
       <Comparativa columnas={columnas} dictionary={dictionary} textos={textosComparativa} />
 
@@ -380,18 +467,30 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
             </h2>
           </div>
           <div className="qs" id="qs">
-            {p.notas.items.map((nota) => (
+            {/* Sin reserva cargada en el admin, la pregunta que la nombra no se pinta: enseñarla
+                con el hueco dentro («¿La reserva de  es reembolsable?») es peor que no enseñarla. */}
+            {p.notas.items
+              .filter((nota) => laReserva !== '' || !`${nota.pregunta} ${nota.respuesta}`.includes('{reserva}'))
+              .map((nota) => (
               <div key={nota.pregunta} className="q">
                 <button aria-expanded="false" type="button">
-                  {nota.pregunta}
+                  {conReserva(nota.pregunta)}
                   <span className="pm" />
                 </button>
                 <div className="ans">
                   <p>{conReserva(nota.respuesta)}</p>
                 </div>
-              </div>
-            ))}
+                </div>
+              ))}
           </div>
+          {enlaceDeWhatsapp === null ? null : (
+            <div className="faq-cierre">
+              <span>{p.notas.cierre}</span>
+              <a className="btn-linea" href={enlaceDeWhatsapp} rel="noopener" target="_blank">
+                {p.notas.cierreCta}
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
@@ -408,11 +507,16 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
             </h2>
             <p className="lead">{conReserva(p.cierre.lead)}</p>
             {planes.length === 0 ? null : (
-              <button className="placa" id="abrirReserva" type="button">
+              <button className="placa placa-centro" id="abrirReserva" type="button">
                 <i />
                 <span>{p.cierre.cta}</span>
                 <em>↗</em>
               </button>
+            )}
+            {enlaceDeWhatsapp === null ? null : (
+              <a className="cierre-wa" href={enlaceDeWhatsapp} rel="noopener" target="_blank">
+                {p.cierre.ctaWhatsapp}
+              </a>
             )}
           </div>
         </div>

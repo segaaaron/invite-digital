@@ -27,4 +27,7 @@ export const capacidadDePlan = (row: PlanRow): Allowance => ({
   ...(row.includesGuestbook === undefined ? {} : { guestbook: row.includesGuestbook }),
   ...(row.includesGiftWays === undefined ? {} : { giftWays: row.includesGiftWays }),
   ...(row.includesStyle === undefined ? {} : { estilo: row.includesStyle }),
+  ...(row.includesReminders === undefined ? {} : { reminders: row.includesReminders }),
+  ...(row.correctionRounds === undefined ? {} : { correctionRounds: row.correctionRounds }),
+  ...(row.deliveryDays === undefined ? {} : { deliveryDays: row.deliveryDays }),
 })

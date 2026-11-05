@@ -317,6 +317,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
       case 'preparar_envio':
         return prepararEnvio(evento, llamada.incluir_enviadas, ruta)
       case 'preparar_recordatorios': {
+        if (!hasFeature(capacidad, 'reminders')) return { error: 'El plan de este evento no incluye los recordatorios.' }
         const cola = await reminders.due({ id: evento.id, locale: evento.locale, rsvpDeadline: new Date(`${evento.rsvpDeadline}T00:00:00Z`) })
         if (isErr(cola)) return { error: 'No se pudo calcular a quién recordar ahora.' }
         if (cola.value.length === 0) return { total: 0, nota: 'Hoy no hay a quién recordar: o ya respondieron o es pronto para insistir.' }

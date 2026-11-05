@@ -109,6 +109,7 @@ export default async function AdminPlanesPage({ searchParams }: { searchParams: 
                   includesGuestbook: elegido.includesGuestbook,
                   includesGiftWays: elegido.includesGiftWays,
                   includesStyle: elegido.includesStyle,
+                  includesReminders: elegido.includesReminders,
                   highlighted: elegido.highlighted,
                   isActive: elegido.isActive,
                   eventos: elegido.eventos,

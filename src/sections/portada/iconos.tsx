@@ -19,10 +19,12 @@ export const ICONOS_DE_LA_NOCHE: readonly ReactNode[] = [
     <circle cx="12" cy="13.5" r="7" />
     <path d="M12 9.5v4l2.6 1.6M9.6 3.4h4.8M12 3.4v3" />
   </>,
-  // Itinerario
+  // Itinerario: una lista con horas. La iglesia no servía para XV, graduaciones ni bodas civiles.
   <>
-    <path d="M4 21V11l8-5 8 5v10z" />
-    <path d="M12 6V2.5M10.3 4.2h3.4M9.5 21v-5.5h5V21" />
+    <circle cx="5.6" cy="7" r="1.5" />
+    <circle cx="5.6" cy="12.5" r="1.5" />
+    <circle cx="5.6" cy="18" r="1.5" />
+    <path d="M10 7h10M10 12.5h10M10 18h6.6" />
   </>,
   // Vestimenta
   <>
@@ -34,16 +36,15 @@ export const ICONOS_DE_LA_NOCHE: readonly ReactNode[] = [
     <circle cx="12" cy="13.5" r="3.6" />
     <path d="M8.3 7l1.5-2.4h4.4L15.7 7" />
   </>,
-  // Libro de firmas
+  // Libro de firmas: un libro abierto. La copa era un brindis.
   <>
-    <path d="M7 3h10l-1.4 6A3.6 3.6 0 0112 12a3.6 3.6 0 01-3.6-3zM12 12v8M8.6 20h6.8" />
+    <path d="M12 7.2C10 5.9 7.3 5.4 4.4 5.8v12.4c2.9-.4 5.6.1 7.6 1.4 2-1.3 4.7-1.8 7.6-1.4V5.8c-2.9-.4-5.6.1-7.6 1.4z" />
+    <path d="M12 7.2v12.4" />
   </>,
-  // Cómo llegar
+  // Cómo llegar: el pin de ubicación. No todos llegan en auto, y el pin es lo que se asocia a Maps.
   <>
-    <path d="M3 16v-3l2.4-4.6A2 2 0 017.2 7h9.6a2 2 0 011.8 1.4L21 13v3" />
-    <circle cx="7" cy="17" r="1.8" />
-    <circle cx="17" cy="17" r="1.8" />
-    <path d="M3 16h2.2M18.8 16H21" />
+    <path d="M12 21.4s7-6.5 7-11.3A7 7 0 005 10.1c0 4.8 7 11.3 7 11.3z" />
+    <circle cx="12" cy="10" r="2.6" />
   </>,
   // Pase QR sin señal
   <>
@@ -52,10 +53,13 @@ export const ICONOS_DE_LA_NOCHE: readonly ReactNode[] = [
     <rect height="7" rx="1" width="7" x="3" y="14" />
     <path d="M14 14h3.2v3.2H14zM20.8 20.8h-2M17.6 20.8v-2" />
   </>,
-  // Mesas
+  // Mesas: una mesa redonda con cuatro sillas, vista desde arriba. El anterior parecía un candado.
   <>
-    <path d="M5 19v-7a2 2 0 012-2h10a2 2 0 012 2v7" />
-    <path d="M3 19h18M8 10V6a2 2 0 012-2h4a2 2 0 012 2v4" />
+    <circle cx="12" cy="12" r="4.6" />
+    <rect height="2.6" rx="1.1" width="4" x="10" y="2.6" />
+    <rect height="2.6" rx="1.1" width="4" x="10" y="18.8" />
+    <rect height="4" rx="1.1" width="2.6" x="2.6" y="10" />
+    <rect height="4" rx="1.1" width="2.6" x="18.8" y="10" />
   </>,
   // Recordatorios
   <>
@@ -67,16 +71,30 @@ export const ICONOS_DE_LA_NOCHE: readonly ReactNode[] = [
     <circle cx="12" cy="12" r="8.5" />
     <path d="M3.5 12h17M12 3.5c2.5 2.5 2.5 14.5 0 17M12 3.5c-2.5 2.5-2.5 14.5 0 17" />
   </>,
-  // Colores y letra
+  // Confirmación en un toque: un check. Los anillos de «Colores y letra» solo hablaban de bodas.
   <>
-    <circle cx="9.5" cy="12" r="5" />
-    <circle cx="14.5" cy="12" r="5" />
+    <circle cx="12" cy="12" r="8.6" />
+    <path d="M8.2 12.4l2.7 2.7 5-5.7" />
   </>,
 ]
 
-/** Los cinco de la columna del teléfono. */
+/**
+ * Los cinco de la columna del teléfono, en el orden de la lista nueva de la demo (documento del
+ * 30 oct): el sobre con el nombre, la canción, las fotos, el mapa y el teléfono sin apps.
+ */
 export const ICONOS_DEL_MOVIL: readonly ReactNode[] = [
-  // Sus fotos, en su lugar
+  // Con el nombre de cada uno: el sobre
+  <>
+    <rect height="13" rx="2" width="18" x="3" y="5.5" />
+    <path d="M3.6 6.4L12 12.4l8.4-6" />
+  </>,
+  // Su canción al abrir
+  <>
+    <circle cx="8" cy="17.4" r="2.6" />
+    <circle cx="17.8" cy="15.4" r="2.4" />
+    <path d="M10.6 17.4V7.1l9.6-2.5v10.8" />
+  </>,
+  // Sus fotos y su historia
   <>
     <rect height="13" rx="2" width="18" x="3" y="6" />
     <circle cx="12" cy="12.5" r="3.4" />
@@ -87,21 +105,9 @@ export const ICONOS_DEL_MOVIL: readonly ReactNode[] = [
     <path d="M12 21s7-6.4 7-11a7 7 0 10-14 0c0 4.6 7 11 7 11z" />
     <circle cx="12" cy="10" r="2.4" />
   </>,
-  // Con el nombre de cada uno
+  // Sin apps ni descargas: el teléfono
   <>
-    <rect height="16" rx="2" width="18" x="3" y="4" />
-    <path d="M3 10h18M9 4v16" />
-  </>,
-  // Pase QR, también sin señal
-  <>
-    <rect height="6" rx="1" width="6" x="4" y="4" />
-    <rect height="6" rx="1" width="6" x="14" y="4" />
-    <rect height="6" rx="1" width="6" x="4" y="14" />
-    <path d="M14 14h3v3h-3zM19 19h1.5M17 19v1.5" />
-  </>,
-  // Español e inglés
-  <>
-    <circle cx="12" cy="12" r="8.5" />
-    <path d="M3.5 12h17M12 3.5c2.4 2.4 2.4 14.1 0 17M12 3.5c-2.4 2.4-2.4 14.1 0 17" />
+    <rect height="19" rx="3" width="12.6" x="5.7" y="2.5" />
+    <path d="M10.3 5.2h3.4M9.6 19h4.8" />
   </>,
 ]

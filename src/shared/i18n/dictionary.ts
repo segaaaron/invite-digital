@@ -224,6 +224,8 @@ export interface PlanComparisonDictionary {
   notaLanzamiento: string
   /** El recuadro de lo que traen **todos** los planes, que no se repite fila a fila (maqueta del 20 oct). */
   todosIncluyen: string
+  /** Lo que se escribe donde el plan no trae la función pero se puede comprar aparte. */
+  extra: string
   /** Los cuatro grupos en que se parte la tabla, para que se lea. */
   grupos: { invitacion: string; regalos: string; control: string; entrega: string }
   si: string
@@ -241,9 +243,19 @@ export interface PlanComparisonDictionary {
   nota: string
   albumTitle: string
   albumBody: string
-  /** Las filas del documento de cambios, en su orden. */
+  /**
+   * Las filas de la comparativa. **El orden lo pone quien pinta la tabla**: la portada elige las
+   * dieciocho del documento del 30 oct y el panel las suyas.
+   */
   filas: {
     basicos: string
+    /** «Sugerencia de regalos»: la traen los tres planes y aun así se compara. */
+    sugerencia: string
+    /** «Rondas de corrección» y «Lista en»: el encargo, plan por plan. */
+    rondas: string
+    entrega: string
+    /** «Recordatorios»: etiqueta comercial de Imperial; el panel no los cierra por plan. */
+    recordatorios: string
     grupos: string
     confirmacion: string
     lista: string
@@ -257,7 +269,6 @@ export interface PlanComparisonDictionary {
     tipografias: string
     secciones: string
     panel: string
-    mesaQr: string
     album: string
     detalles: string
     luxury: string
@@ -956,12 +967,13 @@ export interface Dictionary {
  * del catálogo, nunca escrito a mano.
  */
 export interface PortadaDictionary {
-  /** La barra de arriba: etiquetas cortas, no las del pie («Diseños», no «Los diseños»). */
-  nav: { disenos: string; noche: string; invitacion: string; puerta: string; planes: string; preguntas: string; cta: string }
-  /** El abanico de portadas. El título va en dos líneas; la segunda, en cursiva. */
-  estreno: { eyebrow: string; titulo: string; tituloIt: string; lead: string }
-  /** La cinta que gira: las celebraciones que se venden hoy. */
-  cinta: readonly string[]
+  /** La barra de arriba: los nombres claros del documento de correcciones (30 oct). */
+  nav: { disenos: string; comoFunciona: string; queIncluye: string; precios: string; preguntas: string; cta: string }
+  /**
+   * El abanico de portadas. Es el **`<h1>`** de la página: el título va en dos líneas y la
+   * segunda, en cursiva. `nota` lleva `{precio}` y `{reserva}`, que salen del admin.
+   */
+  estreno: { eyebrow: string; titulo: string; tituloIt: string; lead: string; verDisenos: string; reservar: string; nota: string }
   /** El anillo de diseños. El título cambia con el mundo: boda o XV. */
   disenos: {
     eyebrow: string
@@ -969,17 +981,28 @@ export interface PortadaDictionary {
     tituloIt: string
     tituloXv: string
     tituloXvIt: string
+    lead: string
     todos: string
-    xv: string
     bodas: string
+    xv: string
+    cumple: string
     anterior: string
     siguiente: string
     verModelo: string
   }
-  /** Las doce secciones que trae la invitación, con su icono dibujado. */
-  noche: { eyebrow: string; titulo: string; tituloIt: string; items: readonly { titulo: string; texto: string }[] }
-  /** Las postales que se apilan, una por celebración. */
-  historias: { eyebrow: string; titulo: string; tituloIt: string; postales: readonly { titulo: string; pie: string }[] }
+  /**
+   * Las doce secciones que trae la invitación, con su icono dibujado. `plan` dice de qué planes
+   * es cada una («Todos», «Gala · Imperial», «Imperial»): sin eso, la cuadrícula prometía a
+   * cualquier plan lo que solo trae Imperial.
+   */
+  noche: { eyebrow: string; titulo: string; tituloIt: string; items: readonly { titulo: string; texto: string; plan: string }[] }
+  /** Las postales que se apilan, una por celebración, cada una con su enlace a sus diseños. */
+  historias: {
+    eyebrow: string
+    titulo: string
+    tituloIt: string
+    postales: readonly { titulo: string; pie: string; fiesta: Fiesta; enlace: string }[]
+  }
   /** La invitación dentro del teléfono y lo que se enseña al lado. */
   movil: {
     eyebrow: string
@@ -989,21 +1012,25 @@ export interface PortadaDictionary {
     enVivo: string
     puntos: readonly { titulo: string; texto: string }[]
   }
-  /** La puerta: el pase QR y los contadores. */
+  /** La entrada: el pase QR y los contadores. Es lo exclusivo del plan Imperial. */
   puerta: {
     eyebrow: string
     titulo: string
     tituloIt: string
     lead: string
+    /** «Así se ve su panel en vivo:», sobre los tres números. */
+    panel: string
     dentro: string
     confirmados: string
     mesas: string
+    /** El botón que lleva a los planes. */
+    verPlan: string
     bienvenidos: string
     familia: string
     detalle: string
   }
-  /** Del primer «sí» a la última canción: cinco pasos. */
-  pasos: { eyebrow: string; titulo: string; tituloIt: string; items: readonly { titulo: string; texto: string }[] }
+  /** Cómo funciona: cinco pasos y el botón que lleva a reservar. */
+  pasos: { eyebrow: string; titulo: string; tituloIt: string; items: readonly { titulo: string; texto: string }[]; cta: string }
   /** Los sobres de los planes. Los precios y lo que incluye cada uno vienen del admin. */
   planes: {
     eyebrow: string
@@ -1019,13 +1046,51 @@ export interface PortadaDictionary {
     reserva: string
     elegir: string
     pie: string
+    /**
+     * Las píldoras de la entrega. **Salen de la base**, no de la lista escrita: las rondas, los
+     * días y el tiempo en línea son los mismos números que compara la tabla, y escritos a mano en
+     * los dos sitios acababan diciendo cosas distintas.
+     */
+    rondas: string
+    lista: string
+    enLineaDias: string
+    enLineaMeses: string
+    /**
+     * Lo que se mete en `{luxury}` del pie: con precio si el extra está a la venta, sin él si el
+     * admin todavía no le puso uno. **El importe nunca se escribe aquí**: sale del admin.
+     */
+    pieLuxury: string
+    pieLuxurySinPrecio: string
   }
-  /** La comparativa fila por fila. */
-  comparativa: { titulo: string; incluyen: string }
-  /** Las notas: las doce preguntas de esta portada, de usted. */
-  notas: { eyebrow: string; titulo: string; tituloIt: string; items: readonly { pregunta: string; respuesta: string }[] }
-  /** El cierre con la placa que abre el sobre de la reserva. */
-  cierre: { eyebrow: string; titulo: string; tituloIt: string; lead: string; cta: string }
+  /**
+   * La comparativa fila por fila. `incluyenItems` es la lista con checks de lo que traen todos
+   * los planes: **se escribe**, no se deduce de la tabla, porque hay filas que van en los dos
+   * sitios («Sugerencia de regalos» la traen los tres y aun así se compara).
+   */
+  comparativa: {
+    titulo: string
+    incluyen: string
+    incluyenItems: readonly string[]
+    /**
+     * «Envíos ilimitados por WhatsApp». Va **aparte** porque solo es verdad mientras ningún plan
+     * tenga tope de invitaciones: con un tope cargado en el admin, esta línea se cae del recuadro y
+     * en su lugar la tabla enseña la fila «Invitaciones que puede enviar», que dice el número.
+     */
+    enviosIlimitados: string
+  }
+  /** Las preguntas frecuentes de esta portada, de usted, y su cierre con WhatsApp. */
+  notas: {
+    eyebrow: string
+    titulo: string
+    tituloIt: string
+    items: readonly { pregunta: string; respuesta: string }[]
+    /** La frase que se mete en `{extraDias}`: solo si hay un extra de más días a la venta. */
+    masDias: string
+    cierre: string
+    cierreCta: string
+  }
+  /** El cierre con la placa que abre el sobre de la reserva, y el enlace discreto a WhatsApp. */
+  cierre: { eyebrow: string; titulo: string; tituloIt: string; lead: string; cta: string; ctaWhatsapp: string }
   /** El sobre que se abre sobre la página y arma el mensaje de WhatsApp. */
   reserva: {
     eyebrow: string
@@ -1051,13 +1116,21 @@ export interface PortadaDictionary {
     descripcion: string
     oficio: string
     whatsapp: string
-    columnaGala: string
+    columnaExplorar: string
     columnaCelebraciones: string
     columnaFecha: string
     fechaTexto: string
-    enlaces: { disenos: string; noche: string; invitacion: string; puerta: string; pasos: string; planes: string }
-    celebraciones: readonly string[]
+    enlaces: { disenos: string; comoFunciona: string; queIncluye: string; precios: string; preguntas: string }
+    /** Cada celebración lleva a sus diseños, así que necesita su fiesta además del nombre. */
+    celebraciones: readonly { nombre: string; fiesta: Fiesta }[]
     preguntas: string
     disenadoPor: string
   }
 }
+
+/**
+ * Las celebraciones que la portada puede enseñar hoy. **No hay `graduacion`**: no existe
+ * ningún diseño de graduación portado, y el documento de correcciones pide no ofrecer lo que
+ * no se puede abrir. Cuando haya uno, entra aquí, en la cinta y en los filtros.
+ */
+export type Fiesta = 'boda' | 'xv' | 'cumple'

@@ -12,6 +12,7 @@ import { parseLocaleParam } from '@/shared/i18n/server'
 import { attempt, isOk } from '@/shared/result'
 import { faqJsonLd, jsonLdScript, organizationJsonLd, productJsonLd, websiteJsonLd } from '@/shared/seo/json-ld'
 import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
+import { fiestaDeCategoria } from '@/sections/fiestas'
 import { Portada, type DisenoDePortada } from '@/sections/portada/Portada'
 import type { ColumnaDeComparativa } from '@/sections/portada/Comparativa'
 import { registrarFallo } from '@/shared/observability/fallos'
@@ -26,6 +27,37 @@ export const dynamic = 'force-dynamic'
  * una lista cerrada: lo que no esté a la venta se cae y entra el siguiente del catálogo, así
  * que retirar un modelo en el admin nunca deja un hueco.
  */
+/**
+ * **Las filas de la comparativa de la portada, en el orden del documento del 30 de octubre.**
+ *
+ * No son todas las que el diccionario sabe escribir: las que traen los tres planes igual se
+ * enseñan arriba, en el recuadro de «Todos los planes incluyen», y aquí quedan las que comparan.
+ * «Sugerencia de regalos» es la excepción a propósito: la traen los tres y aun así se compara,
+ * porque la tarjeta de Atelier la promete y la tabla la dejaba en blanco.
+ */
+const FILAS_DE_LA_PORTADA = [
+  'fotos',
+  'colores',
+  'tipografias',
+  'secciones',
+  'detalles',
+  'sugerencia',
+  'regalos',
+  'libro',
+  'album',
+  'plannerCompleto',
+  'panel',
+  'recordatorios',
+  'mesas',
+  'puerta',
+  'porteros',
+  'plannerTotal',
+  'luxury',
+  'rondas',
+  'entrega',
+  'enLinea',
+] as const
+
 const ABANICO = ['xv-isabelle', 'boda-boho', 'xv-mariana', 'boda-cin', 'boda-glamour', 'xv-valeria', 'boda-navy', 'xv-luciana', 'boda-sello'] as const
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -71,6 +103,11 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
   const plans = isOk(plansResult) ? plansResult.value : []
   const templates = isOk(templatesResult) ? templatesResult.value : []
+  if (isOk(templatesResult) && templates.length === 0) {
+    // Leer bien y no traer nada no es un error de la base, pero deja la portada sin cinta, sin
+    // filtros, sin anillo y sin celebraciones. Sin esta línea solo se veía mirando la web.
+    registrarFallo('[locale]/page', 'No se pudo armar la portada completa: el catálogo no tiene ningún diseño publicado')
+  }
 
   // La reserva fija de cada plan, tal como la dejó el admin. Sin ella no se inventa ninguna.
   const activos = await webPublica.planesActivos().catch((cause: unknown) => {
@@ -81,12 +118,6 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
     registrarFallo('[locale]/page', 'Los planes activos llegaron con error:', activos.error)
   }
   const filas = activos === null || !activos.ok ? [] : activos.value
-  const reservas = Object.fromEntries(
-    filas.flatMap((f) => (f.depositFixedCents != null && f.priceCents !== undefined && f.depositFixedCents < f.priceCents ? [[f.slug, f.depositFixedCents] as const] : [])),
-  )
-
-  // La comparativa sale de los límites de cada plan en la base, los mismos que corta el
-  // servidor: una tabla escrita a mano acaba prometiendo lo que el plan no trae.
   const config = asistente.disponible
     ? await asistente.config().catch((cause: unknown) => {
         // Sin registro, una caída de la configuración se leía igual que «no hay clave»: la fila de
@@ -95,6 +126,64 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         return null
       })
     : null
+
+  // **Los extras a la venta, para los dos sitios donde la web los nombra con su precio**: el pie de
+  // los planes (Luxury Planner) y la pregunta del tiempo en línea (más días). El importe sale del
+  // admin, nunca escrito aquí: sin extra activo o sin precio, la frase se queda sin importe.
+  const extrasActivos = await webPublica.extrasActivos().catch((cause: unknown) => {
+    registrarFallo('[locale]/page', 'No se pudieron leer los extras a la venta:', cause)
+    return null
+  })
+  if (extrasActivos !== null && !extrasActivos.ok) {
+    registrarFallo('[locale]/page', 'Los extras a la venta llegaron con error:', extrasActivos.error)
+  }
+  const extras = extrasActivos === null || !extrasActivos.ok ? [] : extrasActivos.value
+  // La moneda de la página es la de los planes. El extra trae la suya de la base, y un importe
+  // en otra moneda con la etiqueta de esta sería un precio equivocado: se deja sin importe y se
+  // anota, que es lo contrario de pintarlo mal.
+  const moneda = plans[0]?.price.currency ?? 'BOB'
+  const elExtra = (efecto: 'asistente' | 'mas_dias') => {
+    const extra = extras.find((x) => x.effect === efecto && x.priceCents > 0)
+    if (extra === undefined) return undefined
+    if (extra.currency !== moneda) {
+      registrarFallo('[locale]/page', `No se pudo escribir el precio del extra «${extra.slug}»: está en ${extra.currency} y la página cobra en ${moneda}`)
+      return undefined
+    }
+    // Luxury Planner no se nombra si el asistente no está en marcha: la tabla ya le quita su fila,
+    // y el panel rechaza la compra («Ese extra no está a la venta»).
+    if (efecto === 'asistente' && config === null) return undefined
+    return extra
+  }
+  const conPrecio = (cents: number) => formatMoney({ cents, currency: moneda }, locale)
+  const luxuryExtra = elExtra('asistente')
+  const diasExtra = elExtra('mas_dias')
+  const textosDeExtras = {
+    luxury:
+      luxuryExtra === undefined
+        ? dictionary.portada.planes.pieLuxurySinPrecio
+        : dictionary.portada.planes.pieLuxury.replace('{monto}', conPrecio(luxuryExtra.priceCents)),
+    // «90 días» se dice «3 meses» cuando cuadra, como en la tabla.
+    dias:
+      diasExtra === undefined || diasExtra.amount <= 0
+        ? ''
+        : dictionary.portada.notas.masDias
+            .replace(
+              '{tiempo}',
+              diasExtra.amount % 30 === 0
+                ? dictionary.pricing.comparison.meses.replace('{n}', String(diasExtra.amount / 30))
+                : dictionary.pricing.comparison.dias.replace('{n}', String(diasExtra.amount)),
+            )
+            .replace('{monto}', conPrecio(diasExtra.priceCents)),
+  }
+
+  // Lo que tarda y lo que dura cada plan, tal cual la base: la tarjeta y la tabla enseñan lo mismo.
+  const entregas = Object.fromEntries(filas.map((f) => [f.slug, { rondas: f.correctionRounds ?? null, dias: f.deliveryDays ?? null, onlineDays: f.onlineDays }]))
+  const reservas = Object.fromEntries(
+    filas.flatMap((f) => (f.depositFixedCents != null && f.priceCents !== undefined && f.depositFixedCents < f.priceCents ? [[f.slug, f.depositFixedCents] as const] : [])),
+  )
+
+  // La comparativa sale de los límites de cada plan en la base, los mismos que corta el
+  // servidor: una tabla escrita a mano acaba prometiendo lo que el plan no trae.
   const columnas: ColumnaDeComparativa[] = plans.flatMap((plan) => {
     const fila = filas.find((f) => f.slug === plan.slug)
     if (fila === undefined) {
@@ -104,6 +193,12 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
       return []
     }
     const limites = capacidadDePlan(fila)
+    // La tabla enseña «Rondas de corrección» y «Lista en» desde la base. **Vacíos los dos, el
+    // plan es de autoservicio** y la tabla lo deja en blanco a propósito (lo dice el editor del
+    // admin). Vacío uno solo sí es un desajuste: la celda dice «no» y la otra promete un plazo.
+    if ((fila.correctionRounds == null) !== (fila.deliveryDays == null)) {
+      registrarFallo('[locale]/page', `No se pudo comparar la entrega del plan «${plan.slug}»: trae uno de los dos datos del encargo —rondas o días de entrega— y la tabla deja el otro en blanco`)
+    }
     return [
       {
         nombre: plan.name,
@@ -115,34 +210,55 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
     ]
   })
   const comparacion = dictionary.pricing.comparison
+  // **El tope de invitaciones solo se compara si existe.** El documento del 30 oct deja esa fila
+  // fuera de la tabla y pone «Envíos ilimitados» en el recuadro de arriba, que es verdad con los
+  // planes de hoy: ninguno tiene tope. El día que el admin ponga uno, la fila entra sola y la línea
+  // del recuadro se cae, porque ese tope el servidor lo corta de verdad.
+  const conTope = columnas.some((c) => c.limites.maxGuestGroups !== null)
+  const clavesDeLaTabla = FILAS_DE_LA_PORTADA.flatMap((clave) => {
+    // Luxury solo se compara si se vende: sin clave de OpenAI, su fila sobra.
+    if (clave === 'luxury' && config === null) return []
+    return clave === 'panel' && conTope ? (['grupos', clave] as const) : [clave]
+  })
   const textosComparativa = {
     ...comparacion,
-    // Luxury solo se compara si se vende: sin clave de OpenAI, la fila sobra.
-    filas: Object.fromEntries(Object.entries(comparacion.filas).filter(([clave]) => config !== null || clave !== 'luxury')) as typeof comparacion.filas,
+    // **El orden de la tabla lo pone la portada**, no el diccionario: son las filas del documento
+    // de correcciones del 30 de octubre, agrupadas como las pidió. Lo que traen los tres planes
+    // igual vive en el recuadro de arriba (`comparativa.incluyenItems`) y no se repite aquí.
+    // Luxury solo se compara si se vende: sin clave de OpenAI, su fila sobra.
+    filas: Object.fromEntries(clavesDeLaTabla.map((clave) => [clave, comparacion.filas[clave]])) as typeof comparacion.filas,
   }
 
   // Las notas que la portada enseña, con el importe ya escrito: es lo que se marca para Google.
   const laReserva = Object.values(reservas).length === 0 ? '' : formatMoney({ cents: Math.min(...Object.values(reservas)), currency: plans[0]?.price.currency ?? 'BOB' }, locale)
-  const notasParaGoogle = dictionary.portada.notas.items.map((nota) => ({ question: nota.pregunta, answer: nota.respuesta.replace('{reserva}', laReserva) }))
+  // Sin reserva cargada, la pregunta que la nombra **no se pinta**: «¿La reserva de  es
+  // reembolsable?» con el hueco dentro acabaría también en el marcado que lee Google. Es la misma
+  // regla que ya aplica el pie a su frase.
+  const conExtras = (texto: string) => texto.replace('{luxury}', textosDeExtras.luxury).replace('{extraDias}', textosDeExtras.dias)
+  const notasParaGoogle = dictionary.portada.notas.items
+    .filter((nota) => laReserva !== '' || !`${nota.pregunta} ${nota.respuesta}`.includes('{reserva}'))
+    .map((nota) => ({
+      question: nota.pregunta.replace('{reserva}', laReserva),
+      answer: conExtras(nota.respuesta).replace('{reserva}', laReserva),
+    }))
 
   // Los modelos del catálogo, en el orden que fijó el admin. La portada enseña los dos mundos.
   const disenos: DisenoDePortada[] = templates.map((t) => ({
     clave: t.slug,
     nombre: t.name,
-    fiesta: t.categorySlug === 'xv-anos' ? 'xv' : 'boda',
+    fiesta: fiestaDeCategoria(t.categorySlug),
     portada: t.coverImagePath,
   }))
   // El anillo **alterna boda y XV**, como la maqueta. Con el orden del admin tal cual salían las
   // once bodas seguidas y después los nueve XV: media vuelta del cilindro quedaba de un solo tono.
   // Dentro de cada mundo manda el orden del admin.
-  const bodas = disenos.filter((d) => d.fiesta === 'boda')
-  const quinces = disenos.filter((d) => d.fiesta === 'xv')
+  const porFiesta = [disenos.filter((d) => d.fiesta === 'boda'), disenos.filter((d) => d.fiesta === 'xv'), disenos.filter((d) => d.fiesta === 'cumple')]
   const alternados: DisenoDePortada[] = []
-  for (let i = 0; i < Math.max(bodas.length, quinces.length); i += 1) {
-    const unaBoda = bodas[i]
-    const unXv = quinces[i]
-    if (unaBoda !== undefined) alternados.push(unaBoda)
-    if (unXv !== undefined) alternados.push(unXv)
+  for (let i = 0; i < Math.max(...porFiesta.map((grupo) => grupo.length)); i += 1) {
+    for (const grupo of porFiesta) {
+      const uno = grupo[i]
+      if (uno !== undefined) alternados.push(uno)
+    }
   }
 
   const preferidos = ABANICO.flatMap((clave) => disenos.filter((d) => d.clave === clave))
@@ -175,6 +291,8 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         columnas={columnas}
         dictionary={dictionary}
         disenos={alternados}
+        entregas={entregas}
+        extras={textosDeExtras}
         locale={locale}
         planes={plans}
         registrarConsulta={submitConsultationAction}

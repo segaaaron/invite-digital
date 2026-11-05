@@ -79,7 +79,12 @@ function pildoraDeInvitacion(filas: readonly PersonRowView[], t: T): { tono: 'ok
  * su botón (Enviar o Recordar)— y debajo sus personas, sangradas, cada una con su confirmación, restricciones y mesa.
  * Una invitación de una sola persona es una sola fila. En el celular, una tarjeta por invitación.
  */
-export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[]; eventSlug: string }) {
+/**
+ * `recordatorios`: si el plan trae la cola de recordatorios (`0101`). Sin ella, el botón de
+ * «Recordar» no sale en ninguna de las tres pantallas —lista, tableta y celular—: llevaría a un
+ * panel que ya no se abre. Repartir la invitación sigue igual para todos los planes.
+ */
+export function PeopleTable({ rows, eventSlug, recordatorios = true }: { rows: readonly PersonRowView[]; eventSlug: string; recordatorios?: boolean }) {
   const t = useT()
   const ETIQUETA = etiqueta(t)
   const ESTADO = estado(t)
@@ -169,7 +174,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
       <PanelButton href={`${base}?panel=envio`} size="sm" variant="primary">
         <SendIcon className="size-4" /> {t('Enviar', 'Send')}
       </PanelButton>
-    ) : (primera.respondedAt ?? null) === null ? (
+    ) : (primera.respondedAt ?? null) === null && recordatorios ? (
       <PanelButton href={`${base}?panel=recordar`} size="sm">
         {t('Recordar', 'Remind')}
       </PanelButton>
@@ -372,7 +377,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                       <a className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[14.5px] font-medium text-white no-underline hover:bg-whatsapp-hover" href={`${base}?panel=envio`}>
                         <SendIcon className="size-4" /> {t('Enviar por WhatsApp', 'Send via WhatsApp')}
                       </a>
-                    ) : todas.some((f) => f.attending === null) ? (
+                    ) : recordatorios && todas.some((f) => f.attending === null) ? (
                       <a className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[14.5px] font-medium text-white no-underline hover:bg-whatsapp-hover" href={`${base}?panel=recordar`}>
                         <SendIcon className="size-4" /> {t('Enviar recordatorio', 'Send reminder')}
                       </a>
@@ -463,7 +468,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                   </span>
                 </Link>
                 <div className="mt-5 flex flex-col gap-2.5">
-                  {(primera.sentAt ?? null) !== null && filas.every((f) => f.attending !== null) ? null : (
+                  {(primera.sentAt ?? null) !== null && (!recordatorios || filas.every((f) => f.attending !== null)) ? null : (
                     <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[15.5px] font-medium text-white no-underline" href={`${base}?panel=${(primera.sentAt ?? null) === null ? 'envio' : 'recordar'}`}>
                       <SendIcon className="size-4" /> {(primera.sentAt ?? null) === null ? t('Enviar por WhatsApp', 'Send via WhatsApp') : t('Enviar recordatorio', 'Send reminder')}
                     </a>
