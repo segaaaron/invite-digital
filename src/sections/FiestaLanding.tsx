@@ -80,6 +80,7 @@ export function FiestaLanding({
           <h2 className="font-display text-[clamp(28px,4vw,40px)] leading-tight text-ink [text-wrap:balance]" id="para-planners">
             {textos.plannerTitle}
           </h2>
+          <p className="font-display text-[clamp(18px,2.4vw,22px)] text-ink-soft [text-wrap:balance]">{textos.plannerSubtitle}</p>
           <p className="max-w-[58ch] text-[15px] leading-[1.7] text-ink-soft">{textos.plannerBody}</p>
         </div>
       </section>

@@ -11,13 +11,13 @@ type Mapa = { readonly href?: string | undefined; readonly coords?: string | und
 const EMBED = (q: string) => `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed`
 const BUSQUEDA = (q: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`
 
-/** «19.32°N · 99.18°W» → «19.32,-99.18». */
+/** «19.32°N · 99.18°W» → «19.32,-99.18». La «O» es oeste, como en «66.15°O»: sin ella la longitud salía positiva y el mapa caía en el océano Índico. */
 function coordenadas(texto: string | undefined): string | null {
   if (texto === undefined) return null
-  const m = /(-?\d+(?:\.\d+)?)\s*°?\s*([NS])?[^\d-]+(-?\d+(?:\.\d+)?)\s*°?\s*([EW])?/i.exec(texto)
+  const m = /(-?\d+(?:\.\d+)?)\s*°?\s*([NS])?[^\d-]+(-?\d+(?:\.\d+)?)\s*°?\s*([EWO])?/i.exec(texto)
   if (m === null) return null
   const lat = Number(m[1]) * (m[2]?.toUpperCase() === 'S' ? -1 : 1)
-  const lng = Number(m[3]) * (m[4]?.toUpperCase() === 'W' ? -1 : 1)
+  const lng = Number(m[3]) * (m[4]?.toUpperCase() === 'E' ? 1 : m[4] === undefined ? 1 : -1)
   return Number.isFinite(lat) && Number.isFinite(lng) ? `${lat},${lng}` : null
 }
 

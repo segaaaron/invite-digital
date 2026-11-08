@@ -13,6 +13,8 @@ type Props = {
   readonly token: string
   /** Cuántas le quedan por subir a este grupo. A cero, el campo se cierra. */
   readonly remaining: number
+  /** El álbum del evento ya no admite más fotos, las suba quien las suba. */
+  readonly albumLleno?: boolean
 }
 
 /**
@@ -28,16 +30,16 @@ type Props = {
  */
 const SUBIR_SIN_CAERSE = sinCaerse(uploadGuestPhotoAction, { status: 'error', message: 'storage_failure' })
 
-export function GuestPhotoUpload({ dictionary, token, remaining }: Props) {
+export function GuestPhotoUpload({ dictionary, token, remaining, albumLleno = false }: Props) {
   // Una subida que falla en el servidor sale como aviso, no como pantalla de error delante del invitado.
   const [estado, formAction, enviando] = useActionState(SUBIR_SIN_CAERSE, INICIAL)
   const formulario = useRef<HTMLFormElement>(null)
   const campoId = useId()
 
-  if (remaining <= 0) {
+  if (remaining <= 0 || albumLleno) {
     return (
       <p className="text-[13px] leading-[1.7] text-ink-soft" role="status">
-        {dictionary.photoErrors.too_many}
+        {albumLleno ? dictionary.photoErrors.album_full : dictionary.photoErrors.too_many}
       </p>
     )
   }

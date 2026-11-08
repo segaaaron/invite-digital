@@ -69,6 +69,7 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
                 ctaLabel={pricing.choose.replace('{plan}', plan.name)}
                 reserva={reserva === undefined ? null : conMonto(pricing.reserve, <Monto cents={reserva} locale={locale} />)}
                 dictionary={dictionary}
+                {...(dictionary.portada.planes.lemas[index] === undefined ? {} : { lema: dictionary.portada.planes.lemas[index] })}
                 locale={locale}
                 plan={plan}
                 anterior={index === 0 ? null : (plans[index - 1]?.name ?? null)}
@@ -99,7 +100,7 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
               className="shrink-0 rounded-[var(--radius-pill)] bg-linear-to-r from-gold-deep via-gold-light to-gold-deep px-7 py-3.5 text-center font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase"
               href={rutaDe(locale, 'pedido', `/${destacado.slug}${consulta === '' ? '' : `?${consulta}`}`)}
             >
-              {pricing.reserveBox.cta}
+              {pricing.reserveBox.cta.replace('{plan}', destacado.name)}
             </a>
           </div>
         )}

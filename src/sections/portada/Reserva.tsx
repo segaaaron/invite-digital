@@ -67,11 +67,16 @@ export function Reserva({ dictionary, locale, planes, reservaCents }: Props) {
           <input inputMode="tel" maxLength={32} name="tel" required type="tel" />
         </label>
 
+        {/* El diseño elegido en el escaparate: lo escribe `PortadaVida` y viaja en el mensaje de WhatsApp. */}
+        <p className="diseno-elegido" hidden id="disenoElegidoForm">
+          {dictionary.portada.planes.disenoElegido} <b />
+        </p>
+        <input id="campoDiseno" name="diseno" type="hidden" />
         <span className="campo-k">{p.plan}</span>
         <div className="planes-radio">
           {planes.map((plan) => (
             <label key={plan.slug}>
-              <input defaultChecked={plan.slug === destacado?.slug} name="plan" type="radio" value={`${plan.name} · ${formatMoney(plan.price, locale)}`} />
+              <input data-slug={plan.slug} defaultChecked={plan.slug === destacado?.slug} name="plan" type="radio" value={`${plan.name} · ${formatMoney(plan.price, locale)}`} />
               <b>{plan.name}</b>
               <i>{formatMoney(plan.price, locale)}</i>
             </label>

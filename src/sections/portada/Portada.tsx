@@ -10,7 +10,7 @@ import { Planes, type EntregaDePlan } from './Planes'
 import { Reserva } from './Reserva'
 import { PortadaVida } from './PortadaVida'
 import { SELLO } from './sello'
-import type { TextosComparativa, GrupoDeComparativa } from '@/modules/plans'
+import type { TextosComparativa, GrupoDeComparativa, NotaDeFila, PrecioDeFila } from '@/modules/plans'
 
 /** Un modelo del catálogo tal como lo necesita la portada: su clave, su nombre y su portada. */
 export type DisenoDePortada = {
@@ -53,13 +53,19 @@ type Props = {
   /** Lo que tarda y lo que dura cada plan, de la base. */
   readonly entregas: Readonly<Record<string, EntregaDePlan>>
   /** Los trozos de frase que dependen del precio de un extra, ya escritos (o vacíos). */
-  readonly extras: { readonly luxury: string; readonly dias: string }
+  readonly extras: { readonly luxury: string; readonly dias: string; readonly fotos: string }
   readonly columnas: readonly ColumnaDeComparativa[]
+  /** El recuadro de «Todos los planes incluyen», ya con «Envíos ilimitados» donde toca. */
+  readonly incluyenTodos: readonly string[]
+  /** Los extras con precio que se ven en la celda del plan que no los trae, y el tope del álbum. */
+  readonly preciosDeExtras: readonly PrecioDeFila[]
+  readonly notasDeFila: Partial<Record<PrecioDeFila['fila'], NotaDeFila>>
   readonly textosComparativa: TextosComparativa & {
     readonly feature: string
     readonly grupos: Record<GrupoDeComparativa, string>
     readonly todosIncluyen: string
     readonly extra: string
+    readonly notaLanzamiento: string
   }
   /** El WhatsApp del atelier, solo dígitos. Vacío: el formulario no se enseña. */
   readonly whatsapp: string
@@ -80,7 +86,7 @@ type Props = {
  * los iconos que se dibujan, la pila de postales, el sobre de la reserva—; si el JavaScript no
  * llega, la página se lee entera igual.
  */
-export function Portada({ locale, dictionary, disenos, abanico, planes, reservas, entregas, extras, columnas, textosComparativa, whatsapp, registrarConsulta }: Props) {
+export function Portada({ locale, dictionary, disenos, abanico, planes, reservas, entregas, extras, columnas, incluyenTodos, preciosDeExtras, notasDeFila, textosComparativa, whatsapp, registrarConsulta }: Props) {
   const p = dictionary.portada
   const rutaDelModelo = (clave: string) => rutaDe(locale, 'modelos', `/${clave}`)
   const primero = disenos[0]
@@ -97,6 +103,7 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
     )
       .replace('{luxury}', extras.luxury)
       .replace('{extraDias}', extras.dias)
+      .replace('{extraFotos}', extras.fotos)
   const reservaCents = Object.values(reservas).length === 0 ? null : Math.min(...Object.values(reservas))
   // **Lo que la página ofrece es lo que puede abrir**: las celebraciones sin ningún diseño a la
   // venta no salen ni en la cinta, ni en las postales, ni en los filtros. El documento del 30 oct
@@ -133,7 +140,7 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
         <div className="half l" />
         <div className="half r" />
         <img alt="" className="s" src={SELLO.src} srcSet={SELLO.srcSet} />
-        <span className="cap">con amor, Luxury Atelier</span>
+        <span className="cap">{locale === 'en' ? 'with love, Luxury Atelier' : 'con amor, Luxury Atelier'}</span>
       </div>
 
       <div aria-hidden="true" id="atmos">
@@ -264,6 +271,7 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
               <h3>{primero.nombre}</h3>
             )}
           </div>
+          <p className="cf-toque">{p.disenos.toque}</p>
         </div>
       </section>
       )}
@@ -455,7 +463,7 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
 
       {planes.length === 0 ? null : <Planes dictionary={dictionary} entregas={entregas} extraLuxury={extras.luxury} locale={locale} planes={planes} reservas={reservas} />}
 
-      <Comparativa columnas={columnas} dictionary={dictionary} textos={textosComparativa} />
+      <Comparativa columnas={columnas} dictionary={dictionary} incluyen={incluyenTodos} notas={notasDeFila} precios={preciosDeExtras} textos={textosComparativa} />
 
       {/* ===== LAS NOTAS ===== */}
       <section id="faq">
@@ -535,6 +543,7 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
         reserva={{
           whatsapp,
           mensaje: p.reserva.mensaje,
+          mensajeDiseno: p.reserva.mensajeDiseno,
           planes: planes.map((plan) => ({ nombre: plan.name, precio: plan.price.cents })),
           locale,
         }}

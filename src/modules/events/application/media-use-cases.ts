@@ -1,13 +1,18 @@
 import { MAX_AUDIO_UPLOAD_BYTES, type AudioProcessor, nombreDeCancion } from '@/shared/audio/audio'
-import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES, type MediaType, esAudio, mediaTypeOf, storageKeyFor } from '../domain/media'
+import { ALBUM_IMAGE_EDGE, MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES, type MediaType, esAudio, mediaTypeOf, storageKeyFor } from '../domain/media'
 import type { ImageProcessor, MediaRepository, MediaStorage } from './ports'
 import { registrarFallo } from '@/shared/observability/fallos'
 
-export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many' | 'photo_limit'
+export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many' | 'photo_limit' | 'album_full'
 
 type Deps = {
   media: MediaRepository
   storage: MediaStorage
+  /**
+   * Dónde van las fotos de **los invitados** (el álbum), si no es el disco: Cloudflare R2, con el disco de respaldo
+   * para lo ya subido. Sin él, todo va a `storage`, que es como fue siempre.
+   */
+  album?: MediaStorage
   images: ImageProcessor
   audio: AudioProcessor
   ids: () => string
@@ -32,7 +37,7 @@ type Deps = {
  *    invitación pintaría un hueco roto.
  */
 export const saveMedia =
-  ({ media, storage, images, audio, ids }: Deps) =>
+  ({ media, storage: disco, album, images, audio, ids }: Deps) =>
   async (
     eventId: string,
     archivo: { size: number; name: string; bytes: () => Promise<Uint8Array> },
@@ -47,6 +52,7 @@ export const saveMedia =
     {
       permitirAudio = true,
       maxFotos = null,
+      lado,
     }: {
       permitirAudio?: boolean
       /**
@@ -54,6 +60,8 @@ export const saveMedia =
        * tope por grupo— ni la canción. `null` es sin límite.
        */
       maxFotos?: number | null
+      /** Lado largo máximo de la imagen. Las del álbum van a 2048; sin decirlo, el de la invitación. */
+      lado?: number
     } = {},
   ): Promise<{ ok: true; id: string; contentType: MediaType; cancion?: { track: string; artist: string } } | { ok: false; error: MediaError }> => {
     // El tope de la puerta es el de la música, que es el mayor: una canción en WAV ronda los
@@ -75,7 +83,7 @@ export const saveMedia =
       }
       // Los primeros bytes dicen que **parece** una imagen; que lo sea lo dice que se pueda
       // decodificar. Una cabecera correcta con un cuerpo que no lo es no pasa de aquí.
-      listo = await images.normalize(bytes)
+      listo = await images.normalize(bytes, lado)
     } else {
       if (!permitirAudio) return { ok: false, error: 'unsupported_type' }
       // **La música se ajusta sola**, sea el formato que sea: quien sube la canción no tiene
@@ -88,6 +96,8 @@ export const saveMedia =
     if (listo === null) return { ok: false, error: 'unsupported_type' }
 
     const id = ids()
+    // Las fotos de invitados van al almacén del álbum; lo del atelier (invitación, canción), al disco.
+    const storage = uploadedByGroupId !== null && album !== undefined ? album : disco
     try {
       await storage.put(storageKeyFor(id, listo.contentType), listo.bytes)
       await media.insert({
@@ -114,12 +124,16 @@ export const saveMedia =
       if (esAudio(listo.contentType)) {
         for (const fila of await media.listByEvent(eventId)) {
           if (fila.id === id || !esAudio(fila.contentType as MediaType)) continue
-          await storage.remove(storageKeyFor(fila.id, fila.contentType as MediaType))
+          await disco.remove(storageKeyFor(fila.id, fila.contentType as MediaType))
           await media.remove(fila.id)
         }
       }
     } catch (cause) {
       registrarFallo('events/media-use-cases', 'No se pudo guardar el archivo del evento %s:', eventId, cause)
+      // Si el fichero llegó a escribirse y la fila no, se borra: sin fila, ninguna retención lo encontraría.
+      await storage.remove(storageKeyFor(id, listo.contentType)).catch((resto: unknown) => {
+        registrarFallo('events/media-use-cases', 'No se pudo retirar el fichero huérfano %s:', id, resto)
+      })
       return { ok: false, error: 'storage_failure' }
     }
 
@@ -128,12 +142,22 @@ export const saveMedia =
 
 /** Lee una imagen por su identificador. Devuelve también a qué evento pertenece. */
 export const readMedia =
-  ({ media, storage }: Deps) =>
+  ({ media, storage, album }: Deps) =>
   async (id: string): Promise<{ eventId: string; contentType: MediaType; bytes: Uint8Array; uploadedByGroupId: string | null } | null> => {
     const fila = await media.find(id)
     if (fila === null) return null
-    const bytes = await storage.get(storageKeyFor(fila.id, fila.contentType as MediaType))
-    if (bytes === null) return null
+    let bytes: Uint8Array | null
+    try {
+      bytes = await (fila.uploadedByGroupId !== null && album !== undefined ? album : storage).get(storageKeyFor(fila.id, fila.contentType as MediaType))
+    } catch (cause) {
+      registrarFallo('events/media-use-cases', 'No se pudo leer el archivo %s del almacén:', id, cause)
+      return null
+    }
+    if (bytes === null) {
+      // La fila existe y el fichero no: es una pérdida, no una foto que nunca estuvo.
+      registrarFallo('events/media-use-cases', 'El archivo %s tiene fila pero no está en el almacén.', id)
+      return null
+    }
     // `uploadedByGroupId` sale también: quien lo use para decidir algo que ven todos los invitados
     // —el QR del banco— necesita saber si la imagen la subió el anfitrión o un invitado cualquiera.
     return { eventId: fila.eventId, contentType: fila.contentType as MediaType, bytes, uploadedByGroupId: fila.uploadedByGroupId }
@@ -150,7 +174,7 @@ export const listMedia = ({ media }: Deps) => (eventId: string) => media.listByE
  * antes que la fila, como en la retención: si falla, la fila sigue y se puede reintentar.
  */
 export const removeMedia =
-  ({ media, storage }: Deps) =>
+  ({ media, storage, album }: Deps) =>
   async (
     eventId: string,
     id: string,
@@ -160,7 +184,7 @@ export const removeMedia =
     if (fila === null || fila.eventId !== eventId) return { ok: false, error: 'not_found' }
     if (enUso.includes(id)) return { ok: false, error: 'in_use' }
     try {
-      await storage.remove(storageKeyFor(fila.id, fila.contentType as MediaType))
+      await (fila.uploadedByGroupId !== null && album !== undefined ? album : storage).remove(storageKeyFor(fila.id, fila.contentType as MediaType))
       await media.remove(fila.id)
     } catch (cause) {
       registrarFallo('events/media-use-cases', 'No se pudo quitar el archivo %s del evento %s:', id, eventId, cause)
@@ -176,11 +200,11 @@ export const removeMedia =
  * pase lo vuelve a intentar. Al revés se perdería el rastro de qué había que borrar.
  */
 export const purgeMedia =
-  ({ media, storage }: Deps) =>
+  ({ media, storage, album }: Deps) =>
   async (eventId: string): Promise<number> => {
     const filas = await media.listByEvent(eventId)
     for (const fila of filas) {
-      await storage.remove(storageKeyFor(fila.id, fila.contentType as MediaType))
+      await (fila.uploadedByGroupId !== null && album !== undefined ? album : storage).remove(storageKeyFor(fila.id, fila.contentType as MediaType))
       await media.remove(fila.id)
     }
     return filas.length
@@ -202,13 +226,19 @@ export const saveGuestPhoto =
     eventId: string,
     groupId: string,
     archivo: { size: number; name: string; bytes: () => Promise<Uint8Array> },
+    /** Cuántas fotos de invitados caben en **todo el evento** (1.000 con el plan, 500 si se compró; +500 por extra). */
+    topeDelAlbum: number,
   ): Promise<{ ok: true; id: string } | { ok: false; error: MediaError }> => {
     const ya = await deps.media.countByGroup(groupId)
     if (ya >= MAX_GUEST_PHOTOS) return { ok: false, error: 'too_many' }
+    // **El tope del álbum**, además del de cada invitado: sin él, 50 invitados con 20 fotos son 1.000 y el
+    // disco lo paga el atelier. Cuenta solo lo que subieron invitados (la galería del atelier no entra).
+    const enElAlbum = (await deps.media.listByEvent(eventId)).filter((fila) => fila.uploadedByGroupId !== null).length
+    if (enElAlbum >= topeDelAlbum) return { ok: false, error: 'album_full' }
     // **Fotografías y nada más.** Este extremo se autoriza con el token del enlace, que
     // circula por WhatsApp; admitir audio aquí dejaría que cualquiera con ese enlace
     // reemplazara la canción de la boda.
-    return saveMedia(deps)(eventId, archivo, groupId, { permitirAudio: false })
+    return saveMedia(deps)(eventId, archivo, groupId, { permitirAudio: false, lado: ALBUM_IMAGE_EDGE })
   }
 
 /** Lo que este grupo lleva subido, para que el invitado vea sus propias fotografías. */

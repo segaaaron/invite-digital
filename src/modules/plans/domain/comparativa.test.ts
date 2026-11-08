@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Allowance } from './allowance'
-import { filasComparativas, type TextosComparativa } from './comparativa'
+import { conPreciosDeExtras, filasComparativas, type TextosComparativa } from './comparativa'
 
 const TEXTOS: TextosComparativa = {
   si: 'Sí',
@@ -110,5 +110,29 @@ describe('filasComparativas', () => {
 
   it('no se deja ninguna fila de lo que el plan limita', () => {
     expect(filasComparativas([atelier], TEXTOS)).toHaveLength(Object.keys(TEXTOS.filas).length)
+  })
+})
+
+describe('conPreciosDeExtras', () => {
+  const gala: Allowance = { ...atelier, planSlug: 'gala', plannerSuite: 'completo' }
+  const imperial: Allowance = { ...alta, guestPhotos: true }
+  const precios = [
+    { fila: 'fotosInvitados', efecto: 'fotos_invitados', precio: 'Bs 150' },
+    { fila: 'plannerTotal', efecto: 'dia_d', precio: 'Bs 150' },
+  ] as const
+
+  it('pone «+Bs 150» solo donde el extra se puede comprar: el Día D no se vende sobre Atelier', () => {
+    const filas = conPreciosDeExtras(filasComparativas([atelier, gala, imperial], TEXTOS), [atelier, gala, imperial], precios)
+    const de = (etiqueta: string) => filas.find((f) => f.etiqueta === etiqueta)?.valores.map((v) => v.texto)
+
+    expect(de('Día D')).toEqual(['No', '+Bs 150', 'Sí'])
+    expect(de('Fotos de los invitados')).toEqual(['+Bs 150', '+Bs 150', 'Sí'])
+  })
+
+  it('la nota de la fila acompaña al precio y al incluido', () => {
+    const filas = conPreciosDeExtras(filasComparativas([atelier, imperial], TEXTOS), [atelier, imperial], precios, {
+      fotosInvitados: { incluido: '✓ (hasta 1.000)', extra: '{precio} (hasta 500)' },
+    })
+    expect(filas.find((f) => f.etiqueta === 'Fotos de los invitados')?.valores.map((v) => v.texto)).toEqual(['+Bs 150 (hasta 500)', '✓ (hasta 1.000)'])
   })
 })

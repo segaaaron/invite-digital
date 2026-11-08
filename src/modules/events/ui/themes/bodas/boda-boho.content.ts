@@ -6,7 +6,7 @@ import type { InvitationContent } from '../../../domain/invitation-content'
  */
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   hero: { eyebrow: 'Nuestra Boda', nameA: 'Sara', nameB: 'Óscar', serial: '· NOS CASAMOS · 20.09.2026 ·' },
-  quote: { text: '"Te ví y supe\nque era todo\nlo que iba a querer."' },
+  quote: { text: '"Te vi y supe\nque era todo\nlo que iba a querer."' },
   schedule: { startsAt: '2026-09-20T13:00:00' },
   hosts: {
     label: 'Con la bendición de Dios y de nuestros padres',
@@ -28,7 +28,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   },
   ceremony: { label: 'Ceremonia Religiosa', place: 'Parroquia San Rafael', time: '13:00' },
   reception: { label: 'Recepción Social', place: 'Salón Los Cedros', time: '15:00' },
-  map: { label: 'SALÓN LOS CEDROS', coords: '19.32°N · 99.18°W' },
+  map: { label: 'SALÓN LOS CEDROS', coords: '17.39°S · 66.16°W' },
   itinerary: [
     { time: '13:00', label: 'Ceremonia Religiosa' },
     { time: '15:00', label: 'Recepción Social' },

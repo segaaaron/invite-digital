@@ -153,7 +153,7 @@ export function Planes({ dictionary, locale, planes, reservas, entregas, extraLu
                       ))}
                     </div>
                   )}
-                  <a className="btn-plan" href="#cierre">
+                  <a className="btn-plan" data-plan={plan.slug} data-reserva href="#cierre">
                     {p.planes.elegir.replace('{plan}', plan.name)}
                   </a>
                 </div>
@@ -163,7 +163,12 @@ export function Planes({ dictionary, locale, planes, reservas, entregas, extraLu
             )
           })}
         </div>
+        {/* El diseño que el cliente eligió en el escaparate (lo escribe `PortadaVida`): se ve al llegar a los planes. */}
+        <p className="diseno-elegido" hidden id="disenoElegidoPlanes">
+          {p.planes.disenoElegido} <b />
+        </p>
         <p className="resline">{conReserva(p.planes.pie, reservaMinima)}</p>
+        {planes.some((plan) => plan.priceBeforeCents !== null && plan.priceBeforeCents > plan.price.cents) ? <p className="nota-lanzamiento">{dictionary.pricing.comparison.notaLanzamiento}</p> : null}
       </div>
     </section>
   )

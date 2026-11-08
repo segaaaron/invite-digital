@@ -32,11 +32,11 @@ const CALIDAD = 82
  * de uso traduce a «eso no es una imagen»—, no una avería del servidor.
  */
 export const sharpImageProcessor: ImageProcessor = {
-  async normalize(bytes) {
+  async normalize(bytes, lado = MAX_IMAGE_EDGE) {
     try {
       const salida = await sharp(bytes)
         .rotate()
-        .resize({ width: MAX_IMAGE_EDGE, height: MAX_IMAGE_EDGE, fit: 'inside', withoutEnlargement: true })
+        .resize({ width: lado, height: lado, fit: 'inside', withoutEnlargement: true })
         .webp({ quality: CALIDAD })
         .toBuffer()
 

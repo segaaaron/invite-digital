@@ -485,7 +485,7 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
             {regalos?.text === undefined ? null : (
               <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.tintaHonda, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
             )}
-            <VerMesaDeRegalos estilo={{ background: P.oroClaro, color: '#ffffff', fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 30 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+            <VerMesaDeRegalos estilo={{ background: P.oroClaro, color: '#ffffff', fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 30 }} muestra={slots.regalos === undefined} aviso={themes.availableInInvitation} rotulo={themes.seeGiftTable}>
               {slots.registry}
             </VerMesaDeRegalos>
           </div>

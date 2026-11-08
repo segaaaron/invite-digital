@@ -16,7 +16,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     serial: '· NOS CASAMOS · 20.09.2026 ·',
   },
   quote: {
-    text: '"Te ví y supe\nque era todo\nlo que iba a querer."\n\n— ALEX, 28\n\nFue en una librería de viejo, una tarde de septiembre. María buscaba a Borges. Alex tropezó con su pila de libros. Se cayeron tres tomos y un cuaderno de notas con dibujos. Lo demás, como suele decirse, es historia. Siete años más tarde, María escribe poemas. Alex sigue dibujando. Y ambos firman la suya, en septiembre, igual que la primera vez.',
+    text: '"Te vi y supe\nque era todo\nlo que iba a querer."\n\n— ALEX, 28\n\nFue en una librería de viejo, una tarde de septiembre. María buscaba a Borges. Alex tropezó con su pila de libros. Se cayeron tres tomos y un cuaderno de notas con dibujos. Lo demás, como suele decirse, es historia. Siete años más tarde, María escribe poemas. Alex sigue dibujando. Y ambos firman la suya, en septiembre, igual que la primera vez.',
   },
   hosts: {
     label: 'Con la bendición de Dios y de nuestros padres',
@@ -42,7 +42,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     time: '15:00',
   },
   // Las coordenadas que el mapa de cada tarjeta enseña dentro (PDF 9 oct), como las demás bodas.
-  map: { label: 'SALÓN LOS CEDROS', coords: '19.32°N · 99.18°W' },
+  map: { label: 'SALÓN LOS CEDROS', coords: '17.39°S · 66.16°W' },
   itinerary: [
     { time: '13:00', label: 'CEREMONIA RELIGIOSA' },
     { time: '15:00', label: 'RECEPCIÓN SOCIAL' },
@@ -60,7 +60,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   notes: [
     {
       title: 'Nuestro gran día',
-      text: 'Nuestro gran día se aproxima y nos encantaría que formaras parte de él.',
+      text: 'Nuestro gran día se aproxima y nos encantaría que formaran parte de él.',
     },
     {
       title: 'CELEBRACIÓN SOLO PARA ADULTOS',

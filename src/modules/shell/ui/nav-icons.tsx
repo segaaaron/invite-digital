@@ -61,6 +61,13 @@ export const NAV_ICONS = {
       <path d="M3 9h18M12 9v11M12 9c-1-3-5-4.5-5-2s3 2 5 2c2 0 5 .5 5-2s-4-1-5 2" />
     </Trazo>
   ),
+  album: (
+    <Trazo>
+      <rect height="14" rx="2" width="18" x="3" y="6" />
+      <circle cx="12" cy="13" r="3.4" />
+      <path d="M8.5 6 9.7 4h4.6l1.2 2" />
+    </Trazo>
+  ),
   mensajes: (
     <Trazo>
       <path d="M5 4h11a3 3 0 0 1 3 3v13l-4-3H5z" />

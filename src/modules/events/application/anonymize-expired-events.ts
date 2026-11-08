@@ -59,10 +59,17 @@ export const anonymizeExpiredEvents =
         let viewsDeleted = 0
         let mediaDeleted = 0
         for (const event of pending) {
+          // Las fotos primero: si el almacén falla (R2 caído), el evento sigue pendiente y el próximo pase
+          // lo reintenta. Anonimizar antes lo sacaba de la lista y dejaba las fotos huérfanas para siempre.
+          try {
+            mediaDeleted += await deps.purgeMediaForEvent(event.id)
+          } catch (causa) {
+            deps.avisar('no se pudieron borrar las fotos del evento vencido; se reintenta en el próximo pase', 'storage_failure', event.slug, causa)
+            continue
+          }
           await deps.events.anonymize(event.id, now)
           viewsDeleted += await deps.deleteViewsForEvent(event.id)
           await deps.clearContentForEvent(event.id)
-          mediaDeleted += await deps.purgeMediaForEvent(event.id)
           anonymized.push(event.slug)
         }
 

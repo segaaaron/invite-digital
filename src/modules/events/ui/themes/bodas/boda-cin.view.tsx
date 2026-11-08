@@ -530,7 +530,7 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
               {regalos?.text === undefined ? null : (
                 <div style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.cremaClara, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</div>
               )}
-              <VerMesaDeRegalos estilo={{ background: P.oro, color: P.fondo, fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 20 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+              <VerMesaDeRegalos estilo={{ background: P.oro, color: P.fondo, fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 20 }} muestra={slots.regalos === undefined} aviso={themes.availableInInvitation} rotulo={themes.seeGiftTable}>
               {slots.registry}
             </VerMesaDeRegalos>
             </div>

@@ -438,7 +438,7 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
             {regalos?.text === undefined ? null : (
               <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
             )}
-            <VerMesaDeRegalos estilo={{ background: P.oro, color: P.marino, fontFamily: MONO, fontSize: 11, padding: '14.5px 24px', borderRadius: 26 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+            <VerMesaDeRegalos estilo={{ background: P.oro, color: P.marino, fontFamily: MONO, fontSize: 11, padding: '14.5px 24px', borderRadius: 26 }} muestra={slots.regalos === undefined} aviso={themes.availableInInvitation} rotulo={themes.seeGiftTable}>
               {slots.registry}
             </VerMesaDeRegalos>
           </div>

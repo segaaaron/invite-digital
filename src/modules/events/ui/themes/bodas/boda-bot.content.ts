@@ -48,7 +48,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   // que no tenerlo—.
   map: {
     label: 'HACIENDA LA AURORA',
-    coords: '19.32°N · 99.18°W',
+    coords: '17.39°S · 66.16°W',
     href: 'https://maps.google.com/?q=-17.39,-66.16',
   },
   itinerary: [
@@ -78,7 +78,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   // Los tres textos que el diseño lleva escritos: la invitación que precede al nombre del
   // invitado, el aviso de solo adultos y la petición de fotografías.
   notes: [
-    { title: 'Nuestro gran día', text: 'Nuestro gran día se aproxima y nos encantaría que formaras parte de él.' },
+    { title: 'Nuestro gran día', text: 'Nuestro gran día se aproxima y nos encantaría que formaran parte de él.' },
     {
       title: 'CELEBRACIÓN SOLO PARA ADULTOS',
       text: 'Los niños son alegría, pero esta noche queremos que ustedes también descansen.',

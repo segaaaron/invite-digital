@@ -14,6 +14,7 @@ type Props = {
   readonly reserva: {
     readonly whatsapp: string
     readonly mensaje: string
+    readonly mensajeDiseno: string
     readonly planes: readonly { readonly nombre: string; readonly precio: number }[]
     readonly locale: Locale
   }
@@ -114,7 +115,7 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
           suave.destroy()
         })
       }
-      $$<HTMLAnchorElement>('a[href*="#"]').forEach((a) => {
+      $$<HTMLAnchorElement>('a[href*="#"]:not([data-reserva])').forEach((a) => {
         const destino = a.getAttribute('href')
         if (destino === null || !destino.includes('#')) return
         const ancla = destino.slice(destino.indexOf('#'))
@@ -659,7 +660,15 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
       const form = $<HTMLFormElement>('#formReserva')
       let cerrarSobre = () => undefined as void
       if (caja !== null) {
-        const abrir = () => {
+        const abrir = (ev?: Event) => {
+          // Los botones de plan son enlaces a `#cierre` (sin JavaScript, bajan al cierre); con él abren
+          // el sobre **con ese plan marcado** (documento del 6 nov: antes el formulario empezaba siempre en Gala).
+          ev?.preventDefault()
+          const plan = (ev?.currentTarget as HTMLElement | null)?.dataset.plan
+          if (plan !== undefined) {
+            const radio = $<HTMLInputElement>(`input[name="plan"][data-slug="${CSS.escape(plan)}"]`, form ?? document)
+            if (radio !== null) radio.checked = true
+          }
           caja.hidden = false
           document.body.style.overflow = 'hidden'
           lenis?.stop()
@@ -683,6 +692,45 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
         })
       }
 
+      /* ---------- el diseño elegido en el escaparate ---------- */
+      // «Elegir este diseño» (en la capa o en la página del modelo) **baja a Precios** y deja el diseño a la
+      // vista y en el formulario: viaja en el mensaje de WhatsApp. Antes recargaba la portada arriba y el
+      // diseño no llegaba a ninguna parte (documento del 6 nov, error 4).
+      let diseno = ''
+      const filasDeDiseno = () => $$('#disenoElegidoPlanes, #disenoElegidoForm')
+      const elegirDiseno = (clave: string): boolean => {
+        const elegido = disenos.find((d) => d.clave === clave)
+        if (elegido === undefined) return false
+        diseno = elegido.nombre
+        filasDeDiseno().forEach((fila) => {
+          const nombre = $('b', fila)
+          if (nombre !== null) nombre.textContent = diseno
+          fila.hidden = false
+        })
+        const campo = $<HTMLInputElement>('#campoDiseno')
+        if (campo !== null) campo.value = diseno
+        cerrarLaCapa()
+        const planes = $('#planes')
+        if (planes !== null) {
+          if (lenis) lenis.scrollTo(planes, { duration: 1.5 })
+          else planes.scrollIntoView({ behavior: RM ? 'auto' : 'smooth' })
+        }
+        return true
+      }
+      // Desde la capa: la página del modelo, dentro del marco, avisa en vez de cargar la portada dentro.
+      escuchar(window, 'message', (ev) => {
+        const m = ev as MessageEvent<{ tipo?: string; clave?: string } | null>
+        if (m.origin !== window.location.origin || m.data?.tipo !== 'elegir-diseno' || typeof m.data.clave !== 'string') return
+        elegirDiseno(m.data.clave)
+      })
+      // Desde la página del modelo, abierta aparte: llega con `?modelo=…#planes`.
+      const modelo = new URLSearchParams(window.location.search).get('modelo')
+      if (modelo !== null && elegirDiseno(modelo)) {
+        const limpia = new URL(window.location.href)
+        limpia.searchParams.delete('modelo')
+        history.replaceState(history.state, '', `${limpia.pathname}${limpia.search}${limpia.hash}`)
+      }
+
       if (form !== null) {
         escuchar(form, 'submit', (e) => {
           // **Siempre** se corta el envío nativo. Sin número configurado, un `<form>` sin acción
@@ -699,6 +747,7 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
             .replace('{fiesta}', String(d.get('fiesta') ?? '').toLowerCase())
             .replace('{fecha}', cuando)
             .replace('{plan}', String(d.get('plan') ?? ''))
+            .replace('{diseno}', diseno === '' ? '' : reserva.mensajeDiseno.replace('{diseno}', diseno))
             .replace('{telefono}', String(d.get('tel') ?? ''))
           // **La consulta se guarda siempre, y antes de abrir el chat.** El sobre solo abría
           // WhatsApp, así que desde la portada nueva ninguna consulta llegaba al panel y Ventas,
@@ -748,6 +797,11 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
           aviso?.setAttribute('hidden', '')
           cerrarSobre()
           form.reset()
+          // El diseño es de esta consulta: la siguiente empieza sin él.
+          diseno = ''
+          filasDeDiseno().forEach((fila) => {
+            fila.hidden = true
+          })
         })
       }
 

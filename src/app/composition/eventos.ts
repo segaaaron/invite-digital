@@ -33,6 +33,7 @@ import { drizzleDisenoRepository } from '@/modules/events/infrastructure/drizzle
 import { aprobarVersion, enviarADiseno, marcarVersionEnviada, pedirCambios, type BriefDelEncargo } from '@/modules/events/domain/diseno'
 import { drizzleContentRepository } from '@/modules/events/infrastructure/drizzle-content-repository'
 import { createDiskMediaStorage } from '@/modules/events/infrastructure/disk-media-storage'
+import { conRespaldo, createR2MediaStorage } from '@/modules/events/infrastructure/r2-media-storage'
 import { drizzleMediaRepository } from '@/modules/events/infrastructure/drizzle-media-repository'
 import { sharpImageProcessor } from '@/modules/events/infrastructure/sharp-image-processor'
 import { ffmpegAudioProcessor } from '@/shared/audio/ffmpeg-audio-processor'
@@ -77,9 +78,25 @@ import { guestError } from '@/modules/guests/domain/errors'
 // Solo dentro de funciones: una referencia ansiosa entre ficheros de composición revienta al cargar.
 import { plans } from './negocio'
 
+const almacenDelDisco = createDiskMediaStorage(env.EVENT_MEDIA_DIR)
+
+/**
+ * El álbum, en R2 si está configurado (las cuatro variables). A medias —una sí y otra no— no se enciende, y
+ * se anota: guardar fotos de invitados en un almacén a medio configurar las perdería.
+ */
+const R2 = [env.ALBUM_R2_ENDPOINT, env.ALBUM_R2_BUCKET, env.ALBUM_R2_KEY_ID, env.ALBUM_R2_SECRET]
+if (R2.some((v) => v !== undefined) && R2.some((v) => v === undefined)) {
+  registrarFallo('composition/eventos', 'No se pudo activar el álbum en R2: faltan variables ALBUM_R2_*. Las fotos de invitados se guardan en disco.')
+}
+const almacenDelAlbum =
+  env.ALBUM_R2_ENDPOINT !== undefined && env.ALBUM_R2_BUCKET !== undefined && env.ALBUM_R2_KEY_ID !== undefined && env.ALBUM_R2_SECRET !== undefined
+    ? conRespaldo(createR2MediaStorage({ endpoint: env.ALBUM_R2_ENDPOINT, bucket: env.ALBUM_R2_BUCKET, keyId: env.ALBUM_R2_KEY_ID, secret: env.ALBUM_R2_SECRET }), almacenDelDisco)
+    : undefined
+
 const mediaDeps = {
   media: drizzleMediaRepository,
-  storage: createDiskMediaStorage(env.EVENT_MEDIA_DIR),
+  storage: almacenDelDisco,
+  ...(almacenDelAlbum === undefined ? {} : { album: almacenDelAlbum }),
   // Lo que llega al disco es ya lo que se va a servir: reducido, reencodado y sin
   // metadatos. No hay una versión pesada esperando a que alguien la pida.
   images: sharpImageProcessor,

@@ -51,14 +51,24 @@ Agotadas las rondas, cada cambio adicional se cobra aparte, al precio vigente pu
 ## 6. Cambio de plan
 
 - **Subir de plan**: en cualquier momento, pagando la diferencia de precio.
-- **Bajar de plan**: se devuelve la diferencia **solo si todavía no nos ha enviado sus textos y
-  fotos**. Una vez empezado el diseño, el plan contratado es el que se factura.
+- **Bajar de plan**: el saldo baja la misma diferencia de precio **solo si todavía no nos ha enviado
+  sus textos y fotos**. Una vez empezado el diseño, el plan contratado es el que se factura. La
+  reserva no cambia: no es reembolsable.
 
 ## 7. Cuánto tiempo queda en línea
 
 La invitación sigue accesible después del evento según el plan: **Atelier 60 días, Gala 90 días,
 Imperial 6 meses**. El cliente puede ampliar el tiempo en línea desde su panel, al precio del extra
 publicado. Pasado el plazo, el enlace deja de abrirse y el contenido se retira.
+
+### Álbum compartido
+
+El álbum permite que los invitados suban sus fotos de la fiesta escaneando un QR. Viene incluido en
+**Imperial**, con lugar para **1.000 fotos**; en **Atelier y Gala** se suma como extra, con lugar para
+**500**. Cada invitado puede subir hasta **20 fotos**. Cuando el álbum se llena, el cliente puede sumar
+**500 fotos más** desde su panel, al precio del extra publicado. Las fotos se guardan reducidas
+(2048 px, WebP) y quedan en línea **lo mismo que la invitación**; antes de que se borren, el cliente
+puede descargarlas **todas en un ZIP** desde su panel. Pasado el plazo se eliminan.
 
 ## 8. Contenido del cliente
 

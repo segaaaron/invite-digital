@@ -28,7 +28,7 @@ export async function guardarFormasDeRegalarAction(_previo: FormasState, formDat
   const eventId = await requireEventAccess(actor, { eventId: texto(formData, 'eventId'), eventSlug: texto(formData, 'eventSlug'), section: 'cliente' })
   // Sin formas de regalar en el plan no se encienden; quien ya las tenía, las sigue editando.
   if (isErr(await plans.requireFeature(eventId, 'giftWays')) && !hayFormas(await registry.formas(eventId))) {
-    return { status: 'error', message: t('Tu plan no incluye la lluvia de sobres ni el QR de transferencia.', 'Your plan doesn’t include the envelope shower or the transfer QR.') }
+    return { status: 'error', message: t('Tu plan no incluye la lluvia de sobres ni el QR de transferencia.', 'Your plan doesn’t include cash gifts or the transfer QR.') }
   }
 
   // React vacía el formulario al terminar, también con error: vuelven los textos (nunca el fichero).

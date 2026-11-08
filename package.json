@@ -29,6 +29,7 @@
     "@node-rs/argon2": "^2.1.0",
     "@serwist/next": "^9.5.12",
     "@swc/helpers": "^0.5.23",
+    "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^13.1.0",
     "gsap": "^3.15.0",

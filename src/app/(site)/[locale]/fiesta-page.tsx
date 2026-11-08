@@ -6,10 +6,9 @@ import { PricingSection } from '@/modules/catalog/ui/PricingSection'
 import type { Plan } from '@/modules/catalog'
 import type { FiestaPublica } from '@/modules/events'
 import { capacidadDePlan } from '@/modules/plans'
-import type { EfectoDeExtra } from '@/modules/plans/domain/extras'
-import type { FilaComparativa } from '@/modules/plans/domain/comparativa'
 import { PlanComparison } from '@/modules/plans/ui/PlanComparison'
-import { Monto } from '@/modules/catalog/ui/Monto'
+import { formatMoney } from '@/modules/catalog'
+import { filasDeLaTabla, lineasQueIncluyenTodos, preciosDeLaTabla } from '@/sections/portada/filas'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import { FiestaLanding } from '@/sections/FiestaLanding'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -44,21 +43,13 @@ export async function metadataDeFiesta(raw: string, fiesta: FiestaPublica): Prom
 }
 
 /**
- * La tabla que compara los planes, con los límites de la base en el orden de las tarjetas.
- * Si los límites no se leen, no hay tabla: mejor sin ella que con una que invente.
+ * La tabla que compara los planes: **la misma que la de la portada** (documento del 6 nov: «las tarjetas y
+ * la tabla deben quedar iguales a las de la página principal»). Mismas filas en el mismo orden, mismo
+ * recuadro de lo que traen todos y mismos extras con precio en la celda; solo cambia la piel.
+ *
+ * Los límites salen de la base, en el orden de las tarjetas. Si no se leen, no hay tabla: mejor sin ella
+ * que con una que invente.
  */
-/** Qué fila de la tabla cubre cada adicional, para enseñar su precio en la celda del plan que no lo trae. */
-const FILA_DE_EXTRA: Partial<Record<EfectoDeExtra, FilaComparativa['clave']>> = {
-  fotos_invitados: 'album',
-  cambio_modelo: 'modelo',
-  mas_dias: 'enLinea',
-  mas_grupos: 'grupos',
-  mas_porteros: 'porteros',
-  sumar_planner: 'planners',
-  dia_d: 'plannerTotal',
-  asistente: 'luxury',
-}
-
 export async function comparativaDePlanes(planes: readonly Plan[], dictionary: Dictionary, locale: Locale) {
   const leidas = await webPublica.planesActivos().catch((cause: unknown) => {
     registrarFallo('[locale]/fiesta-page', 'no se pudo armar la tabla comparativa de precios:', cause)
@@ -71,40 +62,30 @@ export async function comparativaDePlanes(planes: readonly Plan[], dictionary: D
   const columnas = planes.flatMap((plan) => {
     const fila = filas.find((f) => f.slug === plan.slug)
     if (fila === undefined) return []
-    const encargo = fila.correctionRounds != null && fila.deliveryDays != null ? { rondas: fila.correctionRounds, dias: fila.deliveryDays } : null
     const limites = capacidadDePlan(fila)
     return [
       {
         nombre: plan.name,
         limites: config === null ? limites : { ...limites, asistente: tieneLuxury(limites, config) },
-        encargo,
         // El precio bajo el nombre y la columna del más elegido resaltada, como en la maqueta (20 oct).
-        precio: <Monto cents={plan.price.cents} locale={locale} />,
+        precio: formatMoney(plan.price, locale),
         ...(plan.priceBeforeCents !== null && plan.priceBeforeCents > plan.price.cents
-          ? { precioAntes: <Monto cents={plan.priceBeforeCents} locale={locale} /> }
+          ? { precioAntes: formatMoney({ cents: plan.priceBeforeCents, currency: plan.price.currency }, locale) }
           : {}),
         destacado: plan.highlighted,
       },
     ]
   })
   const extrasLeidos = await webPublica.extrasActivos().catch(() => null)
-  const extras = (extrasLeidos === null || !extrasLeidos.ok ? [] : extrasLeidos.value).filter((x) => config !== null || x.effect !== 'asistente')
+  const moneda = planes[0]?.price.currency ?? 'BOB'
+  // Solo los extras en la moneda de la página (un importe en otra con la etiqueta de esta sería un precio equivocado).
+  const extras = (extrasLeidos === null || !extrasLeidos.ok ? [] : extrasLeidos.value).filter((x) => x.currency === moneda && (config !== null || x.effect !== 'asistente'))
   const comparativa = dictionary.pricing.comparison
-  const filasVisibles = Object.fromEntries(Object.entries(comparativa.filas).filter(([clave]) => config !== null || clave !== 'luxury')) as Partial<typeof comparativa.filas>
-  const textos = { ...comparativa, filas: filasVisibles }
+  const conTope = columnas.some((c) => c.limites.maxGuestGroups !== null)
+  const textos = { ...comparativa, filas: filasDeLaTabla(comparativa, { conTope, conLuxury: config !== null }) }
+  const { precios, notas } = preciosDeLaTabla(extras, (cents) => formatMoney({ cents, currency: moneda }, locale), comparativa)
   return columnas.length === 0 ? null : (
-    <PlanComparison
-      extras={extras.map((x) => ({
-        name: x.name,
-        precio: <>+<Monto cents={x.priceCents} locale={locale} /></>,
-        descripcion: comparativa.extrasDescripcion[x.effect],
-        // El adicional se enseña **en la celda del plan que no lo trae**: «+Bs 150» dice a la vez que no
-        // viene incluido y cuánto cuesta sumarlo, que es lo que el cliente pregunta al verlo tachado.
-        fila: FILA_DE_EXTRA[x.effect],
-      }))}
-      planes={columnas}
-      textos={textos}
-    />
+    <PlanComparison incluyen={lineasQueIncluyenTodos(dictionary, conTope)} notas={notas} planes={columnas} precios={precios} textos={textos} />
   )
 }
 

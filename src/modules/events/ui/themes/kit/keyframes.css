@@ -291,16 +291,18 @@
    taparía la invitación, que es lo único que se viene a ver aquí. */
 .theme-phone-cta {
   position: fixed;
-  bottom: 18px;
+  /* Sube con la zona segura del teléfono: abajo quedaba cortado por la barra del navegador. */
+  bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 22px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
   display: inline-flex;
   align-items: center;
   border-radius: var(--radius-pill);
-  border: 1px solid rgb(255 255 255 / 0.28);
-  background: rgb(255 255 255 / 0.1);
-  padding: 12px 26px;
+  border: 1px solid rgb(255 255 255 / 0.7);
+  background: rgb(14 12 10 / 0.78);
+  padding: 13px 28px;
+  white-space: nowrap;
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: var(--tracking-luxe);
@@ -310,8 +312,8 @@
 }
 
 .theme-phone-cta:hover {
-  background: rgb(255 255 255 / 0.18);
-  border-color: rgb(255 255 255 / 0.45);
+  background: rgb(14 12 10 / 0.9);
+  border-color: rgb(255 255 255 / 0.9);
 }
 
 /* Con la portada puesta no se desplaza lo de debajo: la invitación se ve al entrar, no

@@ -20,6 +20,8 @@ type Props = {
   anterior?: string | null
   /** El más completo de la escalera: lleva su propia insignia («La experiencia completa»). */
   masCompleto?: boolean
+  /** El lema aprobado para la tarjeta (habla de usted). Sin él, el que escribió el admin. */
+  lema?: string
 }
 
 type Linea = { texto: string; exclusivo: boolean }
@@ -75,7 +77,7 @@ function Check({ gold = false }: { gold?: boolean }) {
   )
 }
 
-export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = false, ctaLabel, reserva = null, anterior = null, masCompleto = false }: Props) {
+export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = false, ctaLabel, reserva = null, anterior = null, masCompleto = false, lema }: Props) {
   const cta = ctaLabel ?? dictionary.pricing.choose.replace('{plan}', plan.name)
   // El plan más elegido es una tarjeta oscura y elevada, como en la maqueta: es lo que
   // separa «recomendado» de «uno más de la fila». Un borde dorado no se ve a un metro.
@@ -110,7 +112,7 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
           destacado ? 'text-bg-sunken/80' : 'text-ink-mute'
         }`}
       >
-        {plan.tagline}
+        {lema ?? plan.tagline}
       </p>
 
       {/**
@@ -127,22 +129,11 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
         </p>
       )}
 
-      {/* El precio en bolivianos, y en dólares cuando el selector de la sección lo pide (V4). */}
+      {/* Solo bolivianos (7 nov): el precio en dólares sigue guardado en el plan, pero no se enseña. */}
       <p className={`${ahorro === null ? 'mt-7' : 'mt-1'} flex items-baseline gap-2`}>
-        <span
-          className={`font-display text-[46px] leading-none font-light [font-variant-numeric:lining-nums] ${destacado ? 'text-gold-light' : 'text-gold-deep'} ${
-            plan.priceUsdCents === null ? '' : 'group-data-[moneda=usd]/precios:hidden'
-          }`}
-        >
+        <span className={`font-display text-[46px] leading-none font-light [font-variant-numeric:lining-nums] ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}>
           {formatMoney(plan.price, locale)}
         </span>
-        {plan.priceUsdCents === null ? null : (
-          <span
-            className={`hidden font-display text-[46px] leading-none font-light [font-variant-numeric:lining-nums] group-data-[moneda=usd]/precios:inline ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}
-          >
-            {dictionary.pricing.usd.replace('{monto}', String(Math.round(plan.priceUsdCents / 100)))}
-          </span>
-        )}
         <span className={`text-[12.5px] ${destacado ? 'text-bg-sunken/80' : 'text-ink-mute'}`}>{dictionary.pricing.perEvent}</span>
       </p>
       {reserva === null ? null : (

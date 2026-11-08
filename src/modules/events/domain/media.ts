@@ -47,6 +47,13 @@ export const MAX_MEDIA_BYTES = 8 * 1024 * 1024
 export const MAX_IMAGE_EDGE = 1600
 
 /**
+ * El lado largo de las fotos del **álbum compartido** (documento del 6 nov): 2048 px en WebP, que es lo que
+ * pide una foto de fiesta para verse bien en una pantalla grande y que pesa unos 450 KB. Las de la invitación
+ * siguen en 1600: ahí se ven pequeñas.
+ */
+export const ALBUM_IMAGE_EDGE = 2048
+
+/**
  * Cuántas fotografías puede subir **un grupo de invitados** desde su invitación.
  *
  * Existe porque ese extremo no tiene sesión: se autoriza con el token del enlace, y el

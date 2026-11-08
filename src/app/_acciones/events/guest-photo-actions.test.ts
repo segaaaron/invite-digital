@@ -6,6 +6,7 @@ const resolveByToken = vi.fn()
 const saveFromGuest = vi.fn()
 const passwordHashOf = vi.fn()
 const requireFeature = vi.fn()
+const allowanceFor = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
@@ -15,7 +16,7 @@ vi.mock('next/headers', () => ({
 }))
 vi.mock('@/app/composition/container', () => ({
   guests: { resolveByToken: (...args: unknown[]) => resolveByToken(...args) },
-  plans: { requireFeature: (...args: unknown[]) => requireFeature(...args) },
+  plans: { requireFeature: (...args: unknown[]) => requireFeature(...args), allowanceFor: (...args: unknown[]) => allowanceFor(...args) },
   events: {
     media: { saveFromGuest: (...args: unknown[]) => saveFromGuest(...args) },
     passwordHashOf: (...args: unknown[]) => passwordHashOf(...args),
@@ -42,6 +43,8 @@ beforeEach(() => {
   passwordHashOf.mockResolvedValue(null)
   saveFromGuest.mockResolvedValue({ ok: true, id: 'm1' })
   requireFeature.mockResolvedValue(ok({}))
+  // El tope del álbum sale del plan: Imperial, mil fotos.
+  allowanceFor.mockResolvedValue(ok({ guestPhotos: true, albumPhotos: 1000 }))
 })
 
 describe('uploadGuestPhotoAction', () => {
@@ -52,7 +55,7 @@ describe('uploadGuestPhotoAction', () => {
       status: 'success',
       message: '',
     })
-    expect(saveFromGuest).toHaveBeenCalledWith('e1', 'g1', expect.anything())
+    expect(saveFromGuest).toHaveBeenCalledWith('e1', 'g1', expect.anything(), 1000)
   })
 
   it('un token desconocido responde lo mismo que uno revocado, y no escribe nada', async () => {

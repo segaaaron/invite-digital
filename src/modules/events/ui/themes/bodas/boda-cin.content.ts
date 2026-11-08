@@ -33,7 +33,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   ceremony: { label: 'Ceremonia Religiosa', place: 'Parroquia San Rafael', time: '13:00' },
   reception: { label: 'Recepción Social', place: 'Salón Los Cedros', time: '15:00' },
   // Las coordenadas que el mapa de cada tarjeta enseña dentro (PDF 9 oct), como las demás bodas.
-  map: { label: 'SALÓN LOS CEDROS', coords: '19.32°N · 99.18°W' },
+  map: { label: 'SALÓN LOS CEDROS', coords: '17.39°S · 66.16°W' },
   itinerary: [
     { time: '13:00 h', label: 'Ceremonia', imageId: '0' },
     { time: '15:00 h', label: 'Recepción Social', imageId: '1' },
@@ -55,7 +55,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     { label: 'Nosotros' },
   ],
   notes: [
-    { title: 'Nuestro gran día', text: 'Nuestro gran día se aproxima y nos encantaría que formaras parte de él.' },
+    { title: 'Nuestro gran día', text: 'Nuestro gran día se aproxima y nos encantaría que formaran parte de él.' },
     { title: 'CELEBRACIÓN SOLO PARA ADULTOS', text: 'Los niños son alegría, pero esta noche queremos que ustedes también descansen.' },
     {
       title: 'Mesa de regalos',

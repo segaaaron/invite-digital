@@ -402,7 +402,7 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
           <Arte ancho={180} estilo={{ margin: '0 auto' }} src={themeAsset('boda-glamour', 'regalo.avif')} />
           <p style={{ fontFamily: CALIGRAFIA, fontSize: 28, color: P.oro, marginTop: 16 }}>{ROTULOS.regalos}</p>
           {regalos?.text === undefined ? null : <p style={{ marginTop: 10, fontSize: 13, opacity: 0.85 }}>{regalos.text}</p>}
-          <VerMesaDeRegalos estilo={{ background: 'transparent', border: `1.5px solid ${P.marfil}`, color: P.marfil, fontFamily: SANS, fontSize: 9, padding: '12px 20px', borderRadius: 20 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+          <VerMesaDeRegalos estilo={{ background: 'transparent', border: `1.5px solid ${P.marfil}`, color: P.marfil, fontFamily: SANS, fontSize: 9, padding: '12px 20px', borderRadius: 20 }} muestra={slots.regalos === undefined} aviso={themes.availableInInvitation} rotulo={themes.seeGiftTable}>
               {slots.registry}
             </VerMesaDeRegalos>
         </div>

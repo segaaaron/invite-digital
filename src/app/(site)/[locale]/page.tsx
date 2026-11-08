@@ -15,6 +15,7 @@ import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
 import { fiestaDeCategoria } from '@/sections/fiestas'
 import { Portada, type DisenoDePortada } from '@/sections/portada/Portada'
 import type { ColumnaDeComparativa } from '@/sections/portada/Comparativa'
+import { filasDeLaTabla, lineasQueIncluyenTodos, preciosDeLaTabla } from '@/sections/portada/filas'
 import { registrarFallo } from '@/shared/observability/fallos'
 import { submitConsultationAction } from '@/app/_acciones/leads/actions'
 
@@ -27,37 +28,6 @@ export const dynamic = 'force-dynamic'
  * una lista cerrada: lo que no esté a la venta se cae y entra el siguiente del catálogo, así
  * que retirar un modelo en el admin nunca deja un hueco.
  */
-/**
- * **Las filas de la comparativa de la portada, en el orden del documento del 30 de octubre.**
- *
- * No son todas las que el diccionario sabe escribir: las que traen los tres planes igual se
- * enseñan arriba, en el recuadro de «Todos los planes incluyen», y aquí quedan las que comparan.
- * «Sugerencia de regalos» es la excepción a propósito: la traen los tres y aun así se compara,
- * porque la tarjeta de Atelier la promete y la tabla la dejaba en blanco.
- */
-const FILAS_DE_LA_PORTADA = [
-  'fotos',
-  'colores',
-  'tipografias',
-  'secciones',
-  'detalles',
-  'sugerencia',
-  'regalos',
-  'libro',
-  'album',
-  'plannerCompleto',
-  'panel',
-  'recordatorios',
-  'mesas',
-  'puerta',
-  'porteros',
-  'plannerTotal',
-  'luxury',
-  'rondas',
-  'entrega',
-  'enLinea',
-] as const
-
 const ABANICO = ['xv-isabelle', 'boda-boho', 'xv-mariana', 'boda-cin', 'boda-glamour', 'xv-valeria', 'boda-navy', 'xv-luciana', 'boda-sello'] as const
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -142,7 +112,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   // en otra moneda con la etiqueta de esta sería un precio equivocado: se deja sin importe y se
   // anota, que es lo contrario de pintarlo mal.
   const moneda = plans[0]?.price.currency ?? 'BOB'
-  const elExtra = (efecto: 'asistente' | 'mas_dias') => {
+  const elExtra = (efecto: 'asistente' | 'mas_dias' | 'mas_fotos') => {
     const extra = extras.find((x) => x.effect === efecto && x.priceCents > 0)
     if (extra === undefined) return undefined
     if (extra.currency !== moneda) {
@@ -157,6 +127,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   const conPrecio = (cents: number) => formatMoney({ cents, currency: moneda }, locale)
   const luxuryExtra = elExtra('asistente')
   const diasExtra = elExtra('mas_dias')
+  const fotosExtra = elExtra('mas_fotos')
   const textosDeExtras = {
     luxury:
       luxuryExtra === undefined
@@ -174,6 +145,11 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
                 : dictionary.pricing.comparison.dias.replace('{n}', String(diasExtra.amount)),
             )
             .replace('{monto}', conPrecio(diasExtra.priceCents)),
+    // «Si se llena, puede sumar 500 fotos más por Bs 50»: solo con el extra a la venta y su cantidad cargada.
+    fotos:
+      fotosExtra === undefined || fotosExtra.amount <= 0
+        ? ''
+        : dictionary.portada.notas.masFotos.replace('{cantidad}', String(fotosExtra.amount)).replace('{monto}', conPrecio(fotosExtra.priceCents)),
   }
 
   // Lo que tarda y lo que dura cada plan, tal cual la base: la tarjeta y la tabla enseñan lo mismo.
@@ -215,26 +191,22 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   // planes de hoy: ninguno tiene tope. El día que el admin ponga uno, la fila entra sola y la línea
   // del recuadro se cae, porque ese tope el servidor lo corta de verdad.
   const conTope = columnas.some((c) => c.limites.maxGuestGroups !== null)
-  const clavesDeLaTabla = FILAS_DE_LA_PORTADA.flatMap((clave) => {
-    // Luxury solo se compara si se vende: sin clave de OpenAI, su fila sobra.
-    if (clave === 'luxury' && config === null) return []
-    return clave === 'panel' && conTope ? (['grupos', clave] as const) : [clave]
-  })
-  const textosComparativa = {
-    ...comparacion,
-    // **El orden de la tabla lo pone la portada**, no el diccionario: son las filas del documento
-    // de correcciones del 30 de octubre, agrupadas como las pidió. Lo que traen los tres planes
-    // igual vive en el recuadro de arriba (`comparativa.incluyenItems`) y no se repite aquí.
-    // Luxury solo se compara si se vende: sin clave de OpenAI, su fila sobra.
-    filas: Object.fromEntries(clavesDeLaTabla.map((clave) => [clave, comparacion.filas[clave]])) as typeof comparacion.filas,
-  }
+  // **El orden de la tabla lo pone la portada** (`filasDeLaTabla`), no el diccionario: son las filas del
+  // documento del 30 de octubre. Luxury solo se compara si se vende: sin clave de OpenAI, su fila sobra.
+  const textosComparativa = { ...comparacion, filas: filasDeLaTabla(comparacion, { conTope, conLuxury: config !== null }) }
+  const { precios: preciosDeExtras, notas: notasDeFila } = preciosDeLaTabla(
+    extras.filter((x) => x.currency === moneda && (config !== null || x.effect !== 'asistente')),
+    conPrecio,
+    comparacion,
+  )
+  const incluyenTodos = lineasQueIncluyenTodos(dictionary, conTope)
 
   // Las notas que la portada enseña, con el importe ya escrito: es lo que se marca para Google.
   const laReserva = Object.values(reservas).length === 0 ? '' : formatMoney({ cents: Math.min(...Object.values(reservas)), currency: plans[0]?.price.currency ?? 'BOB' }, locale)
   // Sin reserva cargada, la pregunta que la nombra **no se pinta**: «¿La reserva de  es
   // reembolsable?» con el hueco dentro acabaría también en el marcado que lee Google. Es la misma
   // regla que ya aplica el pie a su frase.
-  const conExtras = (texto: string) => texto.replace('{luxury}', textosDeExtras.luxury).replace('{extraDias}', textosDeExtras.dias)
+  const conExtras = (texto: string) => texto.replace('{luxury}', textosDeExtras.luxury).replace('{extraDias}', textosDeExtras.dias).replace('{extraFotos}', textosDeExtras.fotos)
   const notasParaGoogle = dictionary.portada.notas.items
     .filter((nota) => laReserva !== '' || !`${nota.pregunta} ${nota.respuesta}`.includes('{reserva}'))
     .map((nota) => ({
@@ -293,6 +265,9 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         disenos={alternados}
         entregas={entregas}
         extras={textosDeExtras}
+        incluyenTodos={incluyenTodos}
+        notasDeFila={notasDeFila}
+        preciosDeExtras={preciosDeExtras}
         locale={locale}
         planes={plans}
         registrarConsulta={submitConsultationAction}

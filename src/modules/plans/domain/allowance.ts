@@ -20,6 +20,11 @@ export type Allowance = {
   readonly maxGalleryPhotos: number | null
   /** Si los invitados pueden subir sus fotos desde su invitación. */
   readonly guestPhotos: boolean
+  /**
+   * Cuántas fotos de invitados admite el álbum **en todo el evento**. Lo pone `aplicarExtras`; sin decirlo,
+   * `topeDeAlbum` lo deduce. Es aparte de las 20 por invitado (`MAX_GUEST_PHOTOS`).
+   */
+  readonly albumPhotos?: number
   /** Si la invitación puede llevar contraseña. */
   readonly eventPassword: boolean
   /** Si la lista de invitados se puede importar de un CSV. */
@@ -145,3 +150,17 @@ export function seccionesFueraDelPlan(allowance: Allowance): readonly string[] {
  */
 export const planThatIncludes = (feature: PlanFeature, catalog: readonly Allowance[]): string | null =>
   catalog.find((plan) => hasFeature(plan, feature))?.planSlug ?? null
+
+/**
+ * Las fotos del álbum compartido que caben en un evento (documento del 6 nov): **1.000 si el plan lo incluye**
+ * (Imperial), **500 si se compró como extra** (Atelier y Gala). Cada «+500 fotos» suma 500 (`aplicarExtras`).
+ * Son números del documento, no de la base: si cambian, cambian aquí y en la web a la vez.
+ */
+export const ALBUM_INCLUIDO = 1000
+export const ALBUM_COMPRADO = 500
+
+/** El tope del álbum de este evento. Sin álbum (`guestPhotos` apagado), cero. */
+export function topeDeAlbum(a: Allowance): number {
+  if (!a.guestPhotos) return 0
+  return a.albumPhotos ?? ALBUM_INCLUIDO
+}

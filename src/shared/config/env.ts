@@ -20,6 +20,15 @@ const envSchema = z.object({
    */
   EVENT_MEDIA_DIR: z.string().min(1).default('.data/eventos'),
   /**
+   * **Las fotos del álbum compartido, fuera del disco del VPS** (Cloudflare R2 o cualquier almacén S3). Las
+   * cuatro juntas o ninguna: sin ellas las fotos de invitados se guardan en `EVENT_MEDIA_DIR`, que es como
+   * fue siempre. Con ellas, las nuevas van al bucket y las ya subidas siguen leyéndose del disco.
+   */
+  ALBUM_R2_ENDPOINT: z.string().url().optional(),
+  ALBUM_R2_BUCKET: z.string().min(1).optional(),
+  ALBUM_R2_KEY_ID: z.string().min(1).optional(),
+  ALBUM_R2_SECRET: z.string().min(1).optional(),
+  /**
    * La clave de Resend, para el correo saliente.
    *
    * **Opcional a propósito.** Sin ella no se envía nada y el resto de la aplicación

@@ -22,7 +22,7 @@ export const textosDelPanel = (t: T): TextosComparativa => ({
     csv: t('Importar la lista de un CSV', 'Import the list from a CSV'),
     mesas: t('Mesas y plano del salón', 'Tables and floor plan'),
     regalos: t('Mesa de regalos y fondos', 'Gift registry and funds'),
-    formas: t('Lluvia de sobres y QR de transferencia', 'Envelope gifts and transfer QR'),
+    formas: t('Lluvia de sobres y QR de transferencia', 'Cash gifts and bank-transfer QR'),
     libro: t('Libro de firmas', 'Guestbook'),
     estilo: t('Colores y letra a tu gusto', 'Your own colours and fonts'),
     puerta: t('Modo puerta con QR', 'QR door mode'),

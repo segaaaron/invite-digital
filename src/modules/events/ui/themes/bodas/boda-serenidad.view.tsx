@@ -441,7 +441,7 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
                 {regalos.text}
               </p>
             )}
-            <VerMesaDeRegalos estilo={{ background: P.titular, color: '#ffffff', fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 30 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+            <VerMesaDeRegalos estilo={{ background: P.titular, color: '#ffffff', fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 30 }} muestra={slots.regalos === undefined} aviso={themes.availableInInvitation} rotulo={themes.seeGiftTable}>
               {slots.registry}
             </VerMesaDeRegalos>
           </div>

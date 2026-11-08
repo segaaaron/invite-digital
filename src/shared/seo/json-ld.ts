@@ -86,17 +86,14 @@ export function productJsonLd(
     name: `${BRAND.siteName} · ${plan.name}`,
     description: plan.description,
     brand: { '@type': 'Brand', name: BRAND.siteName },
-    offers: ((): Oferta | Oferta[] => {
-      const oferta = (cents: number, moneda: string): Oferta => ({
-        '@type': 'Offer',
-        price: toPriceUnits(cents),
-        priceCurrency: moneda,
-        availability: 'https://schema.org/InStock',
-        url: `${baseUrl}/${locale}#planes`,
-      })
-      const enBs = oferta(plan.price.cents, plan.price.currency)
-      return plan.priceUsdCents == null ? enBs : [enBs, oferta(plan.priceUsdCents, 'USD')]
-    })(),
+    // Solo bolivianos (7 nov): la web ya no enseña ni marca importes en dólares.
+    offers: {
+      '@type': 'Offer',
+      price: toPriceUnits(plan.price.cents),
+      priceCurrency: plan.price.currency,
+      availability: 'https://schema.org/InStock',
+      url: `${baseUrl}/${locale}#planes`,
+    },
   }))
 }
 

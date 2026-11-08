@@ -1,12 +1,12 @@
-import type { Allowance } from './allowance'
+import { ALBUM_COMPRADO, ALBUM_INCLUIDO, type Allowance } from './allowance'
 
 /**
  * Qué hace un extra al evento que lo compra. Los que llevan número suman ese número; los
  * demás encienden algo. `servicio` es trabajo nuestro —la entrega exprés—: se cobra y no
  * toca la capacidad.
  */
-export type EfectoDeExtra = 'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio' | 'mas_rondas'
-export const EFECTOS_DE_EXTRA: readonly EfectoDeExtra[] = ['cambio_modelo', 'fotos_invitados', 'mas_grupos', 'mas_dias', 'mas_porteros', 'sumar_planner', 'dia_d', 'asistente', 'servicio', 'mas_rondas']
+export type EfectoDeExtra = 'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio' | 'mas_rondas' | 'mas_fotos'
+export const EFECTOS_DE_EXTRA: readonly EfectoDeExtra[] = ['cambio_modelo', 'fotos_invitados', 'mas_grupos', 'mas_dias', 'mas_porteros', 'sumar_planner', 'dia_d', 'asistente', 'servicio', 'mas_rondas', 'mas_fotos']
 export const NOMBRE_DE_EFECTO: Record<EfectoDeExtra, string> = {
   cambio_modelo: 'Cambiar de modelo hasta repartir',
   fotos_invitados: 'Fotos de los invitados',
@@ -18,6 +18,7 @@ export const NOMBRE_DE_EFECTO: Record<EfectoDeExtra, string> = {
   asistente: 'Luxury, el planner con IA',
   servicio: 'Un servicio que hace el equipo',
   mas_rondas: 'Más rondas de corrección (diseño por encargo)',
+  mas_fotos: 'Más fotos para el álbum compartido',
 }
 
 export type ExtraAplicado = { readonly effect: EfectoDeExtra; readonly amount: number }
@@ -26,8 +27,8 @@ export type ExtraAplicado = { readonly effect: EfectoDeExtra; readonly amount: n
  * La capacidad del plan con los extras que compró el evento. **Nunca baja** lo que el plan ya
  * trae, y lo que no tiene límite sigue sin límite.
  */
-export function aplicarExtras(base: Allowance, extras: readonly ExtraAplicado[]): Allowance {
-  let a = base
+export function aplicarExtras(base_: Allowance, extras: readonly ExtraAplicado[]): Allowance {
+  let a = base_
   for (const { effect, amount } of extras) {
     switch (effect) {
       case 'mas_grupos':
@@ -57,11 +58,21 @@ export function aplicarExtras(base: Allowance, extras: readonly ExtraAplicado[])
       case 'asistente':
         a = { ...a, asistente: true }
         break
+      case 'mas_fotos':
+        // Se suma al final, con el álbum ya resuelto: así no depende del orden en que se compraron.
+        break
       case 'servicio':
       case 'mas_rondas':
         // Las rondas viven en el encargo (`event_design`), no en la capacidad: las suma `applyExtra`.
         break
     }
+  }
+  // **El tope del álbum**: lo que trae el plan (1.000) o lo que se compró (500), más cada «+500 fotos». Sin
+  // álbum no hay tope que ampliar: «+500 fotos» sobre un plan sin álbum no regala nada.
+  if (a.guestPhotos) {
+    const base = base_.guestPhotos ? (base_.albumPhotos ?? ALBUM_INCLUIDO) : ALBUM_COMPRADO
+    const mas = extras.filter((e) => e.effect === 'mas_fotos').reduce((suma, e) => suma + e.amount, 0)
+    a = { ...a, albumPhotos: base + mas }
   }
   return a
 }
@@ -96,6 +107,9 @@ export function extraDisponible(
     // Más rondas solo tienen sentido si lo diseñamos nosotros.
     case 'mas_rondas':
       return contexto.encargo ? { ok: true } : { ok: false, motivo: 'requiere_plan' }
+    // Más fotos solo tienen sentido con álbum: sin él, primero el álbum.
+    case 'mas_fotos':
+      return a.guestPhotos ? { ok: true } : { ok: false, motivo: 'requiere_plan' }
     case 'mas_porteros':
     case 'mas_dias':
     case 'servicio':

@@ -28,6 +28,7 @@ export interface FiestaPageDictionary {
   /** El bloque para las planners profesionales: entran gratis cuando el anfitrión las suma. */
   plannerEyebrow: string
   plannerTitle: string
+  plannerSubtitle: string
   plannerBody: string
 }
 
@@ -42,7 +43,8 @@ export interface FiestasDictionary {
   toolsTitle: string
   /** «¿Qué plan trae cada herramienta? Compáralos» (portada, lleva a la tabla). */
   toolsPlanes: string
-  tools: { title: string; body: string }[]
+  /** `plan`: qué planes la traen («Todos», «Gala · Imperial»…), igual que en «Qué incluye» de la portada. */
+  tools: { title: string; body: string; plan: string }[]
 }
 
 export interface HeroDictionary {
@@ -182,7 +184,6 @@ export interface PricingDictionary {
   /** «Reserva con {monto} · el resto cuando tu invitación esté lista». */
   reserve: string
   /** El precio en dólares que fija el admin: «USD {monto}». */
-  usd: string
   /** «/ evento», junto al precio. */
   perEvent: string
   /** «Todo lo de {plan}, más:», sobre las funciones de Gala e Imperial. */
@@ -217,7 +218,7 @@ export interface PlanComparisonDictionary {
   /** Los extras sueltos a la venta, debajo de la tabla. */
   extrasTitle: string
   /** Qué hace cada adicional, por su efecto (9 oct: «Sumar a tu planner» o «Día D» no se entendían). */
-  extrasDescripcion: Record<'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio' | 'mas_rondas', string>
+  extrasDescripcion: Record<'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio' | 'mas_rondas' | 'mas_fotos', string>
   /** Cabecera de la primera columna. */
   feature: string
   /** La línea de la promoción bajo la tabla, cuando hay precios de lanzamiento (0100). */
@@ -243,6 +244,8 @@ export interface PlanComparisonDictionary {
   nota: string
   albumTitle: string
   albumBody: string
+  /** Lo que acompaña a «Álbum compartido» en la celda: el tope de fotos por evento. `{precio}`: el extra. */
+  albumNota: { incluido: string; extra: string }
   /**
    * Las filas de la comparativa. **El orden lo pone quien pinta la tabla**: la portada elige las
    * dieciocho del documento del 30 oct y el panel las suyas.
@@ -470,6 +473,8 @@ export interface ThemeDictionary {
   portraitPlaceholder: string
   /** El aviso de la vista previa del catálogo, donde nada se guarda. */
   previewNotice: string
+  /** Bajo los botones que en la muestra no abren nada («Ver mesa de regalos», «Subir mis fotos»). */
+  availableInInvitation: string
   /** La cruz de salir de la vista previa: no hay cabecera que la enmarque. */
   previewClose: string
   /** «HORAS» entera: algunos diseños no abrevian la casilla de la cuenta atrás. */
@@ -717,6 +722,7 @@ export type GuestPhotoMessageKey =
   | 'unsupported_type'
   | 'storage_failure'
   | 'too_many'
+  | 'album_full'
   | 'no_file'
   | 'not_found'
   | 'not_included'
@@ -989,6 +995,8 @@ export interface PortadaDictionary {
     anterior: string
     siguiente: string
     verModelo: string
+    /** El aviso bajo el nombre del modelo del anillo: tocar la portada abre la invitación. */
+    toque: string
   }
   /**
    * Las doce secciones que trae la invitación, con su icono dibujado. `plan` dice de qué planes
@@ -1039,6 +1047,8 @@ export interface PortadaDictionary {
     lead: string
     /** El lema de cada sobre, en el orden del catálogo. */
     lemas: readonly string[]
+    /** «Diseño elegido:», sobre los planes y en el formulario, cuando el cliente viene del escaparate. */
+    disenoElegido: string
     masElegido: string
     exclusivo: string
     ahorra: string
@@ -1070,6 +1080,8 @@ export interface PortadaDictionary {
   comparativa: {
     titulo: string
     incluyen: string
+    /** Solo en el celular, sobre la tabla: invita a deslizarla para ver los planes. */
+    deslice: string
     incluyenItems: readonly string[]
     /**
      * «Envíos ilimitados por WhatsApp». Va **aparte** porque solo es verdad mientras ningún plan
@@ -1086,6 +1098,8 @@ export interface PortadaDictionary {
     items: readonly { pregunta: string; respuesta: string }[]
     /** La frase que se mete en `{extraDias}`: solo si hay un extra de más días a la venta. */
     masDias: string
+    /** La frase que se mete en `{extraFotos}`: solo si hay un extra de más fotos a la venta. */
+    masFotos: string
     cierre: string
     cierreCta: string
   }
@@ -1110,6 +1124,8 @@ export interface PortadaDictionary {
     cerrar: string
     /** El mensaje que se arma: {nombres}, {fiesta}, {fecha}, {plan}, {telefono}. */
     mensaje: string
+    /** Lo que se añade al mensaje si eligió un diseño: «{diseno}» se rellena con su nombre. */
+    mensajeDiseno: string
   }
   /** El pie nuevo. */
   pie: {

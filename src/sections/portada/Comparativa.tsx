@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Allowance } from '@/modules/plans'
-import { filasComparativas, type GrupoDeComparativa, type TextosComparativa } from '@/modules/plans'
+import { conPreciosDeExtras, filasComparativas, type GrupoDeComparativa, type NotaDeFila, type PrecioDeFila, type TextosComparativa } from '@/modules/plans'
 import type { Dictionary } from '@/shared/i18n/dictionary'
 
 /** El orden de los grupos: primero lo que el invitado ve, al final cuándo llega. */
@@ -19,12 +19,18 @@ export type ColumnaDeComparativa = {
 type Props = {
   readonly dictionary: Dictionary
   readonly columnas: readonly ColumnaDeComparativa[]
+  /** Lo que traen todos los planes, en líneas con check. */
+  readonly incluyen: readonly string[]
+  /** Los extras que se ven en la celda del plan que no los trae («+Bs 150»), y el tope del álbum. */
+  readonly precios: readonly PrecioDeFila[]
+  readonly notas: Partial<Record<PrecioDeFila['fila'], NotaDeFila>>
   /** Los textos de las filas, ya elegidas y ordenadas por quien pinta la tabla. */
   readonly textos: TextosComparativa & {
     readonly feature: string
     readonly grupos: Record<GrupoDeComparativa, string>
     readonly todosIncluyen: string
     readonly extra: string
+    readonly notaLanzamiento: string
   }
 }
 
@@ -37,22 +43,19 @@ type Props = {
  *
  * Entra fila por fila: de eso se encarga `PortadaVida`, que busca `#tbody`.
  */
-export function Comparativa({ dictionary, columnas, textos }: Props) {
+export function Comparativa({ dictionary, columnas, incluyen, precios, notas, textos }: Props) {
   const p = dictionary.portada
-  const filas = filasComparativas(
-    columnas.map((c) => c.limites),
-    textos,
-  )
-  // «Envíos ilimitados» solo entra en el recuadro mientras **ningún plan tenga tope**. Con un tope
-  // cargado en el admin, la línea sale de aquí y el tope se compara en la tabla, fila a fila.
-  const conTope = columnas.some((c) => c.limites.maxGuestGroups !== null)
-  const incluyen = conTope
-    ? p.comparativa.incluyenItems
-    : [...p.comparativa.incluyenItems.slice(0, 4), p.comparativa.enviosIlimitados, ...p.comparativa.incluyenItems.slice(4)]
+  const limites = columnas.map((c) => c.limites)
+  // «+Bs 150» en la celda del plan que no trae el extra pero lo puede comprar; «–» donde no se vende.
+  const filas = conPreciosDeExtras(filasComparativas(limites, textos), limites, precios, notas)
   const celda = (texto: string, incluido: boolean, clave: string): ReactNode => {
     // Luxury Planner no es un «no»: el plan que no lo trae lo puede sumar desde su panel.
-    if (!incluido && clave === 'luxury') return <span className="plus">{textos.extra}</span>
+    if (!incluido && clave === 'luxury' && !texto.startsWith('+')) return <span className="plus">{textos.extra}</span>
     if (texto === '✓' || (incluido && texto === '')) return <span className="y">✓</span>
+    // «✓ (hasta 1.000 fotos)»: el check dorado y el tope al lado.
+    if (incluido && texto.startsWith('✓ ')) return <><span className="y">✓</span>{texto.slice(1)}</>
+    // «+Bs 150 (hasta 500 fotos)»: el precio dorado y el tope al lado.
+    if (!incluido && texto.startsWith('+') && texto.includes(' (')) return <><span className="plus">{texto.slice(0, texto.indexOf(' ('))}</span>{texto.slice(texto.indexOf(' ('))}</>
     if (texto === '—' || texto === '') return <span className="n">—</span>
     if (texto.startsWith('+')) return <span className="plus">{texto}</span>
     return texto
@@ -78,6 +81,7 @@ export function Comparativa({ dictionary, columnas, textos }: Props) {
             ))}
           </ul>
         </div>
+        <p className="deslice">{p.comparativa.deslice}</p>
         <div className="tablewrap">
           <table>
             <thead>
@@ -118,9 +122,10 @@ export function Comparativa({ dictionary, columnas, textos }: Props) {
           </table>
         </div>
         {/* Un botón por plan al final de la tabla: quien compara aquí ya está eligiendo. */}
+        {columnas.some((c) => c.precioAntes !== '') ? <p className="nota-lanzamiento">{textos.notaLanzamiento}</p> : null}
         <div className="tabla-cta">
           {columnas.map((c) => (
-            <a className={c.destacado ? 'cta-pill' : 'btn-linea'} href="#cierre" key={c.nombre}>
+            <a className={c.destacado ? 'cta-pill' : 'btn-linea'} data-plan={c.limites.planSlug} data-reserva href="#cierre" key={c.nombre}>
               {p.planes.elegir.replace('{plan}', c.nombre)}
             </a>
           ))}

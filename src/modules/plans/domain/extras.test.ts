@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Allowance } from './allowance'
+import { topeDeAlbum } from './allowance'
 import { aplicarExtras, extraDisponible, leerExtra } from './extras'
 
 const atelier: Allowance = {
@@ -129,5 +130,27 @@ describe('Luxury como extra', () => {
 
   it('el admin puede crearlo', () => {
     expect(leerExtra({ name: 'Luxury', priceCents: 10000, effect: 'asistente', amount: '', isActive: true }).ok).toBe(true)
+  })
+})
+
+describe('el tope del álbum compartido', () => {
+  const imperial: Allowance = { ...atelier, planSlug: 'imperial', guestPhotos: true }
+
+  it('1.000 si el plan lo incluye, 500 si se compró, y cada «+500 fotos» suma 500', () => {
+    expect(topeDeAlbum(aplicarExtras(imperial, []))).toBe(1000)
+    expect(topeDeAlbum(aplicarExtras(imperial, [{ effect: 'mas_fotos', amount: 500 }]))).toBe(1500)
+    expect(topeDeAlbum(aplicarExtras(atelier, [{ effect: 'fotos_invitados', amount: 0 }]))).toBe(500)
+    expect(topeDeAlbum(aplicarExtras(atelier, [{ effect: 'fotos_invitados', amount: 0 }, { effect: 'mas_fotos', amount: 500 }, { effect: 'mas_fotos', amount: 500 }]))).toBe(1500)
+  })
+
+  it('no depende del orden en que se compraron', () => {
+    const a = aplicarExtras(atelier, [{ effect: 'mas_fotos', amount: 500 }, { effect: 'fotos_invitados', amount: 0 }])
+    expect(topeDeAlbum(a)).toBe(1000)
+  })
+
+  it('«+500 fotos» sobre un plan sin álbum no regala nada y no se vende', () => {
+    expect(topeDeAlbum(aplicarExtras(atelier, [{ effect: 'mas_fotos', amount: 500 }]))).toBe(0)
+    expect(extraDisponible(atelier, 'mas_fotos')).toEqual({ ok: false, motivo: 'requiere_plan' })
+    expect(extraDisponible(imperial, 'mas_fotos')).toEqual({ ok: true })
   })
 })

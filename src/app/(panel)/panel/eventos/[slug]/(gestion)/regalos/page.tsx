@@ -137,7 +137,7 @@ export default async function RegalosPage({
             encendida={formas.sobres}
             href={conFormas ? `${base}?panel=sobres` : (mejorarFormas?.href ?? base)}
             incluida={conFormas}
-            titulo={t('Lluvia de sobres', 'Envelope shower')}
+            titulo={t('Lluvia de sobres', 'Cash gifts')}
           />
           <Forma t={t}
             descripcion={formas.transferencia ? t(`Con sus datos${formas.tieneQr ? ' y el QR de tu banco' : ''}.`, `With its details${formas.tieneQr ? ' and your bank’s QR' : ''}.`) : t('Te transfieren directo a tu cuenta o con el QR de tu banco.', 'They transfer straight to your account or with your bank’s QR.')}
@@ -154,7 +154,7 @@ export default async function RegalosPage({
       </section>
 
       {conFormas && (panel === 'sobres' || panel === 'transferencia') ? (
-        <PanelDialog closeHref={base} title={panel === 'sobres' ? t('Lluvia de sobres', 'Envelope shower') : t('Transferencia o QR', 'Transfer or QR')}>
+        <PanelDialog closeHref={base} title={panel === 'sobres' ? t('Lluvia de sobres', 'Cash gifts') : t('Transferencia o QR', 'Transfer or QR')}>
           <FormasDeRegalarForm cerrarEn={base} eventId={event.value.id} eventSlug={event.value.slug} formas={formas} seccion={panel} sobresPorDefecto={getDictionary(event.value.locale).registry.sobresDefault} />
         </PanelDialog>
       ) : null}

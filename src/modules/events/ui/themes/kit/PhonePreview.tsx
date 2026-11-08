@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { CloseIcon } from '@/shared/design/ui/icons'
 import { EnlaceDeVuelta } from '@/shared/design/ui/EnlaceDeVuelta'
+import { ElegirEnLaVentana } from './ElegirEnLaVentana'
 
 /**
  * La invitación dentro de un teléfono, centrada y sin nada a los lados.
@@ -40,7 +41,7 @@ export function PhonePreview({
    * invitación, que es lo único que se viene a ver. Es opcional porque la vista previa del
    * panel enseña una boda ya vendida y ahí no hay nada que elegir.
    */
-  readonly action?: { readonly href: string; readonly label: string; readonly enLaVentana?: boolean }
+  readonly action?: { readonly href: string; readonly label: string; readonly enLaVentana?: boolean; readonly clave?: string }
 }) {
   return (
     <div className="theme-phone-stage">
@@ -52,7 +53,9 @@ export function PhonePreview({
       <div className="theme-phone-frame">{children}</div>
       {/* `enLaVentana`: dentro de la capa de la portada hay que **salir del marco**, o elegir el
           diseño cargaría la portada entera dentro del teléfono. */}
-      {action === undefined ? null : (
+      {action === undefined ? null : action.enLaVentana === true && action.clave !== undefined ? (
+        <ElegirEnLaVentana clave={action.clave} href={action.href} label={action.label} />
+      ) : (
         <Link className="theme-phone-cta" href={action.href} target={action.enLaVentana === true ? '_top' : undefined}>
           {action.label}
         </Link>

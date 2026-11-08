@@ -656,7 +656,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
               {regalos?.text === undefined ? null : (
                 <div style={{ fontFamily: DISPLAY, fontSize: 17.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</div>
               )}
-              <VerMesaDeRegalos estilo={{ background: P.oro, color: P.fondo, fontFamily: MONO, fontSize: 9, padding: '12px 20px', borderRadius: 20 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+              <VerMesaDeRegalos estilo={{ background: P.oro, color: P.fondo, fontFamily: MONO, fontSize: 9, padding: '12px 20px', borderRadius: 20 }} muestra={slots.regalos === undefined} aviso={themes.availableInInvitation} rotulo={themes.seeGiftTable}>
               {slots.registry}
             </VerMesaDeRegalos>
             </div>

@@ -30,7 +30,7 @@ describe('PlanComparison', () => {
 
     expect(screen.getByRole('columnheader', { name: /Alta Costura/ })).toBeInTheDocument()
     const fotos = screen.getByRole('row', { name: /galería de fotos/i })
-    expect(within(fotos).getAllByRole('cell').map((c) => c.textContent)).toEqual(['8', '20'])
+    expect(within(fotos).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Hasta 8', 'Hasta 20'])
     const qr = screen.getByRole('row', { name: /pase qr de acceso/i })
     expect(within(qr).getAllByRole('cell').map((c) => c.textContent)).toEqual(['–', '✓'])
   })
@@ -39,12 +39,11 @@ describe('PlanComparison', () => {
    * Lo que traen todos **no se repite fila a fila**: sube al recuadro de arriba. Una tabla con tres
    * columnas de ✓ idénticos no compara nada, y es lo que hacía que la diferencia real se perdiera.
    */
-  it('lo que traen todos igual sube al recuadro y no sale como fila', () => {
-    render(<PlanComparison planes={[{ nombre: 'Atelier', limites: base }, { nombre: 'Alta Costura', limites: otro }]} textos={es.pricing.comparison} />)
+  it('el recuadro de lo que traen todos es una lista con checks, igual que la portada', () => {
+    render(<PlanComparison incluyen={['Español e inglés', 'Código de vestimenta']} planes={[{ nombre: 'Atelier', limites: base }, { nombre: 'Alta Costura', limites: otro }]} textos={es.pricing.comparison} />)
 
     const recuadro = screen.getByText(es.pricing.comparison.todosIncluyen).parentElement
-    expect(recuadro).toHaveTextContent(es.pricing.comparison.filas.confirmacion!)
-    expect(screen.queryByRole('row', { name: new RegExp(es.pricing.comparison.filas.confirmacion!, 'i') })).toBeNull()
+    expect(within(recuadro!).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Español e inglés', 'Código de vestimenta'])
   })
 
   it('las filas van agrupadas por lo que son', () => {
@@ -63,7 +62,7 @@ describe('PlanComparison', () => {
   it('un adicional pone su precio en la celda del plan que no lo incluye', () => {
     render(
       <PlanComparison
-        extras={[{ name: 'Álbum compartido', precio: '+Bs 150,00', fila: 'album' }]}
+        precios={[{ fila: 'album', efecto: 'fotos_invitados', precio: 'Bs 150,00' }]}
         planes={[{ nombre: 'Atelier', limites: base }, { nombre: 'Alta Costura', limites: otro }]}
         textos={es.pricing.comparison}
       />,

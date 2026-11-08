@@ -157,6 +157,7 @@ const EN: Readonly<Record<string, string>> = {
   'Formal · negro y dorado · sin blanco · sin colores pastel · sin neón.': 'Formal · black and gold · no white · no pastels · no neon.',
   'Formal · paleta fría · sin blanco · sin nude · sin neón.': 'Formal · cool palette · no white · no nude · no neon.',
   'Formal · paleta tierra · tejidos naturales · sin blanco · sin nude · sin neón.': 'Formal · earth palette · natural fabrics · no white · no nude · no neon.',
+  'Formal · paleta tierra · tejidos naturales · sin blanco · sin neón.': 'Formal · earth palette · natural fabrics · no white · no neon.',
   'Formal · tonos tierra y dorado · sin blanco': 'Formal · earth tones and gold · no white',
   'Lino · pies descalzos · paleta tierra/arena · evita pesado': 'Linen · bare feet · earth/sand palette · avoid heavy fabrics',
   'Disfraz sexy y elegante': 'Sexy and elegant costume',
@@ -164,7 +165,7 @@ const EN: Readonly<Record<string, string>> = {
 
   // Avisos
   'Nuestro gran día': 'Our big day',
-  'Nuestro gran día se aproxima y nos encantaría que formaras parte de él.': 'Our big day is coming and we would love for you to be part of it.',
+  'Nuestro gran día se aproxima y nos encantaría que formaran parte de él.': 'Our big day is coming and we would love for you to be part of it.',
   'CELEBRACIÓN SOLO PARA ADULTOS': 'ADULTS-ONLY CELEBRATION',
   'Celebración solo para adultos': 'Adults-only celebration',
   'Evento solo para adultos': 'Adults-only event',
@@ -177,7 +178,7 @@ const EN: Readonly<Record<string, string>> = {
   'Aeropuerto Cancún (CUN) → traslado disponible. Escríbenos y te pasamos la guía completa de viaje.': 'Cancún Airport (CUN) → transfer available. Write to us and we will send you the full travel guide.',
   'Cupones exclusivos para invitados con el código BODA-TULUM26': 'Exclusive guest discounts with the code BODA-TULUM26',
   'Mesa de regalos': 'Gift registry',
-  'Lluvia de Sobres': 'Envelope Gifts',
+  'Lluvia de Sobres': 'Cash Gifts',
   'NUESTRO MEJOR REGALO': 'OUR BEST GIFT',
   'Tu presencia es nuestro mejor regalo': 'Your presence is our best gift',
   'Su presencia es nuestro mejor regalo.': 'Your presence is our best gift.',
@@ -208,7 +209,7 @@ const EN: Readonly<Record<string, string>> = {
   'con cariño,': 'with love,',
   '"Un amor que florece cada día."': '"A love that blooms every day."',
   '"y vivieron felices\npara siempre"': '"and they lived\nhappily ever after"',
-  '"Te ví y supe\nque era todo\nlo que iba a querer."': '"I saw you and knew\nyou were everything\nI would ever want."',
+  '"Te vi y supe\nque era todo\nlo que iba a querer."': '"I saw you and knew\nyou were everything\nI would ever want."',
   '"Hemos esperado este momento con todo el corazón. Queremos compartir nuestra felicidad contigo, porque sin ti, esta historia no estaría completa."':
     '"We have waited for this moment with all our hearts. We want to share our happiness with you, because without you this story would not be complete."',
   '"and they lived\nhappily ever after"\n\n2019 — 2026\n\nNos conocimos un domingo de café. Él pidió un americano, ella un capuccino con dos cucharadas de azúcar. Siete años después, todo lo que queremos es seguir despertando juntos cada domingo.':
@@ -217,7 +218,7 @@ const EN: Readonly<Record<string, string>> = {
     'We met over coffee one Sunday. He ordered an americano, she a cappuccino with two spoons of sugar. Seven years later, all we want is to keep waking up together every Sunday.',
   '"Supe que eras tú\nla primera vez\nque me miraste."\n\n— DIEGO\n\nNos conocimos en una noche cualquiera que terminó no siendo cualquiera. Desde entonces, cada día ha sido la confirmación de que encontramos a nuestra persona. Hoy, con el corazón lleno de gratitud, queremos compartir con quienes amamos el inicio de nuestra historia como esposos.':
     '"I knew it was you\nthe first time\nyou looked at me."\n\n— DIEGO\n\nWe met on an ordinary night that turned out to be anything but. Since then, every day has confirmed that we found our person. Today, with hearts full of gratitude, we want to share with those we love the beginning of our story as husband and wife.',
-  '"Te ví y supe\nque era todo\nlo que iba a querer."\n\n— ALEX, 28\n\nFue en una librería de viejo, una tarde de septiembre. María buscaba a Borges. Alex tropezó con su pila de libros. Se cayeron tres tomos y un cuaderno de notas con dibujos. Lo demás, como suele decirse, es historia. Siete años más tarde, María escribe poemas. Alex sigue dibujando. Y ambos firman la suya, en septiembre, igual que la primera vez.':
+  '"Te vi y supe\nque era todo\nlo que iba a querer."\n\n— ALEX, 28\n\nFue en una librería de viejo, una tarde de septiembre. María buscaba a Borges. Alex tropezó con su pila de libros. Se cayeron tres tomos y un cuaderno de notas con dibujos. Lo demás, como suele decirse, es historia. Siete años más tarde, María escribe poemas. Alex sigue dibujando. Y ambos firman la suya, en septiembre, igual que la primera vez.':
     '"I saw you and knew\nyou were everything\nI would ever want."\n\n— ALEX, 28\n\nIt was in a second-hand bookshop, one September afternoon. María was looking for Borges. Alex bumped into her pile of books. Three volumes and a sketchbook fell. The rest, as they say, is history. Seven years later, María writes poems. Alex still draws. And both sign their own story, in September, just like the first time.',
   'Nos conocimos en el lugar menos esperado y desde entonces no hemos dejado de escribir nuestra historia. Hoy queremos compartir con ustedes el capítulo más importante.':
     'We met in the least expected place and since then we have never stopped writing our story. Today we want to share its most important chapter with you.',

@@ -70,6 +70,7 @@ export function ranurasDeVistaPrevia(
         <span className="inline-block min-w-[var(--fotos-min,0px)] rounded-[var(--radius-pill)] border-[length:var(--fotos-borde,0px)] text-center whitespace-nowrap border-[var(--fotos-linea,transparent)] px-[var(--fotos-px,20px)] py-[var(--fotos-py,12px)] [font-family:var(--fotos-letra,var(--font-mono))] text-[length:var(--fotos-fs,9px)] font-bold tracking-[var(--fotos-tracking,0.15em)] uppercase bg-[var(--fotos-fondo,var(--color-cta))] text-[var(--fotos-tinta,var(--color-on-cta))]">
           {diccionario.invitation.photosPick}
         </span>
+        <small className="mt-2 block text-[11px] opacity-70">{diccionario.themes.availableInInvitation}</small>
       </PreviewSlot>
     ),
   }

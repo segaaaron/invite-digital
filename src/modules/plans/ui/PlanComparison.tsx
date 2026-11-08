@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Allowance } from '../domain/allowance'
-import { filasComparativas, type FilaComparativa, type GrupoDeComparativa, type TextosComparativa } from '../domain/comparativa'
-
-/** Lo del diseño por encargo de cada plan: rondas y días de entrega. `null`: autoservicio. */
-export type EncargoDePlan = { rondas: number; dias: number } | null
+import { CheckIcon } from '@/shared/design/ui/icons'
+import { conPreciosDeExtras, filasComparativas, type GrupoDeComparativa, type NotaDeFila, type PrecioDeFila, type TextosComparativa } from '../domain/comparativa'
 
 /** El orden en que se leen los grupos: primero lo que el invitado ve, al final cuándo llega. */
 const ORDEN: readonly GrupoDeComparativa[] = ['invitacion', 'regalos', 'control', 'entrega']
@@ -11,7 +9,6 @@ const ORDEN: readonly GrupoDeComparativa[] = ['invitacion', 'regalos', 'control'
 type Columna = {
   nombre: string
   limites: Allowance
-  encargo?: EncargoDePlan
   /** El precio bajo el nombre, ya formateado por quien conoce la moneda. */
   precio?: ReactNode
   /** El de lista, tachado encima del de ahora, si el plan está de lanzamiento (0100). */
@@ -26,11 +23,6 @@ type Props = {
     title: string
     feature: string
     extrasTitle: string
-    /** Las filas del encargo: «Rondas de corrección», «Entrega», «{n} días», «Tú la escribes». */
-    rondas: string
-    entrega: string
-    entregaDias: string
-    autoservicio: string
     /** Los rótulos de los cuatro grupos y el del recuadro de lo que traen todos. */
     grupos: Record<GrupoDeComparativa, string>
     todosIncluyen: string
@@ -42,8 +34,11 @@ type Props = {
     albumTitle?: string
     albumBody?: string
   }
-  /** Los extras a la venta, ya con su precio en palabras. Sin ninguno, no hay bloque. */
-  extras?: ReadonlyArray<{ name: string; precio: ReactNode; descripcion?: string | undefined; fila?: FilaComparativa['clave'] | undefined }>
+  /** Lo que traen todos los planes, en líneas con check (las mismas de la portada). */
+  incluyen?: readonly string[]
+  /** Los extras que se ven en la celda del plan que no los trae («+Bs 150»), y el tope del álbum. */
+  precios?: readonly PrecioDeFila[]
+  notas?: Partial<Record<PrecioDeFila['fila'], NotaDeFila>>
 }
 
 /**
@@ -55,36 +50,26 @@ type Props = {
  * y abajo quedan solo las filas donde los planes se diferencian, agrupadas por lo que son. Una tabla de
  * veinticinco filas con tres columnas de ✓ idénticos no compara nada: lo que se viene a ver es la diferencia.
  */
-export function PlanComparison({ planes, textos, extras = [] }: Props) {
-  const filas = filasComparativas(
-    planes.map((p) => p.limites),
-    textos,
-  )
-  // Si algún plan es por encargo, la tabla dice cuántas rondas y en cuánto se entrega: son
-  // datos de la base, los mismos que copia el encargo al empezar.
-  if (planes.some((p) => p.encargo != null)) {
-    const celda = (p: Columna, valor: (e: NonNullable<EncargoDePlan>) => string) =>
-      p.encargo == null ? { texto: textos.autoservicio, incluido: false } : { texto: valor(p.encargo), incluido: true }
-    filas.push(
-      { clave: 'grupos', grupo: 'entrega', etiqueta: textos.rondas, valores: planes.map((p) => celda(p, (e) => String(e.rondas))) },
-      { clave: 'grupos', grupo: 'entrega', etiqueta: textos.entrega, valores: planes.map((p) => celda(p, (e) => textos.entregaDias.replace('{n}', String(e.dias)))) },
-    )
-  }
-
-  // Lo que traen **todos igual** sube al recuadro: en la tabla sería una fila de ✓ repetidos.
-  const iguales = (fila: FilaComparativa) => fila.valores.every((c) => c.incluido && c.texto === fila.valores[0]?.texto)
-  const deTodos = filas.filter(iguales)
-  const diferencias = filas.filter((fila) => !iguales(fila))
-  const precioExtra = (clave: FilaComparativa['clave']) => extras.find((x) => x.fila === clave)?.precio ?? null
+export function PlanComparison({ planes, textos, incluyen = [], precios = [], notas = {} }: Props) {
+  const limites = planes.map((p) => p.limites)
+  // «+Bs 150» en la celda del plan que no trae el extra pero lo puede comprar; «–» donde no se vende.
+  const diferencias = conPreciosDeExtras(filasComparativas(limites, textos), limites, precios, notas)
 
   return (
     <div className="mt-16 rounded-[var(--radius-card)] border border-line bg-bg-raised/60 p-6 sm:p-10">
       <h3 className="text-center font-mono text-[11px] tracking-[var(--tracking-luxe)] text-ink-soft uppercase">{textos.title}</h3>
 
-      {deTodos.length === 0 ? null : (
+      {incluyen.length === 0 ? null : (
         <div className="mt-7 rounded-[18px] bg-pill-pending/60 px-6 py-5">
           <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">{textos.todosIncluyen}</p>
-          <p className="mt-2 text-[13.5px] leading-[1.75] text-ink-soft">{deTodos.map((f) => f.etiqueta).join(' · ')}</p>
+          <ul className="mt-3 grid gap-x-8 gap-y-2 text-[13.5px] leading-[1.6] text-ink-soft sm:grid-cols-2">
+            {incluyen.map((linea) => (
+              <li className="flex gap-2.5" key={linea}>
+                <CheckIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-gold-deep" />
+                <span>{linea}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -115,7 +100,7 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
                           key={planes[i]?.limites.planSlug ?? i}
                         >
                           <span className="sr-only">{planes[i]?.nombre}: </span>
-                          {celda.incluido ? celda.texto : (precioExtra(fila.clave) ?? celda.texto)}
+                          {celda.texto}
                         </span>
                       ))}
                     </dd>
@@ -172,7 +157,7 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
                           className={`px-3 py-3 text-center [font-variant-numeric:lining-nums] ${celda.incluido ? 'text-ink' : 'text-ink-mute'} ${columna?.destacado ? 'bg-pill-pending/70' : ''}`}
                           key={columna?.limites.planSlug ?? i}
                         >
-                          {celda.incluido ? celda.texto : (precioExtra(fila.clave) ?? celda.texto)}
+                          {celda.texto}
                         </td>
                       )
                     })}

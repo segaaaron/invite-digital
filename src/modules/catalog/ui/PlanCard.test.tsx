@@ -70,11 +70,11 @@ describe('PlanCard', () => {
   it('con precio de lanzamiento enseña el de antes tachado y cuánto se ahorra', () => {
     const { rerender } = render(<PlanCard plan={{ ...plan, priceBeforeCents: 159000 }} locale="es" dictionary={es} ctaHref="#contacto" />)
     expect(screen.getByText('Bs 1.590')).toBeDefined()
-    expect(screen.getByText(/ahorras Bs 140/i)).toBeDefined()
+    expect(screen.getByText(/ahorre Bs 140/i)).toBeDefined()
 
     // Sin promoción, nada tachado; y un «antes» más barato sería una rebaja al revés: tampoco.
     rerender(<PlanCard plan={{ ...plan, priceBeforeCents: 100000 }} locale="es" dictionary={es} ctaHref="#contacto" />)
-    expect(screen.queryByText(/ahorras/i)).toBeNull()
+    expect(screen.queryByText(/ahorre/i)).toBeNull()
   })
 
   /**

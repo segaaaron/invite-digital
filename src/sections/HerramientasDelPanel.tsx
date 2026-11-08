@@ -19,6 +19,7 @@ export function HerramientasDelPanel({ dictionary, aLaTabla }: { dictionary: Dic
               <span aria-hidden className="grid size-8 place-items-center rounded-full bg-gold/15 text-gold-deep">
                 <CheckIcon className="size-4" />
               </span>
+              <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">{herramienta.plan}</span>
               <h3 className="font-display text-[22px] leading-tight text-ink">{herramienta.title}</h3>
               <p className="text-[14px] leading-[1.65] text-ink-soft">{herramienta.body}</p>
             </li>

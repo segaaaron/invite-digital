@@ -88,7 +88,8 @@ export interface MediaStorage {
 export interface ImageProcessor {
   // `ImageType` y no `MediaType`: desde que el audio vive en esta misma tabla, un
   // reencodador podría afirmar por tipos que devolvió un MP3. Reencodar es de imagen.
-  normalize(bytes: Uint8Array): Promise<{ bytes: Uint8Array; contentType: ImageType } | null>
+  /** `lado`: el lado largo máximo en píxeles. Sin él, el de las imágenes de la invitación. */
+  normalize(bytes: Uint8Array, lado?: number): Promise<{ bytes: Uint8Array; contentType: ImageType } | null>
 }
 
 export type MediaRow = {

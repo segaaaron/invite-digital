@@ -17,7 +17,7 @@ import { seAsigna } from '@/shared/design/theme-catalog'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import { mismaFiesta } from '@/modules/events/domain/fiesta'
-import { puedeCambiarDiseno } from '@/modules/plans'
+import { puedeCambiarDiseno, topeDeAlbum } from '@/modules/plans'
 import type { EventErrorKind } from '@/modules/events/domain/errors'
 import { campo } from '@/shared/forms/campo'
 import { isAdmin, puedeCrearEventos } from '@/modules/identity'
@@ -663,7 +663,7 @@ export async function removeMediaAction(_previo: ContentActionState, formData: F
 export type GuestPhotoState = {
   status: 'idle' | 'error' | 'success'
   /** La clase del fallo, que la pantalla traduce. Nunca el detalle, que va al registro. */
-  message: 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many' | 'no_file' | 'not_found' | 'rate_limited' | 'not_included' | ''
+  message: 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many' | 'album_full' | 'no_file' | 'not_found' | 'rate_limited' | 'not_included' | ''
 }
 
 /**
@@ -709,11 +709,23 @@ export async function uploadGuestPhotoAction(_previo: GuestPhotoState, formData:
   const archivo = formData.get('file')
   if (!(archivo instanceof File) || archivo.size === 0) return { status: 'error', message: 'no_file' }
 
-  const resultado = await eventUseCases.media.saveFromGuest(grupo.value.eventId, grupo.value.id, {
-    name: archivo.name,
-    size: archivo.size,
-    bytes: async () => new Uint8Array(await archivo.arrayBuffer()),
-  })
+  // El tope del álbum sale del plan del evento y de sus extras: lo decide el servidor, no la pantalla.
+  const capacidad = await plans.allowanceFor(grupo.value.eventId)
+  if (isErr(capacidad)) {
+    registrarFallo('events/actions', 'No se pudo leer el plan del evento %s para subir una foto de invitado:', grupo.value.eventId, capacidad.error)
+    return { status: 'error', message: 'storage_failure' }
+  }
+
+  const resultado = await eventUseCases.media.saveFromGuest(
+    grupo.value.eventId,
+    grupo.value.id,
+    {
+      name: archivo.name,
+      size: archivo.size,
+      bytes: async () => new Uint8Array(await archivo.arrayBuffer()),
+    },
+    topeDeAlbum(capacidad.value),
+  )
 
   // `photo_limit` es el tope de las fotos del atelier; el invitado no lo pasa y no llega aquí.
   if (!resultado.ok) return { status: 'error', message: resultado.error === 'photo_limit' ? 'too_many' : resultado.error }

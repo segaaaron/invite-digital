@@ -1,4 +1,5 @@
 import { hasFeature, type Allowance, type DesignChange } from './allowance'
+import { extraDisponible, type EfectoDeExtra } from './extras'
 
 /**
  * Los textos de la comparativa. Llegan de fuera —el diccionario de la web, o el español del
@@ -199,4 +200,37 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
     grupo: GRUPO[clave],
     valores: planes.map(celdas[clave]),
   }))
+}
+
+/** Un extra que se ve en la celda del plan que no lo trae: «+Bs 150», ya escrito por quien conoce la moneda. */
+export type PrecioDeFila = { readonly fila: FilaComparativa['clave']; readonly efecto: EfectoDeExtra; readonly precio: string }
+
+/** Lo que va entre paréntesis en una fila con tope por evento (el álbum: «hasta 500 fotos»). `{precio}` se rellena. */
+export type NotaDeFila = { readonly incluido: string; readonly extra: string }
+
+/**
+ * **El precio del extra, en la celda del plan que no lo trae** (7 nov). «+Bs 150» dice a la vez que no viene
+ * incluido y cuánto cuesta sumarlo. Solo donde el extra **se puede comprar de verdad** (`extraDisponible`): el
+ * Día D no se vende sobre Atelier, y allí la celda sigue en «–» en vez de prometer lo que el panel rechaza.
+ */
+export function conPreciosDeExtras(
+  filas: readonly FilaComparativa[],
+  limites: readonly Allowance[],
+  precios: readonly PrecioDeFila[],
+  notas: Partial<Record<FilaComparativa['clave'], NotaDeFila>> = {},
+): FilaComparativa[] {
+  return filas.map((fila) => {
+    const precio = precios.find((p) => p.fila === fila.clave)
+    const nota = notas[fila.clave]
+    return {
+      ...fila,
+      valores: fila.valores.map((celda, i) => {
+        const a = limites[i]
+        if (celda.incluido) return nota === undefined ? celda : { texto: nota.incluido, incluido: true }
+        if (precio === undefined || a === undefined || !extraDisponible(a, precio.efecto).ok) return celda
+        const texto = `+${precio.precio}`
+        return { texto: nota === undefined ? texto : nota.extra.replace('{precio}', texto), incluido: false }
+      }),
+    }
+  })
 }

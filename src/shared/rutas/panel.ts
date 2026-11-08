@@ -62,6 +62,7 @@ const SEGMENTOS = {
   calendario: 'calendar',
   'en-vivo': 'live',
   aparato: 'device',
+  descargar: 'download',
 } as const satisfies Record<string, string>
 
 const A_INGLES = new Map<string, string>(Object.entries(SEGMENTOS))

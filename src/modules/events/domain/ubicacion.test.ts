@@ -20,6 +20,8 @@ describe('mapaIncrustado', () => {
   it('entiende las coordenadas escritas a la antigua', () => {
     expect(mapaIncrustado({ coords: '19.32°N · 99.18°W' })).toBe(embed('19.32,-99.18'))
     expect(mapaIncrustado({ coords: '16.50°S · 68.12°W' })).toBe(embed('-16.5,-68.12'))
+    // La «O» de oeste (Esencia, «66.15°O»): sin ella el mapa caía en el océano Índico.
+    expect(mapaIncrustado({ coords: '17.39°S · 66.15°O' })).toBe(embed('-17.39,-66.15'))
   })
 
   it('sin nada que ubicar, cae a la dirección del lugar; y sin eso, no hay mapa', () => {

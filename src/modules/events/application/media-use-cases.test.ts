@@ -170,7 +170,7 @@ describe('saveMedia', () => {
       name: 'mi-cancion.mp3',
       size: MP3.length,
       bytes: async () => MP3,
-    })
+    }, 500)
 
     expect(salida).toEqual({ ok: false, error: 'unsupported_type' })
     expect(deps.storage.put).not.toHaveBeenCalled()
@@ -332,10 +332,32 @@ describe('purgeMedia', () => {
 describe('saveGuestPhoto', () => {
   const foto = () => ({ name: 'boda.png', size: PNG.byteLength, bytes: async () => PNG })
 
+  it('las fotos de invitados van al almacén del álbum y lo del atelier al disco', async () => {
+    const deps = dobles()
+    const puestas: string[] = []
+    const album = { put: async (k: string) => void puestas.push(k), get: async () => null, remove: async () => undefined }
+
+    await saveGuestPhoto({ ...deps, album })('e1', 'g1', foto(), 500)
+    await saveMedia({ ...deps, album })('e1', foto())
+
+    expect(puestas).toHaveLength(1)
+    expect(deps.filas).toHaveLength(2)
+  })
+
+  it('corta en el tope del álbum del evento, aunque cada invitado lleve menos de 20', async () => {
+    const lleno: MediaRow[] = Array.from({ length: 5 }, (_, i) => ({ id: `a${i}`, eventId: 'e1', contentType: 'image/webp', originalName: 'x.webp', byteSize: 10, uploadedByGroupId: `g${i}` }))
+    const deps = dobles(lleno)
+
+    expect(await saveGuestPhoto(deps)('e1', 'g9', foto(), 5)).toEqual({ ok: false, error: 'album_full' })
+    // La galería del atelier no cuenta contra el álbum de los invitados.
+    const conGaleria = dobles([...lleno.slice(0, 4), { ...lleno[4]!, uploadedByGroupId: null }])
+    expect(await saveGuestPhoto(conGaleria)('e1', 'g9', foto(), 5)).toEqual({ ok: true, id: expect.any(String), contentType: 'image/webp' })
+  })
+
   it('deja la procedencia dentro, para poder contarla y distinguirla', async () => {
     const deps = dobles()
 
-    const salida = await saveGuestPhoto(deps)('e1', 'g1', foto())
+    const salida = await saveGuestPhoto(deps)('e1', 'g1', foto(), 500)
 
     expect(salida).toEqual({ ok: true, id: expect.any(String), contentType: 'image/webp' })
     expect(deps.filas[0]?.uploadedByGroupId).toBe('g1')
@@ -354,14 +376,14 @@ describe('saveGuestPhoto', () => {
     }))
     const deps = dobles(filas)
 
-    expect(await saveGuestPhoto(deps)('e1', 'g1', foto())).toEqual({ ok: false, error: 'too_many' })
+    expect(await saveGuestPhoto(deps)('e1', 'g1', foto(), 500)).toEqual({ ok: false, error: 'too_many' })
     // Otro grupo sigue pudiendo: contarlo por evento dejaría al primero sin sitio para el resto.
-    expect(await saveGuestPhoto(deps)('e1', 'g2', foto())).toEqual({ ok: true, id: expect.any(String), contentType: 'image/webp' })
+    expect(await saveGuestPhoto(deps)('e1', 'g2', foto(), 500)).toEqual({ ok: true, id: expect.any(String), contentType: 'image/webp' })
   })
 
   it('el invitado ve solo las suyas', async () => {
     const deps = dobles()
-    await saveGuestPhoto(deps)('e1', 'g1', foto())
+    await saveGuestPhoto(deps)('e1', 'g1', foto(), 500)
     await saveMedia(deps)('e1', foto())
 
     expect(await listGuestPhotos(deps)('g1')).toHaveLength(1)

@@ -82,12 +82,9 @@ describe('SEO para toda América (9 oct)', () => {
     expect(o.logo).toBe('https://luxuryatelier.net/icon.png')
     expect(o.email).toBe('hola@luxuryatelier.net')
   })
-  it('el precio también en dólares cuando el plan lo tiene', () => {
+  it('el precio solo en bolivianos, aunque el plan guarde uno en dólares', () => {
     const [p] = productJsonLd([{ slug: 'gala', name: 'Gala', description: 'd', price: { cents: 69000, currency: 'BOB' }, priceUsdCents: 9900 }], 'en', 'https://luxuryatelier.net')
-    expect(p!.offers).toEqual([
-      expect.objectContaining({ price: '690.00', priceCurrency: 'BOB' }),
-      expect.objectContaining({ price: '99.00', priceCurrency: 'USD' }),
-    ])
+    expect(p!.offers).toEqual(expect.objectContaining({ price: '690.00', priceCurrency: 'BOB' }))
   })
   it('el sitio, en el idioma de la página', () => {
     expect(websiteJsonLd('es', 'https://luxuryatelier.net')).toMatchObject({ '@type': 'WebSite', inLanguage: 'es', url: 'https://luxuryatelier.net/es' })

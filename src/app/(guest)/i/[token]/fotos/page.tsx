@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { events, plans } from '@/app/composition/container'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { MAX_GUEST_PHOTOS } from '@/modules/events/domain/media'
+import { topeDeAlbum } from '@/modules/plans'
 import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 import { GuestPhotoUpload } from '@/modules/events/ui/GuestPhotoUpload'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -45,6 +46,12 @@ export default async function FotosPage({ params }: { params: Promise<{ token: s
 
   const dictionary = getDictionary(event.locale).invitation
   const mias = await events.media.listOfGuest(group.id)
+  // El álbum tiene un tope para todo el evento (1.000 con el plan, 500 si se compró, +500 por extra): a quien llega
+  // con el álbum lleno se le dice, en vez de dejarlo elegir una foto que el servidor va a rechazar.
+  const capacidad = await plans.allowanceFor(event.id)
+  if (isErr(capacidad)) throw new Error(capacidad.error.detail)
+  const enElAlbum = (await events.media.list(event.id)).filter((fila) => fila.uploadedByGroupId !== null).length
+  const albumLleno = enElAlbum >= topeDeAlbum(capacidad.value)
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[520px] flex-col items-center gap-6 bg-bg-top px-6 py-12 text-ink">
@@ -54,7 +61,7 @@ export default async function FotosPage({ params }: { params: Promise<{ token: s
         <p className="max-w-[36ch] text-[13px] leading-[1.7] text-ink-soft">{dictionary.photosIntro}</p>
       </header>
 
-      <GuestPhotoUpload dictionary={dictionary} remaining={MAX_GUEST_PHOTOS - mias.length} token={token} />
+      <GuestPhotoUpload albumLleno={albumLleno} dictionary={dictionary} remaining={MAX_GUEST_PHOTOS - mias.length} token={token} />
 
       <section className="flex w-full flex-col gap-3">
         <h2 className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">

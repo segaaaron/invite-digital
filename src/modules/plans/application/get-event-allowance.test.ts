@@ -67,6 +67,8 @@ describe('getEventAllowance', () => {
       maxHiredPlanners: 0,
       maxGalleryPhotos: null,
       guestPhotos: true,
+      // El álbum del plan que lo incluye: mil fotos para todo el evento.
+      albumPhotos: 1000,
       eventPassword: true,
       csvImport: true,
       onlineDays: 365,

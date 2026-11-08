@@ -169,7 +169,7 @@ export default async function ModelPreviewPage({
       // Lo que cierra el círculo: de mirar el modelo a pedirlo, llevándose la clave del
       // diseño hasta el pedido. Antes el escaparate y la compra eran dos caminos que no
       // se tocaban, y quien aprobaba no sabía qué modelo había mirado el cliente.
-      action={{ href: `/${locale}?modelo=${encodeURIComponent(slug)}#planes`, label: diccionario.themes.chooseDesign, enLaVentana: incrustado }}
+      action={{ href: `/${locale}?modelo=${encodeURIComponent(slug)}#planes`, label: diccionario.themes.chooseDesign, enLaVentana: incrustado, clave: slug }}
       // Dentro de la capa de la portada la cruz la pone la capa, que es la que sabe cerrarse:
       // la de aquí volvería atrás **dentro del marco** y dejaría la capa abierta y en blanco.
       {...(incrustado ? {} : { exit: { href: rutaDe(locale, 'colecciones', '#modelos'), label: diccionario.themes.previewClose } })}
