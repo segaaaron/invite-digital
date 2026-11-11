@@ -58,6 +58,15 @@ function withCsp(request: NextRequest, reescribirA?: string): NextResponse {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // `www.` y el dominio pelado servían el mismo sitio: dos direcciones para cada página. Se muda para
+  // siempre al dominio sin `www` (el canonical), con ruta y consulta intactas. La API se deja: un 308
+  // en un webhook o una subida no vale la pena.
+  if (request.nextUrl.hostname.startsWith('www.') && !pathname.startsWith('/api')) {
+    const url = request.nextUrl.clone()
+    url.hostname = url.hostname.slice(4)
+    return NextResponse.redirect(url, 308)
+  }
+
   if (
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||

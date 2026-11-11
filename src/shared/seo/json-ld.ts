@@ -51,7 +51,9 @@ export type FaqJsonLd = {
 export type OrganizationJsonLd = {
   '@context': 'https://schema.org'
   '@type': 'Organization'
+  '@id': string
   name: string
+  alternateName: string[]
   url: string
   logo: string
   slogan: string
@@ -62,7 +64,7 @@ export type OrganizationJsonLd = {
   sameAs?: string[]
 }
 
-export type WebSiteJsonLd = { '@context': 'https://schema.org'; '@type': 'WebSite'; name: string; url: string; inLanguage: string; publisher: { '@type': 'Organization'; name: string } }
+export type WebSiteJsonLd = { '@context': 'https://schema.org'; '@type': 'WebSite'; name: string; alternateName: string[]; url: string; inLanguage: string; publisher: { '@id': string } }
 
 /** Dónde atiende la marca (9 oct): toda América, sin decir desde dónde trabaja. */
 export const ZONA_DE_SERVICIO = ['Latin America', 'United States', 'Canada'] as const
@@ -142,15 +144,23 @@ export function productJsonLd(
   }))
 }
 
+/** El identificador de la marca: el mismo en `Organization` y `WebSite`, para que Google vea una sola entidad. */
+const idDeLaMarca = (baseUrl: string): string => `${baseUrl.replace(/\/$/, '')}/#organization`
+
+/** Cómo la gente escribe la marca al buscarla: con espacio y como dominio. */
+const nombresAlternos = (baseUrl: string): string[] => [new URL(baseUrl).hostname.replace(/^www\./, ''), BRAND.siteName.replace(/\s+/g, '')]
+
 /** El sitio en el idioma de la página: con el `hreflang`, Google sabe qué versión enseñar en cada país. */
 export function websiteJsonLd(locale: Locale, baseUrl: string = env.SITE_URL): WebSiteJsonLd {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: BRAND.siteName,
+    alternateName: nombresAlternos(baseUrl),
     url: `${baseUrl.replace(/\/$/, '')}/${locale}`,
     inLanguage: locale,
-    publisher: { '@type': 'Organization', name: BRAND.siteName },
+    // Misma entidad que la `Organization` de la portada: Google las une por `@id`.
+    publisher: { '@id': idDeLaMarca(baseUrl) },
   }
 }
 
@@ -182,7 +192,9 @@ export function organizationJsonLd(negocio: NegocioParaGoogle, baseUrl: string =
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': idDeLaMarca(baseUrl),
     name: BRAND.siteName,
+    alternateName: nombresAlternos(baseUrl),
     url: baseUrl,
     logo: `${baseUrl.replace(/\/$/, '')}/icon.png`,
     areaServed: [...ZONA_DE_SERVICIO],

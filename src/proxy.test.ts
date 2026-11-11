@@ -16,6 +16,15 @@ const pedir = (
 const csp = (response: ReturnType<typeof proxy>): string | null =>
   response.headers.get('Content-Security-Policy')
 
+describe('www', () => {
+  it('se muda para siempre al dominio sin www, con ruta y consulta', () => {
+    const response = proxy(new NextRequest(new URL('/es/bodas?x=1', 'https://www.ejemplo.bo')))
+
+    expect(response.status).toBe(308)
+    expect(response.headers.get('location')).toBe('https://ejemplo.bo/es/bodas?x=1')
+  })
+})
+
 describe('negociación de idioma en la raíz', () => {
   it('redirige a español cuando el navegador lo pide', () => {
     const response = proxy(pedir('/', { acceptLanguage: 'es-BO,es;q=0.9,en;q=0.8' }))
