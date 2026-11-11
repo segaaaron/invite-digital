@@ -30,6 +30,15 @@ export interface FiestaPageDictionary {
   plannerTitle: string
   plannerSubtitle: string
   plannerBody: string
+  /** Lo que explica la fiesta con texto propio (11 nov): pasos y preguntas visibles; las preguntas van también a `FAQPage`. */
+  guia: {
+    eyebrow: string
+    title: string
+    intro: string
+    pasos: readonly { title: string; body: string }[]
+    faqTitle: string
+    faq: readonly { question: string; answer: string }[]
+  }
 }
 
 export interface FiestasDictionary {

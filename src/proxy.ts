@@ -61,10 +61,12 @@ export function proxy(request: NextRequest) {
   // `www.` y el dominio pelado servían el mismo sitio: dos direcciones para cada página. Se muda para
   // siempre al dominio sin `www` (el canonical), con ruta y consulta intactas. La API se deja: un 308
   // en un webhook o una subida no vale la pena.
-  if (request.nextUrl.hostname.startsWith('www.') && !pathname.startsWith('/api')) {
-    const url = request.nextUrl.clone()
-    url.hostname = url.hostname.slice(4)
-    return NextResponse.redirect(url, 308)
+  // Detrás de Traefik, `nextUrl.hostname` puede no traer el host público: se lee de las cabeceras que el proxy
+  // inverso sí pone (`x-forwarded-host`, `host`), y el destino se arma con el protocolo público.
+  const hostPublico = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? request.nextUrl.hostname).split(',')[0]?.trim() ?? ''
+  if (hostPublico.startsWith('www.') && !pathname.startsWith('/api')) {
+    const protocolo = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() ?? request.nextUrl.protocol.replace(':', '')
+    return NextResponse.redirect(`${protocolo}://${hostPublico.slice(4)}${pathname}${request.nextUrl.search}`, 308)
   }
 
   if (

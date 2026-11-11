@@ -48,6 +48,23 @@ export const en = {
       plannerTitle: 'Do you organize weddings?',
       plannerSubtitle: 'Work with your own tools across every wedding you organize',
       plannerBody: 'The couple adds you to their event and you join free with your own account: task plan, budget with who pays, check-in staff and your desk with every event and what is due.',
+      guia: {
+        eyebrow: 'How it works',
+        title: 'Your digital wedding invitation, step by step',
+        intro: 'A digital wedding invitation is a personal link for each family: it opens from WhatsApp with nothing to install, with the guests’ names, the music you choose, the venue map and a button to RSVP.',
+        pasos: [
+          { title: 'Choose the design', body: 'Open each design in full and see how your guests will receive it before you decide.' },
+          { title: 'Send it on WhatsApp', body: 'Each family gets its own link with its name on it. You do not forward the same message to everyone.' },
+          { title: 'Follow the RSVPs live', body: 'See who replied and with how many people, and handle tables, gifts and the door in the same dashboard.' },
+        ],
+        faqTitle: 'Digital wedding invitation FAQ',
+        faq: [
+          { question: 'How is the digital wedding invitation sent?', answer: 'On WhatsApp. Each family receives a personal link that opens on their phone, with no app to install.' },
+          { question: 'Can guests confirm their attendance?', answer: 'Yes. They reply from their own link and you see the answer right away in your dashboard.' },
+          { question: 'Can the invitation have music?', answer: 'Yes. Designs can play music when the invitation is opened.' },
+          { question: 'What currency is used, and where can it be used?', answer: 'Prices are in Bolivian bolivianos, and the invitation opens in any country where your guests have WhatsApp.' },
+        ],
+      },
     },
     xv: {
       busqueda: 'Digital quinceañera invitations',
@@ -65,6 +82,23 @@ export const en = {
       plannerTitle: 'Do you organize quinceañeras?',
       plannerSubtitle: 'Run every quinceañera from one desk',
       plannerBody: 'The quinceañera or her parents add you to their event and you join free: task plan with chambelanes and waltz, budget with who pays, check-in staff and your desk with every event.',
+      guia: {
+        eyebrow: 'How it works',
+        title: 'Your digital quinceañera invitation, step by step',
+        intro: 'A digital quinceañera invitation is a personal link for each family: it opens from WhatsApp with nothing to install, with an animated cover, music, each guest’s name and a button to RSVP.',
+        pasos: [
+          { title: 'Choose the design', body: 'Open each design in full and see how your guests will receive it before you decide.' },
+          { title: 'Send it on WhatsApp', body: 'Each family gets its own link with its name on it, with no identical message forwarded to everyone.' },
+          { title: 'Run the party from one dashboard', body: 'Live RSVPs, tables, gifts and the door, in the hands of whoever you choose.' },
+        ],
+        faqTitle: 'Digital quinceañera invitation FAQ',
+        faq: [
+          { question: 'How is the digital quinceañera invitation sent?', answer: 'On WhatsApp. Each family receives a personal link that opens on their phone, with no app to install.' },
+          { question: 'Why not use a free template?', answer: 'A free template is something you build yourself and send identically to everyone. Here the invitation is prepared with your details, each family gets its own link with its name and replies from it, and you manage tables, gifts and the door from one dashboard.' },
+          { question: 'Can guests confirm their attendance?', answer: 'Yes. They reply from their own link and you see the answer right away in your dashboard.' },
+          { question: 'What currency are prices in?', answer: 'Prices are in Bolivian bolivianos (Bs) and shown on this same page.' },
+        ],
+      },
     },
     toolsEyebrow: 'Your dashboard',
     toolsTitle: 'Everything for the day, in one dashboard',

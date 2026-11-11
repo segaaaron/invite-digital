@@ -160,7 +160,7 @@ export function Portada({ locale, dictionary, disenos, abanico, planes, reservas
             {abanico.map((d, i) => (
               <div key={d.clave} className="tcard">
                 {/* La del centro es la imagen principal de la página: se pide primero. */}
-                <img alt="" fetchPriority={i === 4 ? 'high' : 'auto'} loading={i === 4 ? 'eager' : 'lazy'} src={d.portada} />
+                <img alt={d.nombre} fetchPriority={i === 4 ? 'high' : 'auto'} loading={i === 4 ? 'eager' : 'lazy'} src={d.portada} />
               </div>
             ))}
           </div>

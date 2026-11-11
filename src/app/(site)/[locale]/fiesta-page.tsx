@@ -16,7 +16,8 @@ import { parseLocaleParam } from '@/shared/i18n/server'
 import type { Locale } from '@/shared/i18n/locales'
 import { attempt, isOk } from '@/shared/result'
 import { buildAlternates, buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
-import { breadcrumbJsonLd, jsonLdScript } from '@/shared/seo/json-ld'
+import { sitioPublico } from '@/modules/admin/domain/site-settings'
+import { breadcrumbJsonLd, faqJsonLd, jsonLdScript, productJsonLd } from '@/shared/seo/json-ld'
 import { headers } from 'next/headers'
 import { NONCE_HEADER } from '@/shared/config/headers'
 import { registrarFallo } from '@/shared/observability/fallos'
@@ -113,6 +114,8 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
   if (!locale) notFound()
   const dictionary = getDictionary(locale)
   const fallo = (cause: unknown) => ({ kind: 'not_found' as const, detail: cause instanceof Error ? cause.message : 'error desconocido' })
+  // Los testimonios confirmados: solo la página de bodas los enseña (el de la wedding planner).
+  const testimonios = fiesta === 'boda' ? sitioPublico(await site.settings(), locale).testimonios : []
   const [planes, plantillas] = await Promise.all([
     attempt(() => webPublica.planes(locale), fallo),
     attempt(() => webPublica.modelos(locale), fallo),
@@ -130,6 +133,11 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
   return (
     <>
     <script dangerouslySetInnerHTML={{ __html: jsonLdScript(migas) }} nonce={nonce} type="application/ld+json" />
+    {/* Precios y preguntas se ven en la página (PricingSection y la guía), así que ambos bloques son legítimos. */}
+    <script dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd(dictionary, dictionary.fiestas[fiesta].guia.faq)) }} nonce={nonce} type="application/ld+json" />
+    {isOk(planes) && planes.value.length > 0 ? (
+      <script dangerouslySetInnerHTML={{ __html: jsonLdScript(productJsonLd(planes.value, locale)) }} nonce={nonce} type="application/ld+json" />
+    ) : null}
     <FiestaLanding
       dictionary={dictionary}
       fiesta={fiesta}
@@ -147,6 +155,7 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
         ) : null
       }
       templates={isOk(plantillas) ? plantillas.value : []}
+      testimonios={testimonios}
     />
     </>
   )

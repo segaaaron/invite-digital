@@ -45,7 +45,7 @@ describe('organizationJsonLd', () => {
     expect(organization.url).toBe('https://invitepremium.bo')
     expect(organization.telephone).toBe('+59170012345')
     expect(organization).not.toHaveProperty('address')
-    expect(organization.areaServed).toEqual(['Latin America', 'United States', 'Canada'])
+    expect(organization.areaServed).toEqual(['Bolivia', 'Latin America', 'United States', 'Canada'])
     expect(organization.sameAs).toEqual(['https://instagram.com/x'])
   })
 
@@ -77,7 +77,7 @@ describe('SEO para toda América (9 oct)', () => {
   it('una organización en línea, con sus idiomas y dónde atiende, sin dirección', () => {
     const o = organizationJsonLd({ whatsapp: '', direccion: '', ciudad: '', pais: '', redes: [], correo: 'hola@luxuryatelier.net' }, 'https://luxuryatelier.net')
     expect(o['@type']).toBe('Organization')
-    expect(o.areaServed).toEqual(['Latin America', 'United States', 'Canada'])
+    expect(o.areaServed).toEqual(['Bolivia', 'Latin America', 'United States', 'Canada'])
     expect(o.knowsLanguage).toEqual(['es', 'en'])
     expect(o.logo).toBe('https://luxuryatelier.net/icon.png')
     expect(o.email).toBe('hola@luxuryatelier.net')

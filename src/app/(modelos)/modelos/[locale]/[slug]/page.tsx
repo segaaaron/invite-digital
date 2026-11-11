@@ -12,7 +12,10 @@ import { muestraDe, THEME_KEYS, themeFor } from '@/modules/events/ui/themes/regi
 import { textoDeMuestraEnIngles } from '@/modules/events/ui/themes/muestra-en'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
-import { isOk } from '@/shared/result'
+import { attempt, isOk } from '@/shared/result'
+import { env } from '@/shared/config/env'
+import { BRAND } from '@/shared/config/brand'
+import { registrarFallo } from '@/shared/observability/fallos'
 import { nombreDelCatalogo, seVende } from '@/shared/design/theme-catalog'
 import { buildAlternates, buildPageMetadata } from '@/shared/seo/metadata'
 import { breadcrumbJsonLd, jsonLdScript } from '@/shared/seo/json-ld'
@@ -162,9 +165,46 @@ export default async function ModelPreviewPage({
     { name: nombreDelCatalogo(tema.key, locale) ?? tema.label, url: buildAlternates(`/modelos/${locale}/${slug}`).canonical },
   ])
 
+  // Qué es el diseño, para quien lo cita (buscadores y asistentes de IA): el nombre, la fiesta, la imagen y desde cuánto.
+  // La página es la pareja de muestra y no lo dice. Sin precios (base caída) el producto sale sin oferta.
+  const nombreDelModelo = nombreDelCatalogo(tema.key, locale) ?? tema.label
+  const avisados: string[] = []
+  const planes = await attempt(
+    () => webPublica.planes(locale),
+    (cause) => {
+      avisados.push(slug)
+      registrarFallo('modelos/[slug]', `La ficha ${slug} no se pudo armar con precios:`, cause)
+      return { kind: 'not_found' as const, detail: cause instanceof Error ? cause.message : 'error desconocido' }
+    },
+  )
+  // Un `Err` devuelto (sin excepción) también se avisa; el que lanzó ya quedó registrado arriba.
+  if (!isOk(planes) && avisados.length === 0) registrarFallo('modelos/[slug]', `La ficha ${slug} no se pudo armar con precios:`, planes.error.detail)
+  const precios = isOk(planes) ? planes.value.map((p) => p.price.cents) : []
+  const producto = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${nombreDelModelo} · ${BRAND.siteName}`,
+    description: diccionario.seo.modelDescription.replace('{nombre}', nombreDelModelo).replace('{fiesta}', diccionario.seo.fiestaDeModelo[fiestaDelModelo]),
+    image: `${env.SITE_URL.replace(/\/$/, '')}${rutaDe(locale, 'modelos', `/${slug}/imagen`)}`,
+    brand: { '@type': 'Brand', name: BRAND.siteName },
+    ...(precios.length === 0 || !isOk(planes)
+      ? {}
+      : {
+          offers: {
+            '@type': 'AggregateOffer',
+            priceCurrency: planes.value[0]?.price.currency ?? 'BOB',
+            lowPrice: (Math.min(...precios) / 100).toFixed(2),
+            highPrice: (Math.max(...precios) / 100).toFixed(2),
+            offerCount: precios.length,
+            availability: 'https://schema.org/InStock',
+          },
+        }),
+  }
+
   return (
     <>
     <script dangerouslySetInnerHTML={{ __html: jsonLdScript(migas) }} nonce={nonce} type="application/ld+json" />
+    {seVende(slug) ? <script dangerouslySetInnerHTML={{ __html: jsonLdScript(producto) }} nonce={nonce} type="application/ld+json" /> : null}
     <PhonePreview
       // Lo que cierra el círculo: de mirar el modelo a pedirlo, llevándose la clave del
       // diseño hasta el pedido. Antes el escaparate y la compra eran dos caminos que no

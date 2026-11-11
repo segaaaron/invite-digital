@@ -66,8 +66,8 @@ export type OrganizationJsonLd = {
 
 export type WebSiteJsonLd = { '@context': 'https://schema.org'; '@type': 'WebSite'; name: string; alternateName: string[]; url: string; inLanguage: string; publisher: { '@id': string } }
 
-/** Dónde atiende la marca (9 oct): toda América, sin decir desde dónde trabaja. */
-export const ZONA_DE_SERVICIO = ['Latin America', 'United States', 'Canada'] as const
+/** Dónde atiende la marca: Bolivia primero (11 nov, mercado principal) y toda América; sin decir desde dónde trabaja (9 oct). */
+export const ZONA_DE_SERVICIO = ['Bolivia', 'Latin America', 'United States', 'Canada'] as const
 
 /** Lo que Google cruza con los directorios y las redes: nombre, dirección, teléfono y web. */
 export type NegocioParaGoogle = {

@@ -4,6 +4,7 @@ import { TemplateCard } from '@/modules/catalog/ui/TemplateCard'
 import { fiestaDeCategoria, type Fiesta, type FiestaPublica } from '@/modules/events'
 import { Button } from '@/shared/design/ui/Button'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
+import { TestimonialsSection } from '@/sections/TestimonialsSection'
 import { HerramientasDelPanel } from './HerramientasDelPanel'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
@@ -25,6 +26,7 @@ export function FiestaLanding({
   fiesta,
   templates,
   pricing,
+  testimonios,
 }: {
   dictionary: Dictionary
   locale: Locale
@@ -32,6 +34,8 @@ export function FiestaLanding({
   templates: readonly Template[]
   /** La sección de precios ya compuesta por la página, o `null` si el catálogo no responde. */
   pricing: ReactNode
+  /** Los testimonios confirmados de «La web»; sin ninguno, la sección no se pinta. */
+  testimonios?: readonly { autor: string; rol: string; cita: string; foto: string }[]
 }) {
   const textos = dictionary.fiestas[fiesta]
   const suyas = plantillasDeFiesta(templates, fiesta)
@@ -82,6 +86,35 @@ export function FiestaLanding({
           </h2>
           <p className="font-display text-[clamp(18px,2.4vw,22px)] text-ink-soft [text-wrap:balance]">{textos.plannerSubtitle}</p>
           <p className="max-w-[58ch] text-[15px] leading-[1.7] text-ink-soft">{textos.plannerBody}</p>
+        </div>
+      </section>
+
+      <TestimonialsSection dictionary={dictionary} testimonios={testimonios ?? []} />
+
+      <section aria-labelledby="guia-fiesta" className="px-6 py-20">
+        <div className="mx-auto max-w-[920px]">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <SectionHeading eyebrow={textos.guia.eyebrow} title={<span id="guia-fiesta">{textos.guia.title}</span>} />
+            <p className="max-w-[62ch] text-[15px] leading-[1.75] text-ink-soft">{textos.guia.intro}</p>
+          </div>
+          <ol className="mt-12 grid gap-5 md:grid-cols-3">
+            {textos.guia.pasos.map((paso, i) => (
+              <li className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-bg-raised p-6" key={paso.title}>
+                <p className="font-mono text-[11px] tracking-[var(--tracking-luxe)] text-gold-deep">{String(i + 1).padStart(2, '0')}</p>
+                <h3 className="mt-2 font-display text-[22px] leading-tight text-ink">{paso.title}</h3>
+                <p className="mt-2 text-[14px] leading-[1.7] text-ink-soft">{paso.body}</p>
+              </li>
+            ))}
+          </ol>
+          <h2 className="mt-16 text-center font-display text-[clamp(24px,3.4vw,32px)] leading-tight text-ink [text-wrap:balance]">{textos.guia.faqTitle}</h2>
+          <dl className="mt-8 flex flex-col gap-6">
+            {textos.guia.faq.map((item) => (
+              <div key={item.question}>
+                <dt className="font-display text-[19px] text-ink">{item.question}</dt>
+                <dd className="mt-1.5 text-[14px] leading-[1.7] text-ink-soft">{item.answer}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 

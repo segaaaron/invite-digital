@@ -21,7 +21,10 @@
   --oro-plano:var(--p-oro);
   --sec:clamp(84px,9vw,160px);
 }
-*{box-sizing:border-box;margin:0;padding:0}
+/* En la capa `base`, no suelto (11 nov): sin capa ganaba a TODAS las utilidades de Tailwind y las páginas hermanas
+   (bodas, XV, colecciones, legales) se quedaban sin `px-*`, `py-*` ni `mx-auto`. Tailwind ya trae este reset en su
+   `preflight`; la portada lo sigue teniendo porque lo pisa con sus propias reglas, que sí van sin capa. */
+@layer base{*{box-sizing:border-box;margin:0;padding:0}}
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html,body{overflow-x:clip}
 /* XV: noche de terciopelo violeta y oro rosado. Boda: medianoche índigo y oro antiguo. */

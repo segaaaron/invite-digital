@@ -23,6 +23,19 @@ describe('www', () => {
     expect(response.status).toBe(308)
     expect(response.headers.get('location')).toBe('https://ejemplo.bo/es/bodas?x=1')
   })
+
+  it('también detrás de un proxy inverso: el host público viene en la cabecera, no en la dirección', () => {
+    const headers = { 'x-forwarded-host': 'www.ejemplo.bo', 'x-forwarded-proto': 'https' }
+    const response = proxy(new NextRequest(new URL('/es?x=1', 'http://localhost:3000'), { headers }))
+
+    expect(response.status).toBe(308)
+    expect(response.headers.get('location')).toBe('https://ejemplo.bo/es?x=1')
+  })
+
+  it('no toca la API ni el dominio sin www', () => {
+    expect(proxy(new NextRequest(new URL('/api/x', 'https://www.ejemplo.bo'))).status).not.toBe(308)
+    expect(proxy(new NextRequest(new URL('/es', 'https://ejemplo.bo'))).status).not.toBe(308)
+  })
 })
 
 describe('negociación de idioma en la raíz', () => {
