@@ -24,8 +24,8 @@ describe('buildAlternates', () => {
     expect(alternates.languages['es']).toBe('https://invitepremium.bo/es')
   })
 
-  it('en la portada, x-default apunta a la raíz que negocia el idioma', () => {
-    expect(buildAlternates('/es', SITE).languages['x-default']).toBe('https://invitepremium.bo/')
+  it('en la portada, x-default apunta a /en y nunca a la raíz que redirige', () => {
+    expect(buildAlternates('/es', SITE).languages['x-default']).toBe('https://invitepremium.bo/en')
   })
 
   it('no duplica la barra cuando SITE_URL termina en barra', () => {

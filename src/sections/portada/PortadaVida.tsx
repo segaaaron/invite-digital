@@ -288,7 +288,9 @@ export function PortadaVida({ disenos, tiras, palabras, reserva, registrarConsul
       }
       if (capa !== null && marco !== null) {
         escuchar(capa, 'close', () => {
-          marco.removeAttribute('src')
+          // Quitar el atributo `src` **no descarga** el documento del marco: la invitación seguía
+          // viva ahí dentro y su música seguía sonando. Se navega a una página en blanco.
+          marco.src = 'about:blank'
           document.documentElement.classList.remove('vm-abierta')
           // La entrada que puso al abrirse se la lleva al cerrarse: el historial queda como estaba.
           if ((history.state as { vermodelo?: boolean } | null)?.vermodelo === true) history.back()

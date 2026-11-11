@@ -38,9 +38,10 @@ export function buildAlternates(path: string, baseUrl: string = env.SITE_URL): A
     languages: {
       es: urlFor('es'),
       en: urlFor('en'),
-      // x-default points at the URL that negotiates the language, which is the root —
-      // not at one of the translations. Only meaningful for the landing pages.
-      'x-default': rest.length === 0 ? `${base}/` : urlFor(DEFAULT_LOCALE),
+      // x-default es el idioma por defecto (`/en`), no la raíz. La raíz responde con un 307 según el idioma
+      // del aparato y, al listarla aquí, Google la tomó por canónica de `/en` y dejó `/en` sin indexar
+      // («Duplicate, Google chose different canonical», 11 nov).
+      'x-default': urlFor(DEFAULT_LOCALE),
     },
   }
 }

@@ -24,11 +24,23 @@ export type ProductJsonLd = {
   '@type': 'Product'
   name: string
   description: string
+  image: string[]
+  sku: string
   brand: { '@type': 'Brand'; name: string }
   offers: Oferta | Oferta[]
 }
 
-type Oferta = { '@type': 'Offer'; price: string; priceCurrency: string; availability: string; url: string }
+type Oferta = {
+  '@type': 'Offer'
+  price: string
+  priceCurrency: string
+  availability: string
+  url: string
+  priceValidUntil: string
+  itemCondition: string
+  shippingDetails: unknown
+  hasMerchantReturnPolicy: unknown
+}
 
 export type FaqJsonLd = {
   '@context': 'https://schema.org'
@@ -75,6 +87,33 @@ const CENTS_PER_UNIT = 100
 
 const toPriceUnits = (cents: number): string => (cents / CENTS_PER_UNIT).toFixed(2)
 
+/** La invitación de muestra (arte real) que Google enseña con el plan: su ficha de comercio exige `image`. */
+const IMAGEN_DEL_PLAN = '/site/portada/inv-1.webp'
+
+/**
+ * Producto digital: no hay envío físico. Lo que se declara es lo que la web ya dice: entrega en línea,
+ * gratis, lista en 3 a 5 días según el plan, y la reserva **no es reembolsable** (preguntas frecuentes).
+ */
+function condicionesDeVenta(moneda: string) {
+  return {
+    shippingDetails: {
+      '@type': 'OfferShippingDetails',
+      shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: moneda },
+      shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'BO' },
+      deliveryTime: {
+        '@type': 'ShippingDeliveryTime',
+        handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
+        transitTime: { '@type': 'QuantitativeValue', minValue: 3, maxValue: 5, unitCode: 'DAY' },
+      },
+    },
+    hasMerchantReturnPolicy: {
+      '@type': 'MerchantReturnPolicy',
+      applicableCountry: 'BO',
+      returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+    },
+  }
+}
+
 export function productJsonLd(
   plans: readonly PricedPlan[],
   locale: Locale,
@@ -85,6 +124,8 @@ export function productJsonLd(
     '@type': 'Product',
     name: `${BRAND.siteName} · ${plan.name}`,
     description: plan.description,
+    image: [`${baseUrl.replace(/\/$/, '')}${IMAGEN_DEL_PLAN}`],
+    sku: plan.slug,
     brand: { '@type': 'Brand', name: BRAND.siteName },
     // Solo bolivianos (7 nov): la web ya no enseña ni marca importes en dólares.
     offers: {
@@ -93,6 +134,10 @@ export function productJsonLd(
       priceCurrency: plan.price.currency,
       availability: 'https://schema.org/InStock',
       url: `${baseUrl}/${locale}#planes`,
+      // Hasta fin del año que viene: el precio lo cambia el admin, y una fecha pasada invalida la ficha.
+      priceValidUntil: `${new Date().getFullYear() + 1}-12-31`,
+      itemCondition: 'https://schema.org/NewCondition',
+      ...condicionesDeVenta(plan.price.currency),
     },
   }))
 }

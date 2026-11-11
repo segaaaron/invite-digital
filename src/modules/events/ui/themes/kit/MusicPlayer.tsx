@@ -86,16 +86,31 @@ export function useCancion(audioSrc: string | undefined, soloAlAbrir: boolean) {
     const alPrimerGesto = () => GESTOS.forEach((tipo) => document.addEventListener(tipo, alGesto, { capture: true }))
 
     let vigente = true
-    // Con `soloAlAbrir` ni se intenta: la invitación está tapada por su portada y sonar
-    // ahora sería sonar antes de que nadie la abra.
-    if (soloAlAbrir) alPrimerGesto()
-    else
+    const arrancar = () =>
       elemento.play().catch(() => {
         if (vigente) alPrimerGesto()
       })
+
+    // **Mientras la portada esté puesta no suena nada**: la música es de quien ya entró. Toda
+    // portada lleva `data-portada` y se desmonta al abrirse, así que se espera a que desaparezca
+    // (observador, sin temporizador). Abrirla es un gesto, y `play()` corre en ese mismo turno.
+    const hayPortada = () => document.querySelector('[data-portada]') !== null
+    let observador: MutationObserver | null = null
+    if (hayPortada()) {
+      observador = new MutationObserver(() => {
+        if (hayPortada()) return
+        observador?.disconnect()
+        void arrancar()
+      })
+      observador.observe(document.body, { childList: true, subtree: true })
+    } else if (soloAlAbrir) alPrimerGesto()
+    else void arrancar()
     return () => {
       vigente = false
+      observador?.disconnect()
       quitar()
+      // Al desmontar (salir de la invitación) la canción se corta.
+      elemento.pause()
     }
   }, [audioSrc, soloAlAbrir])
 
